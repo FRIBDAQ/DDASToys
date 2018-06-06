@@ -143,6 +143,7 @@ public:
   Bool_t hasExtension() const;
   const DDAS::HitExtension& getExtension() const;
 
+
   // Tell root we're implementing the class.
   
     ClassDef(DDASRootFitHit, 1)

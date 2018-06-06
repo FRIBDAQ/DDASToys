@@ -33,7 +33,7 @@ ClassImp(DDASRootFitEvent);
 /**
  *  Default constructor Pretty much null but Root requires an implementation.
  */
-DDASRootFitEvent::DDASRootFitEvent()
+DDASRootFitEvent::DDASRootFitEvent() : TObject()
 {}
 
 /**
@@ -49,10 +49,10 @@ DDASRootFitEvent::~DDASRootFitEvent()
  *  Copy Constructor
  *      @param rhs - the object we're being copied from.
  */
-DDASRootFitEvent::DDASRootFitEvent(const DDASRootFitEvent& rhs)
+DDASRootFitEvent::DDASRootFitEvent(const DDASRootFitEvent& rhs) : TObject()
 {
     *this = rhs;                    // Assigment and copying are about the same.
-    return *this;
+    return *this;                   // that assignment takes care of base class too.
 }
 /**
  * operator=
@@ -69,6 +69,7 @@ DDASRootFitEvent::operator=(const DDASRootFitEvent& rhs)
 {
     if (this != &rhs) {
         Reset();                       // Kill off any old stuff.
+        TObject::operator=(rhs);       // Base class elements.
         for(int i =0; i < rhs.m_hits.size(); i++) {
             AddHit(*rhs.m_hits[i]);
             

@@ -71,11 +71,11 @@ FitEventProcessor::operator()(
         FragmentIndex frags(reinterpret_cast<uint16_t*>(pEvent));
         DAQ::DDAS::FitHitUnpacker unpacker;
         unsigned h = 0;
-	unsigned fragno = 0;
+        unsigned fragno = 0;
         for (auto p = frags.begin(); p != frags.end(); p++) {
             
             DAQ::DDAS::DDASFitHit hit;
-	    hit.Reset();
+            hit.Reset();
             unpacker.decode(p->s_itemhdr, hit);
 	    
             if (hit.hasExtension() && (h < MAX_HITS)) {
