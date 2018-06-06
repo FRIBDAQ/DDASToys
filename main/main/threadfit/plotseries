@@ -1,0 +1,5 @@
+#!/bin/bash
+f="`realpath $1`"
+s=$2
+(cd plotting; tclsh plotseries.tcl $f $s)
+
