@@ -70,7 +70,7 @@ public:
     
     // Root needs this macro:
     
-    ClassDef(DDASRootFitEvent, 1);
+    ClassDef(DDASRootFitEvent, 1)
 };
 
 
