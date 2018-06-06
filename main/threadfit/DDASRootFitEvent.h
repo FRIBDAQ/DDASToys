@@ -66,6 +66,11 @@ public:
 public:
     void AddHit(const DDASRootFitHit& hit);   // Allocates copies and appends.
     void Reset();                             // Clear the vector, freeing the hits.
+    
+    
+    // Root needs this macro:
+    
+    ClassDef(DDASRootFitHiyt, 1);
 };
 
 
