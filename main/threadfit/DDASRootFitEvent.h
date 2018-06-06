@@ -46,11 +46,11 @@ private:
     
     // canonical methods:
 public:
-    DDASRootFitHit();
-    DDASRootFitHit(const DDASRootFitHit& rhs);
-    ~DDASRootFitHit();
+    DDASRootFitEvent();
+    DDASRootFitEvent(const DDASRootFitEvent& rhs);
+    ~DDASRootFitEvent();
     
-    DDASRootFitHit& operator=(const DDASRootFitHit& rhs);
+    DDASRootFitEvent& operator=(const DDASRootFitEvent& rhs);
     
     // Selectors; Some of these are provided  because maybe root analysis
     // needs them?
@@ -59,7 +59,7 @@ public:
     std::vector<DDASRootFitHit*> GetData();
     Double_t GetFirstTime() const;
     Double_t GetLastTime() const;
-    DoublePt GetTimeWidth() const;
+    Double_t GetTimeWidth() const;
     
     //Operations:
     
@@ -70,7 +70,7 @@ public:
     
     // Root needs this macro:
     
-    ClassDef(DDASRootFitHiyt, 1);
+    ClassDef(DDASRootFitEvent, 1);
 };
 
 
