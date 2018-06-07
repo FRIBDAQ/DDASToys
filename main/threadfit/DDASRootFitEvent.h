@@ -22,7 +22,7 @@
 #ifndef DDASROOTFITEVENT_H
 #define DDASROOTFITEVENT_H
 
-#include <TOBject.h>                // Root base class
+#include <TObject.h>                // Root base class
 #include <vector>
 
 /**

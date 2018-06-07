@@ -9,7 +9,7 @@ DDASROOT=/usr/opt/ddas/2.2
 DDASINC=$(DDASROOT)/include
 DDASLIB=$(DDASROOT)/lib
 
-CXXFLAGS=$(CFLAGS) -I$(DAQROOT)/include -I$(DDAS_INC)
+CXXFLAGS=$(CFLAGS) -I$(DAQROOT)/include -I$(DDAS_INC) -fPIC
 CXXLDFLAGS=$(LDFLAGS) -L$(DAQLIB)  -L$(DDASLIB) \
 	-lFragmentIndex			\
 	-ldataformat			\
@@ -17,7 +17,15 @@ CXXLDFLAGS=$(LDFLAGS) -L$(DAQLIB)  -L$(DDASLIB) \
 	-lException			\
 	-Wl,"-rpath=$(DAQLIB)" -Wl,"-rpath=$(DDASLIB)"
 
-all:   ringblockdealer  tests 
+# Flags related to CERN ROOT
+
+ROOTCFLAGS=$(shell $(ROOTSYS)/bin/root-config --cflags)
+ROOTLDFLAGS=$(shell $(ROOTSYS)/bin/root-config --libs --ldflags)
+ROOT_RPATH=-Wl,-rpath=$(ROOTSYS)/lib/root
+
+#
+
+all:   ringblockdealer libDDASFitClasses.so  tests 
 
 tests: functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
 	DisplayExtensions
@@ -33,8 +41,10 @@ CRingFileBlockReader.o: CRingFileBlockReader.cpp
 
 ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \
 	CRingFileOutputter.o FitHitUnpacker.o 				\
-	functions.o zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o
-	$(CXX) $(CXXLDFLAGS) -o $@ $^ -ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas
+	functions.o zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o \
+	DDASRootFitEvent.o DDASRootFitHit.o RootFitDictionary.o RootFitDictionary.o
+	$(CXX) $(CXXLDFLAGS) -o $@ $^ -ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas \
+	$(ROOTLDFLAGS) $(ROOT_RPATH)
 
 ringblockdealer.o: ringblockdealer.cpp
 	$(CXX) -c $(CXXFLAGS) $<
@@ -45,6 +55,27 @@ CDDASAnalyzer.o: CDDASAnalyzer.cpp  CDDASAnalyzer.h Outputter.h
 DDASFileOutputter.o: DDASFileOutputter.cpp DDASFileOutputter.h Outputter.h \
 	CDDASAnalyzer.h
 	$(CXX) -c $(CXXFLAGS) $<
+
+
+DDASRootFitEvent.o: DDASRootFitEvent.cpp
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
+DDASRootFitHit.o: DDASRootFitHit.cpp
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
+RootFitDictionary.o: RootFitDictionary.cpp
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
+RootFitDictionary.cpp: RootFitDictionary.h
+
+RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h LinkDef.h
+	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint 	\
+		-f RootFitDictionary.cpp  \
+		-rml libDDASFitClasses.so \
+		-rmf libDDASFitClasses.rootmap  \
+		-I$(DDASINC)	\
+		DDASRootFitEvent.h DDASRootFitHit.h LinkDef.h 
+
 
 functions.o: functions.cpp functions.h
 	$(CXX) -c $(CXXFLAGS) $<
@@ -79,6 +110,10 @@ DisplayExtensions : DisplayExtensions.o FitHitUnpacker.o functions.o
 	$(CXX) $(CXXLDFLAGS) -o $@ $^ -lgsl -lgslcblas -ldataformat -ldaqio -lDataFlow -lurl -lException
 
 
+
+
+libDDASFitClasses.so:  DDASRootFitHit.o RootFitDictionary.o RootFitDictionary.o
+	$(CXX) -shared -o libDDASFitClases.so $< 
 
 
 .PHONY: clean cleanest

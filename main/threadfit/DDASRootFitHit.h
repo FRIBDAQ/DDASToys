@@ -22,7 +22,7 @@
 #define DDASROOTFITHIT_H
 
 #include <TObject.h>
-#include <functions.h>
+#include "functions.h"
 #include "DDASFitHit.h"         // We're really a rootized one of these.
 
 
@@ -99,12 +99,12 @@ private:
     // Canonicals:
     
 public:
-    DDasRootFitHit();
+    DDASRootFitHit();
     DDASRootFitHit(const DDASRootFitHit& rhs);
     ~DDASRootFitHit();
     
     DDASRootFitHit& operator=(const DDASRootFitHit& rhs);
-    DDASRootFitHit& operator=(const DDASFitHit& rhs);
+    DDASRootFitHit& operator=(const DAQ::DDAS::DDASFitHit& rhs);
     
     // Operations:
     

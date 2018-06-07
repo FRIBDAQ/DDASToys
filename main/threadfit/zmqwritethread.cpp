@@ -185,8 +185,8 @@ sendEnd(zmq::socket_t& sock, int thread)
  * zmqwriter_thread
  *    Thread entry point
  *
- * @param args - actually a pointer to the const char* name of the
- *               file to write.
+ * @param args - actually a pointer to an array of character pointers to the
+ *                filename and file format.
  * @return void* - nothing actually.
  */
 void*
@@ -200,13 +200,16 @@ zmqwriter_thread(void* args)
     sock.setsockopt(ZMQ_LINGER, &linger, sizeof(int));
     sock.bind(ServerUri().c_str());
     
-    //  Set up the File data sink.
+    //  Set up the File name data sink with appropriate format:
     
-    const char* filename = reinterpret_cast<const char*>(
-        const_cast<const void*>(args)
-    );
-    std::string f(filename);
-    CFileDataSink outFile(f);
+    char** pArgs = reinterpret_cast<char**>(args);
+    std::string filename   = pArgs[0];
+    std::string fileFormat = pArgs[1];
+
+    /** @todo - create the data sinktype based on the fileFormat param */
+    
+
+    CFileDataSink outFile(filename);
     
     
     // Process ring items until there are no more souces.

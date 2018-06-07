@@ -38,7 +38,7 @@ DDASRootFitHit::DDASRootFitHit() :
 /**
  * copy constructor
  */
-DDASRootFitHit(const DDASRootFitHit& rhs) : TObject()
+DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) : TObject()
 {
     *this = rhs;
 }
@@ -58,8 +58,8 @@ DDASRootFitHit::~DDASRootFitHit()
 DDASRootFitHit&
 DDASRootFitHit::operator=(const DDASRootFitHit& hit)
 {
-    if (this != &rhs) {
-        TObject::operator=(rhs);
+    if (this != &hit) {
+        TObject::operator=(hit);
         Reset();                       // Probably not needed.
         time                = hit.GetTime();
         coarsetime          = hit.GetCoarseTime();
@@ -67,7 +67,7 @@ DDASRootFitHit::operator=(const DDASRootFitHit& hit)
         energy              = hit.GetEnergy();
         timehigh            = hit.GetTimeHigh();
         timelow             = hit.GetTimeLow();
-        timecfd             = hit.GetTimeCFD();
+        timecfd             = hit.timecfd;
         channelnum          = hit.GetChannelID();
         finishcode          = hit.GetFinishCode();
         channellength       = hit.GetChannelLength();
@@ -77,19 +77,19 @@ DDASRootFitHit::operator=(const DDASRootFitHit& hit)
         slotid              = hit.GetSlotID();
         crateid             = hit.GetCrateID();
         id                  = hit.id;
-        cfdtrigsourcebit    = hit.GetCFDTrigSource();
-        cfdfailbit          = hit.GetCFDFailBit();
-        tracelength         = hit.GetTraceLength();
+        cfdtrigsourcebit    = hit.cfdtrigsourcebit;
+        cfdfailbit          = hit.cfdfailbit;
+        tracelength         = hit.tracelength;
         ModMSPS             = hit.GetModMSPS();
-        energySums          = hit.GetEnergySums();
-        qdcSums             = hit.GetQDCSums();
+        energySums          = hit.energySums;
+        qdcSums             = hit.qdcSums;
         trace               = hit.GetTrace();
-        externalTimestamp   = hit.GetExternalTimestamp();
+        externalTimestamp   = hit.externalTimestamp;
         m_adcResolution     = hit.GetADCResolution();
         m_hdwrRevision      = hit.GetHardwareRevision();
         m_adcOverUnderflow  = hit.GetADCOverflowUnderflow();
 
-        m_haveExtensions    = hit.m_haveExtension;
+        m_haveExtension     = hit.m_haveExtension;
         m_extension         = hit.m_extension;
         
     }
@@ -105,7 +105,7 @@ DDASRootFitHit::operator=(const DDASRootFitHit& hit)
  *
  */
 DDASRootFitHit&
-DDASRootFitHit::operator=(const ::DAQ::DDAS::DDASFitHit& rhs)
+DDASRootFitHit::operator=(const ::DAQ::DDAS::DDASFitHit& hit)
 {
     
     time                = hit.GetTime();
@@ -136,8 +136,8 @@ DDASRootFitHit::operator=(const ::DAQ::DDAS::DDASFitHit& rhs)
     m_hdwrRevision      = hit.GetHardwareRevision();
     m_adcOverUnderflow  = hit.GetADCOverflowUnderflow();
     if (hit.hasExtension()) {
-      m_haveExension = true;
-      m_extension    = hit.getExtension;
+      m_haveExtension = true;
+      m_extension    = hit.getExtension();
     }
     return *this;
 }
@@ -155,7 +155,7 @@ DDASRootFitHit::operator=(const ::DAQ::DDAS::DDASFitHit& rhs)
  *            That can be a ring item  from a fragment of the event builder.
  */
 void 
-DDASRootFitHit::UnpackChannelData(void* p)
+DDASRootFitHit::UnpackChannelData(const void* p)
 {
     DAQ::DDAS::DDASFitHit     hit;
     DAQ::DDAS::FitHitUnpacker decoder;
@@ -194,8 +194,8 @@ DDASRootFitHit::hasExtension() const
  *
  *  @return DDASHitExtension&
  */
-DDAS::HitExtension&
+const DDAS::HitExtension&
 DDASRootFitHit::getExtension() const
 {
-    return m_extension();
+    return m_extension;
 }

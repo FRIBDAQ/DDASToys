@@ -300,12 +300,12 @@ zmqwriter_thread(void* args)
     sock.bind(ServerUri().c_str());
     
     //  Set up the File data sink.
-    
-    const char* filename = reinterpret_cast<const char*>(
-        const_cast<const void*>(args)
-    );
-    std::string f(filename);
-    CFileDataSink outFile(f);
+
+    char** pArgs = reinterpret_cast<char**>(args);
+    std::string filename(pArgs[0]);
+    std::string fileFormat(pArgs[1]);
+
+    CFileDataSink outFile(filename);
     CSortingOutputter outputter(outFile);
     
     // Set up the REQ/REP socket and accept the thread registrations:

@@ -52,7 +52,6 @@ DDASRootFitEvent::~DDASRootFitEvent()
 DDASRootFitEvent::DDASRootFitEvent(const DDASRootFitEvent& rhs) : TObject()
 {
     *this = rhs;                    // Assigment and copying are about the same.
-    return *this;                   // that assignment takes care of base class too.
 }
 /**
  * operator=
@@ -114,7 +113,7 @@ Double_t
 DDASRootFitEvent::GetLastTime() const
 {
     if (!m_hits.empty()) {
-        return m_hist.back()->GetTime();
+        return m_hits.back()->GetTime();
     } else {
         return 0.0;
     }
@@ -144,7 +143,7 @@ void
 DDASRootFitEvent::AddHit(const DDASRootFitHit& hit)
 {
     DDASRootFitHit* pHit = new DDASRootFitHit(hit);
-    m_hits.push_back(phit);
+    m_hits.push_back(pHit);
 }
 
 /**

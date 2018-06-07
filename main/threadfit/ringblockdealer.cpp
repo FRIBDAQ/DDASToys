@@ -298,15 +298,16 @@ int main(int argc, char** argv) {
   pthread_t sender;
   pthread_t writer;
 
-  if (argc != 5) {
+  if (argc != 6) {
     std::cerr << "Incorrect number of command line parameters.\n";
     std::cerr << "Usage:\n";
-    std::cerr << "    ringblockdealer   workers blocksize infile outfile\n";
+    std::cerr << "    ringblockdealer   workers blocksize infile outfile format\n";
     std::cerr << "Where: \n";
     std::cerr << "   workers   - number of worker threads\n";
     std::cerr << "   blocksize - Size of the read for a block of ringitems\n";
     std::cerr << "   infile    - input file of nscldaq11.x ring items\n";
     std::cerr << "   outfile   - outputfile.\n";
+    std::cerr << "   format    - Output file format:  root or ring are acceptable\n";
     exit(EXIT_FAILURE);
   }
   
@@ -314,14 +315,26 @@ int main(int argc, char** argv) {
   CHUNK_SIZE   = atoi(argv[2]);
   fileName     = argv[3];
   outfile      = argv[4];
+  std::string strFormat = argv[5];
+  
+  if (strFormat != "ring" && strFormat != "root") {
+    std::cerr << strFormat << " is not a valid output file format\n";
+    std::cerr << "Valid formats are 'ring' for NSCL Ringbuffers and\n";
+    std::cerr << "root for root files\n";
+    exit(EXIT_FAILURE);
+  }
   
   workers = new pthread_t[NBR_WORKERS];
   threadBytes = new size_t[NBR_WORKERS];
   threadItems = new size_t[NBR_WORKERS];
 
 
-  
-  pthread_create(&writer, nullptr, zmqwriter_thread, outfile);
+  const char*  writerArgs[2] = {
+    outfile,
+    strFormat.c_str()
+  };
+  char** writerParams = const_cast<char**>(writerArgs);
+  pthread_create(&writer, nullptr, zmqwriter_thread, writerParams);
   
   // Register the threads with the writer.  Doing this here ensures the
   // queues are built before any data can be  sent since there's no workers yet.
