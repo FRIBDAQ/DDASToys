@@ -42,7 +42,8 @@ CRingFileBlockReader.o: CRingFileBlockReader.cpp
 ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \
 	CRingFileOutputter.o FitHitUnpacker.o 				\
 	functions.o zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o \
-	DDASRootFitEvent.o DDASRootFitHit.o RootFitDictionary.o RootFitDictionary.o
+	CRootFileDataSink.o DDASRootFitEvent.o DDASRootFitHit.o \
+	RootFitDictionary.o RootFitDictionary.o
 	$(CXX) $(CXXLDFLAGS) -o $@ $^ -ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas \
 	$(ROOTLDFLAGS) $(ROOT_RPATH)
 
@@ -56,6 +57,8 @@ DDASFileOutputter.o: DDASFileOutputter.cpp DDASFileOutputter.h Outputter.h \
 	CDDASAnalyzer.h
 	$(CXX) -c $(CXXFLAGS) $<
 
+CRootFileDataSink.o: CRootFileDataSink.cpp CRootFileDataSink.cpp
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
 DDASRootFitEvent.o: DDASRootFitEvent.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
@@ -68,13 +71,13 @@ RootFitDictionary.o: RootFitDictionary.cpp
 
 RootFitDictionary.cpp: RootFitDictionary.h
 
-RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h LinkDef.h
+RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h functions.h LinkDef.h
 	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint 	\
 		-f RootFitDictionary.cpp  \
 		-rml libDDASFitClasses.so \
 		-rmf libDDASFitClasses.rootmap  \
 		-I$(DDASINC)	\
-		DDASRootFitEvent.h DDASRootFitHit.h LinkDef.h 
+		$^
 
 
 functions.o: functions.cpp functions.h
@@ -112,13 +115,16 @@ DisplayExtensions : DisplayExtensions.o FitHitUnpacker.o functions.o
 
 
 
-libDDASFitClasses.so:  DDASRootFitHit.o RootFitDictionary.o RootFitDictionary.o
-	$(CXX) -shared -o libDDASFitClases.so $< 
+libDDASFitClasses.so:  DDASRootFitHit.o DDASRootFitEvent.o  RootFitDictionary.o RootFitDictionary.o
+	$(CXX) -shared -o $@ $^  \
+	-L$(DDASLIB)  -lddasformat \
+	-Wl,-rpath=$(DDASLIB)
 
 
 .PHONY: clean cleanest
 
 clean:
 	rm -f *.o  \
-	functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter DisplayExtensions \
-	ringblockdealer
+	functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
+	DisplayExtensions \
+	ringblockdealer libDDASFitClasses.so

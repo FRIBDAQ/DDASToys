@@ -41,7 +41,7 @@ class DDASRootFitHit;
 
 class DDASRootFitEvent : public TObject
 {
-private:
+public:
     std::vector<DDASRootFitHit*> m_hits;     // An event is a vector of hits.
     
     // canonical methods:

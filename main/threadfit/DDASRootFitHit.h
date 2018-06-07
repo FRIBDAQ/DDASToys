@@ -40,7 +40,7 @@ class CRingItme;
  */
 class DDASRootFitHit : public TObject
 {
-private:
+public:
     
   // These are stolen from ddaschannel -- along with the comment that's violated
     

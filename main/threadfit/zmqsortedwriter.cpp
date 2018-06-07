@@ -24,6 +24,9 @@
 #include "CSortingOutputter.h"
 
 #include <CFileDataSink.h>
+#include "CRootFileDataSink.h"
+
+
 #include <CRingItem.h>
 
 #include <string>
@@ -305,7 +308,18 @@ zmqwriter_thread(void* args)
     std::string filename(pArgs[0]);
     std::string fileFormat(pArgs[1]);
 
-    CFileDataSink outFile(filename);
+
+    CDataSink* pSink;
+    
+    if (fileFormat == "ring") {
+        pSink = new CFileDataSink(filename);
+    } else if (fileFormat == "root") {
+        pSink = new CRootFileDataSink(filename.c_str());
+    } else {
+        std::cerr << fileFormat << " was passed to zmqwriter_thread as the file format\n";
+        std::cerr << " But the allowed formats are only 'ring' and 'root'\n";
+    }
+    CDataSink& outFile(*pSink);
     CSortingOutputter outputter(outFile);
     
     // Set up the REQ/REP socket and accept the thread registrations:
