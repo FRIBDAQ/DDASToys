@@ -43,7 +43,7 @@ ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \
 	CRingFileOutputter.o FitHitUnpacker.o 				\
 	functions.o zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o \
 	CRootFileDataSink.o DDASRootFitEvent.o DDASRootFitHit.o \
-	RootFitDictionary.o RootFitDictionary.o
+	RootFitDictionary.o RootExtensions.o RootFitDictionary.o
 	$(CXX) $(CXXLDFLAGS) -o $@ $^ -ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas \
 	$(ROOTLDFLAGS) $(ROOT_RPATH)
 
@@ -66,12 +66,16 @@ DDASRootFitEvent.o: DDASRootFitEvent.cpp
 DDASRootFitHit.o: DDASRootFitHit.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
+RootExtensions.o: RootExtensions.cpp
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
 RootFitDictionary.o: RootFitDictionary.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
 RootFitDictionary.cpp: RootFitDictionary.h
 
-RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h functions.h LinkDef.h
+RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h RootExtensions.h \
+	LinkDef.h
 	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint 	\
 		-f RootFitDictionary.cpp  \
 		-rml libDDASFitClasses.so \
@@ -115,7 +119,8 @@ DisplayExtensions : DisplayExtensions.o FitHitUnpacker.o functions.o
 
 
 
-libDDASFitClasses.so:  DDASRootFitHit.o DDASRootFitEvent.o  RootFitDictionary.o RootFitDictionary.o
+libDDASFitClasses.so:  DDASRootFitHit.o DDASRootFitEvent.o  \
+	RootFitDictionary.o RootExtensions.o RootFitDictionary.o
 	$(CXX) -shared -o $@ $^  \
 	-L$(DDASLIB)  -lddasformat \
 	-Wl,-rpath=$(DDASLIB)
