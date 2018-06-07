@@ -18,6 +18,7 @@
 /** @file:  RootExtensions.cpp
  *  @brief: Trivial implementations of the RootExtensions struct.
  */
+#include "RootExtensions.h"
 
 /*----------------------------------------------------------------------------
  * RootPulseDescription
@@ -50,7 +51,7 @@ RootPulseDescription::operator=(const DDAS::PulseDescription& rhs)
 {
     position = rhs.position;
     amplitude = rhs.amplitude;
-    steepness = rhs.steepnees;
+    steepness = rhs.steepness;
     decayTime = rhs.decayTime;
     
     return *this;
@@ -68,7 +69,7 @@ ClassImp(RootFit1Info);
 RootFit1Info::RootFit1Info() :
     iterations(0),
     fitStatus(0),
-    chiSqure(0.0),
+    chiSquare(0.0),
     offset(0.0)
 {}
 
@@ -130,7 +131,7 @@ RootFit2Info::operator=(const DDAS::fit2Info& rhs)
  *  RootHitExtension.
  */
 
-ClassImpl(RootHitExtension);
+ClassImp(RootHitExtension);
 
 /**
  * constructor

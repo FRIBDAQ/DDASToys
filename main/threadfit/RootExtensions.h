@@ -40,14 +40,14 @@ struct RootPulseDescription : public TObject
 {
    // Data members.
    
-   double position;         // Where the pusle is.
-   double amplitude;        // Pulse amplitude
-   double steepness;        // Logistic steepness factor.
-   double decayTime;        // Decay time constant.
+   Double_t position;         // Where the pusle is.
+   Double_t amplitude;        // Pulse amplitude
+   Double_t steepness;        // Logistic steepness factor.
+   Double_t decayTime;        // Decay time constant.
    
    // Methods:
    
-   RootPulseDecription();
+   RootPulseDescription();
    RootPulseDescription& operator=(const DDAS::PulseDescription& rhs);
    
    // Add root members to support streaming.
@@ -61,11 +61,11 @@ struct RootFit1Info : public TObject
 {
     // Data members:
     
-   unsigned iterations;     // Iterations for fit to converge
-   unsigned fitStatus;      // fit status from GSL.
-   double chiSquare;
+   UInt_t iterations;     // Iterations for fit to converge
+   UInt_t fitStatus;      // fit status from GSL.
+   Double_t chiSquare;
    RootPulseDescription pulse;
-   double  offset;          // Constant offset.
+   Double_t  offset;          // Constant offset.
    
    // Methods:
    
@@ -81,11 +81,11 @@ struct RootFit2Info : public TObject
 {
     // Data members:
     
-   unsigned iterations;          // Iterations needed to converge.
-   unsigned fitStatus;           // Fit status from GSL
-   double chiSquare; 
+   UInt_t iterations;          // Iterations needed to converge.
+   UInt_t fitStatus;           // Fit status from GSL
+   Double_t chiSquare; 
    RootPulseDescription pulses[2];  // The two pulses
-   double offset;               // Ofset on which they siyt.
+   Double_t offset;               // Ofset on which they siyt.
    
    // Methods
    
@@ -100,7 +100,7 @@ struct RootHitExtension : public TObject
     RootFit1Info onePulseFit;
     RootFit2Info twoPulseFit;
     
-    RootHitExtension()
+    RootHitExtension();
     RootHitExtension& operator=(const DDAS::HitExtension& rhs);
     
     ClassDef(RootHitExtension, 1);

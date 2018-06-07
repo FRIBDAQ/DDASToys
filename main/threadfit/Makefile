@@ -44,7 +44,8 @@ ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \
 	functions.o zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o \
 	CRootFileDataSink.o DDASRootFitEvent.o DDASRootFitHit.o \
 	RootFitDictionary.o RootExtensions.o RootFitDictionary.o
-	$(CXX) $(CXXLDFLAGS) -o $@ $^ -ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas \
+	$(CXX) $(CXXLDFLAGS) -o $@ $^ \
+	-ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas \
 	$(ROOTLDFLAGS) $(ROOT_RPATH)
 
 ringblockdealer.o: ringblockdealer.cpp

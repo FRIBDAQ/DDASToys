@@ -38,7 +38,7 @@ DDASRootFitHit::DDASRootFitHit() :
 /**
  * copy constructor
  */
-DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) : TObject()
+DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) : TObject(rhs)
 {
     *this = rhs;
 }
@@ -194,7 +194,7 @@ DDASRootFitHit::hasExtension() const
  *
  *  @return DDASHitExtension&
  */
-const DDAS::HitExtension&
+const RootHitExtension&
 DDASRootFitHit::getExtension() const
 {
     return m_extension;

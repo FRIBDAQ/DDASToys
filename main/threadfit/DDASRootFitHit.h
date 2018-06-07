@@ -24,7 +24,7 @@
 #include <TObject.h>
 #include "functions.h"
 #include "DDASFitHit.h"         // We're really a rootized one of these.
-
+#include "RootExtensions.h"
 
 class CRingItme;
 
@@ -94,7 +94,7 @@ public:
   // going to cause problems.
   
   Bool_t m_haveExtension;
-  ::DDAS::HitExtension m_extension;
+  RootHitExtension m_extension;
   
     // Canonicals:
     
@@ -141,7 +141,7 @@ public:
   // New ones for this class
   
   Bool_t hasExtension() const;
-  const DDAS::HitExtension& getExtension() const;
+  const RootHitExtension& getExtension() const;
 
 
   // Tell root we're implementing the class.

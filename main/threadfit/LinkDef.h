@@ -27,15 +27,15 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class RootHitExtension;
-#pragma link C++ class RootFit1Info;
-#pragma link C++ class RootFit2Info;
-#pragma link C++ class RootPulseDescription;
+#pragma link C++ class RootHitExtension+;
+#pragma link C++ class RootFit1Info+;
+#pragma link C++ class RootFit2Info+;
+#pragma link C++ class RootPulseDescription+;
 
-#pragma link C++ class DDASRootFitHit;
+#pragma link C++ class DDASRootFitHit+;
 
-#pragma link C++ class std::vector<DDASFitHit*>;
+#pragma link C++ class std::vector<DDASFitHit*>!;
 
-#pragma link C++ class DDASRootFitEvent;
+#pragma link C++ class DDASRootFitEvent+;
 
 #endif
