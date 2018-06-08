@@ -91,6 +91,9 @@
 
 static const int PORT(5672);        // Port part of URIs.
 static const int REGPORT(5673);     // Registration port.
+
+static  int MAX_QUEUED_MESSAGES(128);
+
 /*-----------------------------------------------------------------------------
  *   Internal utility methods.
  */
@@ -182,6 +185,8 @@ makeClientSocket(zmq::context_t& ctx)
     zmq::socket_t* pSock = new zmq::socket_t(ctx, ZMQ_PUSH);
     int linger(0);
     pSock->setsockopt(ZMQ_LINGER, &linger, sizeof(int));
+    pSock->setsockopt(ZMQ_SNDHWM, &MAX_QUEUED_MESSAGES, sizeof(int));
+    pSock->setsockopt(ZMQ_RCVHWM, &MAX_QUEUED_MESSAGES, sizeof(int));
     pSock->connect(ClientUri().c_str());
     
     return *pSock;
@@ -298,6 +303,8 @@ zmqwriter_thread(void* args)
     
     zmq::context_t context;
     zmq::socket_t  sock(context, ZMQ_PULL);    // As a fan in.
+    sock.setsockopt(ZMQ_SNDHWM, &MAX_QUEUED_MESSAGES, sizeof(int));
+    sock.setsockopt(ZMQ_RCVHWM, &MAX_QUEUED_MESSAGES, sizeof(int));
     int linger(0);
     sock.setsockopt(ZMQ_LINGER, &linger, sizeof(int));
     sock.bind(ServerUri().c_str());

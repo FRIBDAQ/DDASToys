@@ -262,26 +262,26 @@ sender_task(void* args)
     while (1) {
         //  Next message gives us least recently used worker
         std::string identity = s_recv(broker);
-	std::string size;
+        std::string size;
         {
             s_recv(broker);     //  Envelope delimiter
-	    std::string command = s_recv(broker);     //  Command
-	    size    = s_recv(broker);     //  size:
+            std::string command = s_recv(broker);     //  Command
+            size    = s_recv(broker);     //  size:
         }
-	if (!done) {
-	  int status =  sendChunk(broker, identity, reader, atoi(size.c_str()));
-	  if (status == 0) {
-	    done = true;
-	    sendEOF(broker, identity);
-	    
-	    ++workers_fired;
-	    if (workers_fired == NBR_WORKERS) break;
-	  }
+        if (!done) {
+          int status =  sendChunk(broker, identity, reader, atoi(size.c_str()));
+          if (status == 0) {
+            done = true;
+            sendEOF(broker, identity);
+            
+            ++workers_fired;
+            if (workers_fired == NBR_WORKERS) break;
+          }
         } else {
-	  sendEOF(broker, identity);
-	  if (++workers_fired == NBR_WORKERS)
-	    break;
-        }
+          sendEOF(broker, identity);
+          if (++workers_fired == NBR_WORKERS)
+            break;
+          }
     }
     broker.close();
 

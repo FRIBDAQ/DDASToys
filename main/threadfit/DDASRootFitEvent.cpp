@@ -154,6 +154,7 @@ void
 DDASRootFitEvent::Reset()
 {
     for (int i = 0; i < m_hits.size(); i++) {
+        m_hits[i]->Reset();             // Shouldn't need to.
         delete m_hits[i];
     }
     m_hits.clear();

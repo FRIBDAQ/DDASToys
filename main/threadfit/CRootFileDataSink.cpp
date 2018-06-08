@@ -99,14 +99,15 @@ CRootFileDataSink::putItem(const CRingItem& item)
     // Decode the DDAS hit in each fragment and add it to the event.
     // Note that AddHit does a copy construction of the hit into new storage.
     
+    DDASRootFitHit hit;
     for(int i = 0; i < frags.getNumberFragments(); i++) {
-        DDASRootFitHit hit;
+        hit.Reset();
         hit.UnpackChannelData(frags.getFragment(i).s_itemhdr);
         m_TreeEvent->AddHit(hit);
     }
     // Fill the tree now that we have all the hits marshalled:
     
-    m_tree->Fill();    
+     m_tree->Fill();    
 }
 /**
  * put
