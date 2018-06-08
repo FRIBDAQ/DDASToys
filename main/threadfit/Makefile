@@ -73,6 +73,9 @@ RootExtensions.o: RootExtensions.cpp
 RootFitDictionary.o: RootFitDictionary.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
+zmqsortedwriter.o: zmqsortedwriter.cpp
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
 RootFitDictionary.cpp: RootFitDictionary.h
 
 RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h RootExtensions.h \

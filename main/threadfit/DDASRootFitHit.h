@@ -89,12 +89,6 @@ public:
 
   Double_t externalTimestamp;  ///< External clock
 
-  // Additional data we need.  Hopefully the fact that the hit extension is
-  // implemented in terms of native types rather than e.g. Double_t is not
-  // going to cause problems.
-  
-  Bool_t m_haveExtension;
-  RootHitExtension m_extension;
   
     // Canonicals:
     
@@ -108,7 +102,6 @@ public:
     
     // Operations:
     
-    void UnpackChannelData(const void* p);
     void Reset();
 
     
@@ -139,9 +132,6 @@ public:
   uint32_t GetCfdTrigSource() const { return cfdtrigsourcebit; }; // Per S.L. request.
   
   // New ones for this class
-  
-  Bool_t hasExtension() const;
-  const RootHitExtension& getExtension() const;
 
 
   // Tell root we're implementing the class.

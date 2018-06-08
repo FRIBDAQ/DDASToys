@@ -89,9 +89,6 @@ DDASRootFitHit::operator=(const DDASRootFitHit& hit)
         m_hdwrRevision      = hit.GetHardwareRevision();
         m_adcOverUnderflow  = hit.GetADCOverflowUnderflow();
 
-        m_haveExtension     = hit.m_haveExtension;
-        m_extension         = hit.m_extension;
-        
     }
     return *this;
 }
@@ -135,33 +132,14 @@ DDASRootFitHit::operator=(const ::DAQ::DDAS::DDASFitHit& hit)
     m_adcResolution     = hit.GetADCResolution();
     m_hdwrRevision      = hit.GetHardwareRevision();
     m_adcOverUnderflow  = hit.GetADCOverflowUnderflow();
-    if (hit.hasExtension()) {
-      m_haveExtension = true;
-      m_extension    = hit.getExtension();
-    }
+
     return *this;
 }
 /*------------------------------------------------------------------------------
  * Operations;
  */
 
-/**
- * UnpackChannelData
- *    This must unpacks a DDASFitHit using FitHitUnpacker. The resulting
- *    hit is assigned to us.
- *
- * @param p - pointer to the data to decode.  This should be a
- *            pointer to a raw ring item which contains only the data of one hit.
- *            That can be a ring item  from a fragment of the event builder.
- */
-void 
-DDASRootFitHit::UnpackChannelData(const void* p)
-{
-    DAQ::DDAS::DDASFitHit     hit;
-    DAQ::DDAS::FitHitUnpacker decoder;
-    decoder.decode(p, hit);
-    *this = hit;                    // (Easy button).
-}
+
 /**
  * Reset
  *    Reset the object to empty.  This is really just a matter of 
@@ -178,24 +156,3 @@ DDASRootFitHit::Reset()
  *  Selector implementation.
  */
 
-/**
- * hasExtension
- *    @return Bool_t - true if ther's an extension.
- */
-Bool_t
-DDASRootFitHit::hasExtension() const
-{
-    return m_haveExtension;
-}
-/**
- * getExtension
- *   Returns the extension.  This will be full of zeroes if m_haveExtension is
- *   false.
- *
- *  @return DDASHitExtension&
- */
-const RootHitExtension&
-DDASRootFitHit::getExtension() const
-{
-    return m_extension;
-}

@@ -97,6 +97,7 @@ struct RootFit2Info : public TObject
 
 struct RootHitExtension : public TObject
 {
+    Bool_t       haveExtension;
     RootFit1Info onePulseFit;
     RootFit2Info twoPulseFit;
     

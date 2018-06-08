@@ -35,6 +35,7 @@
 #pragma link C++ class DDASRootFitHit+;
 
 #pragma link C++ class std::vector<DDASFitHit*>!;
+#pragma link C++ class std::vector<RootHitExtension>!;
 
 #pragma link C++ class DDASRootFitEvent+;
 

@@ -136,8 +136,10 @@ ClassImp(RootHitExtension);
 /**
  * constructor
  */
-RootHitExtension::RootHitExtension()  // default member constructors do the rest.
-{}
+RootHitExtension::RootHitExtension() :
+    haveExtension(false)  // default member constructors do the rest.
+{
+}
 
 /**
  * assignment from a DDAS::HitExtension
@@ -148,6 +150,7 @@ RootHitExtension::RootHitExtension()  // default member constructors do the rest
 RootHitExtension&
 RootHitExtension::operator=(const DDAS::HitExtension& rhs)
 {
+    haveExtension = true;
     onePulseFit = rhs.onePulseFit;
     twoPulseFit = rhs.twoPulseFit;
     

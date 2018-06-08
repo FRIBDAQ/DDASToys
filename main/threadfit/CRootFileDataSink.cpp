@@ -20,6 +20,7 @@
  */
 #include "CRootFileDataSink.h"
 #include "DDASRootFitEvent.h"
+#include "FitHitUnpacker.h"
 #include "DDASRootFitHit.h"
 #include <TTree.h>
 #include <TFile.h>
@@ -28,7 +29,11 @@
 #include <CRingItemFactory.h>
 #include <FragmentIndex.h>
 
+
 #include <iostream>
+
+static const Int_t K(1024);
+static const Int_t BUFFERSIZE(1024*K);
 
 /**
  * constructor
@@ -54,7 +59,8 @@ CRootFileDataSink::CRootFileDataSink(const char* filename, const char* treename)
         m_file = new TFile(filename, "UPDATE");   // Sets the default dir.
         m_TreeEvent = new DDASRootFitEvent();
         m_tree      = new TTree(treename, treename);
-        m_tree->Branch("DDASHits", m_TreeEvent);
+        m_tree->Branch("RawHits", m_TreeEvent, BUFFERSIZE);
+        m_tree->Branch("HitFits", &m_extensions, BUFFERSIZE);
         
         gDirectory->Cd(oldDir.c_str());           // Restor the directory.
         
@@ -91,19 +97,30 @@ void
 CRootFileDataSink::putItem(const CRingItem& item)
 {
     m_TreeEvent->Reset();                    // Free dynamic hist from last event.
+    m_extensions.clear();
     
     // Bust the ring item up into event builder fragments.
     
     FragmentIndex frags(reinterpret_cast<uint16_t*>(item.getBodyPointer()));
+    DAQ::DDAS::FitHitUnpacker unpacker;
     
     // Decode the DDAS hit in each fragment and add it to the event.
     // Note that AddHit does a copy construction of the hit into new storage.
     
-    DDASRootFitHit hit;
+    DDASRootFitHit roothit;
+    DAQ::DDAS::DDASFitHit     fitHit;
     for(int i = 0; i < frags.getNumberFragments(); i++) {
-        hit.Reset();
-        hit.UnpackChannelData(frags.getFragment(i).s_itemhdr);
-        m_TreeEvent->AddHit(hit);
+        roothit.Reset();
+        fitHit.Reset();
+        unpacker.decode(frags.getFragment(i).s_itemhdr, fitHit);
+        roothit = fitHit;                       // The base part.
+        m_TreeEvent->AddHit(roothit);
+        
+        RootHitExtension ext;             // initialized haveExtension false.
+        if (fitHit.hasExtension()) {
+            ext = fitHit.getExtension();  // Fill from fit and set have Extension true.
+        }
+        m_extensions.push_back(ext);      // Add to fit branch.
     }
     // Fill the tree now that we have all the hits marshalled:
     

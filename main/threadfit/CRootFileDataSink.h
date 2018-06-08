@@ -20,6 +20,8 @@
  */
 #ifndef CROOTFILEDATASINK_H
 #include <CDataSink.h>                 // base class
+#include "RootExtensions.h"
+#include <vector>
 
 class CRingItem;
 class DDASRootFitEvent;               // Holds the decoded event for output.
@@ -41,6 +43,7 @@ class CRootFileDataSink : public CDataSink
 {
 private:
     DDASRootFitEvent*    m_TreeEvent;
+    std::vector<RootHitExtension> m_extensions;
     TTree*               m_tree;
     TFile*               m_file;
     bool                 m_warnedPutUsed;
