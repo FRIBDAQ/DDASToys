@@ -56,7 +56,7 @@ CRootFileDataSink::CRootFileDataSink(const char* filename, const char* treename)
     std::string oldDir = gDirectory->GetPath();
     gDirectory->Cd("/");              // tack this file onto root.
     try {
-        m_file = new TFile(filename, "UPDATE");   // Sets the default dir.
+        m_file = new TFile(filename, "RECREATE");   // Sets the default dir.
         m_TreeEvent = new DDASRootFitEvent();
         m_tree      = new TTree(treename, treename);
         m_tree->Branch("RawHits", m_TreeEvent, BUFFERSIZE);
