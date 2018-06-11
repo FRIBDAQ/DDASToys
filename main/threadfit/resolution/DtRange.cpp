@@ -61,10 +61,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <time.h>
 #include <iostream>
 #include <iostream>
-#include <stdint>
+#include <stdexcept>
 
 
 const size_t TRACE_LENGTH(500);
@@ -93,6 +94,35 @@ struct Event {
     double                 s_actualOffset;       // Actual offset.
     DDAS::PulseDescription s_pulses[];           // One or two elements.
 };
+
+
+/**
+ * Adds the contents of two containers together resulting in
+ * a third.  Note that the template types:
+ * 
+ * c - must support push_back and clear.
+ * i1- must dereference, support operator== operator++, assignment
+ * i2- must dereference, and support operator++, assignment.
+ * The types dereferenced by i1, and i2 must support operator+ with the type i1
+ * on the left of that operation.  The result of that addition must be a type
+ * that can be put into the container c.
+ *
+ * @param from - an iterator that, together with to defines a range of iteration.
+ * @param to   - end (not inclusive) of the range of iteration.
+ * @param addend - Iterator in to the container that will be summed into the result.
+ * @result c
+ */
+template<typename c, typename i1, typename i2>
+static c
+add(i1 from, i1 to, i2 addend)
+{
+    c result;
+    for(auto p = from; p != to; p++, addend++) {
+        result.push_back(*p + *addend);
+    }
+    return result;
+}
+
 /**
  * randomize
  *   Produce a random double uniformly distributed in the requested range.
@@ -129,7 +159,7 @@ generatePulse(double a, double k1, double k2, double o, double t0, size_t n)
     std::vector<uint16_t> result;
     for (int i =0; i < n; i++) {
         double t = i;
-        result.push_back(DDAS::singlePulse(a, k1, k2, t0, o, t);
+        result.push_back(DDAS::singlePulse(a, k1, k2, t0, o, t));
     }
     return result;
 }
@@ -145,7 +175,7 @@ generatePulse(double a, double k1, double k2, double o, double t0, size_t n)
  * @note We just put 0xffffffffffffffff for the timestamp.
  */
 static void
-writeEvent(CEventSink& sink Event* p)
+writeEvent(CDataSink& sink, Event* p)
 {
     // Figure out how big the event is so that we get the
     // constructor right (though I doubt we'll hit 8192 since we don't
@@ -154,10 +184,10 @@ writeEvent(CEventSink& sink Event* p)
     size_t eventSize = sizeof(Event) + sizeof(DDAS::PulseDescription);
     if (p->s_isDouble) eventSize += sizeof(DDAS::PulseDescription);
     
-    CPhysicsEvent event(0xffffffffffffffff, 0, 0, eventSize);
+    CPhysicsEventItem event(0xffffffffffffffff, 0, 0, eventSize);
     void* pBody = event.getBodyCursor();
     memcpy(pBody, p, eventSize);
-    uint_t* pByteBody = reinterpret_cast<uint8_t*>(pBody);
+    uint8_t* pByteBody = reinterpret_cast<uint8_t*>(pBody);
     pByteBody += eventSize;
     event.setBodyCursor(pByteBody);
     event.updateSize();                    // Actually I think setBodyCursor does this?
@@ -184,7 +214,7 @@ writeEvent(CEventSink& sink Event* p)
  */
 void doublePulseEvent(
     CDataSink& sink,
-    double o, double a1, double k1, double k2
+    double o, double a1, double k1, double k2,
     double a2, double k3, double k4,
     double dtmax
 )
@@ -194,7 +224,7 @@ void doublePulseEvent(
     a1 = randomize(a1 - AMPLITUDE_RANGE, a1 + AMPLITUDE_RANGE);
     k1 = randomize(k1 - RISE_TIME_RANGE, k1 + RISE_TIME_RANGE);
     k2 = randomize(k2 - FALL_TIME_RANGE, k2 + FALL_TIME_RANGE);
-    double t0 =  randomize(500 - TO_RANGE, 500 + TO_RANGE);
+    double t0 =  randomize(500 - T0_RANGE, 500 + T0_RANGE);
     
     a2 = randomize(a2 - AMPLITUDE_RANGE, a2 + AMPLITUDE_RANGE);
     k3 = randomize(k3 - RISE_TIME_RANGE, k3 + RISE_TIME_RANGE);
@@ -203,19 +233,25 @@ void doublePulseEvent(
     
     // Generate the double pulse trace:
     
-    std::vector<uint16_t> trace1 = generatePulse(a1, k1, k2, o, to, TRACE_LENGTH);
+    std::vector<uint16_t> trace1 = generatePulse(a1, k1, k2, o, t0, TRACE_LENGTH);
     std::vector<uint16_t> trace2 = generatePulse(a2, k3, k4, 0.0, t1, TRACE_LENGTH);
-    std::vector<uint16_t> trace  = add(trace1.begin(), trace1.end(), trace2.begin());
+    std::vector<uint16_t> trace  =
+        add<
+            std::vector<uint16_t>, std::vector<uint16_t>::iterator,
+            std::vector<uint16_t>::iterator
+        >(trace1.begin(), trace1.end(), trace2.begin());
     
     // Fit the trace:
     
-    HitExtension fits;
-    lmfit1(
+    DDAS::HitExtension fits;
+    DDAS::lmfit1(
         &fits.onePulseFit, trace,
         std::pair<unsigned, unsigned>(0, trace.size()-1)
     );
-    lmfit2(
-        &fits.twoPulseFit, trace, std::pair<unsigned, unsigned>(0. trace.size-1),
+
+    DDAS::lmfit2(
+        &fits.twoPulseFit, trace,
+        std::pair<unsigned, unsigned>(0, trace.size()-1),
         &fits.onePulseFit
     );
     
@@ -240,7 +276,7 @@ void doublePulseEvent(
     pEvent->s_pulses[1].position = t1;
     pEvent->s_pulses[1].amplitude = a2;
     pEvent->s_pulses[1].steepness = k3;
-    pEvent->s_pulses[1].decaytime = k4;
+    pEvent->s_pulses[1].decayTime = k4;
     
     writeEvent(sink, pEvent);
     
@@ -264,7 +300,7 @@ void doublePulseEvent(
  *       for callers up the stack to handle.
  */
 static void
-singlePulseEvent(COutputSink& sink, double o, double a, double k1, double k2)
+singlePulseEvent(CDataSink& sink, double o, double a, double k1, double k2)
 {
     // Using the  actual values as starting points, randomize new ones.
     // Randomize the t0 as well
@@ -273,23 +309,23 @@ singlePulseEvent(COutputSink& sink, double o, double a, double k1, double k2)
     a = randomize(a - AMPLITUDE_RANGE, a + AMPLITUDE_RANGE);
     k1 = randomize(k1 - RISE_TIME_RANGE, k1 + RISE_TIME_RANGE);
     k2 = randomize(k2 - FALL_TIME_RANGE, k2 + FALL_TIME_RANGE);
-    double to = randomize(500 - TO_RANGE, 500 + T_RANGE);
+    double t0 = randomize(500 - T0_RANGE, 500 + T0_RANGE);
     
     // Generate the trace for fitting:
     
-    std::vector<uint16_t> trace = generatePulse(a, k1, k2, o, to, TRACE_LENGTH);
+    std::vector<uint16_t> trace = generatePulse(a, k1, k2, o, t0, TRACE_LENGTH);
     
     // Get the fit results:
     
     
-    HitExtension fits;
-    lmfit1(
+    DDAS::HitExtension fits;
+    DDAS::lmfit1(
         &fits.onePulseFit, trace,
         std::pair<unsigned, unsigned>(0, trace.size()-1)
     );
-    lmfit2(
-        &fits.twoPulseFit, trace, std::pair<unsigned, unsigned>(0. trace.size-1),
-        &fits.onePulseFit
+    DDAS::lmfit2(
+        &fits.twoPulseFit, trace,
+        std::pair<unsigned, unsigned>(0, trace.size()-1), &fits.onePulseFit
     );
     
     // Build the event:
@@ -302,8 +338,8 @@ singlePulseEvent(COutputSink& sink, double o, double a, double k1, double k2)
         throw std::bad_alloc();
     }
     pEvent->s_isDouble            = false;
-    pEvent->s_fitInfo             = fits;
-    pEvent->s_actualoffset        = o;
+    pEvent->s_fitinfo             = fits;
+    pEvent->s_actualOffset        = o;
     pEvent->s_pulses[0].position  = t0;
     pEvent->s_pulses[0].amplitude = a;
     pEvent->s_pulses[0].steepness = k1;
@@ -351,11 +387,11 @@ static double
 convertDouble(const char* src, const char* msg)
 {
     char* endptr;
-    long int result = strtod(src, &endptr, 0);
-    if ((result == 0) && (endptr == src)) {
+    double result = strtod(src, &endptr);
+    if ((result == 0.0) && (endptr == src)) {
         throw std::invalid_argument(msg);
     }
-    if (result <= 0) {
+    if (result < 0.0) {
         throw std::invalid_argument(msg);
     }
     return result;
@@ -373,7 +409,7 @@ usage(std::ostream& str, const char* msg)
 {
     str << msg << std::endl;
     str << "Usage\n";
-    str << "   DTRange  ntraces o a1 a2 k1 k2 k3 k4 dthigh file\m";
+    str << "   DTRange  ntraces o a1 a2 k1 k2 k3 k4 dthigh file\n";
     str << "Where\n";
     str <<     "ntraces - number of traces each of single and double hits.  \n";
     str << "              Thus 2*ntraces events will be created.\n";
@@ -427,7 +463,7 @@ int main(int argc, char** argv)
         file    = argv[10];
     }
     catch (std::invalid_argument& e) {
-        usage(std::cerr, e.what())
+        usage(std::cerr, e.what());
         exit(EXIT_FAILURE);
     }
     catch (...) {
@@ -469,9 +505,10 @@ int main(int argc, char** argv)
     
     try {
         for (int i = 0; i < ntraces; i++) {
-            singlePulseEvent(sink, o, a1, k1, k2);
-            doublePulseEvent(sink, o, a1, k1, k2, a2, k3, k4, dthigh);
+            singlePulseEvent(*sink, o, a1, k1, k2);
+            doublePulseEvent(*sink, o, a1, k1, k2, a2, k3, k4, dthigh);
         }
+    }
     catch (CException& e) {
         std::cerr << "Caught an NSCLDaq Exception generating events:\n";
         std::cerr << e.ReasonText() << std::endl;
