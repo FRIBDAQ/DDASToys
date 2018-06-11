@@ -87,7 +87,7 @@ struct fit2Info {                // info from double pulse fit:
    unsigned fitStatus;           // Fit status from GSL
    double chiSquare; 
    PulseDescription pulses[2];  // The two pulses
-   double offset;               // Ofset on which they siyt.
+   double offset;               // Ofset on which they sit.
 };
 
 // For good measure here's what we append to a DDAS Hit that's

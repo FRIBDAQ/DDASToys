@@ -16,7 +16,7 @@ RUNNING IT UNMODIFIED
 
 To run the program:
 
-./ringblockdealer workers blocksize infile outfile
+./ringblockdealer workers blocksize infile outfile format
 
 workers - The number of worker threads that do fitting.  This should be like
 the number of CPUS shown on cat /proc/cpuinfo.  Note that you'll only get
@@ -33,6 +33,11 @@ create a script that can sequentially locate and analyze each segment.
 
 outfile - Name of the output file (see OUPUT FORMAT below).  Note that only
 physics items will be output to this file.
+
+format - type of output desired.  This can be ring for NSCL ring buffer format
+or root for a CERN Root file.  With root format on genesis, there's no gain in
+setting workers > 4.  This is due to the compute intensiveness of Root's output
+subsystem.  At that point, a core is fully utilized doing Root output.
 
 Note as well that the actual performance of this program will depend on the
 predicate you use to define which channels get fit and how large the region of
@@ -169,6 +174,11 @@ This algorithm seems able to keep up with 56 worker threads beating on it.
 OUTPUT FORMAT
 ============
 
+This section describes both the structure of NSCL Ring buffer and Root files
+written by this program.
+
+Ring buffer format:
+
 The program output is a file containing only PHYSICS_EVENT ring items.   Each
 ring item contains a set of event fragments.  Each fragment contains either a
 DDASHit or a DDASHit with an extension that contains the fitting parameters.
@@ -189,6 +199,28 @@ provides you with the extra methods:
 hasExtension()  - returns true if the hit has a fit extension.
 getExtension()  - Returns the hit extension (throws std::logic_error if there'
 not an extension).
+
+
+Root Format:
+  
+  The program writes trees with a pair of branches.  The "RawHits" branch contains
+raw data associated with each event.  The form of this is very much like the form
+of the data written by the ddasdumper program.  The DDASRootFitEvent contains
+a class definition for this branch.  The library libDDASFitClasses.so and its
+associated libDDASFitClasses.rootmap allow this and the other classes/structs
+to be made known to the Root CLING/CINT interpreters.
+  The class is defined in DDASRootFitHit.h and implemented in DDASRootFitHit.cpp
+if you want to incorporate it directly into compiled root applications.
+
+The second branch, called "HitFits",  contains, for each event, a vector of
+RootHitExtension structs.   This struct is identical in form to the HitExtension
+class defined in functions.h, however it supports Root serialization.
+
+The file RootExtensions.h defines this struct and its structured members.
+These are implemented in RootExtensions.cpp for incorporation into compiled Root
+applications.  The shared library libDDASFitClases.so and associated root
+dictionary file libDDASFitClasses.rootmap allow these classes to be dynamically
+incorporated in to interpreted Root sesssions.
 
 
 HOW TO MODIFY THIS
