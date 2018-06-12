@@ -53,8 +53,8 @@
  *        and electronics chain rather than by the actual detector hits.
  * 
  */
+#include "DtRange.h"
 
-#include <functions.h>
 #include <CFileDataSink.h>
 #include <Exception.h>
 #include <CPhysicsEventItem.h>
@@ -77,23 +77,6 @@ const double AMPLITUDE_RANGE(100);
 const double RISE_TIME_RANGE(0.2);
 const double FALL_TIME_RANGE(0.01);
 const double T0_RANGE(50.0);            // Range around midpoint of first pulse.
-
-
-/**
- *  This is the format of an event.  Note that the arrays shown have the
- *  number of elements that there are pulses in the generated event:
- *
- */
-
-
-
-struct Event {
-    uint32_t               s_isDouble;           // True if event is double.
-    DDAS::HitExtension     s_fitinfo;            // Fit results.
-    
-    double                 s_actualOffset;       // Actual offset.
-    DDAS::PulseDescription s_pulses[];           // One or two elements.
-};
 
 
 /**
@@ -224,7 +207,7 @@ void doublePulseEvent(
     a1 = randomize(a1 - AMPLITUDE_RANGE, a1 + AMPLITUDE_RANGE);
     k1 = randomize(k1 - RISE_TIME_RANGE, k1 + RISE_TIME_RANGE);
     k2 = randomize(k2 - FALL_TIME_RANGE, k2 + FALL_TIME_RANGE);
-    double t0 =  randomize(500 - T0_RANGE, 500 + T0_RANGE);
+    double t0 =  randomize(TRACE_LENGTH/2 - T0_RANGE, TRACE_LENGTH/2 + T0_RANGE);
     
     a2 = randomize(a2 - AMPLITUDE_RANGE, a2 + AMPLITUDE_RANGE);
     k3 = randomize(k3 - RISE_TIME_RANGE, k3 + RISE_TIME_RANGE);
@@ -309,7 +292,7 @@ singlePulseEvent(CDataSink& sink, double o, double a, double k1, double k2)
     a = randomize(a - AMPLITUDE_RANGE, a + AMPLITUDE_RANGE);
     k1 = randomize(k1 - RISE_TIME_RANGE, k1 + RISE_TIME_RANGE);
     k2 = randomize(k2 - FALL_TIME_RANGE, k2 + FALL_TIME_RANGE);
-    double t0 = randomize(500 - T0_RANGE, 500 + T0_RANGE);
+    double t0 = randomize(TRACE_LENGTH/2 - T0_RANGE, TRACE_LENGTH/2 + T0_RANGE);
     
     // Generate the trace for fitting:
     
