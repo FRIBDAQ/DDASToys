@@ -1,4 +1,4 @@
-#  SpecTclGUI save file created Tue Jun 12 13:07:22 EDT 2018
+#  SpecTclGUI save file created Thu Jun 14 12:39:52 EDT 2018
 #  SpecTclGui Version: 1.0
 #      Author: Ron Fox (fox@nscl.msu.edu)
 
@@ -227,6 +227,10 @@ catch {spectrum -delete a1diff}
 spectrum a1diff 1 event.chiratio2over1 {{1.000000 100.000000 100}} long
 catch {spectrum -delete a2diff}
 spectrum a2diff 1 event.fit2.a1diff {{-1000.000000 1000.000000 2000}} long
+catch {spectrum -delete actualdt-v-fita2diff}
+spectrum actualdt-v-fita2diff 2 {event.dt event.fit2.a2diff} {{0.000000 100.000000 100} {-500.000000 500.000000 1000}} long
+catch {spectrum -delete actualdt-v-fitdtdiff}
+spectrum actualdt-v-fitdtdiff 2 {event.dt event.dtdiff} {{0.000000 100.000000 100} {-200.000000 100.000000 300}} long
 catch {spectrum -delete chratio}
 spectrum chratio 1 event.chiratio2over1 {{0.000000 10.000000 200}} long
 catch {spectrum -delete dtdiff}

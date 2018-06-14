@@ -20,7 +20,7 @@
  */
 
 #include "REventProcessor.h"
-
+#include <stdlib.h>
 /**
  * Note that the bulk of this implementation is the implementation of the
  * methods of the various private structs that are used to organize the data.
@@ -300,14 +300,32 @@ REventProcessor::operator()(
     // the fit is right for the raw event.  We use 'huge' differences for
     // the 'wrong' fit type.
     
+    // To do this we need to be sure the left pulse is the left pulse in the
+    // fitted data as this can be swapped.. otherwise we're comparing left to
+    // right in fitted vs. actual.  We'll put things in the right order into fit
+    // below:
+    
+    DDAS::fit2Info fit;
+    fit = p->s_fitinfo.twoPulseFit;
+    if (
+        p->s_fitinfo.twoPulseFit.pulses[0].position >
+        p->s_fitinfo.twoPulseFit.pulses[1].position) {   // they're flopped:
+        
+        fit.pulses[0] = p->s_fitinfo.twoPulseFit.pulses[1]; // So swap 
+        fit.pulses[1] = p->s_fitinfo.twoPulseFit.pulses[0]; // the fitted pulses.
+        
+    }
+    
+    
+    
     // Amplitudes.
     
     if (p->s_isDouble) {
         fit1AmplitudeDiff = 5000;             // It's actually a double pulse.
         fit2Amp1Diff =
-            p->s_fitinfo.twoPulseFit.pulses[0].amplitude  - p->s_pulses[0].amplitude;
+            fit.pulses[0].amplitude - p->s_pulses[0].amplitude;
         fit2Amp2Diff =
-            p->s_fitinfo.twoPulseFit.pulses[1].amplitude - p->s_pulses[1].amplitude;
+            fit.pulses[1].amplitude - p->s_pulses[1].amplitude;
     } else {
         fit1AmplitudeDiff =
             p->s_fitinfo.onePulseFit.pulse.amplitude - p->s_pulses[0].amplitude;
@@ -319,16 +337,15 @@ REventProcessor::operator()(
     if (p->s_isDouble) {
         fit1XposDiff = 5000;               // Double pulse after all.
         fit2X1PosDiff =
-            p->s_fitinfo.twoPulseFit.pulses[0].position - p->s_pulses[0].position;
+            fit.pulses[0].position - p->s_pulses[0].position;
         fit2X2PosDiff =
-            p->s_fitinfo.twoPulseFit.pulses[1].position - p->s_pulses[1].position;
-            
-        actualDt =
-            p->s_pulses[1].position - p->s_pulses[0].position;
-        fittedDt =
-            p->s_fitinfo.twoPulseFit.pulses[1].position -
-            p->s_fitinfo.twoPulseFit.pulses[0].position;
-        DtDifference = fittedDt - actualDt;
+            fit.pulses[1].position - p->s_pulses[1].position;
+        double adt = abs(p->s_pulses[1].position - p->s_pulses[0].position);
+        actualDt = adt;
+        double fdt = fit.pulses[1].position - fit.pulses[0].position;
+        fittedDt = fdt;
+        double dtdiff = fdt - adt;
+        DtDifference = dtdiff;
     } else {
         
         fit1XposDiff =
