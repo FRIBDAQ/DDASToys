@@ -218,7 +218,7 @@ class defined in functions.h, however it supports Root serialization.
 
 The file RootExtensions.h defines this struct and its structured members.
 These are implemented in RootExtensions.cpp for incorporation into compiled Root
-applications.  The shared library libDDASFitClases.so and associated root
+applications.  The shared library libDDASFitClasses.so and associated root
 dictionary file libDDASFitClasses.rootmap allow these classes to be dynamically
 incorporated in to interpreted Root sesssions.
 
