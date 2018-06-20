@@ -89,8 +89,6 @@
  * Constants:
  */
 
-static const int PORT(5672);        // Port part of URIs.
-static const int REGPORT(5673);     // Registration port.
 
 static  int MAX_QUEUED_MESSAGES(128);
 
@@ -106,10 +104,8 @@ static  int MAX_QUEUED_MESSAGES(128);
 static std::string
 ServerUri()
 {
-    std::stringstream uri;
-    uri << "tcp://*:" << PORT;
+    return std::string("inproc://writer");
     
-    return uri.str();
 }
 /**
  * ClientUri
@@ -118,9 +114,7 @@ ServerUri()
 static std::string
 ClientUri()
 {
-    std::stringstream uri;
-    uri << "tcp://localhost:" << PORT;
-    return uri.str();
+    return std::string("inproc://writer");
 }
 
 /**
@@ -130,9 +124,8 @@ ClientUri()
 static std::string
 RegServerUri()
 {
-    std::stringstream uri;
-    uri << "tcp://*:" << REGPORT;
-    return uri.str();
+    return std::string("inproc://registrar");
+ 
 }
 /**
  * RegClientUri
@@ -141,9 +134,8 @@ RegServerUri()
 static std::string
 RegClientUri()
 {
-    std::stringstream uri;
-    uri << "tcp://localhost:" << REGPORT;
-    return uri.str();
+    return std::string("inproc://registrar");
+    
 }
 
 /**
@@ -301,7 +293,7 @@ zmqwriter_thread(void* args)
 {
     // Listen on our data socket.
     
-    zmq::context_t context;
+    zmq::context_t& context(getContext());
     zmq::socket_t  sock(context, ZMQ_PULL);    // As a fan in.
     sock.setsockopt(ZMQ_SNDHWM, &MAX_QUEUED_MESSAGES, sizeof(int));
     sock.setsockopt(ZMQ_RCVHWM, &MAX_QUEUED_MESSAGES, sizeof(int));

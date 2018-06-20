@@ -68,7 +68,6 @@
  * Constants:
  */
 
-static const int PORT(5672);        // Port part of URIs.
 
 /*-----------------------------------------------------------------------------
  *   Internal utility methods.
@@ -82,10 +81,8 @@ static const int PORT(5672);        // Port part of URIs.
 static std::string
 ServerUri()
 {
-    std::stringstream uri;
-    uri << "tcp://*:" << PORT;
+    return std::string("inproc://writer");
     
-    return uri.str();
 }
 /**
  * ClientUri
@@ -94,9 +91,7 @@ ServerUri()
 static std::string
 ClientUri()
 {
-    std::stringstream uri;
-    uri << "tcp://localhost:" << PORT;
-    return uri.str();
+    return std::string("inproc://writer");
 }
 /**
  * sendHeader
@@ -194,7 +189,7 @@ zmqwriter_thread(void* args)
 {
     // Listen on our socket.
     
-    zmq::context_t context;
+    zmq::context_t& context(getContext());
     zmq::socket_t  sock(context, ZMQ_PULL);    // As a fan in.
     int linger(0);
     sock.setsockopt(ZMQ_LINGER, &linger, sizeof(int));

@@ -1,4 +1,4 @@
-#  SpecTclGUI save file created Thu Jun 14 12:39:52 EDT 2018
+#  SpecTclGUI save file created Tue Jun 19 15:09:34 EDT 2018
 #  SpecTclGui Version: 1.0
 #      Author: Ron Fox (fox@nscl.msu.edu)
 
@@ -218,7 +218,7 @@ spectrum Actua.a1 1 event.actual.left.amplitude {{0.000000 1024.000000 1024}} lo
 catch {spectrum -delete Actua.a2}
 spectrum Actua.a2 1 event.actual.right.amplitude {{0.000000 1024.000000 1024}} long
 catch {spectrum -delete Chisquare1}
-spectrum Chisquare1 1 event.fits.onepulsefit.chiSquare {{0.000000 5000.000000 1000}} long
+spectrum Chisquare1 1 event.fits.onepulsefit.chiSquare {{0.000000 5000.000000 20000}} long
 catch {spectrum -delete Chisquare2}
 spectrum Chisquare2 1 event.fits.twopulsefit.chiSquare {{0.000000 4000.000000 1000}} long
 catch {spectrum -delete EventType}
