@@ -32,6 +32,10 @@ static char* outfile;
 static size_t* threadBytes;
 static size_t* threadItems;
 
+static zmq::context_t globalContext(5);
+
+zmq::context_t& getContext() {return globalContext;}
+
 
 //  Predicate used to restrict which fragments get fits;
 
@@ -110,7 +114,7 @@ static void *
 worker_task(void *args)
 {
     long thread = (long)(args);
-    zmq::context_t context(1);
+    zmq::context_t& context(getContext());
     zmq::socket_t worker(context, ZMQ_DEALER);
     int linger(0);
     worker.setsockopt(ZMQ_LINGER, &linger, sizeof(int));
@@ -135,7 +139,7 @@ worker_task(void *args)
     s_set_id(worker);          //  Set a printable identity
 #endif
 
-    worker.connect("tcp://localhost:5671");
+    worker.connect("inproc://sender");
     std::stringstream ChunkSize;
     ChunkSize << CHUNK_SIZE;
     size_t bytes = 0;
@@ -244,14 +248,14 @@ static int  sendChunk(zmq::socket_t& sock, const std::string& identity, CRingFil
 static void*
 sender_task(void* args)
 {
-    zmq::context_t context(1);
+    zmq::context_t& context(getContext());
     zmq::socket_t broker(context, ZMQ_ROUTER);
     int linger(0);
     broker.setsockopt(ZMQ_LINGER, &linger, sizeof(int));
     
     FILE* pFile;
 
-    broker.bind("tcp://*:5671");
+    broker.bind("inproc://sender");
 
     CRingFileBlockReader reader(fileName);
 
@@ -339,7 +343,7 @@ int main(int argc, char** argv) {
   // Register the threads with the writer.  Doing this here ensures the
   // queues are built before any data can be  sent since there's no workers yet.
   
-  zmq::context_t context(1);
+  zmq::context_t& context(getContext());
   zmq::socket_t& regsocket(makeRegistrationSocket(context));
   for (int i = 0; i < NBR_WORKERS; i++) {
     registerThread(regsocket, i);
