@@ -17,6 +17,7 @@
 #include <string.h>
 #include <system_error>
 #include <assert.h>
+#include <string>
 
 /**
  * Constructor
@@ -27,7 +28,12 @@
 CRingFileBlockReader::CRingFileBlockReader(const char* filename) :
   m_partialItemSize(0), m_partialItemBlockSize(0), m_pPartialItem(nullptr)
 {
-  m_nFd = open(filename, O_RDONLY);
+  std::string fName(filename);
+  if (fName == "-") {
+    m_nFd = STDIN_FILENO;
+  } else {
+    m_nFd = open(filename, O_RDONLY);
+  }
   if (m_nFd < 0) {
     throw std::system_error(std::make_error_code(static_cast<std::errc>(errno)),
 			    "Opening the ring item file");
