@@ -173,9 +173,9 @@ pulseAmplitude(double A, double k1, double k2, double x0)
 {
     double frac = k1/k2;
     if (frac <= 1.0) {
-        return -1;
+        return -1; 
     }
-    double pos = x0 + log(frac)/k1;
+    double pos = x0 + log(frac-1.0)/k1;
     return singlePulse(A, k1, k2, x0, 0.0, pos);
 }
 /**
