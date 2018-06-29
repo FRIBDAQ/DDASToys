@@ -8,12 +8,12 @@ DTCXXLDFLAGS=-L$(DAQLIB) -ldataformat -ldaqio \
 all: DtRange SpecTcl
 
 DtRange: DtRange.o
-	$(CXX) $(DTCXXLDFLAGS) -o DtRange DtRange.o ../functions.o
+	$(CXX) $(DTCXXLDFLAGS) -o DtRange DtRange.o ../functions.o ../lmfit.o
 
 DtRange.o: DtRange.cpp
 	$(CXX) $(DTCXXFLAGS) -c DtRange.cpp
 
-INSTDIR=/usr/opt/spectcl/5.0-005
+INSTDIR=/usr/opt/spectcl/5.0-006
 # Skeleton makefile for 3.1
 
 include $(INSTDIR)/etc/SpecTcl_Makefile.include
@@ -21,7 +21,7 @@ include $(INSTDIR)/etc/SpecTcl_Makefile.include
 #  If you have any switches that need to be added to the default c++ compilation
 # rules, add them to the definition below:
 
-USERCXXFLAGS=-I. -I.. -std=c++11 -g
+USERCXXFLAGS=-I. -I.. -std=c++11 -g 
 
 #  If you have any switches you need to add to the default c compilation rules,
 #  add them to the defintion below:
@@ -30,13 +30,13 @@ USERCCFLAGS=$(USERCXXFLAGS)
 
 #  If you have any switches you need to add to the link add them below:
 
-USERLDFLAGS=-lResolution -lgsl -lgslcblas
+USERLDFLAGS=-L. -lResolution -lgsl -lgslcblas
 
 #
 #   Append your objects to the definitions below:
 #
 
-LIBOBJECTS=MySpecTclApp.o ../functions.o REventProcessor.o
+LIBOBJECTS= ../functions.o ../lmfit.o REventProcessor.o
 
 libResolution.a: $(LIBOBJECTS)
 	rm -f $@
@@ -47,14 +47,16 @@ libResolution.a: $(LIBOBJECTS)
 #
 
 
-SpecTcl:  libResolution.a
-	$(CXXLD)  -o SpecTcl  $(USERLDFLAGS) \
+SpecTcl:  libResolution.a MySpecTclApp.o
+	$(CXXLD)  -o SpecTcl MySpecTclApp.o  $(USERLDFLAGS) \
 	$(LDFLAGS)
 
 
 REventProcessor.o: REventProcessor.cpp REventProcessor.h ../functions.h
 	$(CXX) -c $(CXXFLAGS) $(USERCXXFLAGS) REventProcessor.cpp
 
+MySpecTclApp.o: MySpecTclApp.cpp
+	$(CXX) -c $(CXXFLAGS) $(USERCXXFLAGS) MySpecTclApp.cpp
 
 clean:
 	rm -f *.o SpecTcl DtRange

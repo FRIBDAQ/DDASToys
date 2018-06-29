@@ -14,6 +14,7 @@
 #include <DDASHit.h>
 #include <DataFormat.h>
 #include <string.h>
+#include "lmfit.h"
 
 using namespace DAQ::DDAS;
 

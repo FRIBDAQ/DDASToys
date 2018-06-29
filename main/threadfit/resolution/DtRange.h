@@ -22,6 +22,7 @@
 #define DTRANGE_H
 
 #include <functions.h>
+#include <lmfit.h>
 
 
 /**

@@ -21,6 +21,7 @@
  */
 
 #include "functions.h"
+#include "lmfit.h"
 #include <iostream>
 #include <fstream>
 void

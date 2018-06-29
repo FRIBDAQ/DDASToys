@@ -20,6 +20,7 @@
  */
 
 #include "functions.h"
+#include "lmfit.h"
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>

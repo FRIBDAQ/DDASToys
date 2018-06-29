@@ -24,6 +24,7 @@
 
 #include "DDASHit.h"               // Base class
 #include "functions.h"              // Defines HitExtension.
+#include "lmfit.h"
 #include <stdexcept>
 
 namespace DAQ {

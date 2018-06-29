@@ -26,6 +26,7 @@
 
 #include "TObject.h"
 #include "functions.h"
+#include "lmfit.h"
 
 
 /**
