@@ -30,21 +30,25 @@ USERCCFLAGS=$(USERCXXFLAGS)
 
 #  If you have any switches you need to add to the link add them below:
 
-USERLDFLAGS=-lgsl -lgslcblas
+USERLDFLAGS=-lResolution -lgsl -lgslcblas
 
 #
 #   Append your objects to the definitions below:
 #
 
-OBJECTS=MySpecTclApp.o ../functions.o REventProcessor.o
+LIBOBJECTS=MySpecTclApp.o ../functions.o REventProcessor.o
+
+libResolution.a: $(LIBOBJECTS)
+	rm -f $@
+	ar cq $@ $(LIBOBJECTS)
 
 #
 #  Finally the makefile targets.
 #
 
 
-SpecTcl: $(OBJECTS)
-	$(CXXLD)  -o SpecTcl $(OBJECTS) $(USERLDFLAGS) \
+SpecTcl:  libResolution.a
+	$(CXXLD)  -o SpecTcl  $(USERLDFLAGS) \
 	$(LDFLAGS)
 
 

@@ -30,7 +30,6 @@ all:   ringblockdealer libDDASFitClasses.so  tests
 tests: functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
 	DisplayExtensions
 
-
 CRingFileReader.o: CRingFileReader.cpp
 	$(CC) -c $(CXXFLAGS) $<
 
