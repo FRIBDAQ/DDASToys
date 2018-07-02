@@ -41,7 +41,8 @@ subsystem.  At that point, a core is fully utilized doing Root output.
 
 Note as well that the actual performance of this program will depend on the
 predicate you use to define which channels get fit and how large the region of
-interest for each fit is (see HOW TO MODIFY THIS).
+interest for each fit, as well as the saturation level for the ADC
+(see HOW TO MODIFY THIS).
 
 INTERNAL STRUCTURE
 ==================
@@ -130,6 +131,8 @@ The framework has four types of threads:
     back end of the waveforms in some channels).  Predicates must be derived
     from CDDAnalyzer::FitPredicate the ChannelSelector predicate is defined and
     implemented in ringblockdealer.cpp (probably not the best choice).
+    Predicates also provide the saturation level for the digitizer for that
+    channel.
 *   The sorter/outputter thread accepts analyzed ring items from worker
     threads.  It resorts them by timestamp and outputs the sorted ring items to
     file.  Its entry point is zmqwriter_thread() in zmqsortedwriter.cpp.  It
@@ -248,7 +251,7 @@ predicates.
 The predicate must implement a function call operator with the following call
 signature:
 
- virtual std::pair<unsigned, unsigned> operator()(
+ virtual std::pair<std::pair<unsigned, unsigned>, unsigned> operator()(
             const FragmentInfo& frag, DAQ::DDAS::DDASHit& hit,
             const std::vector<uint16_t>& trace
         )
@@ -258,9 +261,14 @@ The parameters are:
    - hit  - the original DDAS hit being analyzed.
    - trace - the trace to potentially fit.
 
-This method is called prior to performing fits (see below). The result is a
-pair of indices into the trace indicating the region of interest to fit.  If
-the region of interest is emtpty, no fit is performed. 
+This method is called prior to performing fits (see below). The first element
+of the returned pair are the low and high limits (both are inclusive) of the
+samples to be included in the fit.  If the low and high limits are equal, no
+fit is done.   The second element of the pair is the largest value the
+digitizer can convert.  Regions of the trace that are at or above this value
+will not be used by the fit.  For a 14 bit digitizer, for example, this should
+be 16383 (or 0x3fff).
+
 
 CDDASAnalyzer provices:
 
