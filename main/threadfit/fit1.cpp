@@ -27,6 +27,8 @@
 #include <vector>
 #include <stdint.h>
 
+static uint16_t saturation = 0xffff;
+
 /**
  * Usage:
  *    fit1  pulsemaker-file
@@ -125,7 +127,7 @@ fitNext(std::istream& in)
         //
         
         DDAS::fit1Info result;
-        DDAS::lmfit1(&result, trace, limits);
+        DDAS::lmfit1(&result, trace, limits, saturation);
         outputTraceInfo(result, trace, A, k1, k2, x1, C);
     }
 }
@@ -141,9 +143,10 @@ usage(std::ostream& o, const char* msg)
 {
     o << msg << std::endl << std::endl;
     o << "Usage\n";
-    o << "    fit1 pulsemaker-file\n";
+    o << "    fit1 pulsemaker-file [saturation]\n";
     o << "Where:\n";
     o << "   pulsemaker-file - is the name of a file written by pulsemaker\n";
+    o << "   saturation      - is the optional saturation value.\n";
     
     exit(EXIT_FAILURE);
 }
@@ -164,10 +167,18 @@ usage(std::ostream& o, const char* msg)
 int
 main(int argc, char** argv)
 {
-    if (argc !=2 ) {
+    if (argc !=2 && argc != 3) {
         usage(std::cerr, "Incorrect number of command line parameters");
     }
     const char* filename = argv[1];
+    
+    if (argc == 3) {
+        int usersat = atoi(argv[2]);
+        if (usersat <= 0) {
+            usage(std::cerr, "Saturation values must be integers > 0");
+        }
+        saturation = usersat;
+    }
     
     std::ifstream rawData(filename);
     if (rawData.fail()) {

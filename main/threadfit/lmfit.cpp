@@ -496,7 +496,7 @@ DDAS::lmfit1(
     double X1 = gsl_vector_get(solver->x, P1X1_INDEX);
     double C  = gsl_vector_get(solver->x, P1C_INDEX);
     
-    double ChiSquare = chiSquare1(A, K1 , K2, X1, C, trace, low, high);
+    double ChiSquare = chiSquare1(A, K1 , K2, X1, C, points);
     
     // Set the result struct from the fit parameters and the chi square.
     
@@ -863,7 +863,7 @@ DDAS::lmfit2(
     
     
     double ChiSquare =
-        chiSquare2(A1, K1, K2, X1, A2, K3, K4, X2, C, trace, low, high);
+        chiSquare2(A1, K1, K2, X1, A2, K3, K4, X2, C, points);
     
     pResult->iterations = iteration;
     pResult->fitStatus     = status;

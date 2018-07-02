@@ -59,6 +59,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 
 static const int id(1);              // Fake thread/source id.
 
@@ -106,15 +107,16 @@ MyPredicate::operator() (
         (hit.GetCrateID() == 0) && (hit.GetSlotID() == 2) &&
         (hit.GetChannelID() == 0)
     ) {
-        return
-            std::pair<std::pair<unsigned, unsigned>, unsigned>(
-                (0, trace.size() - 1), 0xffff
-            );
+            std::pair<std::pair<unsigned, unsigned>, unsigned> result = {
+                {0, trace.size()}, 0xffff
+            };
+            return result;
     
     } else {
-        return std::pair<std::pair<unsigned, unsigned>, unsigned>(
-            (0, 0), 0xffff
-        );   // supresses the fit.
+        std::pair<std::pair<unsigned, unsigned>, unsigned> result = {
+            {0, 0}, 0xffff
+        };
+        return result;
     }
 }
 

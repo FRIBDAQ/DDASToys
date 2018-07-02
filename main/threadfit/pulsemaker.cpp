@@ -28,7 +28,7 @@
 
 /**
  *  Usage:
- *      pulsemaker file npulses noise-amplitude 1 | 2
+ *      pulsemaker file npulses noise-amplitude 1 | 2 [saturation]
  *   Where:
  *       file     - the name of the output file to write.
  *                  Will be overwritten if exists
@@ -36,6 +36,7 @@
  *       noise-amplitude - amplitude of the noise.  This is uniformly distributed
  *                  and clamped so that the trace is never negative.
  *       1 | 2    -  Determines if the traces have one or two pulses.
+ *       saturation - optional
  *
  *  The output files contain  a header line that contains the numbre of traces
  *  in the file.
@@ -71,6 +72,7 @@ const unsigned X_LOW(100);             // earliest pulse1 onset.
 const unsigned X1_HIGH(250);            // latest pulse1  onset.
 const unsigned X2_HIGH(400);            // latest pulse 2 onset (earliest is X1 position).
 
+unsigned saturation(0xffff);      // If pulse saturation level not set.
 /**
  * rrange
  *    Random numnber in the specified range.
@@ -117,6 +119,7 @@ void generateSinglePulses(std::ostream& o, int n, int a)
         for (int t = 0; t < SAMPLES; t++) {
             double p = DDAS::singlePulse(A, K1, K2, X1, C, t) + rrange(-a, a);
             if (p < 0.0) p = 0.0;           // Clamp the trace.
+            if (p > saturation) p = saturation;
             o << t << " " << p << std::endl;
         }
     }
@@ -157,6 +160,7 @@ void generateDoublePulses(std::ostream& o, int n, int a)
                 DDAS::doublePulse(A1, K1, K2, X1, A2, K3, K4, X2, C, t) +
                     rrange(-a, a);
             if (p < 0.0) p = 0.0;           // Clamp the trace.
+            if (p > saturation) p = saturation;
             o << t << " " << p << std::endl;
         }
     }    
@@ -192,12 +196,13 @@ usage(std::ostream& o, const char* msg)
 {
     o << msg << std::endl << std::endl;
     o << "Usage:\n";
-    o << "     pulsemaker file npulses noise-amplitude 1|2\n";
+    o << "     pulsemaker file npulses noise-amplitude 1|2 [saturation]\n";
     o << "Where:\n";
     o << "   file     - Name of the file to write\n";
     o << "   npulses  - Number of pulses to write\n";
     o << "   noise-amplitude - Amplitude of the noise put on the pulses.\n";
     o << "   1|2       - 1 to write single pulses 2 writes double pulses\n";
+    o << "   saturation - optional value at which the pulse saturates";
     
     exit(EXIT_FAILURE);       // Writing this message means we gave up.
 }
@@ -211,7 +216,7 @@ int main(int argc, char** argv)
 {
     // Need exactly 5 parameters.
     
-    if (argc != 5) {
+    if (argc != 5 && argc != 6) {
         usage(std::cerr, "Incorrect number of command line parameters.");
     }
     
@@ -238,6 +243,15 @@ int main(int argc, char** argv)
         pulses = 2;
     } else {
         usage(std::cerr, "Can only select 1 or 2 pulses");
+    }
+    
+    if (argc == 6) {          // Saturation supplied.
+        int userSat = iConvert(argv[5]);
+        if (userSat <= 0) {
+            usage(std::cerr, "Saturation value must be an integer > 0");
+           
+        }
+         saturation = userSat;
     }
     
     // open the output file; seed the random generator.

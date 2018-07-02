@@ -1,4 +1,4 @@
-#  SpecTclGUI save file created Mon Jul 02 12:42:42 EDT 2018
+#  SpecTclGUI save file created Mon Jul 02 16:10:02 EDT 2018
 #  SpecTclGui Version: 1.0
 #      Author: Ron Fox (fox@nscl.msu.edu)
 
