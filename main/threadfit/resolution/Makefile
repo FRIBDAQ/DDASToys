@@ -47,7 +47,7 @@ libResolution.a: $(LIBOBJECTS)
 #
 
 
-SpecTcl:  libResolution.a MySpecTclApp.o
+SpecTcl:  MySpecTclApp.o libResolution.a 
 	$(CXXLD)  -o SpecTcl MySpecTclApp.o  $(USERLDFLAGS) \
 	$(LDFLAGS)
 

@@ -1,4 +1,4 @@
-#  SpecTclGUI save file created Tue Jun 19 15:09:34 EDT 2018
+#  SpecTclGUI save file created Mon Jul 02 12:42:42 EDT 2018
 #  SpecTclGui Version: 1.0
 #      Author: Ron Fox (fox@nscl.msu.edu)
 
@@ -211,6 +211,9 @@ treeparameter -setunit   event.isdouble unknown
 # Tree variable definitions:
 
 
+# Gate definitions in reverse dependency order
+ 
+
 # Spectrum Definitions
 
 catch {spectrum -delete Actua.a1}
@@ -220,7 +223,7 @@ spectrum Actua.a2 1 event.actual.right.amplitude {{0.000000 1024.000000 1024}} l
 catch {spectrum -delete Chisquare1}
 spectrum Chisquare1 1 event.fits.onepulsefit.chiSquare {{0.000000 5000.000000 20000}} long
 catch {spectrum -delete Chisquare2}
-spectrum Chisquare2 1 event.fits.twopulsefit.chiSquare {{0.000000 4000.000000 1000}} long
+spectrum Chisquare2 1 event.fits.twopulsefit.chiSquare {{0.000000 4000.000000 20000}} long
 catch {spectrum -delete EventType}
 spectrum EventType 1 event.isdouble {{0.000000 400.000000 100}} long
 catch {spectrum -delete a1diff}
@@ -257,9 +260,6 @@ catch {spectrum -delete t1Actual}
 spectrum t1Actual 1 event.actual.left.position {{0.000000 500.000000 501}} long
 catch {spectrum -delete t2Actual}
 spectrum t2Actual 1 event.actual.right.position {{0.000000 500.000000 501}} long
-
-# Gate definitions in reverse dependency order
- 
 
 # Gate Applications: 
 

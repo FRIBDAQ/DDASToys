@@ -56,7 +56,7 @@ public:
     Channel aChan = {c, s, ch};
     m_channels.push_back(aChan);
   }
-  virtual std::pair<unsigned, unsigned> operator()(
+  virtual std::pair<std::pair<unsigned, unsigned>, unsigned> operator()(
     const FragmentInfo& frag, DAQ::DDAS::DDASHit& hit,
     const std::vector<uint16_t>& trace    
   );
@@ -66,7 +66,7 @@ public:
  * this returns the full trace for channels that match at least one
  * entry in m_channels
  */
-std::pair<unsigned, unsigned>
+std::pair<std::pair<unsigned, unsigned>, unsigned>
 ChannelSelector::operator()(
   const FragmentInfo& frag, DAQ::DDAS::DDASHit& hit,
   const std::vector<uint16_t>& trace
@@ -75,8 +75,11 @@ ChannelSelector::operator()(
   int cr = hit.GetCrateID();
   int sl = hit.GetSlotID();
   int ch = hit.GetChannelID();
-  std::pair<unsigned, unsigned> fulltrace(0, trace.size() -1);
-  std::pair<unsigned, unsigned> nofit(0,0);
+  std::pair<std::pair<unsigned, unsigned>, unsigned > fulltrace =
+    {{0, trace.size() -1}, 0x3fff};           // For now assume 13 bits.
+    
+  std::pair<std::pair<unsigned, unsigned>, unsigned> nofit =
+    {{0,0}, 0};                           // Saturation value doesn't matter.
   
   for (int i =0; i < m_channels.size(); i++) {
     if (

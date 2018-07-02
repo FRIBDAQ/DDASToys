@@ -169,7 +169,7 @@ DDAS::doublePulse(
  *  @note   the return value will be negative for pulses where k1/k2 <= 1.
  */
 double
-pulseAmplitude(double A, double k1, double k2, double x0)
+DDAS::pulseAmplitude(double A, double k1, double k2, double x0)
 {
     double frac = k1/k2;
     if (frac <= 1.0) {
@@ -178,6 +178,20 @@ pulseAmplitude(double A, double k1, double k2, double x0)
     double pos = x0 + log(frac-1.0)/k1;
     return singlePulse(A, k1, k2, x0, 0.0, pos);
 }
+// This is there for compatibility sake
+
+double pulseAmplitude(double A, double k1, double k2,double x0)
+{
+    static bool warned(false);
+    if(!warned) {
+        std::cerr << "WARNING the pulseAmplitude function is in the DDAS namespace\n";
+        std::cerr << "It should be called as DDAS::pulseAmplitude(...);\n";
+        warned = true;
+    }
+    DDAS::pulseAmplitude(A, k1, k2, x0);
+}
+
+
 /**
  * chiSquare1
  *   Computes the Chi Square goodness of a specific parameterization
@@ -205,6 +219,30 @@ DDAS::chiSquare1(
     for  (int i = low; i <= high; i++) {
         double x = i;
         double y = trace[i];
+        double pulse = singlePulse(A1, k1, k2, x1 ,C, x);  // Fitted pulse.
+        double diff = y-pulse;
+        if (y != 0.0) {
+            result += (diff/y)*diff;  // This order may control overflows
+            if (std::fpclassify(result) == FP_ZERO) result =  0.0;
+        }
+    }
+    return result;
+}
+/**
+ * same as above, but a set of x/y points are passed in as the data
+ * rather than a trace.
+ */
+double
+DDAS::chiSquare1(
+    double A1, double k1, double k2, double x1, double C,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
+)
+{
+    
+    double result = 0.0;
+    for  (int i = 0; i < points.size(); i++) {
+        double x = points[i].first;
+        double y = points[i].second;
         double pulse = singlePulse(A1, k1, k2, x1 ,C, x);  // Fitted pulse.
         double diff = y-pulse;
         if (y != 0.0) {
@@ -264,6 +302,34 @@ DDAS::chiSquare2(
     
     return result;
 }
+// Same as above but a set of X/Y points is passed in rather than the
+// trace:
+
+double
+DDAS::chiSquare2(
+    double A1, double k1, double k2, double x1,
+    double A2, double k3, double k4, double x2,
+    double C,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
+)
+{
+    double result = 0.0;
+    
+    for (int i = 0; i < points.size(); i++) {
+        double x = points[i].first;
+        double y = points[i].second;
+        double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+        double diff = y - pulse;
+        if (std::fpclassify(diff) == FP_ZERO) diff = 0.0;
+        if (y != 0.0) {
+            result += (diff/y)*diff;  // This order may control overflows
+            if (std::fpclassify(result) == FP_ZERO) result =  0.0;
+        }
+    }
+    
+    return result;
+}
+
 /**
  * writeTrace
  *    Write  a single trace to file.

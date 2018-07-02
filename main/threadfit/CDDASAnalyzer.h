@@ -27,7 +27,7 @@ public:
     public:
         FitPredicate()  {}
         virtual ~FitPredicate() {}
-        virtual std::pair<unsigned, unsigned> operator()(
+        virtual std::pair<std::pair<unsigned, unsigned>, unsigned> operator()(
             const FragmentInfo& frag, DAQ::DDAS::DDASHit& hit,
             const std::vector<uint16_t>& trace
         ) =0;

@@ -65,9 +65,7 @@ struct HitExtension {     // Data added to hits with traces:
 // and function evaluators.
 //
 struct GslFitParameters {
-   const std::vector<uint16_t>* s_pTrace;
-   unsigned               s_low;        // limits of the fit.
-   unsigned               s_high;       // Low/high both inclusive.
+   const std::vector<std::pair<uint16_t, uint16_t> >* s_pPoints;
 };
   
 

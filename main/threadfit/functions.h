@@ -44,13 +44,23 @@ double chiSquare1(
     const std::vector<uint16_t>& trace, int low = 0 , int high = -1
 );
 
+double chiSquare1(
+    double A1, double k1, double k2, double x1, double C,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
+);
+
 double chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,    
     const std::vector<uint16_t>& trace, int low = 0, int high = -1
 );
-
+double chiSquare2(
+    double A1, double k1, double k2, double x1,
+    double A2, double k3, double k4, double x2,
+    double C,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
+);
 void writeTrace(
    const char* filename, const char* title,
    const std::vector<uint16_t>& trace

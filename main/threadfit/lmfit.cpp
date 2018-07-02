@@ -45,108 +45,7 @@ double DDAS_FALLBACK_K2(0.1);
 int SINGLE_MAXITERATIONS(50);
 int DOUBLE_MAXITERATIONS(50);
 
-/*----------------------------------------------------------------------------
- *  Fitting functions.
- *     We use the GNU Scientific Library (GSL) to do our fits. This should be
- *     suitable for singly threaded, threaded and cluster distributed
- *     code.  GPU and FPGA code, however not so much.
- *
- *     I'm too lazy to derive closed forms for the Jacobian of the chi square
- *     for these functions as required by e.g. L-M fitting so I've selected
- *     the GSL Nedler Mead Simplex implementation
- *     (gsl_multimin_fminimizer_nmsimplex2).
- *
- *    This implementation is heavly indebted to the example on page 397 of
- *    the GSL manual 1.14 edition.
- */
 
-/**
- * The functions below, wrap the Chi square computations for single
- * pulsed data into what's expected by the GSL library.
- */
-
-/**
- * gsl_chisquare1
- *    Single pulse version.
- *
- * @param params - GSL Vector containing this candidate fit's parameterization
- *                0 - Contains the amplitude (A).
- *                1 - Contains the pulse rise steepenes (k1).
- *                2 - Contains the pulse decay time constant (k2)
- *                3 - Contains the pulse position (x1)
- *                4 - Contains the constant offset.
- * @param t    - Actually a pointer to the std::vector of trace points.
- *               not const because the GSL Passes a void* not a const void*
- * @return double - the chisquare for the single pulse fit.
- */
-static
-double gsl_chisquare1(const gsl_vector* params, void* t)
-{
-    // Marshall the current fit parametarization from params:
-    
-    double A  = gsl_vector_get(params, 0);
-    double k1 = gsl_vector_get(params, 1);
-    double k2 = gsl_vector_get(params, 2);
-    double x1 = gsl_vector_get(params, 3);
-    double C  = gsl_vector_get(params, 4);
-    
-    
-    // Cast t to the right type:
-    
-    std::vector<uint16_t>* pTrace = reinterpret_cast<std::vector<uint16_t>* >(t);
-    
-    double cs =  DDAS::chiSquare1(A, k1, k2, x1, C, *pTrace);
-    
-    if (std::fpclassify(cs) == FP_ZERO) cs = 0.0;
-    if (cs == INFINITY || std::isnan(cs)) cs = 1.0E150;
-    return cs;
-}
-
-/**
- * gsl_chisquare2
- *    Double pulse version.
- *
- * @param params - GSL Vector containing the current fit parametrization:
- *                 0 - Contains the amplitude of pulse 1 (A1).
- *                 1 - Contains the rise steepness of pulse 1 (k1).
- *                 2 - Contains the decay time constant of pulse 1 (k2).
- *                 3 - Contains the position of pulse 1 (x1)
- *                 4 - Contains the amplitude of pulse 2 (A2)
- *                 5 - contains the rise time constant of pulse 2 (k3)
- *                 6 - contains the fall time constant of pulse 2 (k4)
- *                 7 - Contains the position of pulse 2 (x2)
- *                 8 - Contains the constant offset of the pulse (C).
- * @param t   - Pointer to the std::vector of trace points.
- * @return double - chisquare for this candidate double pulse fit.
- */
-static
-double gsl_chisquare2(const gsl_vector* params, void* t)
-{
-    //Marshall the fit parameters from the params 'vector'.
-     
-    double A1 = gsl_vector_get(params, 0);  // Pulse 1 characteristics.
-    double k1 = gsl_vector_get(params, 1);
-    double k2 = gsl_vector_get(params, 2);
-    double x1 = gsl_vector_get(params, 3);
-    
-    double A2 = gsl_vector_get(params, 4);  // Pulse 2 characteristics.
-    double k3 = gsl_vector_get(params, 5);
-    double k4 = gsl_vector_get(params, 6);
-    double x2 = gsl_vector_get(params, 7);
-    
-    double C = gsl_vector_get(params, 8);   // Constant off set.
-    
-    // Now cast to to a pointer to std::vector<uint16_t>*:
-    
-    std::vector<uint16_t>* pTrace = reinterpret_cast<std::vector<uint16_t>* >(t);
-    double cs = DDAS::chiSquare2(A1, k1, k2, x1, A2, k3, k4, x2, C, *pTrace);
-    
-    if (std::fpclassify(cs) == FP_ZERO) cs = 0.0;
-    if (cs == INFINITY || std::isnan(cs)) cs = 1.0E150;
-   
-   
-    return cs;
-}
 
 
 /*-----------------------------------------------------------------------------
@@ -288,7 +187,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
   *  parameters.
   *
   *  @param[in]  p     - current parameters of the fit (see indices above).
-  *  @param[in]  pData - Actually a pointer to the vector of raw data points.
+  *  @param[in]  pData - Actually a pointer to a GslFitParameters struct.
   *  @param[out] r     - Function residuals for each data point.
   *  @return int  - Status of the computation (GSL_SUCCESS).  Note all points are
   *                 weighted by 1.0 in this computation.
@@ -308,16 +207,17 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
     
     // convert the raw data into its proper form:
     
-    const std::vector<uint16_t>& trace(*pParams->s_pTrace);
+    const std::vector<std::pair<uint16_t, uint16_t> >& points(*pParams->s_pPoints);
 
     // Now loop over all the data points, filling in r with the weighted residuals
     
-    for (int  i = pParams->s_low; i <= pParams->s_high; i++) {
-        double x = i;             // Index is the x coordinate.
-        int index = i - pParams->s_low;
+    for (int  i = 0; i < points.size(); i++) {
+        double x = points[i].first;             // Index is the x coordinate.
+        double y = points[i].second;
+        
         
         double p = singlePulse(A, k1, k2, x1, C, x);
-        gsl_vector_set(r, index, (p - trace[i]));  // Weighted by 1.0.
+        gsl_vector_set(r, i, (p - y));  // Weighted by 1.0.
     }
     
     return GSL_SUCCESS;              // Cant' fail this function.
@@ -325,7 +225,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  /**
   *  Compute the Jacobian matrix - partial derivatives evaluated at each data point.
   *  @param[in] p       - Current fit parameterization.
-  *  @param[in] pdata   - Actually a pointer to the vecstor of raw data points.
+  *  @param[in] pdata   - Actually a pointer to a GslFitParameters struct.
   *  @param[out] J      - The Jacobian for this iteration of the fit.
   *  @return int GSL_SUCCESS if all computations work.
   *  @note the weights will all be 1.0.
@@ -345,14 +245,13 @@ static int
     
     // Convert the pData to the proper type:
     
-    const std::vector<uint16_t>& trace(*pParams->s_pTrace);
+    const std::vector<std::pair<uint16_t, uint16_t> >& points(*pParams->s_pPoints);
     
     //  Now loop over the data computing the partials and hence the
     //  Jacobian matrix values:
     
-    for (int i = pParams->s_low; i <= pParams->s_high; i++) {
-        double x = i;
-        int index = i - pParams->s_low;
+    for (int i = 0; i < points.size(); i++) {
+        double x = points[i].first;
         
         // Compute some exponentials that will be used over and over again:
         
@@ -369,11 +268,11 @@ static int
         
         // Shove them into the output matrix J
         
-        gsl_matrix_set(J, index, P1A_INDEX, Ai);
-        gsl_matrix_set(J, index, P1K1_INDEX, k1i);
-        gsl_matrix_set(J, index, P1K2_INDEX, k2i);
-        gsl_matrix_set(J, index, P1X1_INDEX, x1i);
-        gsl_matrix_set(J, index, P1C_INDEX, Ci);
+        gsl_matrix_set(J, i, P1A_INDEX, Ai);
+        gsl_matrix_set(J, i, P1K1_INDEX, k1i);
+        gsl_matrix_set(J, i, P1K2_INDEX, k2i);
+        gsl_matrix_set(J, i, P1X1_INDEX, x1i);
+        gsl_matrix_set(J, i, P1C_INDEX, Ci);
     }
     
     return GSL_SUCCESS;
@@ -415,6 +314,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
   *  @param trace - the trace.
   *  @note - for now assume that the 3/4 and 1/2 points are inside the AOI if they
   *          exist.  In the future could confine the search to the AOI.
+  *  @note - for now we're not correcting for flat-tops. 
   */
  static double estimateK2(int x0, double C0, const std::vector<uint16_t>& trace)
  {
@@ -461,6 +361,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
   *   @param trace - The trace data.
   *   @return double - the estimate.
   *   @note for now assume that the .5 position is within the AOI
+  *   @note for now we're not correcting for flattops.
   */
  double estimateK1(int xmax, double C0, const std::vector<uint16_t>& trace)
  {
@@ -486,16 +387,31 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
   * @param pResult - sstruct that will get the results of the fit.
   * @param trace   - vector of trace points.
   * @param limits  - Limits of the trace over which to conduct the fit.
+  * @param saturation - Value at which the ADC is saturated (points at or above
+  *                  this value are removed from the fit.)
   */
 void
 DDAS::lmfit1(
     fit1Info* pResult, std::vector<uint16_t>& trace,
-    const std::pair<unsigned, unsigned>& limits
+    const std::pair<unsigned, unsigned>& limits, uint16_t saturation
 )
  {
     unsigned low  = limits.first;
     unsigned high = limits.second;
-    unsigned npts = high - low + 1;
+    
+    // Produce the set of x/y points that are to be fit.  This is the trace
+    // within the limits and with points at or above saturation removed:
+    
+    std::vector<std::pair<uint16_t, uint16_t>> points;
+    for (int i =  low; i <= high; i++) {
+        if (trace[i] < saturation) {
+            points.push_back(std::pair<uint16_t, uint16_t>(
+                i, trace[i]
+            ));
+        }
+    }
+    
+    unsigned npts = points.size();
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
     gsl_multifit_fdfsolver*     solver;
@@ -517,12 +433,15 @@ DDAS::lmfit1(
     function.n   = npts;
     function.p   = P1_PARAM_COUNT;
     
-    GslFitParameters params = {&trace, low, high};
+    GslFitParameters params = {&points};
     function.params = &params;
     
     // Make the initial parameter guesses.
     
     // A0/X0 wil be determined by the maximum point on the trace.
+    // Note that the guesses don't correct for flattops.
+    // Hopefully the fits themselves will iron that all out.
+    //
     initialGuess = gsl_vector_alloc(P1_PARAM_COUNT);
     
     double   max = 0;
@@ -536,7 +455,7 @@ DDAS::lmfit1(
     
     
     double A0  = max;
-    double C0  = fmin(trace[0], trace.back()); 
+    double C0  = fmin(trace[low], trace[high]); 
     A0 -= C0;
     double K10 = estimateK1(maxchan, C0, trace);
     double K20 = estimateK2(maxchan, C0, trace);    // 0.1;
@@ -619,8 +538,7 @@ DDAS::lmfit1(
   *     weight of 1.0 for each point.
   *
   * @param[in]  p     - The fit parameters (see indices above).
-  * @param[in]  pData - Actually a pointer to std::vector<uint16_t>
-  *                     containing the trace.
+  * @param[in]  pData - Actuall a pointer to a GslFitParameters object.
   * @param[out] r     - Pointer to the vector to contain the residuals.
   * @return int  GSL_SUCCESS - can't really fail.
   */
@@ -645,15 +563,15 @@ DDAS::lmfit1(
     // Recast pData as a reference to the trace:
     
     GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    const std::vector<uint16_t>& trace(*pParams->s_pTrace);
+    const std::vector<std::pair<uint16_t, uint16_t>> & points(*pParams->s_pPoints);
     
     // Compute double pulse residuals for each point:
     
-    for (int i = pParams->s_low; i <= pParams->s_high; i++) {
-        double x = i;
+    for (int i = 0; i < points.size(); i++) {
+        double x = points[i].first;
+        double y = points[i].second;
         double p = DDAS::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
-        int index = i - pParams->s_low;
-        gsl_vector_set(r, index, (p - trace[i]));     // divided by w = 1.0.
+        gsl_vector_set(r, i, (p - y));     // divided by w = 1.0.
     }
     
     return GSL_SUCCESS;
@@ -666,7 +584,7 @@ DDAS::lmfit1(
   *     there are just almost twice as many.
   *
   * @param[in] p   - gsl_vector of current fit parameters.
-  * @param[in] pData - Actually a pointer to the std::<uint16_t> trace
+  * @param[in] pData - Actually a pointer to a GslFitParameterse struct.
   * @param[out] j  - gsl_matrix into which the jacobian will be computed.
   * @result int - GSL_SUCCESS - I don't see how this can fail (flw).
   * @note the weights are all set to 1.0.
@@ -692,16 +610,16 @@ gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     // Recast pData as a reference to the trace vector:
     
     GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    const std::vector<uint16_t>& trace(*pParams->s_pTrace);
+    const std::vector<std::pair<uint16_t, uint16_t>>& points(*pParams->s_pPoints);
    
     // Loop over the data points producing the Jacobian for each point.
     // Note we can re-use the partial derivative functions for the single pulse
     // case since the two pulses are independent and have identical functional forms.
     
     
-    for (int i = pParams->s_low; i <= pParams->s_high; i++) {
-        double x = i;
-        int index = i - pParams->s_low;
+    for (int i = 0; i < points.size(); i++) {
+        double x = points[i].first;
+        
         // Pulse 1 terms (A, k1, k2, x1):
         
         // Compute some reuseable exponentials:
@@ -712,21 +630,21 @@ gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
         double erise2 = exp(-k3*(x - x2));
         double efall2 = exp(-k4*(x - x2));
         
-        gsl_matrix_set(j, index, P2A1_INDEX, dp1dA(k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, index, P2K1_INDEX, dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, index, P2K2_INDEX, dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, index, P2X1_INDEX, dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
+        gsl_matrix_set(j, i, P2A1_INDEX, dp1dA(k1, k2, x1, x, 1.0, erise1, efall1));
+        gsl_matrix_set(j, i, P2K1_INDEX, dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
+        gsl_matrix_set(j, i, P2K2_INDEX, dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1));
+        gsl_matrix_set(j, i, P2X1_INDEX, dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
         
         // For pulse 2 elements:  A1->A2, k1 -> k3, k2 -> k4, x1 -> x2
         
-        gsl_matrix_set(j, index, P2A2_INDEX, dp1dA(k3, k4, x2, x, 1.0, erise2, efall2));
-        gsl_matrix_set(j, index, P2K3_INDEX, dp1dk1(A2, k3, k4, x2, x, 1.0, erise2, efall2));
-        gsl_matrix_set(j, index, P2K4_INDEX, dp1dk2(A2, k3, k4, x2, x, 1.0, erise2, efall2));
-        gsl_matrix_set(j, index, P2X2_INDEX, dp1dx1(A2, k3, k4, x2, x, 1.0, erise2, efall2));
+        gsl_matrix_set(j, i, P2A2_INDEX, dp1dA(k3, k4, x2, x, 1.0, erise2, efall2));
+        gsl_matrix_set(j, i, P2K3_INDEX, dp1dk1(A2, k3, k4, x2, x, 1.0, erise2, efall2));
+        gsl_matrix_set(j, i, P2K4_INDEX, dp1dk2(A2, k3, k4, x2, x, 1.0, erise2, efall2));
+        gsl_matrix_set(j, i, P2X2_INDEX, dp1dx1(A2, k3, k4, x2, x, 1.0, erise2, efall2));
         
         // Don't forget the constant term
         
-        gsl_matrix_set(j, index, P2C_INDEX, 1.0);     // Don't bother with the function call.
+        gsl_matrix_set(j, i, P2C_INDEX, 1.0);     // Don't bother with the function call.
     }
     
     
@@ -762,17 +680,35 @@ gsl_p2Compute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix* 
  * @param fit2Info - Results will be stored here.
  * @param trace    - References the trace to fit.
  * @param limits   - The limits of the trace that can be fit.
+ * @param pSinglePulseFit - The fit for a single pulse, used to seed initial
+ *                    guesses if present. Otherwise a single pulse fit is done for that.
+ * @param saturation - ADC saturation value.  Points with values at or above this
+ *                    value are removed from the fit.
  */
 void
 DDAS::lmfit2(
     fit2Info* pResult, std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    fit1Info* pSinglePulseFit
+    fit1Info* pSinglePulseFit, uint16_t saturation
 )
 {
     unsigned low = limits.first;
     unsigned high = limits.second;
-    unsigned npts = high - low + 1;
+    
+    
+    // Now produce a set of x/y points to be fit from the trace,
+    // limits and saturation value:
+    
+    std::vector<std::pair<uint16_t, uint16_t> > points;
+    for (int i = low; i <= high; i++) {
+        if (trace[i] < saturation) {
+            points.push_back(std::pair<uint16_t, uint16_t>(
+                i, trace[i]
+            ));
+        }
+    }
+    int npts = points.size();              // Number of points to fit.
+    
     // Set up basic solver stuff:
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
@@ -795,7 +731,7 @@ DDAS::lmfit2(
     function.n   = npts;
     function.p   = P2_PARAM_COUNT;
     
-    GslFitParameters params = {&trace, limits.first, limits.second};
+    GslFitParameters params = {&points};
     
     function.params = &params;
     
@@ -833,7 +769,7 @@ DDAS::lmfit2(
        std::pair<unsigned, unsigned> revLimits;
        revLimits.second = trace.size() - limits.first;
        revLimits.first  = revLimits.second - (limits.second - limits.first);
-       lmfit1(&fit1, reversed, revLimits);
+       lmfit1(&fit1, reversed, revLimits, saturation);
        
        C0  = fit1.offset;
        A0  = fit1.pulse.amplitude;
@@ -852,6 +788,9 @@ DDAS::lmfit2(
 
     // Note, we only consider the region of interest of the trace.
     // of the trace fitted.
+    
+    // Note aw well that we don't correct for flattops on these estamtors
+    // The fit _should_ converge things to the right answers.
     
     int maxchannel = 0;
     double maxvalue = -1.0e6;
