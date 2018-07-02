@@ -147,23 +147,28 @@ CDDASAnalyzer::fit(
   //
   // If neither predicate says we should do a fit just return right away:
   //
-  std::pair<unsigned, unsigned> fit1Limits(0, trace.size()-1);
-  std::pair<unsigned, unsigned> fit2Limits(fit1Limits);
+  std::pair<std::pair<unsigned, unsigned>, unsigned> fit1Info =
+    { {0, trace.size() - 1}, 0xffff};
+  std::pair<std::pair<unsigned, unsigned>, unsigned> fit2Info(fit1Info);
   
   // If there is a predicate for the first fit, check it.
   // Don't do anything if it returns limits that are equal.
   
   if (m_singlePredicate) {
-    fit1Limits = (*m_singlePredicate)(frag, hit, trace);  
+    fit1Info = (*m_singlePredicate)(frag, hit, trace);  
   }
+  std::pair<unsigned, unsigned> fit1Limits     = fit1Info.first;
+  unsigned                      fit1Saturation = fit1Info.second;
 
-  if (fit1Limits.first == fit1Limits.second) return;
-  
   // fit limits that have no extent indicate don't do the fit.  If
   // fit1 should not be done, neither should fit 2. so we're done here.
   
+  if (fit1Limits.first == fit1Limits.second) return;
+  
+  
   // Allocate the new fragment.  We're going to assume that the fragment
   // has a body  header.
+
   size_t newSize = frag.s_size + sizeof(DDAS::HitExtension);
   size_t originalSize = frag.s_size;
   
@@ -191,19 +196,21 @@ CDDASAnalyzer::fit(
       reinterpret_cast<DDAS::HitExtension*>(pItem + originalSize);
       
   
-  DDAS::lmfit1(&(pExtension->onePulseFit), trace, fit1Limits);
+  DDAS::lmfit1(&(pExtension->onePulseFit), trace, fit1Limits, fit1Saturation);
   
   // See what the limits of the second fit should be... or if it even
   // should be done.  Note that we can feed the result of lmfit1
   //  back into lmfit2 as an attempt to guess the answer
   
   if (m_doublePredicate) {
-    fit2Limits = (*m_doublePredicate)(frag, hit, trace);
+    fit2Info = (*m_doublePredicate)(frag, hit, trace);
   }
+  std::pair<unsigned, unsigned> fit2Limits     = fit2Info.first;
+  unsigned                      fit2Saturation = fit2Info.second;
   if (fit2Limits.first == fit2Limits.second) return;
   
   DDAS::lmfit2(&(pExtension->twoPulseFit), trace, fit2Limits,
-               &(pExtension->onePulseFit));
+               &(pExtension->onePulseFit), fit2Saturation);
   
 }
 

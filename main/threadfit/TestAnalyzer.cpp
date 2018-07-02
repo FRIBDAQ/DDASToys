@@ -59,6 +59,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 
 static const int id(1);              // Fake thread/source id.
 
@@ -88,7 +89,7 @@ class MyPredicate : public CDDASAnalyzer::FitPredicate
 {
 public:
     ~MyPredicate() {}
-    std::pair<unsigned, unsigned> operator() (
+    std::pair<std::pair<unsigned, unsigned>, unsigned> operator() (
         const FragmentInfo& frag, DAQ::DDAS::DDASHit& hit,
         const std::vector<uint16_t>& trace
     );
@@ -96,7 +97,7 @@ public:
 
 // Only fit crate 0, slot2, channel 0
 
-std::pair<unsigned, unsigned>
+std::pair<std::pair<unsigned, unsigned>, unsigned>
 MyPredicate::operator() (
         const FragmentInfo& frag, DAQ::DDAS::DDASHit& hit,
         const std::vector<uint16_t>& trace
@@ -106,10 +107,16 @@ MyPredicate::operator() (
         (hit.GetCrateID() == 0) && (hit.GetSlotID() == 2) &&
         (hit.GetChannelID() == 0)
     ) {
-        return std::pair<unsigned, unsigned>(0, trace.size() - 1);
+            std::pair<std::pair<unsigned, unsigned>, unsigned> result = {
+                {0, trace.size()}, 0xffff
+            };
+            return result;
     
     } else {
-        return std::pair<unsigned, unsigned>(0, 0);   // supresses the fit.
+        std::pair<std::pair<unsigned, unsigned>, unsigned> result = {
+            {0, 0}, 0xffff
+        };
+        return result;
     }
 }
 

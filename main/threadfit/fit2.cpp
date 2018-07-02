@@ -26,11 +26,14 @@
 #include <vector>
 #include <stdint.h>
 
+unsigned saturation(0xffff);           // Saturation level.
+
 /**
  * Usage:
- *    fit1  pulsemaker-file
+ *    fit1  pulsemaker-file [saturation]
  *    
  *  pulsemaker-file - is the filename of a file written by pulsemaker.
+ *  saturation      - is the optional level at which the pulse flattops.
  */
 
 /**
@@ -145,7 +148,7 @@ fitNext(std::istream& in)
         //
         
         DDAS::fit2Info result;
-        DDAS::lmfit2(&result, trace, limits);
+        DDAS::lmfit2(&result, trace, limits, nullptr, saturation);
         outputTraceInfo(result, trace, A1, k1, k2, x1, A2, k3, k4, x2, C);
     }
 }
@@ -161,9 +164,10 @@ usage(std::ostream& o, const char* msg)
 {
     o << msg << std::endl << std::endl;
     o << "Usage\n";
-    o << "    fit2 pulsemaker-file\n";
+    o << "    fit2 pulsemaker-file [saturation]\n";
     o << "Where:\n";
     o << "   pulsemaker-file - is the name of a file written by pulsemaker\n";
+    o << "   saturation - an optional maximu pulse value.\n";
     
     exit(EXIT_FAILURE);
 }
@@ -184,7 +188,7 @@ usage(std::ostream& o, const char* msg)
 int
 main(int argc, char** argv)
 {
-    if (argc !=2 ) {
+    if (argc !=2 && argc != 3) {
         usage(std::cerr, "Incorrect number of command line parameters");
     }
     const char* filename = argv[1];
@@ -193,7 +197,14 @@ main(int argc, char** argv)
     if (rawData.fail()) {
         usage(std::cerr, "Could not open data filename\n");
     }
-    
+    if (argc == 3) {
+        int usersat = atoi(argv[2]);
+        if (usersat <=0) {
+            usage(std::cerr, "Saturation value must be a postivie integer");
+        }
+        saturation = usersat;
+    }
+
     while(!rawData.eof()) {
         fitNext(rawData);
     }
