@@ -1,4 +1,7 @@
-class doubleFit {
+#include <TObject.h>
+
+class doubleFit : public TObject
+{
 public:
   UInt_t iterations;
   UInt_t fitStatus;
@@ -16,9 +19,11 @@ public:
     pulse2    = fit.pulses[1];
     offset    = fit.offset;
   }
-  
+  ClassDef(doubleFit, 1);
+
 };
-class fit {
+class fit : public TObject
+{
 public:
   std::vector<Bool_t>   haveExtension;
   std::vector<RootFit1Info> singleFits;
@@ -48,42 +53,8 @@ public:
     doubleFits.clear();
     haveExtension.clear();
   }
-}; 
+  ClassDef(fit, 1);
+};
 
-Int_t reserializer(){
-  // input file
-  TFile *fin = new TFile("/mnt/analysis/e16032/rootfiles/run-0182-00.root","UPDATE");
-  TTree *treein = (TTree*)fin->Get("DDASFit");
-
-  std::vector<RootHitExtension>* old_extension(0);
-  treein->SetBranchAddress("HitFits", &old_extension);  
-
-  // initialization class of vector
-  fit* item = 0;
-  item = new fit();
-  
-  // output file
-  TFile *f = new TFile("./new-run-0182-00.root","RECREATE");
-  TTree *tree = new TTree("DDASFit", "");
-  tree->Branch("newHitFits", "fit", item);
-
-  Int_t nentries = treein->GetEntries();
-  cout << "I have " << nentries << " entries" << endl;
-  for (int i = 0; i < nentries; ++i) {
-    treein->GetEntry(i);
-    if ((i % 10000) == 0)std::cout << i << std::endl;
-    std::vector<RootHitExtension>& oldExt(*old_extension);
-    Int_t size = oldExt.size();
-    for (int h = 0; h < size; h++) {
-      item->addFit(oldExt[h]);
-    }
-    tree->Fill();
-    item->clear();
-  }
-  std::cout << "Reserializer done" << std::endl;
-  tree->Write();
-  std::cout << "File written" << std::endl;
-
-  delete f;
-  return 0;
-}
+ClassImp(doubleFit);
+ClassImp(fit);

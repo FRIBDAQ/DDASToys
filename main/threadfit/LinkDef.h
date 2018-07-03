@@ -39,4 +39,7 @@
 
 #pragma link C++ class DDASRootFitEvent+;
 
+#pragma link C++ class doubleFit+;
+#pragma link C++ class fit+;
+
 #endif

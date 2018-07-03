@@ -78,7 +78,7 @@ zmqsortedwriter.o: zmqsortedwriter.cpp
 
 RootFitDictionary.cpp: RootFitDictionary.h
 
-RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h RootExtensions.h functions.h \
+RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h RootExtensions.h rootTreeClasses.h functions.h  \
 	LinkDef.h
 	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint 	\
 		-f RootFitDictionary.cpp  \
@@ -137,4 +137,4 @@ clean:
 	rm -f *.o  \
 	functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
 	DisplayExtensions \
-	ringblockdealer libDDASFitClasses.so
+	ringblockdealer libDDASFitClasses.so RootFitDictionary.*
