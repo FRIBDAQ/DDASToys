@@ -1,4 +1,4 @@
-CC      = g++
+C      = g++
 CFLAGS  = -std=c++11 -g  -O2
 LDFLAGS = -pthread -Wall -lrt  -lzmq  -g
 
@@ -42,7 +42,8 @@ ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \
 	CRingFileOutputter.o FitHitUnpacker.o 				\
 	functions.o lmfit.o \
 	zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o \
-	CRootFileDataSink.o CRootSelectableDataSink.o	\
+	CRootFileDataSink.o CRootSelectableDataSink.o \
+	COutputFormatFactory.o \
 	DDASRootFitEvent.o DDASRootFitHit.o \
 	RootFitDictionary.o RootExtensions.o RootFitDictionary.o
 	$(CXX) $(CXXLDFLAGS) -o $@ $^ \
@@ -63,6 +64,9 @@ CRootFileDataSink.o: CRootFileDataSink.cpp CRootFileDataSink.h
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
 CRootSelectableDataSink.o: CRootSelectableDataSink.cpp CRootSelectableDataSink.h
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
+COutputFormatFactory.o: COutputFormatFactory.cpp COutputFormatFactory.h
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
 DDASRootFitEvent.o: DDASRootFitEvent.cpp

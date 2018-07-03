@@ -22,7 +22,7 @@
 #ifndef COUTPUTFORMATFACTORY_H
 #define COUTPUTFORMATFACTORY_H
 
-class COutputSink;
+class CDataSink;
 
 /**
  * @class COutputFormatFactory
@@ -34,7 +34,7 @@ class COutputSink;
  *    for the ringblockdealer fitter.
  */
 class COutputFormatFactory {
-    static COutputSink* createSink(const char* format, const char* connection);
-}
+    static CDataSink* createSink(const char* format, const char* connection);
+};
 
 #endif

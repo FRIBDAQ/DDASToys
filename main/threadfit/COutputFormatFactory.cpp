@@ -20,7 +20,7 @@
  *          Returns a COutputSink of the appropriate type.
  */
 #include "COutputFormatFactory.h"
-#include "CRootSelectableDataSink.h
+#include "CRootSelectableDataSink.h"
 #include "CRootFileDataSink.h"
 #include "CFileDataSink.h"
 
@@ -37,7 +37,7 @@
  *  @throws std::invalid_argument - if format is invalid or anything one of the
  *                        output sink class constructors might throw.
  */
-static COutputSink*
+CDataSink*
 COutputFormatFactory::createSink(const char* format, const char* connection)
 {
     std::string fmt(format);
@@ -47,7 +47,7 @@ COutputFormatFactory::createSink(const char* format, const char* connection)
     } else if (fmt == "root") {
         return new CRootFileDataSink(connection);
     } else if (fmt == "rootselectable") {
-        return CRootSelectableDataSink(connection);
+        return new CRootSelectableDataSink(connection);
     } else {
         throw std::invalid_argument("Invalid output format type.");
     }
