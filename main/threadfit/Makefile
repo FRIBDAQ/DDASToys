@@ -42,7 +42,8 @@ ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \
 	CRingFileOutputter.o FitHitUnpacker.o 				\
 	functions.o lmfit.o \
 	zmqsortedwriter.o CZMQRingOutputter.o CSortingOutputter.o \
-	CRootFileDataSink.o DDASRootFitEvent.o DDASRootFitHit.o \
+	CRootFileDataSink.o CRootSelectableDataSink.o	\
+	DDASRootFitEvent.o DDASRootFitHit.o \
 	RootFitDictionary.o RootExtensions.o RootFitDictionary.o
 	$(CXX) $(CXXLDFLAGS) -o $@ $^ \
 	-ldataformat -ldaqio -lDataFlow -lurl -lgsl -lgslcblas \
@@ -58,7 +59,10 @@ DDASFileOutputter.o: DDASFileOutputter.cpp DDASFileOutputter.h Outputter.h \
 	CDDASAnalyzer.h
 	$(CXX) -c $(CXXFLAGS) $<
 
-CRootFileDataSink.o: CRootFileDataSink.cpp CRootFileDataSink.cpp
+CRootFileDataSink.o: CRootFileDataSink.cpp CRootFileDataSink.h
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
+
+CRootSelectableDataSink.o: CRootSelectableDataSink.cpp CRootSelectableDataSink.h
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
 
 DDASRootFitEvent.o: DDASRootFitEvent.cpp

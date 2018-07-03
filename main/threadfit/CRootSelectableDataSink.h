@@ -63,13 +63,13 @@ private:
     // Canonicals:
 public:
     CRootSelectableDataSink(const char* filename, const char* treename="DDASFit");
-    virtual ~CRootSelectableDatSink();
+    virtual ~CRootSelectableDataSink();
     
     // CDataSink mandatory interface:
     
 public:
     virtual void putItem(const CRingItem& item);
-    virtual void put(const void* pData size_t nBytes);
+    virtual void put(const void* pData, size_t nBytes);
 };
 
 

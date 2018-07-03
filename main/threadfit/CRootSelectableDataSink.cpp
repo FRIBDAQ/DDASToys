@@ -23,12 +23,14 @@
 #include <CRingItem.h>
 #include <CRingItemFactory.h>
 #include "DDASRootFitEvent.h"
+#include "DDASRootFitHit.h"
 #include <TTree.h>
 #include <TFile.h>
 #include <TDirectory.h>
 #include <FragmentIndex.h>
-#include <FitHitUnpacker.h>
+#include "FitHitUnpacker.h"
 
+#include <iostream>
 /**
  * constructor
  *   Create the TFile, the TTree, the buffers link them all together
@@ -50,11 +52,11 @@ CRootSelectableDataSink::CRootSelectableDataSink(
     gDirectory->Cd("/");
     try {
         m_file = new TFile(filename, "RECREATE");
-        m_TreeEvent = new DDASRootFitEvent;
+        m_RawEvent = new DDASRootFitEvent;
         m_fits      = new fit;
         
         m_tree = new TTree(treename, treename);
-        m_tree->Branch("RawHits", m_TreeEvent);
+        m_tree->Branch("RawHits", m_RawEvent);
         m_tree->Branch("HitFits", m_fits);
     }
     catch(...) {
@@ -70,7 +72,6 @@ CRootSelectableDataSink::CRootSelectableDataSink(
         throw;
     }
 }
-
 /** Destructor
  *     Delete all the crap we made.
  */
@@ -80,7 +81,7 @@ CRootSelectableDataSink::~CRootSelectableDataSink()
 
     delete m_tree;
     delete m_file;
-    delete m_TreeEvent;
+    delete m_RawEvent;
     delete m_fits;
 }
 /**
@@ -91,6 +92,7 @@ CRootSelectableDataSink::~CRootSelectableDataSink()
  *
  * @param item - reference to the ring itemt to output.
  */
+void
 CRootSelectableDataSink::putItem(const CRingItem& item)
 {
     m_RawEvent->Reset();              // Clear its vectors etc.
@@ -121,7 +123,7 @@ CRootSelectableDataSink::putItem(const CRingItem& item)
         if (fitHit.hasExtension()) {
             ext = fitHit.getExtension();
         }
-        fits->addFit(ext);
+        m_fits->addFit(ext);
     }
     // Now that both branch buffers have been stocked, fill the tree.
     
@@ -139,7 +141,7 @@ CRootSelectableDataSink::putItem(const CRingItem& item)
  * @param nBytes - Number of bytes of data (ignored).
  */
 void
-CRootSelectableDataSink::put(const char* pData, size_t nBytes)
+CRootSelectableDataSink::put(const void* pData, size_t nBytes)
 {
     if (!m_warnedPutUsed) {
         m_warnedPutUsed = true;
@@ -154,7 +156,7 @@ CRootSelectableDataSink::put(const char* pData, size_t nBytes)
     // See if pData can be put as a ring item.
     
     void* p = const_cast<void*>(pData);    // Factory does not expect const.
-    CRingItem* pItem = CRingItemFactor::createRingItem(p);
+    CRingItem* pItem = CRingItemFactory::createRingItem(p);
     putItem(*pItem);
-    delete pITem;
+    delete pItem;
 }

@@ -324,10 +324,10 @@ int main(int argc, char** argv) {
   outfile      = argv[4];
   std::string strFormat = argv[5];
   
-  if (strFormat != "ring" && strFormat != "root") {
+  if (strFormat != "ring" && strFormat != "root" && strFormat != "rootselectable") {
     std::cerr << strFormat << " is not a valid output file format\n";
     std::cerr << "Valid formats are 'ring' for NSCL Ringbuffers and\n";
-    std::cerr << "root for root files\n";
+    std::cerr << "'root' or 'rootselectable' for root files\n";
     exit(EXIT_FAILURE);
   }
   
