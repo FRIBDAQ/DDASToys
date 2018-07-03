@@ -34,6 +34,7 @@ class CDataSink;
  *    for the ringblockdealer fitter.
  */
 class COutputFormatFactory {
+public:
     static CDataSink* createSink(const char* format, const char* connection);
 };
 

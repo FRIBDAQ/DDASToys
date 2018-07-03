@@ -23,8 +23,8 @@
 #include "zhelpers.hpp"
 #include "CSortingOutputter.h"
 
-#include <CFileDataSink.h>
-#include "CRootFileDataSink.h"
+#include <CDataSink.h>
+#include "COutputFormatFactory.h"
 
 
 #include <CRingItem.h>
@@ -308,16 +308,9 @@ zmqwriter_thread(void* args)
     std::string fileFormat(pArgs[1]);
 
 
-    CDataSink* pSink;
+    CDataSink* pSink =
+        COutputFormatFactory::createSink(fileFormat.c_str(), filename.c_str());
     
-    if (fileFormat == "ring") {
-        pSink = new CFileDataSink(filename);
-    } else if (fileFormat == "root") {
-        pSink = new CRootFileDataSink(filename.c_str());
-    } else {
-        std::cerr << fileFormat << " was passed to zmqwriter_thread as the file format\n";
-        std::cerr << " But the allowed formats are only 'ring' and 'root'\n";
-    }
     CDataSink& outFile(*pSink);
     CSortingOutputter outputter(outFile);
     
