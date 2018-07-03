@@ -78,7 +78,7 @@ zmqsortedwriter.o: zmqsortedwriter.cpp
 
 RootFitDictionary.cpp: RootFitDictionary.h
 
-RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h RootExtensions.h \
+RootFitDictionary.h: DDASRootFitEvent.h DDASRootFitHit.h RootExtensions.h functions.h \
 	LinkDef.h
 	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint 	\
 		-f RootFitDictionary.cpp  \
@@ -125,7 +125,7 @@ DisplayExtensions : DisplayExtensions.o FitHitUnpacker.o functions.o
 
 
 libDDASFitClasses.so:  DDASRootFitHit.o DDASRootFitEvent.o  \
-	RootFitDictionary.o RootExtensions.o RootFitDictionary.o
+	RootFitDictionary.o RootExtensions.o RootFitDictionary.o functions.o
 	$(CXX) -shared -o $@ $^  \
 	-L$(DDASLIB)  -lddasformat \
 	-Wl,-rpath=$(DDASLIB)
