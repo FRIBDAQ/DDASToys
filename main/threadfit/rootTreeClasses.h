@@ -1,4 +1,6 @@
 #include <TObject.h>
+#include "RootExtensions.h"
+
 
 class doubleFit : public TObject
 {
