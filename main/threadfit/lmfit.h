@@ -71,12 +71,12 @@ struct GslFitParameters {
 
 void lmfit1(
    fit1Info* pResult, std::vector<uint16_t>& trace,
-   const std::pair<unsigned, unsigned>& limits
+   const std::pair<unsigned, unsigned>& limits, uint16_t saturation = 0xffff
 );
 void lmfit2(
    fit2Info* pResult, std::vector<uint16_t>& trace,
    const std::pair<unsigned, unsigned>& limits,
-   fit1Info* pSinglePulseFit = nullptr
+   fit1Info* pSinglePulseFit = nullptr, uint16_t saturation = 0xffff
 );    
 };
 
