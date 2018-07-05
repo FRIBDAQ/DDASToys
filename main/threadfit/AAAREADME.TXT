@@ -34,10 +34,11 @@ create a script that can sequentially locate and analyze each segment.
 outfile - Name of the output file (see OUPUT FORMAT below).  Note that only
 physics items will be output to this file.
 
-format - type of output desired.  This can be ring for NSCL ring buffer format
-or root for a CERN Root file.  With root format on genesis, there's no gain in
-setting workers > 4.  This is due to the compute intensiveness of Root's output
-subsystem.  At that point, a core is fully utilized doing Root output.
+format - type of output desired.  This can be 'ring' for NSCL ring buffer format
+or 'root' or 'rootselectable' for a CERN Root file.  With root format on
+genesis, there's no gain in setting workers > 4.  This is due to the compute
+intensiveness of Root's output subsystem.  At that point, a core is fully
+utilized doing Root output. 
 
 Note as well that the actual performance of this program will depend on the
 predicate you use to define which channels get fit and how large the region of
@@ -224,6 +225,21 @@ These are implemented in RootExtensions.cpp for incorporation into compiled Root
 applications.  The shared library libDDASFitClasses.so and associated root
 dictionary file libDDASFitClasses.rootmap allow these classes to be dynamically
 incorporated in to interpreted Root sesssions.
+
+RootSelectable Format
+  This root format was determined to be amenable to the creation of root
+selectors.  It is now the recommended root format.  As with 'root' format,
+'rootselectable' format writes the dat ain two branches.  The "RawHits" branch
+is identical to the 'root' format, and contains the raw hit data.  The
+"HitFits' branch, however contains a fit object (see rootTreeClasses.h) for
+each event.  For compatibility with existing code, this class supports indexing
+and the indexing operator returns a RootHitExtension object for the specified
+hit.  The number of hits is the same as the number of hits in the RawHits
+branch.  You can use that to control iteration over the fits in the fit class.
+
+Note that you may have a Root Macro file that defines the fit class. You must
+not include this if you've loaded the libDDASFitClasses.so library.
+  
 
 
 HOW TO MODIFY THIS
