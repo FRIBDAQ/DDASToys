@@ -20,6 +20,8 @@
  */
 #ifndef LMFIT_H
 #define LMFIT_H
+#include <vector>
+#include <stdint.h>
 namespace DDAS {
 // The following structs are used by the fitting
 // functions.
