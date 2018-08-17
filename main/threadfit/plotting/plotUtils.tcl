@@ -72,8 +72,7 @@ proc plotDataSet {data canvas  {color black}} {
     
     set ySpec [Plotchart::determineScale $ymin $ymax 0]
 
-    puts "($ymin, $ymax)  $ySpec"
-    
+       
     # Create and plot the data:
     
     set plot [Plotchart::createXYPlot $canvas $xSpec $ySpec]
