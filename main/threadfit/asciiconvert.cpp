@@ -34,7 +34,9 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /**
  * Usage:
@@ -80,9 +82,9 @@ usage(std::ostream& s, const char* msg)
  * @return bool - true if the hit makes the criteria to write it out.
  */
 bool writeMe(const DAQ::DDAS::DDASHit& hit) {
-    uint32_t crate = hit.GetCrateId();
-    uint32_t slot  = hit.GetSlotId();
-    uint32_t chan  = hit.GetChannelId();
+    uint32_t crate = hit.GetCrateID();
+    uint32_t slot  = hit.GetSlotID();
+    uint32_t chan  = hit.GetChannelID();
     
     return (crate == 0) && (slot == 2) && (chan == 0);  // Dynode channel.
 }
@@ -101,7 +103,7 @@ writeHit(std::ostream& s, const DAQ::DDAS::DDASHit& hit)
     if (hit.GetTraceLength() > 0) {
         const std::vector<uint16_t>& trace(hit.GetTrace());
         s << trace.size() << std::endl;
-        for (int i = 0; i < trace.size(); i++) {
+        for (size_t i = 0; i < trace.size(); i++) {
             s << trace[i] << std::endl;
         }
     }
@@ -120,18 +122,18 @@ writeHit(std::ostream& s, const DAQ::DDAS::DDASHit& hit)
 static std::vector<DAQ::DDAS::DDASHit>
 getHits(CRingItem& item)
 {
-    std::vector<DAQ::DDAS::DDASHit> result
+    std::vector<DAQ::DDAS::DDASHit> result;
     if (item.type() == PHYSICS_EVENT) {
-        FragmentIndex frags(reinterpret_cast<uint16_t*>(pItem->getBodyPointer()));
+        FragmentIndex frags(reinterpret_cast<uint16_t*>(item.getBodyPointer()));
         FragmentInfo frag;
-        DDASHitUnpacker unpacker;
-        sizse_t nFrags = frags.getNumberFragments();
-        for (int i =0; i < nFrags; i++) {
+        DAQ::DDAS::DDASHitUnpacker unpacker;
+        size_t nFrags = frags.getNumberFragments();
+        for (size_t i =0; i < nFrags; i++) {
             FragmentInfo frag = frags.getFragment(i);
-            DDASHit hit;
-            uint32_t* begin = reinterpret_cast<uint32_t*>(f.s_itembody);
+            DAQ::DDAS::DDASHit hit;
+            uint32_t* begin = reinterpret_cast<uint32_t*>(frag.s_itembody);
             uint32_t* end   = reinterpret_cast<uint32_t*>(
-                reinterpret_cast<uint8_t*>(f.s_itembody) + f.s_size
+                reinterpret_cast<uint8_t*>(frag.s_itembody) + frag.s_size
             );
             unpacker.unpack(begin, end, hit);
             result.push_back(hit);
@@ -149,13 +151,13 @@ getHits(CRingItem& item)
  * @param in - input data source.
  * @param out - output stream
  */
-stati void
+static void
 convert(CFileDataSource& in, std::ostream& out)
 {
     CRingItem* pItem;
-    while (pItem = in.getItem()) {
+    while ((pItem = in.getItem())) {
         std::vector<DAQ::DDAS::DDASHit> hits = getHits(*pItem);
-        for (int i = 0; i < hits.size(); i++) {
+        for (size_t i = 0; i < hits.size(); i++) {
             if (writeMe(hits[i])) {
                 writeHit(out, hits[i]);
             }
@@ -175,7 +177,13 @@ int main(int argc, char** argv)
     if (argc != 3) usage(std::cerr, "Invalid number of parameters");
     
     std::vector<uint16_t> empty;
-    CFileDataSource src(argv[1], empty);
+    int fd = open(argv[1], O_RDONLY);
+    
+    if (fd < 0) {
+        usage(std::cerr, "Input file could not be opened");
+    }
+    
+    CFileDataSource src(fd, empty);
     std::ofstream   dest(argv[2]);
     
     convert(src, dest);
