@@ -208,9 +208,14 @@ CDDASAnalyzer::fit(
   std::pair<unsigned, unsigned> fit2Limits     = fit2Info.first;
   unsigned                      fit2Saturation = fit2Info.second;
   if (fit2Limits.first == fit2Limits.second) return;
-  
-  DDAS::lmfit2(&(pExtension->twoPulseFit), trace, fit2Limits,
-               &(pExtension->onePulseFit), fit2Saturation);
+
+#if COMMON_TIMING==1
+  DDAS::lmfit2fixedT(
+#else
+  DDAS::lmfit2(
+#endif
+      &(pExtension->twoPulseFit), trace, fit2Limits,
+      &(pExtension->onePulseFit), fit2Saturation);
   
 }
 
