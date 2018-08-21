@@ -68,6 +68,7 @@ set dataSet [readFitDataSet $fd]
 set x [dict get $dataSet x]
 set y1 [dict get $dataSet y1]
 set y2 [dict get $dataSet y2]
+set d  [dict get $dataSet diff]
 
 # Figure out x range and y range.
 
@@ -75,13 +76,16 @@ set xmin 0
 set xmax [lindex $x end]
 set xSpec [Plotchart::determineScale $xmin $xmax]
 
+set dmin [expr min([join $d ,])]
+set dmax [expr max([join $d ,])]
+
 set ymin [expr min([join $y1 ,])];
 set ymax [expr max([join $y1 ,])]
 set ymax2 [expr max([join $y2 ,])]
-set ymax [expr max($ymax,$ymax2)]
+set ymax [expr max($ymax,$ymax2, $dmax)]
 set ymax [expr 1.05*$ymax]
 set ymin2 [expr min([join $y2 ,])]
-set ymin [expr min($ymin, $ymin2, 0)]
+set ymin [expr min($ymin, $ymin2, $dmin,  0)]
 
 
 set yspec [Plotchart::determineScale $ymin $ymax 0]
