@@ -930,8 +930,8 @@ DDAS::lmfit2(
     
     
     double A2    = gsl_vector_get(p, P2FTA2_INDEX);   // Pulse 2.
-    double k3    = gsl_vector_get(p, P2FTK1_INDEX);
-    double k4    = gsl_vector_get(p, P2FTK2_INDEX);
+    double k3    = gsl_vector_get(p, P2FTK1_INDEX);   // k3 = k1
+    double k4    = gsl_vector_get(p, P2FTK2_INDEX);   // k4 = k2
     double x2    = gsl_vector_get(p, P2FTX2_INDEX);
     
     double C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
@@ -977,8 +977,8 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     
     
     double A2    = gsl_vector_get(p, P2FTA2_INDEX);   // Pulse 2.
-    double k3    = gsl_vector_get(p, P2FTK1_INDEX);
-    double k4    = gsl_vector_get(p, P2FTK2_INDEX);
+    double k3    = gsl_vector_get(p, P2FTK1_INDEX);   // k3 = k1
+    double k4    = gsl_vector_get(p, P2FTK2_INDEX);   // k4 = k2
     double x2    = gsl_vector_get(p, P2FTX2_INDEX);
     
     double C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
@@ -1007,8 +1007,16 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
         double efall2 = exp(-k4*(x - x2));
         
         gsl_matrix_set(j, i, P2FTA1_INDEX, dp1dA(k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, i, P2FTK1_INDEX, dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, i, P2FTK2_INDEX, dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1));
+        gsl_matrix_set(
+            j, i, P2FTK1_INDEX,
+            dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1) +
+            dp1dk1(A2, k1, k2, x2, x, 1.0, erise2, efall2)
+        );
+        gsl_matrix_set(
+            j, i, P2FTK2_INDEX,
+            dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1) +
+            dp1dk2(A2, k1, k2, x2, x, 1.0, erise2, efall2)
+        );
         gsl_matrix_set(j, i, P2FTX1_INDEX, dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
         
         // For pulse 2 elements:  A1->A2,  x1 -> x2
