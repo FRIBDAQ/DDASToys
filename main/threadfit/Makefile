@@ -1,3 +1,5 @@
+COMMON_TIMING=0
+
 C      = g++
 CFLAGS  = -std=c++11 -g  -O2
 LDFLAGS = -pthread -Wall -lrt  -lzmq  -g
@@ -9,7 +11,8 @@ DDASROOT=/usr/opt/ddas/2.2
 DDASINC=$(DDASROOT)/include
 DDASLIB=$(DDASROOT)/lib
 
-CXXFLAGS=$(CFLAGS) -I$(DAQROOT)/include -I$(DDAS_INC) -fPIC
+CXXFLAGS=$(CFLAGS) -I$(DAQROOT)/include -I$(DDAS_INC) -fPIC \
+	-DCOMMON_TIMING=$(COMMON_TIMING)
 CXXLDFLAGS=$(LDFLAGS) -L$(DAQLIB)  -L$(DDASLIB) \
 	-lFragmentIndex			\
 	-ldataformat			\
@@ -27,7 +30,7 @@ ROOT_RPATH=-Wl,-rpath=$(ROOTSYS)/lib/root
 
 all:   ringblockdealer libDDASFitClasses.so asciiconvert  tests 
 
-tests: functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
+tests: functiontests pulsemaker fit1 fit2 fit2t  TestAnalyzer v10to11converter \
 	DisplayExtensions
 
 CRingFileReader.o: CRingFileReader.cpp
@@ -119,6 +122,9 @@ fit1: fit1.cpp functions.o lmfit.o
 	$(CXX) $(CXXFLAGS) $(CXXLDFLAGS) -o $@ $^ -lgsl -lgslcblas
 
 fit2: fit2.cpp functions.o lmfit.o
+	$(CXX) $(CXXFLAGS) $(CXXLDFLAGS) -o $@ $^ -lgsl -lgslcblas
+
+fit2t: fit2t.cpp functions.o lmfit.o
 	$(CXX) $(CXXFLAGS) $(CXXLDFLAGS) -o $@ $^ -lgsl -lgslcblas
 
 

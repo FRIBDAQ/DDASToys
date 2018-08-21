@@ -1096,7 +1096,7 @@ DDAS::lmfit2fixedT(
     
     // Make the solver workspace:
     
-    solver = gsl_multifit_fdfsolver_alloc(method, npts, P2_PARAM_COUNT);
+    solver = gsl_multifit_fdfsolver_alloc(method, npts, P2FT_PARAM_COUNT);
     if (solver == nullptr) {
         throw std::runtime_error("lmfit1 Unable to allocate fit solver workspace");
     }    
@@ -1226,7 +1226,7 @@ DDAS::lmfit2fixedT(
     double X1 = gsl_vector_get(solver->x, P2FTX1_INDEX);
     
     double A2 = gsl_vector_get(solver->x, P2FTA2_INDEX);  // Pulse 2
-    double K3 = gsl_vector_get(solver->x, P2FTK2_INDEX);
+    double K3 = gsl_vector_get(solver->x, P2FTK1_INDEX);
     double K4 = gsl_vector_get(solver->x, P2FTK2_INDEX);
     double X2 = gsl_vector_get(solver->x, P2FTX2_INDEX);
     

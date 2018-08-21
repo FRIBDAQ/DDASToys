@@ -145,8 +145,13 @@ void generateDoublePulses(std::ostream& o, int n, int a)
         double X1 = rrange(X_LOW, X1_HIGH);
         
         double A2 = rrange(A_LOW, A_HIGH);
+#if COMMON_TIMING==1
+        double K3 = K1;       // Same time parameters for both pulses.
+        double K4 = K2;
+#else
         double K3 = rrange(K1_LOW, K1_HIGH);
         double K4 = rrange(K2_LOW, K2_HIGH);
+#endif
         double X2 = rrange(X1, X2_HIGH);
         
         // Header line
