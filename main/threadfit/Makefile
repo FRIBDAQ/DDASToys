@@ -28,7 +28,7 @@ ROOT_RPATH=-Wl,-rpath=$(ROOTSYS)/lib/root
 
 #
 
-all:   ringblockdealer libDDASFitClasses.so asciiconvert  tests 
+all:   ringblockdealer libDDASFitClasses.so asciiconvert binconvert  tests 
 
 tests: functiontests pulsemaker fit1 fit2 fit2t  TestAnalyzer v10to11converter \
 	DisplayExtensions
@@ -42,6 +42,10 @@ CRingFileBlockReader.o: CRingFileBlockReader.cpp
 
 asciiconvert: asciiconvert.cpp
 	$(CXX) $(CXXFLAGS) -o asciiconvert asciiconvert.cpp $(CXXLDFLAGS) \
+	-ldaqio
+
+binconvert: binconvert.cpp
+	$(CXX) $(CXXFLAGS) -o binconvert binconvert.cpp $(CXXLDFLAGS) \
 	-ldaqio
 
 
