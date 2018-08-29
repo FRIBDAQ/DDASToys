@@ -40,7 +40,7 @@
 
 /**
  * Usage:
- *     asciiconvert infile outfile
+ *     binconvert infile outfile [numevents]
  *
  *  infile - the input ring item file.
  *  outfile - the output ASCII file.
@@ -177,7 +177,13 @@ int main(int argc, char** argv)
     if (argc != 3) usage(std::cerr, "Invalid number of parameters");
     
     std::vector<uint16_t> empty;
-    int fd = open(argv[1], O_RDONLY);
+    int fd;
+    if (*argv[1] == '-') {
+        fd = STDIN_FILENO;
+    } else {
+        fd = open(argv[1], O_RDONLY);
+        
+    }
     
     if (fd < 0) {
         usage(std::cerr, "Input file could not be opened");
