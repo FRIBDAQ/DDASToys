@@ -68,7 +68,7 @@ usage(std::ostream& s, const char* msg)
 {
     s << msg << std::endl;
     s << "Usage\n";
-    s << "    asciiconvert infile outfile\n";
+    s << "    asciiconvert infile outfile [numevents]\n";
     
     exit(EXIT_FAILURE);
 }
@@ -102,10 +102,16 @@ writeHit(std::ostream& s, const DAQ::DDAS::DDASHit& hit)
 {
     if (hit.GetTraceLength() > 0) {
         const std::vector<uint16_t>& trace(hit.GetTrace());
-        s << trace.size() << std::endl;
-        for (size_t i = 0; i < trace.size(); i++) {
-            s << trace[i] << std::endl;
+        uint32_t tSize = trace.size();
+        s.write(reinterpret_cast<const char*>(&tSize), sizeof(uint32_t));
+        uint16_t traceArray[tSize];
+        for (size_t i = 0; i < tSize; i++) {
+            traceArray[i] =  trace[i];
         }
+        s.write(
+            reinterpret_cast<const char*>(traceArray),
+            tSize * sizeof(uint16_t)
+        );
     }
 }
 /**
@@ -150,16 +156,23 @@ getHits(CRingItem& item)
  *
  * @param in - input data source.
  * @param out - output stream
+ * @param num - Number of hits to output
  */
 static void
-convert(CFileDataSource& in, std::ostream& out)
+convert(CFileDataSource& in, std::ostream& out, uint64_t num)
 {
     CRingItem* pItem;
+    uint64_t nwritten = 0;
     while ((pItem = in.getItem())) {
         std::vector<DAQ::DDAS::DDASHit> hits = getHits(*pItem);
         for (size_t i = 0; i < hits.size(); i++) {
             if (writeMe(hits[i])) {
                 writeHit(out, hits[i]);
+                nwritten++;
+                if (nwritten == num) {
+                    delete pItem;
+                    return;
+                }
             }
         }
         delete pItem;
@@ -174,15 +187,16 @@ convert(CFileDataSource& in, std::ostream& out)
  */
 int main(int argc, char** argv)
 {
-    if (argc != 3) usage(std::cerr, "Invalid number of parameters");
+    uint64_t events = UINT64_MAX;
+    if ((argc != 3) && (argc != 4))
+        usage(std::cerr, "Invalid number of parameters");
     
     std::vector<uint16_t> empty;
     int fd;
     if (*argv[1] == '-') {
         fd = STDIN_FILENO;
     } else {
-        fd = open(argv[1], O_RDONLY);
-        
+        fd = open(argv[1], O_RDONLY);        
     }
     
     if (fd < 0) {
@@ -192,7 +206,15 @@ int main(int argc, char** argv)
     CFileDataSource src(fd, empty);
     std::ofstream   dest(argv[2]);
     
-    convert(src, dest);
+    if (argc == 4) {
+        char* endptr;
+        events = strtoull(argv[3], &endptr, 0);
+        if (endptr == argv[3]) {
+            usage(std::cerr, "Event count must be an unsigned integer");
+        }
+    }
+    
+    convert(src, dest, events);
     
     return EXIT_SUCCESS;
 }
