@@ -85,6 +85,36 @@ static const int P2FTC_INDEX(6);
 static const int P2FT_PARAM_COUNT(7);
  
 
+/*------------------------------------------------------------------
+ * Utility functions.
+ */
+
+/**
+ * reduceTrace
+ *   given a trace and a saturation value, returns the vector of
+ *   sample-no,sample-value pairs that are below a saturation value.
+ *
+ * @param[out] points - Reduced trace.
+ * @param[in]  trace  - Raw trace.
+ * @paream     low, high - Limits of the trace to reduce.
+ * @param      saturation - Saturation level.
+ */
+static void reduceTrace(
+   std::vector<std::pair<uint16_t, uint16_t>>& points,
+   int low, int high,
+   const std::vector<uint16_t>& trace, uint16_t saturation)
+{
+    for (int i =  low; i <= high; i++) {
+        if (trace[i] < saturation) {
+            points.push_back(std::pair<uint16_t, uint16_t>(
+                i, trace[i]
+            ));
+        }
+    }
+    
+}
+
+
 /*-----------------------------------------------------------------------------
  *  Fitting via Levenberg-Marquardt in the GSL.
  *
@@ -434,13 +464,7 @@ DDAS::lmfit1(
     // within the limits and with points at or above saturation removed:
     
     std::vector<std::pair<uint16_t, uint16_t>> points;
-    for (int i =  low; i <= high; i++) {
-        if (trace[i] < saturation) {
-            points.push_back(std::pair<uint16_t, uint16_t>(
-                i, trace[i]
-            ));
-        }
-    }
+    reduceTrace(points, low, high, trace, saturation);
     
     unsigned npts = points.size();
     
@@ -719,13 +743,7 @@ DDAS::lmfit2(
     // limits and saturation value:
     
     std::vector<std::pair<uint16_t, uint16_t> > points;
-    for (int i = low; i <= high; i++) {
-        if (trace[i] < saturation) {
-            points.push_back(std::pair<uint16_t, uint16_t>(
-                i, trace[i]
-            ));
-        }
-    }
+    reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
     
     // Set up basic solver stuff:
@@ -739,7 +757,7 @@ DDAS::lmfit2(
     
     solver = gsl_multifit_fdfsolver_alloc(method, npts, P2_PARAM_COUNT);
     if (solver == nullptr) {
-        throw std::runtime_error("lmfit1 Unable to allocate fit solver workspace");
+        throw std::runtime_error("lmfit2 Unable to allocate fit solver workspace");
     }    
     
     // Fill in the function data pointers:
@@ -1086,13 +1104,7 @@ DDAS::lmfit2fixedT(
     // limits and saturation value:
     
     std::vector<std::pair<uint16_t, uint16_t> > points;
-    for (int i = low; i <= high; i++) {
-        if (trace[i] < saturation) {
-            points.push_back(std::pair<uint16_t, uint16_t>(
-                i, trace[i]
-            ));
-        }
-    }
+    reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
     
     // Set up basic solver stuff:
@@ -1106,7 +1118,7 @@ DDAS::lmfit2fixedT(
     
     solver = gsl_multifit_fdfsolver_alloc(method, npts, P2FT_PARAM_COUNT);
     if (solver == nullptr) {
-        throw std::runtime_error("lmfit1 Unable to allocate fit solver workspace");
+        throw std::runtime_error("lmfit2fixed Unable to allocate fit solver workspace");
     }    
     
     // Fill in the function data pointers:
