@@ -7,7 +7,7 @@ LDFLAGS = -pthread -Wall -lrt  -lzmq  -g
 #  Assume DAQ environment is set up:
 #  Use DDAS-2.2 damnit:
 
-DDASROOT=/usr/opt/ddas/2.2
+DDASROOT=$(DDAS_ROOT)
 DDASINC=$(DDASROOT)/include
 DDASLIB=$(DDASROOT)/lib
 
