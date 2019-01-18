@@ -61,13 +61,14 @@ while {![eof $fd]} {
     # Read the trace into x/y
     
     set traceLen [gets $fd]
+    set traceLen [lindex $traceLen 0]
     set x [list]
     set y [list]
     set title "Raw trace $trace"
     set sample 0
     for {set i 0} {$i < $traceLen} {incr i} {
 	lappend x $sample
-	lappend y [gets $fd]
+	lappend y [lindex [gets $fd] 1]
 	incr sample
     }
     # Make a data set:
