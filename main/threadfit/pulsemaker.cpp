@@ -55,7 +55,7 @@
 const unsigned SAMPLES(500);        // Samples in a trace.
 
 const unsigned A_LOW(10);            // Smallest allowed amplitude.
-const unsigned A_HIGH(16384);        // '14 bit adc'.
+const unsigned A_HIGH(8192);        // '14 bit adc'.
 
 const unsigned BASELINE_LOW(10);
 const unsigned BASELINE_HIGH(100);
@@ -63,8 +63,8 @@ const unsigned BASELINE_HIGH(100);
 const double K1_LOW(0.1);          // Shallowest rise.
 const double K1_HIGH(0.9);         // steepest rise.
 
-const double K2_LOW(0.05);           // Shallowest decay.
-const double K2_HIGH(0.2);          // Steepest decay.
+const double K2_LOW(0.00005);           // Shallowest decay.
+const double K2_HIGH(0.00007);          // Steepest decay.
 
 // These interact with SAMPLES -- if pulses are to be fully in the trace.
 
