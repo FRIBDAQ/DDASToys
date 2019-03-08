@@ -46,7 +46,7 @@ asciiconvert: asciiconvert.cpp
 
 binconvert: binconvert.cpp
 	$(CXX) $(CXXFLAGS) -o binconvert binconvert.cpp $(CXXLDFLAGS) \
-	-ldaqio
+	-ldaqio -lurl
 
 
 ringblockdealer: ringblockdealer.o CRingFileBlockReader.o CDDASAnalyzer.o \

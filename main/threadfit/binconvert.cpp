@@ -37,7 +37,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <URL.h>
 /**
  * Usage:
  *     binconvert infile outfile [numevents]
@@ -191,8 +191,9 @@ int main(int argc, char** argv)
     if ((argc != 3) && (argc != 4))
         usage(std::cerr, "Invalid number of parameters");
     
-    std::vector<uint16_t> empty;
-    int fd;
+   std::vector<uint16_t> empty;
+#ifdef STDINSOURCE_SUPPORTED
+   int fd;
     if (*argv[1] == '-') {
         fd = STDIN_FILENO;
     } else {
@@ -204,6 +205,11 @@ int main(int argc, char** argv)
     }
     
     CFileDataSource src(fd, empty);
+#else
+    URL file(argv[1]);
+    CFileDataSource src(file, empty);
+#endif
+    
     std::ofstream   dest(argv[2]);
     
     if (argc == 4) {
