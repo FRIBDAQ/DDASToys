@@ -28,6 +28,9 @@
 
 unsigned saturation(0xffff);           // Saturation level.
 
+extern double DDAS_FALLBACK_K2;
+
+
 /**
  * Usage:
  *    fit1  pulsemaker-file [saturation]
@@ -188,6 +191,7 @@ usage(std::ostream& o, const char* msg)
 int
 main(int argc, char** argv)
 {
+  DDAS_FALLBACK_K2=0.00001;            // Ge pulses.
     if (argc !=2 && argc != 3) {
         usage(std::cerr, "Incorrect number of command line parameters");
     }
