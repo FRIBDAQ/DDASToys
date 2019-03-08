@@ -45,7 +45,7 @@ asciiconvert: asciiconvert.cpp
 	-ldaqio
 
 binconvert: binconvert.cpp
-	$(CXX) $(CXXFLAGS) -o binconvert binconvert.cpp $(CXXLDFLAGS) \
+	$(CXX) $(CXXFLAGS) -DSTDINSOURCE_SUPPORTED -o binconvert binconvert.cpp $(CXXLDFLAGS) \
 	-ldaqio -lurl
 
 
@@ -159,4 +159,4 @@ clean:
 	rm -f *.o  \
 	functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
 	DisplayExtensions \
-	ringblockdealer libDDASFitClasses.so RootFitDictionary.*
+	ringblockdealer libDDASFitClasses.so RootFitDictionary.* binconvert
