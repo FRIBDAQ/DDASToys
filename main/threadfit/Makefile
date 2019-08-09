@@ -1,8 +1,12 @@
 COMMON_TIMING=0
 
+GSLCFLAGS=$(shell /usr/opt/gsl/2.5/bin/gsl-config --cflags)
+GSLLDFLAGS=$(shell /usr/opt/gsl/2.5/bin/gsl-config --libs)
+GSLLIB=$(shell /usr/opt/gsl/2.5/bin/gsl-config --prefix)/lib
+
 C      = g++
-CFLAGS  = -std=c++11 -g  -O2
-LDFLAGS = -pthread -Wall -lrt  -lzmq  -g
+CFLAGS  = -std=c++11 -g  -O2 $(GSLCFLAGS)
+LDFLAGS = $(GSLLDFLAGS) -pthread -Wall -lrt  -lzmq  -g -Wl,-rpath=$(GSLLIB)
 
 #  Assume DAQ environment is set up:
 #  Use DDAS-2.2 damnit:
