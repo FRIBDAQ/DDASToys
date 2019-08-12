@@ -14,11 +14,19 @@ To build this code you must:
 The Makefile produces the libFitter.so shared object.  This can be
 
 1. Used as the extension library for $DAQBIN/Transformer allowing fits to be
-parallelized using either Threading and ZMQ or MPI.
+parallelized using either Threading and ZMQ or MPI. ($DAQBIN/Transformer --help
+provides some simple documentation describing how to do this).
 2. Used as a loadable extension to Tcl that allows you to treat DDAS data from
 within pure Tcl scripts.  The Makefile creates the pgkIndex.tcl index file.
-3. The tracepeek.tcl script is a pure Tcl script that can be used to
-   
+3. The tracepeek.tcl script is a pure Tcl script that can be used to visualize
+DDAS data with traces and optionally fits.  To use this, TCLLIBPATH must
+include $DAQROOT/TclLibs and the directory containing libFitter.so for example:
+TCLLIBPATH="$DAQROOT/TclLibs ." tclsh tracepeek.tcl
+4. Provide the DDASFitHit and FitHitUnpacker  classes which can unpack hits
+that have fit data appended to them.  This class can unpack:
+   * Hits with no fit extension.
+   * Hits with fit extensions from ringblockdealer.
+   * Hits with fit extensions from Transformer
 
 Use the libFitter.so library with Transformer as described in the manpage
 for that program.  The remainder of this document describes
