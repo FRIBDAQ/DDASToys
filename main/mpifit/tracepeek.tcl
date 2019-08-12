@@ -33,6 +33,9 @@ set filename ""
 set currentEvent [list]
 set chart ""
 
+set cratemask *
+set slotmask  *
+set chanmask  *
 
 ##
 # pulse
@@ -178,6 +181,31 @@ proc computeDoublePulse {xs fit2} {
 }
 
 ##
+# getFragment
+#   Returns the fragment from the current event whose crate/slot/ch
+#   matches that in the selection string.
+#
+# @param sel - selection string crate:slot:chan
+# @return fragment dict.
+#
+proc getFragment sel {
+    set selList [split $sel :]
+    set crate [lindex $selList 0]
+    set slot  [lindex $selList 1]
+    set chan  [lindex $selList 2]
+    
+    foreach frag $::currentEvent {
+        if {($crate == [dict get $frag crate])      &&
+            ($slot   == [dict get $frag slot])       &&
+            ($chan   == [dict get $frag channel])} {
+                return $frag
+            }
+    }
+    error "No matching fragment for c:s:chan : $sel ($crate $slot $chan)"
+}
+
+
+##
 # showFrag
 #   Display trace and fit information for the selected event.
 #   This is normally bound to the double-1 event in the list box.
@@ -189,9 +217,12 @@ proc showFrag w {
     if {$i ne ""} {
         #  There's a selection.
         
-        set frag [lindex $::currentEvent $i]
+        set selection [$w get $i]
+        set frag [getFragment $selection]
+        
         
         if {[dict exists $frag fits]} {
+            puts [dict get $frag fits]
             showFits [dict get $frag fits]
         }
         #  There's always a trace..though there may not be fits.
@@ -225,6 +256,41 @@ proc showFrag w {
     
 }
 ##
+# populateListbox
+#   Populates the list box with the channels from the event that
+#   have traces and match the glob patterns in the cratemask, slotmask and chanmask
+#   globals.
+#
+proc populateListbox {} {
+    .control.fraglist delete 0 end;           # clear
+    foreach fragment $::currentEvent {
+        set crate [dict get $fragment crate]
+        set slot  [dict get $fragment slot]
+        set ch    [dict get $fragment channel]
+    
+        set crmask [split $::cratemask ,]
+        set slmask [split $::slotmask ,]
+        set chmask [split $::chanmask ,]
+        
+        set populated 0
+        foreach cmask $crmask {
+            foreach smask $slmask {
+                foreach chanmask $chmask {
+                    if {[string match $crmask $crate]     &&
+                        [string match $smask $slot]       &&
+                        [string match $chanmask $ch]} {
+                            if {!$populated} {
+                                .control.fraglist insert end $crate:$slot:$ch
+                                set populated 1;   #in case of multiple matches.
+                            }
+                        }
+                }
+            }
+        }
+
+    }
+}
+##
 # setupUi
 #    We have a button for the next event,
 #    A list box for the hits that have a trace.
@@ -239,8 +305,24 @@ proc setupUi {} {
     listbox    $c.fraglist -yscrollcommand [list $c.fragscroll set]
     ttk::scrollbar  $c.fragscroll -orient vertical -command [list $c.fraglist yview]
     
+    set filter [ttk::frame $c.filter]
+    ttk::label $filter.crfiltl -text crate
+    ttk::label $filter.slfiltl -text slot
+    ttk::label $filter.chfiltl -text channel
+    grid $filter.crfiltl $filter.slfiltl $filter.chfiltl -sticky w
+    
+    ttk::entry $filter.crfilter -textvariable ::cratemask
+    ttk::entry $filter.slfilter -textvariable ::slotmask
+    ttk::entry $filter.chfilter -textvariable ::chanmask
+    grid $filter.crfilter $filter.slfilter $filter.chfilter
+    foreach w [list $filter.crfilter $filter.slfilter $filter.chfilter] {
+        bind $w <Key-Return>  populateListbox
+    }
+    
+    
     grid $c.llabel
     grid $c.fraglist $c.fragscroll  -sticky nsew
+    grid $filter -row 1 -column 2   -sticky ns
     
     ttk::button $c.next -text {Next Event} -command nextEvent
     grid   $c.next
@@ -319,7 +401,7 @@ proc clearData {} {
 proc nextEvent {} {
     set rawEvent [ddasunpack next $::handle]
     set ::currentEvent [list]
-    .control.fraglist delete 0 end
+
     foreach hit $rawEvent {
         
         if {[dict exists $hit trace]} {
@@ -329,10 +411,9 @@ proc nextEvent {} {
             set slot  [dict get $hit slot]
             set chan  [dict get $hit channel]
             
-            .control.fraglist insert end $crate:$slot:$chan
         }
     }
-    
+    populateListbox
     
     clearData
     
