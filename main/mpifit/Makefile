@@ -24,7 +24,8 @@ all: libFitter.so
 libFitter.so: FitExtender.o functions.o lmfit.o FitHitUnpacker.o \
 	TCLDDASFitHitUnpacker.o
 	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS)
-
+	echo  pkg_mkIndex -verbose . *.so | tclsh
 
 clean:
-	rm -f *.so *.o 
+	rm -f *.so *.o pkgIndex.tcl
+
