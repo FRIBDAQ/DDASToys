@@ -38,8 +38,42 @@ ddasunpack use filename - Specifies a data source.  The data source must be a fi
 ddasunpack close handle - Closes the data source whose use returned the handle.
 ddasunpack next handle - gets the next physics event from the source.  The
                  event is returned as the command result. This result is a
-                 dict. Some keys in the dict are always there.  Others are
+                 list of dicts. One dict per hit in the built event.
+		 Some keys in the dict are always there.  Others are
 		 only there if the appropriate data are there:
 		 These keys are always present:
+
+		 crate -- crate id of the hit.
+		 slot  -- the slot id of the hit.
+		 channel-- the channel id of the hit.
+		 energy -- the extracted energy of the hit.
+		 time   -- the nanosecond time of the hit.
+
+		 If the hit has a trace the dict will contain a trace key whose
+		 value is the list of trace points.
+
+		 If the trace has one or more fits associated with it, the dict
+		 will have a fits dictionary key.  The value of this dict is
+		 iteslf a dict that can one or both of fit1 and fit2 keys.
+		 
+		 fit1 if present describes the single pulse fit for the trace.
+		 This is a dict that has the following keys:
+		 position - the logistic position parameter.
+		 amplitude - the scale factor of the fit.
+		 steepness - the rise time parameter of the logistic of the
+		             fit.
+		 decaytime - the decay time parameter of the decay of the fit.
+		 offset    - the DC Offset of the fit.
+		 chisqure  - The fit chi square goodness.
+		 fitstatus - The GSL Fit status.
+		 
+		 fit2 if present describes the double pulse fit.
+		 This dict has the same keys as fit1 however position,
+		 amplitude, steepness and decaytime are two element lists. The
+		 first element is the associated fit parameter for the the first
+		 pulse while the second is the fit parameter for the second
+		 pulse. For example:  position {100 550} means the two fits
+		 have positions at 100 and 550.
+		 
 		 
     
