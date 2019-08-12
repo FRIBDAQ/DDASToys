@@ -318,7 +318,13 @@ proc setupUi {} {
     foreach w [list $filter.crfilter $filter.slfilter $filter.chfilter] {
         bind $w <Key-Return>  populateListbox
     }
-    
+    button $filter.reset -text "Reset filter" -command {
+        set ::cratemask *
+        set ::slotmask *
+        set ::chanmask *
+        populateListbox
+    }
+    grid $filter.reset
     
     grid $c.llabel
     grid $c.fraglist $c.fragscroll  -sticky nsew
