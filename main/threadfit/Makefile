@@ -123,8 +123,7 @@ functiontests: functiontests.o functions.o lmfit.o
 functiontests.o: functiontests.cpp functions.h
 
 
-pulsemaker: pulsemaker.o functions.o
-	$(CXX) $(CXXFLAGS) $(CXXLDFLAGS) -o $@ $^ 
+
 
 fit1: fit1.cpp functions.o lmfit.o
 	$(CXX) $(CXXFLAGS) $(CXXLDFLAGS) -o $@ $^ -lgsl -lgslcblas
@@ -161,6 +160,6 @@ libDDASFitClasses.so:  DDASRootFitHit.o DDASRootFitEvent.o  \
 
 clean:
 	rm -f *.o  \
-	functiontests pulsemaker fit1 fit2 TestAnalyzer v10to11converter \
+	functiontests  fit1 fit2 TestAnalyzer v10to11converter \
 	DisplayExtensions \
 	ringblockdealer libDDASFitClasses.so RootFitDictionary.* binconvert
