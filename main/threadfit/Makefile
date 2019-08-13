@@ -34,6 +34,11 @@ ROOT_RPATH=-Wl,-rpath=$(ROOTSYS)/lib/root
 
 all:   ringblockdealer libDDASFitClasses.so asciiconvert binconvert  tests 
 
+
+pulsemaker:
+	(cd pulsemacher; make)
+	mv pulsemacher/pulsemaker pulsemaker
+
 tests: functiontests pulsemaker fit1 fit2 fit2t  TestAnalyzer v10to11converter \
 	DisplayExtensions
 
@@ -162,4 +167,6 @@ clean:
 	rm -f *.o  \
 	functiontests  fit1 fit2 TestAnalyzer v10to11converter \
 	DisplayExtensions \
-	ringblockdealer libDDASFitClasses.so RootFitDictionary.* binconvert
+	rm -f ringblockdealer libDDASFitClasses.so RootFitDictionary.* binconvert
+	make -C pulsemacher clean
+	rm -r pulsemaker
