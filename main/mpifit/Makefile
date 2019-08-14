@@ -26,6 +26,21 @@ libFitter.so: FitExtender.o functions.o lmfit.o FitHitUnpacker.o \
 	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS)
 	echo  pkg_mkIndex -verbose . *.so | tclsh
 
+#
+#  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
+#
+# make install PREFIX=/usr/opt/ddastoys
+#
+install:
+	install -d $(PREFIX)
+	install -d $(PREFIX)/include
+	install -d $(PREFIX)/lib
+	install -d $(PREFIX)/bin
+	install -m 0755 libFitter.so $(PREFIX)/lib
+	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
+	install -m 0644 *.h $(PREFIX)/include
+	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
+
 clean:
 	rm -f *.so *.o pkgIndex.tcl
 
