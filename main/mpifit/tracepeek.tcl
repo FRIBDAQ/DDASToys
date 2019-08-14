@@ -38,6 +38,17 @@ set slotmask  *
 set chanmask  *
 
 ##
+#  Stuff to use for expansions:
+#
+set startX  0;            #  starting point of the expansion box
+set startY  0
+
+set endX    0;           # ending point of the expansion box.
+set endY    0
+
+set rubberBox "";        # canvas id of the rubbrerband box.
+
+##
 # pulse
 #   For a given set of pulse parameters and x position, compute
 #   The pulse value.
@@ -145,6 +156,94 @@ proc computeXcoords ys {
     return $result
 }
 ##
+# stretchBox
+#   Responds to a motion event in the canvas while stretching a rubber band
+#   expansion box.
+#    - Save the new end x end y points.
+#    - Update the rectangle
+# @param canvas - canvas we're drawing on.
+# @param x,y    - canvas positions we moved to.
+#
+proc stretchBox {canvas x y} {
+    set ::endX $x
+    set ::endY $y
+    
+    $canvas coords $::rubberBox $::startX $::startY $::endX $::endY
+}
+
+##
+# expandPlot
+#    Called when the MB1 is released to end selection of an expansion window.
+#    - The endx/y are updated
+#    - the rectangle is destroyed.
+#    - The plot is expanded as indicated by x/y.
+#    - Motion and Release events are turned off.
+#    - presss event is re-enabled.
+#
+# @param canvas - the canvas being expanded.
+# @param x,y    - Cursor position.
+#
+proc expandPlot {canvas x y} {
+    set ::endX $x
+    set ::endY $y
+
+    bind $canvas <Motion> ""
+    bind $canvas <ButtonRelease-1> ""
+    bind $canvas <ButtonPress-1> [list startRubberBox $canvas %x %y]
+    
+    $canvas delete $::rubberBox
+    
+    # Convert the coordinates to plot coords and make them a lower left
+    # and upper right pair of coords.
+    
+    set pt1 [::Plotchart::pixelToCoords $canvas $::startX $::startY]
+    set pt2 [::Plotchart::pixelToCoords $canvas $::endX $::endY]
+    
+    set xll [expr {min([lindex $pt1 0], [lindex $pt2 0])}]  ; # lower left coords
+    set yll [expr {min([lindex $pt1 1], [lindex $pt2 1])}]
+    
+    set xur  [expr {max([lindex $pt1 0], [lindex $pt2 0])}]
+    set yur [expr {max([lindex $pt1 1], [lindex $pt2 1])}]
+    
+    #  Get sane axis specs for the expansion:
+    
+    set xAxis [::Plotchart::determineScale $xll $xur]
+    set yAxis [::Plotchart::determineScale $yll $yur]
+    
+    reinitPlot $xAxis $yAxis
+    showFrag .control.fraglist 0
+    
+}
+##
+#  startRubberBox
+#    Starts making a rubber-band expansion box.
+#    Set the starting point in pixels.
+#    Remove the mb1 down event binding.
+#    Set a motion event binding.
+#    Set an mb up event binding.
+#    Create a zero extent rectangle on the canvas in dashed line.
+#
+# @param canvas - the canvas we're drawing on.
+# @param x      - X position of the mouse.
+# @param y      - Y position of the mouse.
+#
+proc startRubberBox {canvas x y} {
+    set ::startX $x
+    set ::startY $y
+    
+    set ::endX   $x
+    set ::endY   $y
+    
+    bind $canvas <ButtonPress-1> "";      # Removes the down binding.
+    bind $canvas <Motion> [list stretchBox $canvas %x %y]
+    bind $canvas <ButtonRelease-1> [list expandPlot $canvas %x %y]
+    
+    set ::rubberBox \
+        [$canvas create rectangle $::startX $::startY $::endX $::endY \
+         -dash {2 2}]
+}
+
+##
 # initPlot
 #    Initialize the plot
 #
@@ -158,7 +257,35 @@ proc initPlot nx {
     set c [canvas    .plot -height 600 -width 800]
     grid $c -sticky nsew 
     set ::chart [::Plotchart::createXYPlot $c [list 0 $nx 50] [list 0 16400 500] -xlabels sample ]
+    
+    bind .plot <ButtonPress-1> [list startRubberBox .plot %x %y]
 }
+##
+# reinitPlot
+#   Reinitialize the plot with specified axes (e.g. expansion).
+# @param xaxis - x axis specifications.
+# @param yaxis - y axis specifications.
+#
+proc reinitPlot {xaxis yaxis} {
+    if {$::chart ne ""} {
+        $::chart deletedata
+    }
+    destroy .plot
+    
+    set c [canvas .plot -height 600 -width 800]
+    grid $c -sticky nsew
+    set ::chart [::Plotchart::createXYPlot $c $xaxis $yaxis]
+    bind .plot <ButtonPress-1> [list startRubberBox .plot %x %y]
+}
+
+##
+# plot
+#   Plot a series with a given name, points and color
+#
+# @param name - plotchart series name.
+# @param xs   - X coordinates.
+# @param ys   - Y coordinates.
+# @param color - color for plot.
 proc plot {name xs ys color} {
     $::chart dataconfig $name -color $color
     foreach x $xs y $ys {
@@ -248,7 +375,7 @@ proc getFragment sel {
 #
 # @param w - widget in which the fragment has been selected.
 #
-proc showFrag w {
+proc showFrag {w {init 1}} {
     set i [$w curselection]
     if {$i ne ""} {
         #  There's a selection.
@@ -264,7 +391,9 @@ proc showFrag w {
         
         set trace [dict get $frag trace]
         set x     [computeXcoords $trace]
-        initPlot [llength $x]
+        if {$init} {
+            initPlot [llength $x]
+        }
         plot trace $x $trace black
 
         # Note we do double pulse fit first so since most pulses are
@@ -285,10 +414,7 @@ proc showFrag w {
             }
         }
 
-    }
-    
-    
-    
+    } 
 }
 ##
 # populateListbox
