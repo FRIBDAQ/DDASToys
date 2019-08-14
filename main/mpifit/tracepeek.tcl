@@ -56,7 +56,28 @@ proc pulse {p a r f o x} {
     
     return $result
 }
-
+##
+# amplitude
+#   This mimics DDAS::pulseAmplitude - which computes he
+#   amplitude of a pulse  the amplitude dict entry isn't actually that
+#   but an overal scale factor.  This computes the amplitude at the peak.
+#
+# @param fit  - fit dict for a fit.
+# @return double - actual amplitude.
+#
+proc amplitude {fit} {
+    set a [dict get $fit amplitude]
+    set k1 [dict get $fit steepness]
+    set k2 [dict get $fit decaytime]
+    set x0 [dict get $fit position]
+    
+    set frac [expr {$k1/$k2}]
+    if {$frac <= 1.0} {
+        return -1;             # Can't compute due to log of negative.
+    }
+    set pos [expr {$x0 + log($frac - 1.0)/$k1}];  # position at peak.
+    return [pulse $x0 $a $k1 $k2 0.0 $pos]
+}
 
 ##
 # showFits
@@ -74,22 +95,37 @@ proc showFits fits {
             set value [format %7.4f $value]
             .data.$w configure -text $value
         }
+        # The actual amplitude:
+        
+        set amp [amplitude $fit1]
+        .data.amplitude config -text [format %7.4f $amp]
     }
+    
     if {[dict exists $fits fit2]} {
         set fit2 [dict get $fits fit2]
+        set first [dict create]
         foreach w [list pos1 amp1 steep1 decay1 doffset dchi] \
             k [list position amplitude steepness decaytime offset chisquare] {
             
             set value [lindex [dict get $fit2 $k] 0];    # first pulse.
+            dict set first $k $value
             set value [format %7.4f $value]
             .data.$w configure -text $value
+            
         }
+        set second [dict create]
         foreach w [list pos2 amp2 steep2 decay2] \
             k [list position amplitude steepness decaytime] {
             set value [lindex [dict get $fit2 $k] 1]
+            dict set second $k $value
             set value [format %7.4f $value]
             .data.$w configure -text $value
         }
+        set a1 [amplitude $first]
+        set a2 [amplitude $second]
+        
+        .data.amplitude1 config -text [format %7.4f $a1] 
+        .data.amplitude2 config -text [format %7.4f $a2]
     }
 }
 ##
@@ -341,7 +377,8 @@ proc setupUi {} {
     ttk::label $d.p1label -text {First}
     ttk::label $d.p2label -text {Second}
     ttk::label $d.plabel -text {Position}
-    ttk::label $d.alabel -text {Amplitude}
+    ttk::label $d.alabel -text {Scale}
+    ttk::label $d.amplabel -text {Amplitude}
     ttk::label $d.stlabel -text {Steepness}
     ttk::label $d.dlabel -text {Decay Time}
     ttk::label $d.olabel -text {Offset}
@@ -352,6 +389,7 @@ proc setupUi {} {
     
     ttk::label $d.spos   -text {***}
     ttk::label $d.samp   -text {***}
+    ttk::label $d.amplitude -text {***}
     ttk::label $d.ssteep -text {***}
     ttk::label $d.sdecay -text {***}
     ttk::label $d.soffset -text {***}
@@ -362,6 +400,7 @@ proc setupUi {} {
     
     ttk::label $d.pos1 -text {***}
     ttk::label $d.amp1 -text {***}
+    ttk::label $d.amplitude1 -text {***}
     ttk::label $d.steep1 -text {***}
     ttk::label $d.decay1 -text {***}
     ttk::label $d.doffset -text {***}
@@ -370,12 +409,14 @@ proc setupUi {} {
     
     ttk::label $d.pos2 -text {***}
     ttk::label $d.amp2 -text {***}
+    ttk::label $d.amplitude2 -text {***}
     ttk::label $d.steep2 -text {***}
     ttk::label $d.decay2 -text {***}
     
     grid x $d.slabel $d.p1label $d.p2label   -sticky w
     grid $d.plabel $d.spos     $d.pos1  $d.pos2     -sticky w
     grid $d.alabel $d.samp     $d.amp1  $d.amp2 -sticky w
+    grid $d.amplabel $d.amplitude $d.amplitude1 $d.amplitude2 -sticky w
     grid $d.stlabel $d.ssteep  $d.steep1 $d.steep2 -sticky w
     grid $d.dlabel  $d.sdecay  $d.decay1 $d.decay2 -sticky w
     grid $d.olabel  $d.soffset $d.doffset -sticky w
@@ -390,10 +431,10 @@ proc setupUi {} {
 #   Clears the fit data
 #
 proc clearData {} {
-    foreach w [list spos samp ssteep sdecay soffset schi] {
+    foreach w [list spos samp amplitude ssteep sdecay soffset schi] {
         .data.$w configure -text {***}
     }
-    foreach w [list pos1 pos2 amp1 amp2 steep1 steep2 decay1 decay2 doffset dchi] {
+    foreach w [list pos1 pos2 amp1 amplitude1  amp2  amplitude2 steep1 steep2 decay1 decay2 doffset dchi] {
         .data.$w configure -text {***}
     }
 }
