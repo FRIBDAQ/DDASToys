@@ -447,22 +447,29 @@ proc clearData {} {
 #
 proc nextEvent {} {
     set rawEvent [ddasunpack next $::handle]
-    set ::currentEvent [list]
-
-    foreach hit $rawEvent {
-        
-        if {[dict exists $hit trace]} {
-            
-            lappend ::currentEvent $hit
-            set crate [dict get $hit crate]
-            set slot  [dict get $hit slot]
-            set chan  [dict get $hit channel]
-            
-        }
-    }
-    populateListbox
     
-    clearData
+    if {$rawEvent eq ""} {         ; # End of file.
+        tk_messageBox -icon info -parent . -title "End of file" -type ok \
+            -message {No more physics evens in this file.}
+    } else  {
+        
+        set ::currentEvent [list]
+    
+        foreach hit $rawEvent {
+            
+            if {[dict exists $hit trace]} {
+                
+                lappend ::currentEvent $hit
+                set crate [dict get $hit crate]
+                set slot  [dict get $hit slot]
+                set chan  [dict get $hit channel]
+                
+            }
+        }
+        populateListbox
+        
+        clearData
+    }
     
 }
 
