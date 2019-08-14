@@ -37,6 +37,8 @@ set cratemask *
 set slotmask  *
 set chanmask  *
 
+set eventNumber 0
+
 ##
 #  Stuff to use for expansions:
 #
@@ -466,7 +468,7 @@ proc setupUi {} {
     listbox    $c.fraglist -yscrollcommand [list $c.fragscroll set]
     ttk::scrollbar  $c.fragscroll -orient vertical -command [list $c.fraglist yview]
     
-    set filter [ttk::frame $c.filter]
+    set filter [ttk::frame $c.filter -relief groove -borderwidth 3]
     ttk::label $filter.crfiltl -text crate
     ttk::label $filter.slfiltl -text slot
     ttk::label $filter.chfiltl -text channel
@@ -491,14 +493,21 @@ proc setupUi {} {
     grid $c.fraglist $c.fragscroll  -sticky nsew
     grid $filter -row 1 -column 2   -sticky ns
     
-    ttk::button $c.next -text {Next Event} -command nextEvent
+    
+    set nextframe [ttk::frame $c.next]
+    ttk::button $nextframe.next -text {Next Event} -command nextEvent
+    ttk::label  $nextframe.evtlbl -text "Event "
+    ttk::label  $nextframe.evno   -textvariable ::eventNumber
+    
+    grid $nextframe.next $nextframe.evtlbl $nextframe.evno -padx 5
+    
     set skip [ttk::frame  $c.skip -relief groove -borderwidth 3]
     ttk::spinbox $skip.count -from 1 -to 10000 -increment 1 -width 5
     $skip.count set 1
     ttk::button $skip.skip -text {Skip} -command skipEvents
     
     grid $skip.count $skip.skip
-    grid   $c.next - $skip
+    grid   $nextframe - $skip
     
     grid $c -sticky nsew
     
@@ -590,7 +599,7 @@ proc nextEvent {} {
     if {$rawEvent eq ""} {         ; # End of file.
         notifyEndFile
     } else  {
-        
+        incr ::eventNumber        
         set ::currentEvent [list]
     
         foreach hit $rawEvent {
@@ -624,6 +633,7 @@ proc skipEvents {} {
             notifyEndFile
             return
         }
+        incr ::eventNumber
         incr count -1
     }
     nextEvent;              # Done skipping
