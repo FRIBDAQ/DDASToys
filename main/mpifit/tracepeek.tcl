@@ -258,7 +258,6 @@ proc showFrag w {
         
         
         if {[dict exists $frag fits]} {
-            puts [dict get $frag fits]
             showFits [dict get $frag fits]
         }
         #  There's always a trace..though there may not be fits.
@@ -354,7 +353,7 @@ proc setupUi {} {
     foreach w [list $filter.crfilter $filter.slfilter $filter.chfilter] {
         bind $w <Key-Return>  populateListbox
     }
-    button $filter.reset -text "Reset filter" -command {
+    ttk::button $filter.reset -text "Reset filter" -command {
         set ::cratemask *
         set ::slotmask *
         set ::chanmask *
@@ -367,7 +366,13 @@ proc setupUi {} {
     grid $filter -row 1 -column 2   -sticky ns
     
     ttk::button $c.next -text {Next Event} -command nextEvent
-    grid   $c.next
+    set skip [ttk::frame  $c.skip -relief groove -borderwidth 3]
+    ttk::spinbox $skip.count -from 1 -to 10000 -increment 1 -width 5
+    $skip.count set 1
+    ttk::button $skip.skip -text {Skip} -command skipEvents
+    
+    grid $skip.count $skip.skip
+    grid   $c.next - $skip
     
     grid $c -sticky nsew
     
@@ -439,6 +444,14 @@ proc clearData {} {
     }
 }
 ##
+# notifyEndFile
+#   Let the user know we've got no more data:
+#
+proc notifyEndFile {} {
+    tk_messageBox -icon info -parent . -title "End of file" -type ok \
+            -message {No more physics events in this file.}    
+}
+##
 # nextEvent
 #   Gets the next event from file.
 #   removes all channels that don't have traces and populates the
@@ -449,8 +462,7 @@ proc nextEvent {} {
     set rawEvent [ddasunpack next $::handle]
     
     if {$rawEvent eq ""} {         ; # End of file.
-        tk_messageBox -icon info -parent . -title "End of file" -type ok \
-            -message {No more physics evens in this file.}
+        notifyEndFile
     } else  {
         
         set ::currentEvent [list]
@@ -472,7 +484,24 @@ proc nextEvent {} {
     }
     
 }
-
+##
+# skipEvents
+#   Skip forward n events where n is the number in .control.skip.count
+#   If skipping hits or results in an end file; then we pop up a notification
+#   to that effect.
+#
+proc skipEvents {} {
+    set count [.control.skip.count get]
+    while {$count > 1} {
+        set rawEvent [ddasunpack next $::handle]
+        if {$rawEvent eq ""} {;                # endfile.
+            notifyEndFile
+            return
+        }
+        incr count -1
+    }
+    nextEvent;              # Done skipping
+}
 ##
 #  Choose the file to peek, transform it into a
 #  URI and open it:
