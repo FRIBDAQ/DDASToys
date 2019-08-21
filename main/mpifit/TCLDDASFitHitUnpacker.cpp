@@ -249,12 +249,12 @@ CTCLDDASFitHitUnpacker::makeHitDict(
     if (hit.GetTraceLength() > 0)  {
         std::vector<uint16_t> t = hit.GetTrace();
         addKeyValue(interp, result, "trace", t);
-        if (hit.hasExtension()) {
-            CTCLObject extensionDict;
-            extensionDict.Bind(interp);
-            makeFitsDict(interp, extensionDict, hit);
-            addKeyValue(interp, result, "fits", extensionDict);
-        }
+    }
+    if (hit.hasExtension()) {
+      CTCLObject extensionDict;
+      extensionDict.Bind(interp);
+      makeFitsDict(interp, extensionDict, hit);
+      addKeyValue(interp, result, "fits", extensionDict);
     }
 }
 /**
