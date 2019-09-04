@@ -32,6 +32,12 @@
 #include <stdexcept>
 #include <iostream>
 #include <string.h>
+#include <map>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+#include <locale>
+#include <cctype>
 
 using namespace  DDAS;
 
@@ -48,70 +54,31 @@ _FitInfo::_FitInfo() : s_size(sizeof(FitInfo)) {
     memset(&s_extension, 0,sizeof(DDAS::HitExtension));  // Zero the fit params.
 }
 
-/*
- * doFit
- *    This is a predicate function:
- *
- * @param crate - crate a hit comes from.
- * @param slot  - Slot a hit comes from.
- * @param channel - Channel within the slot the hit comes from
- * @return bool - if true, the channel is fit.
- * @note This sample predicate requests that all channels be fit.
- */
-static bool doFit(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();           // In case we are channel dependent.
-    int chan  = hit.GetChannelID();
-    return true;
+////////////////////////////// local trim functions   /////////////////////////
+
+static inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
 }
 
-/**
-* fitLimits
-*    For each channel we're fitting, we need to know
-*    -  The left and right limits of the waveform that will be fittedn
-*    -  The digitizer saturation level.
-*
-*
-* @param hit - reference to a single hit.
-* @return std::pair<std::pair<unsigned, unsigned>, unsigned>
-*       The first element of the outer pair are the left and right
-*       fit limits respectively.  The second element of the outer pair
-*       is the saturation level.
-*/
-static std::pair<std::pair<unsigned, unsigned>, unsigned>
-fitLimits(DAQ::DDAS::DDASHit& hit)
-{
-    std::pair<std::pair<unsigned, unsigned>, unsigned> result;
-    
-    result.second = (1 << 14) -1;          // 14 bits.
-    
-    // There are sometimes spikes at the edges of the trace,
-    // this example excludes the outer channel..
-    
-    const std::vector<uint16_t>& trace(hit.GetTrace());
-    result.first.first = 1;
-    result.first.second = trace.size() -1;
-    
-    return result;
-    
+// trim from end
+static inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
 }
-/**
- * pulseCount
- *    This is a hook into which to add the ML classifier being developed
- *    by CSE.
- *
- * @param hit - references a hit.
- * @return int
- * @retval 0  - On the basis of the trace no fitting.
- * @retval 1  - Only fit a single trace.
- * @retval 2  - Only fit two traces.
- * @retval 3  - Fit both one and double hit.
- */
-static int
-pulseCount(DAQ::DDAS::DDASHit& hit)
+
+// trim from both ends
+static inline std::string &trim(std::string &s) {
+    return ltrim(rtrim(s));
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+static inline int channelIndex(unsigned crate, unsigned slot, unsigned channel)
 {
-    return 3;                  // in absence of classifier.
+    return (crate << 8) | (slot << 4)  | channel;
 }
 
 /**
@@ -119,10 +86,42 @@ pulseCount(DAQ::DDAS::DDASHit& hit)
  */
 class CFitExtender : public CBuiltRingItemExtender::CRingItemExtender
 {
+    std::map <int, std::pair<std::pair<unsigned, unsigned>, unsigned>> m_fitChannels;
 public:
+    CFitExtender();
     iovec operator()(pRingItem item);
     void free(iovec& e);
+private:
+    int pulseCount(DAQ::DDAS::DDASHit& hit);
+    bool doFit(DAQ::DDAS::DDASHit& hit);
+    std::pair<std::pair<unsigned, unsigned>, unsigned> fitLimits(
+        DAQ::DDAS::DDASHit& hit
+    );
+    std::string getConfigFilename(const char* envname);
+    void readConfigFile(const char* filename);
+    std::string isComment(std::string line);
 };
+/**
+ * cpnstructor
+ *   - Figure out the name of our config file (env variable FIT_CONFIGFILE)
+ *     points to it.
+ *   - Load the config file into m_fitChannels such that each index is the
+ *     bottom 12 bits of the first word and values are fit low/high limits.
+ *  @note - errors in configuration file processing are flagged via exceptions
+ *          which we catch and report, terminating the program.  This termination
+ *          will result in abnormal ends if --parallel-strategy is MPI.
+ */
+CFitExtender::CFitExtender()
+{
+    try {    
+        std::string name = getConfigFilename("FIT_CONFIGFILE");
+        readConfigFile(name.c_str());
+    } catch (std::exception& e) {
+        std::cerr << "Error Processing configuration file: " << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
 /**
  * operator()
  *   - Parse the fragment into a hit.
@@ -230,6 +229,157 @@ CFitExtender::free(iovec& v)
         throw std::logic_error(msg);
     }
 }
+//////////////////////////////////////////////////////////////////////////////
+// Private  methods.
+
+/**
+ * getConfigFilename
+ *    Return the name of the configuration file or throw.
+ * @param envname - environment variable that points to the file.
+ * @return std::string - translation of envname.
+ * @throw std::invalid_argument - if there's no translation.
+ */
+std::string
+CFitExtender::getConfigFilename(const char* envname)
+{
+    const char* pFilename = getenv(envname);
+    if (!pFilename) {
+        std::string msg("No translation for environment variable : ");
+        msg += envname;
+        msg += " Point that to the fit configuration file and re-run";
+        throw std::invalid_argument(msg);
+    }
+}
+
+/**
+ * readConfigFile
+ *    Read the configuration file.  Lines in the configuration file can
+ *    be empty or have as their first non-blank character "#" in which case
+ *    they are ignored.  All other lines specify channels that should be fit and
+ *    contain six whitespace integers:  crate slot channel  low  high saturation
+ *    The crate, slot, channel identify a channel to fit while low, high are
+ *    the limits of the trace to fit (first sample index, last sample index),
+ *    and saturation is the level at which the digitizer saturates.
+ *
+ * @param filename - name of the configuration file.
+ * @throw std::invalid_argument - if there are errors processing the file
+ *                                including an inability to open the file.
+ */
+void
+CFitExtender::readConfigFile(const char* filename)
+{
+    std::ifstream f(filename);
+    if (f.fail()) {
+        std::string msg("Unable to open the configuration file: ");
+        msg += filename;
+        throw std::invalid_argument(msg);
+    }
+    while (!f.eof()) {
+        std::string originalline("");
+        std::getline(f, originalline, '\n');
+        std::string line = isComment(originalline);
+        if (line != "") {
+            unsigned crate, slot, channel, low, high, saturation;
+            std::stringstream sline(line);
+            sline >> crate >> slot >>channel >> low  >> high >> saturation;
+            if (sline.fail()) {
+                std::string msg("Error processing line in configuration file '");
+                msg += originalline;
+                msg += "'";
+                throw std::invalid_argument(msg);
+            }
+            // compute the channel index:
+            
+            int index = channelIndex(crate, slot, channel);
+            std::pair<unsigned, unsigned> limits(low, high);
+            std::pair<std::pair<unsigned, unsigned>, unsigned> value(limits, saturation);
+            m_fitChannels[index] = value;
+        }
+    }
+}
+/**
+ * isComment
+ *   Determines if a line is a comment or not
+ *
+ * @param line - line to check.
+ * @return std::string - if empty this line is  comment else it's the trimmed string.
+*/
+std::string
+CFitExtender::isComment(std::string line)
+{
+    trim(line);                      // modifies it.
+    if (line[0] == '#') return std::string("");
+    return line;
+}
+
+/**
+ * pulseCount
+ *    This is a hook into which to add the ML classifier being developed
+ *    by CSE.
+ *
+ * @param hit - references a hit.
+ * @return int
+ * @retval 0  - On the basis of the trace no fitting.
+ * @retval 1  - Only fit a single trace.
+ * @retval 2  - Only fit two traces.
+ * @retval 3  - Fit both one and double hit.
+ */
+int
+CFitExtender::pulseCount(DAQ::DDAS::DDASHit& hit)
+{
+    return 3;                  // in absence of classifier.
+}
+
+/*
+ * doFit
+ *    This is a predicate function:
+ *
+ * @param crate - crate a hit comes from.
+ * @param slot  - Slot a hit comes from.
+ * @param channel - Channel within the slot the hit comes from
+ * @return bool - if true, the channel is fit.
+ * @note This sample predicate requests that all channels be fit.
+ */
+bool
+CFitExtender::doFit(DAQ::DDAS::DDASHit& hit)
+{
+    int crate = hit.GetCrateID();
+    int slot  = hit.GetSlotID();           // In case we are channel dependent.
+    int chan  = hit.GetChannelID();
+    
+    int index = channelIndex(crate, slot, chan);
+    return (m_fitChannels.find(index) != m_fitChannels.end());
+    
+    return true;
+}
+/**
+* fitLimits
+*    For each channel we're fitting, we need to know
+*    -  The left and right limits of the waveform that will be fittedn
+*    -  The digitizer saturation level.
+*
+*
+* @param hit - reference to a single hit.
+* @return std::pair<std::pair<unsigned, unsigned>, unsigned>
+*       The first element of the outer pair are the left and right
+*       fit limits respectively.  The second element of the outer pair
+*       is the saturation level.
+* @note the caller must have ensured there's a map entry for this channel.
+*/
+std::pair<std::pair<unsigned, unsigned>, unsigned>
+CFitExtender::fitLimits(DAQ::DDAS::DDASHit& hit)
+{
+    int crate = hit.GetCrateID();
+    int slot  = hit.GetSlotID();           // In case we are channel dependent.
+    int chan  = hit.GetChannelID();
+    
+    int index = channelIndex(crate, slot, chan);
+    std::pair<std::pair<unsigned, unsigned>, unsigned> result = m_fitChannels[index];
+    
+    return result;
+       
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Factory for our extender.:

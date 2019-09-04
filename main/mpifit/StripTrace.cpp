@@ -31,7 +31,8 @@ class StripTrace : public CBuiltRingItemEditor::BodyEditor
 };
 /**
  * operator()
- *    Strips any traces off a DDAS hit.  Note that if there are
+ *    Strips any traces off a DDAS hit if it has an extension(fit).
+ *    Note that if there are
  *    fits at the end of the event they are retained:
  *    - Gets the length of the trace.
  *    - Sets the hit trace length to zero.
@@ -67,24 +68,28 @@ StripTrace::operator()(
     
     *pB  -= traceLen16;                            // update word count.
     
-    // Describe the hit:
+    //  If there's an extension, we can kill off the trace and keep the
+    // extension instead.  Otherwise, keep the entire ring item.
     
-    CBuiltRingItemEditor::BodySegment hit(
-        (evtlen+2)*sizeof(uint32_t), pBody
-    );
-    result.push_back(hit);
-    
-    // If there's any data after the trace describe it too:
     
     pB += 2 + evtlen  + traceLen16/2;      // Point past trace.
-    bodySize -=
-        (2 + evtlen + traceLen16/sizeof(uint16_t))*sizeof(uint32_t); // left over bytes:
+    int extSize =
+        bodySize - (2 + evtlen + traceLen16/sizeof(uint16_t))*sizeof(uint32_t); // left over bytes:
     
-    if (bodySize) {
-        CBuiltRingItemEditor::BodySegment extension(bodySize, pB);
-        result.push_back(extension);
+    if (extSize) {                    // There's an extension
+        CBuiltRingItemEditor::BodySegment hit(   // Wave form removed 
+            (evtlen+2)*sizeof(uint32_t), pBody
+        );
+        result.push_back(hit);                   // fit extension.
+            CBuiltRingItemEditor::BodySegment extension(extSize, pB);
+            result.push_back(extension);
+    } else {                    // Keep the whole ring item.
+        // One descriptor for the entire body:
+        CBuiltRingItemEditor::BodySegment body(bodySize, pBody);
+        result.push_back(body);
+        
     }
-    
+       
     return result;
 }
 /**

@@ -91,7 +91,7 @@ class CThresholdClassifier : public CRingMarkingWorker::Classifier
 private:
     std::map<unsigned, unsigned> m_channelThresholds;
     int  m_nScaledown;
-    int  m_nRejects
+    int  m_nRejects;
 public:
     CThresholdClassifier();
     
@@ -167,7 +167,7 @@ CThresholdClassifier::operator()(CRingItem& item)
     int    goodValues(0);
     for (int i =0; i < nFrags; i++) {
         pRingItem pFrag =
-            reinterpret_cast<pRingItem>(frags.getFragment().s_itembody);
+            reinterpret_cast<pRingItem>(frags.getFragment(i).s_itembody);
         uint32_t* pHit = reinterpret_cast<uint32_t*>(
             pFrag->s_body.u_hasBodyHeader.s_body    
         );
@@ -239,7 +239,7 @@ CThresholdClassifier::readThresholdFile(const char* filename)
     
     while (!f.eof()) {
         std::string line("");
-        std::geline(f, line, '\n');
+        std::getline(f, line, '\n');
         line = isComment(line);
         if (line != "") {                     // Not a comment.
             int crate, channel, slot, thresh;
@@ -275,7 +275,7 @@ CThresholdClassifier::getScaledown(const char* envname)
 {
     const char* pValue = getenv(envname);
     if (!pValue) return 0;
-    const char* endp
+    char* endp;
     long value = strtol(pValue, &endp, 0);
     if (endp == pValue) {
         throw std::invalid_argument("Scaledown value must be an integer");
