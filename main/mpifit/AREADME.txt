@@ -15,7 +15,24 @@ The Makefile produces the libFitter.so shared object.  This can be
 
 1. Used as the extension library for $DAQBIN/Transformer allowing fits to be
 parallelized using either Threading and ZMQ or MPI. ($DAQBIN/Transformer --help
-provides some simple documentation describing how to do this).
+provides some simple documentation describing how to do this).  The
+fitter requires the environment variable FIT_CONFIGFILE to point at a file
+that describes which channels to fit, the limits over which the fit is performed
+(usually all but the end points of the trace) and the saturation value of
+the digitizer.   The file an contain blank lines.  Leading and trailing
+spaces are not significant.  If the first non-whitespace character is a #
+the line is ignored (treated as a comment).   Non comment lines contain five
+whitespace separated unsigned integers that are, in order:
+   * crate - the crate id of a channel to fit.
+	* slot  - the slot number of a channel to fit.
+	* channel - the channel number within the crate/slot that should be fitted.
+	* first   - The index of the first trace point to consider for the fit (usually 1).
+	* last    - The index of the last trace point to consider for the fit
+	            (usually tracelength -2).
+	* saturation - The last highest legal digitizer trace value, e.g.
+	               16383  trace points with this value are assumed to be saturation
+						and are not considered in the fit.
+
 2. Used as a loadable extension to Tcl that allows you to treat DDAS data from
 within pure Tcl scripts.  The Makefile creates the pgkIndex.tcl index file.
 3. The tracepeek.tcl script is a pure Tcl script that can be used to visualize
