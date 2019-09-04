@@ -249,6 +249,7 @@ CFitExtender::getConfigFilename(const char* envname)
         msg += " Point that to the fit configuration file and re-run";
         throw std::invalid_argument(msg);
     }
+    return std::string(pFilename);
 }
 
 /**
