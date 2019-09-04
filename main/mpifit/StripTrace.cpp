@@ -63,26 +63,34 @@ StripTrace::operator()(
     uint32_t traceLen16 = ((pB[5] >> 16) & 0x3fff); // # 32 bit trace uint16's
     uint32_t evtlen     = (pB[2] >> 17) & 0x3fff;   // Initial eventlen.
     evtlen -= traceLen16/2;                        // 2 samples/long
-    pB[2] = (pB[2] & 0x8001ffff) | (evtlen << 17); // Update event len.
-    pB[5] = (pB[2] & 0x8000ffff);                  // Zero out the trace len.
-    
-    *pB  -= traceLen16;                            // update word count.
+                         // update word count.
     
     //  If there's an extension, we can kill off the trace and keep the
     // extension instead.  Otherwise, keep the entire ring item.
     
     
-    pB += 2 + evtlen  + traceLen16/2;      // Point past trace.
+    uint32_t* pExt = pB + 2 + evtlen  + traceLen16/2;      // Point past trace.
     int extSize =
         bodySize - (2 + evtlen + traceLen16/sizeof(uint16_t))*sizeof(uint32_t); // left over bytes:
     
-    if (extSize) {                    // There's an extension
+    /// There's an extension, and hence a fit, if
+    // there's more than a longword following the trace.
+    // In that case, there are two possibilities:
+    //  - old style fit  - the next word starts the exytension.
+    //  - new style fit  - the next word is the size of the extension
+    //                     which is null if it's sizeof(uint32_t).
+    
+    if (extSize > sizeof(uint32_t)) {                    // There's an extension
+        pB[2] = (pB[2] & 0x8001ffff) | (evtlen << 17); // Update event len.
+        pB[5] = (pB[2] & 0x8000ffff);                  // Zero out the trace len.
+    
+        *pB  -= traceLen16;    
         CBuiltRingItemEditor::BodySegment hit(   // Wave form removed 
             (evtlen+2)*sizeof(uint32_t), pBody
         );
         result.push_back(hit);                   // fit extension.
-            CBuiltRingItemEditor::BodySegment extension(extSize, pB);
-            result.push_back(extension);
+        CBuiltRingItemEditor::BodySegment extension(extSize, pExt);
+        result.push_back(extension);
     } else {                    // Keep the whole ring item.
         // One descriptor for the entire body:
         CBuiltRingItemEditor::BodySegment body(bodySize, pBody);
