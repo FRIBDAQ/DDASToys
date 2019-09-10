@@ -153,8 +153,7 @@ CThresholdClassifier::operator()(CRingItem& item)
      *  +--------------------------------+
      *  | Module id info (among others)  | uint32_t
      *  +--------------------------------+
-     *  |  Don't really care             |
-     *  +--------------------------------+
+     *  |  Don't really care             |q
      *  |  Really don't care             |
      *  +--------------------------------+
      *  | Energy in bottom 16 bits       |
@@ -167,7 +166,7 @@ CThresholdClassifier::operator()(CRingItem& item)
     int    goodValues(0);
     for (int i =0; i < nFrags; i++) {
         pRingItem pFrag =
-            reinterpret_cast<pRingItem>(frags.getFragment(i).s_itembody);
+            reinterpret_cast<pRingItem>(frags.getFragment(i).s_itemhdr);
         uint32_t* pHit = reinterpret_cast<uint32_t*>(
             pFrag->s_body.u_hasBodyHeader.s_body    
         );
@@ -186,7 +185,7 @@ CThresholdClassifier::operator()(CRingItem& item)
     if (matches == 0) return 0;
     m_nRejects++;                       // Count a reject.
     if (m_nScaledown) {
-        if (m_nRejects % m_nScaledown) {
+        if ((m_nRejects % m_nScaledown) == 0) {
             return 2;                  // Scaled down reject to keep.
         } else {
             return 1;                  // reject.

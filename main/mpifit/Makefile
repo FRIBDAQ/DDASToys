@@ -36,10 +36,12 @@ install:
 	install -d $(PREFIX)/include
 	install -d $(PREFIX)/lib
 	install -d $(PREFIX)/bin
+	install -d $(PREFIX)/share
 	install -m 0755 libFitter.so $(PREFIX)/lib
 	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
 	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
+	install -m 0644 AREADME.txt $(PREFIX)/share
 
 clean:
 	rm -f *.so *.o pkgIndex.tcl
