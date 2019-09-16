@@ -19,12 +19,16 @@ CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
 
 
 
-all: libFitter.so
+all: libFitter.so libFitEditor.so
 
 libFitter.so: FitExtender.o functions.o lmfit.o FitHitUnpacker.o \
 	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o
 	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS)
 	echo  pkg_mkIndex -verbose . *.so | tclsh
+
+
+libFitEditor.so: FitEditor.o functions.o lmfit.o FitHitUnpacker.o
+	$(CXX) -o libFitEditor.so -shared $^ $(CXXLDFLAGS)
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
@@ -39,6 +43,7 @@ install:
 	install -d $(PREFIX)/share
 	install -m 0755 libFitter.so $(PREFIX)/lib
 	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
+	install -m 0755 libFitEditor.so $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
 	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
 	install -m 0644 AREADME.txt $(PREFIX)/share
