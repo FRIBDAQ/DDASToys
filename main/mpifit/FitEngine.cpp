@@ -24,7 +24,7 @@
  * FitEngine constructor
  *   Just marshall the x/y points.
  */
-FitEngine::FitEngin(std::vector<uint16_t, uint16_t>& data)
+FitEngine::FitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)
 {
     for (size_t i = 0; i < data.size(); i++) {
         x.push_back(data[i].first);

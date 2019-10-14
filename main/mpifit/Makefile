@@ -21,7 +21,8 @@ CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
 
 all: libFitter.so libFitEditor.so
 
-libFitter.so: FitExtender.o functions.o lmfit.o FitHitUnpacker.o \
+libFitter.so: FitExtender.o functions.o lmfit.o FitEngine.o serialJacobian.o \
+	FitHitUnpacker.o \
 	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o
 	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS)
 	echo  pkg_mkIndex -verbose . libFitter.so | tclsh

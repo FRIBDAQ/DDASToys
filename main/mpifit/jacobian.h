@@ -22,6 +22,9 @@
  *  by the actual fit.
  *
  */
+#include <vector>
+#include <stdint.h>
+
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
@@ -37,43 +40,43 @@ class FitEngine {
   std::vector<uint16_t> x;           // Trace x coords
   std::vector<uint16_t> y;           // Trace y coords
  public:
-  FitEngine(std::vector<uint16_t, uint16_t>&  data);
+  FitEngine(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
   virtual void residuals(const gsl_vector*p, gsl_vector* r)  = 0;
 };
 
 // concrete classes:
 
-class SerialFitEngine1 {
-  SerialFitEngine(std::vector<uint16_t, uint16_t>&  data);
+class SerialFitEngine1 : public FitEngine {
+  SerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
-class CudaFitEngine1 {
-  CudaFitEngine(std::vector<uint16_t, uint16_t>&  data);
+class CudaFitEngine1 : public FitEngine {
+  CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
-class SerialFitEngine2 {
-  SerialFitEngine(std::vector<uint16_t, uint16_t>&  data);
+class SerialFitEngine2 : public FitEngine {
+  SerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
-class CudaFitEngine2 {
-  CudaFitEngine(std::vector<uint16_t, uint16_t>&  data);
+class CudaFitEngine2 : public FitEngine {
+  CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
 class FitEngineFactory {
-  FitEngine* createSerialFitEngine1(std::vector<uint16_t, uint16_t>&  data);
-  FitEngine*  createCudaFitEngine1(std::vector<uint16_t, uint16_t>&  data);
+  FitEngine* createSerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  FitEngine*  createCudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
 
-  FitEngine*  createSerialFitEngine2(std::vector<uint16_t, uint16_t>&  data);
-  FitEngine*  createCudaFitEngine2(std::vector<uint16_t, uint16_t>&  data);
+  FitEngine*  createSerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  FitEngine*  createCudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
 
 };
 
