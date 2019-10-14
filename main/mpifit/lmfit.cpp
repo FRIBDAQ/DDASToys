@@ -257,31 +257,11 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  static int
  gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  {
-    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    // pull the fit parameterization from p:
+    FitEngine* pEngine =  reinterpret_cast<FitEngine*>(pData);
+    pEngine->residuals(p, r);
     
-    double A  = gsl_vector_get(p, P1A_INDEX);
-    double k1 = gsl_vector_get(p, P1K1_INDEX);
-    double k2 = gsl_vector_get(p, P1K2_INDEX);
-    double x1 = gsl_vector_get(p, P1X1_INDEX);
-    double C  = gsl_vector_get(p, P1C_INDEX);
-    
-    // convert the raw data into its proper form:
-    
-    const std::vector<std::pair<uint16_t, uint16_t> >& points(*pParams->s_pPoints);
+    return GSL_SUCCESS;
 
-    // Now loop over all the data points, filling in r with the weighted residuals
-    
-    for (int  i = 0; i < points.size(); i++) {
-        double x = points[i].first;             // Index is the x coordinate.
-        double y = points[i].second;
-        
-        
-        double p = singlePulse(A, k1, k2, x1, C, x);
-        gsl_vector_set(r, i, (p - y));  // Weighted by 1.0.
-    }
-    
-    return GSL_SUCCESS;              // Cant' fail this function.
  }
  /**
   *  Compute the Jacobian matrix - partial derivatives evaluated at each data point.
@@ -295,48 +275,11 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
 static int
  gsl_p1Jacobian(const gsl_vector* p, void* pData, gsl_matrix* J)
  {
-    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    // Pull the fit parameters from p
-    
-    double A   = gsl_vector_get(p, P1A_INDEX);
-    double k1  = gsl_vector_get(p, P1K1_INDEX);
-    double k2  = gsl_vector_get(p, P1K2_INDEX);
-    double x1  = gsl_vector_get(p, P1X1_INDEX);
-    double C   = gsl_vector_get(p, P1C_INDEX);
-    
-    // Convert the pData to the proper type:
-    
-    const std::vector<std::pair<uint16_t, uint16_t> >& points(*pParams->s_pPoints);
-    
-    //  Now loop over the data computing the partials and hence the
-    //  Jacobian matrix values:
-    
-    for (int i = 0; i < points.size(); i++) {
-        double x = points[i].first;
-        
-        // Compute some exponentials that will be used over and over again:
-        
-        double erise = exp(-k1*(x - x1));
-        double efall = exp(-k2*(x - x1));
-        
-        // Compute this row's elements.
-        
-        double Ai   = dp1dA(k1, k2, x1, x, 1.0, erise, efall);        // Weights are 1.0.
-        double k1i  = dp1dk1(A, k1, k2, x1, x, 1.0, erise, efall);
-        double k2i  = dp1dk2(A, k1, k2, x1, x, 1.0, erise, efall);
-        double x1i  = dp1dx1(A, k1, k2, x1, x, 1.0, erise, efall);
-        double Ci   = dp1dC(A, k1, k2, x1, x, 1.0);
-        
-        // Shove them into the output matrix J
-        
-        gsl_matrix_set(J, i, P1A_INDEX, Ai);
-        gsl_matrix_set(J, i, P1K1_INDEX, k1i);
-        gsl_matrix_set(J, i, P1K2_INDEX, k2i);
-        gsl_matrix_set(J, i, P1X1_INDEX, x1i);
-        gsl_matrix_set(J, i, P1C_INDEX, Ci);
-    }
-    
+    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    pEngine->jacobian(p, J);
     return GSL_SUCCESS;
+
+
  }
  /**
   * calls gsl_p1Residuals and gsl_p1Jacobian.
@@ -356,8 +299,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
     
     pEngine->residuals(p, resids);
     pEngine->jacobian(p, J);
-    //gsl_p1Residuals(p, pData, resids);
-    //gsl_p1Jacobian(p, pData, J);
+
     
     return GSL_SUCCESS;
  }
