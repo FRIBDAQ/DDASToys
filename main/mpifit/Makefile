@@ -28,7 +28,8 @@ libFitter.so: FitExtender.o functions.o lmfit.o FitEngine.o serialJacobian.o \
 	echo  pkg_mkIndex -verbose . libFitter.so | tclsh
 
 
-libFitEditor.so: FitEditor.o functions.o lmfit.o FitHitUnpacker.o
+libFitEditor.so: FitEditor.o functions.o lmfit.o FitEngine.o serialJacobian.o \
+	FitHitUnpacker.o
 	$(CXX) -o libFitEditor.so -shared $^ $(CXXLDFLAGS)
 
 #

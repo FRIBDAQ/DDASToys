@@ -31,7 +31,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_multimin.h>
-#include <gsl/gsl_multifit_nlin.h>
+#include <gsl/gsl_multifit_nlin.h>  
 
 // Abstract base class.
 
@@ -41,6 +41,7 @@ class FitEngine {
   std::vector<uint16_t> y;           // Trace y coords
  public:
   FitEngine(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  virtual ~FitEngine(){}
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
   virtual void residuals(const gsl_vector*p, gsl_vector* r)  = 0;
 };
@@ -48,30 +49,36 @@ class FitEngine {
 // concrete classes:
 
 class SerialFitEngine1 : public FitEngine {
+public:
   SerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  ~SerialFitEngine1() {}
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
 class CudaFitEngine1 : public FitEngine {
+public:
   CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
 class SerialFitEngine2 : public FitEngine {
+public:
   SerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
 class CudaFitEngine2 : public FitEngine {
+public:
   CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
 class FitEngineFactory {
+public:
   FitEngine* createSerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   FitEngine*  createCudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
 

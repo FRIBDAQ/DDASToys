@@ -30,7 +30,7 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <algorithm>
 #include <stdexcept>
-
+#include "jacobian.h"
 
 using namespace DDAS;
 
@@ -352,8 +352,12 @@ static int
 static int
 gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J)
  {
-    gsl_p1Residuals(p, pData, resids);
-    gsl_p1Jacobian(p, pData, J);
+    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    
+    pEngine->residuals(p, resids);
+    pEngine->jacobian(p, J);
+    //gsl_p1Residuals(p, pData, resids);
+    //gsl_p1Jacobian(p, pData, J);
     
     return GSL_SUCCESS;
  }
@@ -466,6 +470,8 @@ DDAS::lmfit1(
     std::vector<std::pair<uint16_t, uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);
     
+    SerialFitEngine1 engine(points);
+    
     unsigned npts = points.size();
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
@@ -488,8 +494,7 @@ DDAS::lmfit1(
     function.n   = npts;
     function.p   = P1_PARAM_COUNT;
     
-    GslFitParameters params = {&points};
-    function.params = &params;
+    function.params = &engine;
     
     // Make the initial parameter guesses.
     
