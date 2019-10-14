@@ -255,6 +255,13 @@ SerialFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
 // pulses.
 
 /**
+ * constructor
+ *  @param data - the trace.
+ */
+SerialFitEngine2::SerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data) :
+    FitEngine(data) {}
+
+/**
  * residuals
  *    Compute the residuals for a set of parameters.
  *

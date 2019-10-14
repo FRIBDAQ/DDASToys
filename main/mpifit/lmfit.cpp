@@ -535,35 +535,8 @@ DDAS::lmfit1(
  static int
  gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  {
-    // Pull out the current fit parameterization>
-    
-    double A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
-    double k1    = gsl_vector_get(p, P2K1_INDEX);
-    double k2    = gsl_vector_get(p, P2K2_INDEX);
-    double x1    = gsl_vector_get(p, P2X1_INDEX);
-    
-    
-    double A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
-    double k3    = gsl_vector_get(p, P2K3_INDEX);
-    double k4    = gsl_vector_get(p, P2K4_INDEX);
-    double x2    = gsl_vector_get(p, P2X2_INDEX);
-    
-    double C     = gsl_vector_get(p, P2C_INDEX);    // constant.
-    
-    // Recast pData as a reference to the trace:
-    
-    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    const std::vector<std::pair<uint16_t, uint16_t>> & points(*pParams->s_pPoints);
-    
-    // Compute double pulse residuals for each point:
-    
-    for (int i = 0; i < points.size(); i++) {
-        double x = points[i].first;
-        double y = points[i].second;
-        double p = DDAS::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
-        gsl_vector_set(r, i, (p - y));     // divided by w = 1.0.
-    }
-    
+    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    pEngine->residuals(p, r);
     return GSL_SUCCESS;
  }
  /**
@@ -582,64 +555,10 @@ DDAS::lmfit1(
 static int
 gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 {
-    // Fish the current fit parameters from p:
-    
-    double A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
-    double k1    = gsl_vector_get(p, P2K1_INDEX);
-    double k2    = gsl_vector_get(p, P2K2_INDEX);
-    double x1    = gsl_vector_get(p, P2X1_INDEX);
-    
-    
-    double A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
-    double k3    = gsl_vector_get(p, P2K3_INDEX);
-    double k4    = gsl_vector_get(p, P2K4_INDEX);
-    double x2    = gsl_vector_get(p, P2X2_INDEX);
-    
-    double C     = gsl_vector_get(p, P2C_INDEX);    // constant.
-    
-    // Recast pData as a reference to the trace vector:
-    
-    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    const std::vector<std::pair<uint16_t, uint16_t>>& points(*pParams->s_pPoints);
-   
-    // Loop over the data points producing the Jacobian for each point.
-    // Note we can re-use the partial derivative functions for the single pulse
-    // case since the two pulses are independent and have identical functional forms.
-    
-    
-    for (int i = 0; i < points.size(); i++) {
-        double x = points[i].first;
-        
-        // Pulse 1 terms (A, k1, k2, x1):
-        
-        // Compute some reuseable exponentials:
-        
-        double erise1 = exp(-k1*(x - x1));
-        double efall1 = exp(-k2*(x - x1));
-        
-        double erise2 = exp(-k3*(x - x2));
-        double efall2 = exp(-k4*(x - x2));
-        
-        gsl_matrix_set(j, i, P2A1_INDEX, dp1dA(k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, i, P2K1_INDEX, dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, i, P2K2_INDEX, dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1));
-        gsl_matrix_set(j, i, P2X1_INDEX, dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1));
-        
-        // For pulse 2 elements:  A1->A2, k1 -> k3, k2 -> k4, x1 -> x2
-        
-        gsl_matrix_set(j, i, P2A2_INDEX, dp1dA(k3, k4, x2, x, 1.0, erise2, efall2));
-        gsl_matrix_set(j, i, P2K3_INDEX, dp1dk1(A2, k3, k4, x2, x, 1.0, erise2, efall2));
-        gsl_matrix_set(j, i, P2K4_INDEX, dp1dk2(A2, k3, k4, x2, x, 1.0, erise2, efall2));
-        gsl_matrix_set(j, i, P2X2_INDEX, dp1dx1(A2, k3, k4, x2, x, 1.0, erise2, efall2));
-        
-        // Don't forget the constant term
-        
-        gsl_matrix_set(j, i, P2C_INDEX, 1.0);     // Don't bother with the function call.
-    }
-    
-    
-    
+    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    pEngine->jacobian(p, j);
     return GSL_SUCCESS;
+
 }
 
 /**
@@ -657,6 +576,12 @@ gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 static int
 gsl_p2Compute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix* J)
 {
+    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    pEngine->residuals(p, resids);
+    pEngine->jacobian(p, J);
+    return GSL_SUCCESS;
+
+    
     gsl_p2Residuals(p, pData, resids);
     gsl_p2Jacobian(p, pData, J);
     
@@ -693,6 +618,8 @@ DDAS::lmfit2(
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
     
+    SerialFitEngine2 engine(points);
+    
     // Set up basic solver stuff:
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
@@ -715,9 +642,9 @@ DDAS::lmfit2(
     function.n   = npts;
     function.p   = P2_PARAM_COUNT;
     
-    GslFitParameters params = {&points};
     
-    function.params = &params;
+    
+    function.params = &engine;
     
     
     // For LM, initial parameter guesses are not that sensitive (I think).
