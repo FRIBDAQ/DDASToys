@@ -22,7 +22,230 @@
 
 
 #include "jacobian.h"
-#include "functions.h"
+#include <stdexcept>
+
+// From functions.cpp -> device:
+
+
+
+
+/**
+ * logistic
+ *    Evaluate a logistic function for the specified parameters and point.
+ *    A logistic function is a function with a sigmoidal shape.  We use it
+ *    to fit the rising edge of signals DDAS digitizes from detectors.
+ *    See e.g. https://en.wikipedia.org/wiki/Logistic_function for
+ *    a discussion of this function.
+ *
+ * @param A  - Amplitude of the signal.
+ * @param k1 - steepness of the signal (related to the rise time).
+ * @param x1 - Mid point of the rise of the sigmoid.
+ * @param x  = Location at which to evaluate the function.
+ * @return double
+ */
+__device__
+static float
+logistic(float A, float k, float x1, float x)
+{
+    return A/(1+exp(-k*(x-x1)));
+}
+
+/**
+ * decay
+ *    Signals from detectors usually have a falling shape that approximates
+ *    an exponential.  This function evaluates this decay at some point.
+ *
+ *  @param A1 - amplitude of the signal
+ *  @param k1 - Decay time factor f the signal.
+ *  @param x1 - Position of the pulse.
+ *  @param x  - Where to evaluate the signal.
+ *  @return double
+ */
+__device__
+static float
+decay(float A, float k, float x1, float x)
+{
+    return A*(exp(-k*(x-x1)));
+}
+
+/**
+ * singlePulse
+ *    Evaluate the value of a single pulse in accordance with our
+ *    canonical functional form.  The form is a sigmoid rise with an
+ *    exponential decay that sits on top of a constant offset.
+ *    The exponential decay is turned on with switchOn() above when
+ *    x > the rise point of the sigmoid.
+ *
+ * @param A1  - pulse amplitiude
+ * @parm  k1  - sigmoid rise steepness.
+ * @param k2  - exponential decay time constant.
+ * @param x1  - sigmoid position.
+ * @param C   - Constant offset.
+ * @param x   - Position at which to evaluat this function
+ * @return double
+ */
+__device__
+static float
+singlePulse(
+    float A1, float k1, float k2, float x1, float C, float x
+)
+{
+    return (logistic(A1, k1, x1, x)  * decay(1.0, k2, x1, x)) // decay term
+        + C;                                        // constant.
+}
+
+/**
+ * doublePulse
+ *    Evaluate the canonical form of a double pulse.  This is done
+ *    by summing two single pulses.  The constant term is thrown into the
+ *    first pulse.  The second pulse gets a constant term of 0.
+ *
+ * @param A1   - Amplitude of the first pulse.
+ * @param k1   - Steepness of first pulse rise.
+ * @param k2   - Decay time of the first pulse.
+ * @param x1   - position of the first pulse.
+ *
+ * @param A2   - Amplitude of the second pulse.
+ * @param k3   - Steepness of second pulse rise.
+ * @param k4   - Decay time of second pulse.
+ * @param x2   - position of second pulse.
+ *
+ * @param C    - Constant offset the pulses sit on.
+ * @param x    - position at which to evaluate the pulse.
+ * @return double.
+ * 
+*/
+__device__
+static float
+doublePulse(
+    float A1, float k1, float k2, float x1,
+    float A2, float k3, float k4, float x2,
+    float C, float x    
+)
+{
+    float p1 = singlePulse(A1, k1, k2, x1, C, x);
+    float p2 = singlePulse(A2, k3, k4, x2, 0.0, x);
+    return p1 + p2;
+}
+
+// Support functions that are in the device:
+
+/**
+ * dp1dA
+ *    Returns the partial derivative of a single pulse with respect to the
+ *    amplitude evaluated at a point
+ *
+ * @param k1 - current guess at rise steepness param (log(81)/risetime90).
+ * @param k2 - current guess at the decay time constant.
+ * @param x1 - Current guess at pulse position.
+ * @param x  - X at which to evaluate all this.
+ * @param w  - weight for the point 
+ * @return double - Value of (dP1/dA)(x)/w
+*/
+__device__
+static float
+dp1dA(float k1, float k2, float x1, float x, float w,
+      float erise, float efall)
+{
+    float d = efall;                      // decay(1.0, k2, x1, x);
+    float l = 1.0/(1.0 + erise);              // logistic(1.0, k1, x1, x);
+    return d*l / w;
+}
+/**
+ * dp1dk1
+ *    Partial of single pulse with respect to the rise time constant k1.
+ *
+ * @param A - current guess at amplitude.
+ * @param k1 - current guess at rise steepness param (log(81)/risetime90).
+ * @param k2 - current guess at the decay time constant.
+ * @param x1 - Current guess at pulse position.
+ * @param x  - X at which to evaluate all this.
+ * @param w  - weight for the point 
+ * @return double - Value of (dP1/dk1)(x)/w
+ */
+__device__
+static float
+dp1dk1(float A, float k1, float k2, float x1, float x, float w,
+       float erise, float efall)
+{
+    float d1 =   A*efall;               // decay(A, k2, x1, x);  
+    float d2 =   erise; //              // decay(1.0, k1, x1,  x);   // part of logistic deriv.
+    float num = d1*d2*(x - x1);
+    float l   =  1.0/(1.0 + erise);     //  logistic(1.0, k1, x1, x);   
+    
+    
+    return (num*l*l)/w;
+}
+/**
+ * dp1dk2
+ *    Partial of a single pulse with respect to the decay time constant.
+ * @param A - current guess at amplitude.
+ * @param k1 - current guess at rise steepness param (log(81)/risetime90).
+ * @param k2 - current guess at the decay time constant.
+ * @param x1 - Current guess at pulse position.
+ * @param x  - X at which to evaluate all this.
+ * @param w  - weight for the point 
+ * @return double - Value of (dP1/dk2)(x)/w
+ */
+__device__
+static float
+dp1dk2(float A, float k1, float k2, float x1, float x, float w,
+       float erise, float efall)
+{
+    float d1 = A*efall;                   // decay(A, k2, x1, x);
+    float num = d1*(x1 - x);
+    float l = 1.0/(1.0 + erise);          // logistic(1.0, k1, x1, x);
+    
+    return (num*l)/w;
+}
+/**
+ * dp1dx1
+ *    Partial of a single pulse with respect to the time at the middle
+ *    of the pulse's rise.
+ *
+ * @param A - current guess at amplitude.
+ * @param k1 - current guess at rise steepness param (log(81)/risetime90).
+ * @param k2 - current guess at the decay time constant.
+ * @param x1 - Current guess at pulse position.
+ * @param x  - X at which to evaluate all this.
+ * @param w  - weight for the point 
+ * @return double - Value of (dP1/dk2)(x)/w
+ */
+__device__
+static float
+dp1dx1(float A, float k1, float k2, float x1, float x, float w,
+       float erise, float efall)
+{
+    float dk1 = erise;                   // = decay(1.0, k1, x1, x);
+    float dk2 = efall;                   // decay (1.0, k2, x1, x);
+    float l   = 1.0/(1.0 + erise);       // logistic(1.0, k1, x1, x);
+    
+    float left = A*k2*dk2*l;
+    float right = A*k1*dk1*dk2*l*l;
+    
+    return (left - right)/w;
+}
+/**
+ * dp1dC
+ *    Partial derivative of single pulse with respect to the constant term
+ *    evaluated at a point.
+ *
+ * @param A - current guess at amplitude.
+ * @param k1 - current guess at rise steepness param (log(81)/risetime90).
+ * @param k2 - current guess at the decay time constant.
+ * @param x1 - Current guess at pulse position.
+ * @param x  - X at which to evaluate all this.
+ * @param w  - weight for the point 
+ * @return double - Value of (dP1/dC)(x)/w
+ */
+__device__
+static float
+dp1dC(float A, float k1, float k2, float x1, float x, float w)
+{
+    
+    return 1.0/w;
+}
+
 
 /**
  * The residual and jacobian copmutations are pointwise parallel in the device
@@ -251,3 +474,27 @@ CudaFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
         gsl_vector_set(r, i, resids[i]);
     }
 }
+/**
+ * throwCudaError
+ *    - Find the last cuda error
+ *    - Make a string out of the message we're passed and the cuda error.
+ *    - throw this all as a runtime_error
+ *
+ *  @param msg - context message.
+ */
+void
+CudaFitEngine1::throwCudaError(const char* msg)
+{
+    std::string e="Error: ";
+    e += msg;
+    e += " : ";
+    
+    cudaError_t status = cudaGetLastError();
+    e += cudaGetErrorString(status);
+    
+    throw std::runtime_error(e);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// CudaFitEngine2 implementation - double pulse fits.
+//

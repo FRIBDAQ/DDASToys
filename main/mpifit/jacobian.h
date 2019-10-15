@@ -81,8 +81,16 @@ public:
 };
 
 class CudaFitEngine2 : public FitEngine {
+private:
+    void* m_dXtrace;          // Device ptr to trace x. [in]
+    void* m_dYtrace;          // device ptr to trace y. [in]
+    void* m_dResiduals;       // device ptr to residuals. [out]
+    void* m_dJacobian;        // device ptr to jacobian [out]
+    unsigned m_npts;          // # points in the trace.
+        
 public:
   CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  ~CudaFitEngine2();
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
