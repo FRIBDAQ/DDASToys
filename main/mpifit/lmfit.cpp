@@ -411,9 +411,11 @@ DDAS::lmfit1(
     
     std::vector<std::pair<uint16_t, uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);
-    
+#ifdef CUDA
+    CudaFitEngine1 engine(points);
+#else
     SerialFitEngine1 engine(points);
-    
+#endif    
     unsigned npts = points.size();
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
@@ -617,9 +619,11 @@ DDAS::lmfit2(
     std::vector<std::pair<uint16_t, uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
-    
+#ifdef CUDA
+    CudaFitEngine2   engine(points);
+#else
     SerialFitEngine2 engine(points);
-    
+#endif
     // Set up basic solver stuff:
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;

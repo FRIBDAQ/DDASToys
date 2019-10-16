@@ -1,36 +1,66 @@
 # SPECTCLHOME must be define externally to point to a SpecTcl that has
 # the fragment index stuff built in.
 
+
 SPECINC=$(SPECTCLHOME)/include
 SPECLIB=$(SPECTCLHOME)/lib
 
-CXXFLAGS=-I$(DAQINC) -fPIC -std=c++11 -I$(DDAS_INC) -I. -g \
+CXXFLAGS=-I$(DAQINC)  -std=c++11 -I$(DDAS_INC) -I. -g \
 	-I/usr/include/tcl8.6 -I$(SPECINC)
 CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
 	-lSwTrigger -L$(DDAS_LIB) -lddasformat \
 	-ltclPlus -lException -lTclGrammerApp -lDDASUnpacker \
 	-ldaqio -ldataformat -lDataFlow -lurl -ldaqshm \
-	-Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) \
-	-Wl,-rpath=$(SPECLIB)	\
-	-lgsl -lgslcblas -ltcl8.6 -Wl,-z,defs
+	-lgsl -lgslcblas -ltcl8.6 
+
+CUDACXXFLAGS= -DCUDA --compiler-options -fPIC
+GNUCXXFLAGS=  -fPIC
+
+CUDALDFLAGS= --linker-options -rpath=$(DDAS_LIB) \
+	--linker-options -rpath=$(DAQLIB)        \
+	--linker-options -rpath=$(SPECLIB)
+GNULDFLAGS=-Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) \
+	-Wl,-rpath=$(SPECLIB)
+
+ifdef CUDA
+CXX=nvcc
+CUDAOBJ=CudaFitEngine.o
+
+.SUFFIXES: .cu
+EXTRACXXFLAGS=$(CUDACXXFLAGS)
+EXTRALDFLAGS=$(CUDALDFLAGS)
+.cu.o:
+	$(CXX) -c $(CXXFLAGS) $(EXTRACXXFLAGS) $^
+else
+EXTRACXXFLAGS=$(GNUCXXFLAGS)
+EXTRALDFLAGS=$(GNULDFLAGS)
+#CXXLDFLAGS+=-#	-Wl,-z,defs
+endif
+
 
 .cpp.o:
-	$(CXX) $(CXXFLAGS) -c $^
+	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
+TCLDDASFitHitUnpacker.o: TCLDDASFitHitUnpacker.cpp
+	g++ -c $^ $(CXXFLAGS) $(GNUCXXFLAGS)
 
-
-all: libFitter.so libFitEditor.so
+all: libFitter.so libFitEditor.so libTclUnpacker.so
 
 libFitter.so: FitExtender.o functions.o lmfit.o FitEngine.o serialJacobian.o \
 	FitHitUnpacker.o \
-	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o
-	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS)
-	echo  pkg_mkIndex -verbose . libFitter.so | tclsh
+	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o \
+	$(CUDAOBJ)
+	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
+
+
+libTclUnpacker.so: TCLDDASFitHitUnpacker.o
+	g++ -o libTclUnpacker.so -shared $^ $(CXXLDFLAGS) $(GNULDFLAGS)
+	echo  pkg_mkIndex -verbose . libTclUnpacker.so | tclsh
 
 libFitEditor.so: FitEditor.o functions.o lmfit.o FitEngine.o serialJacobian.o \
-	FitHitUnpacker.o
-	$(CXX) -o libFitEditor.so -shared $^ $(CXXLDFLAGS)
+	FitHitUnpacker.o $(CUDAOBJ)
+	$(CXX) -o libFitEditor.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
@@ -43,9 +73,8 @@ install:
 	install -d $(PREFIX)/lib
 	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
-	install -m 0755 libFitter.so $(PREFIX)/lib
+	install -m 0755 *.so $(PREFIX)/lib
 	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
-	install -m 0755 libFitEditor.so $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
 	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
 	install -m 0644 AREADME.txt $(PREFIX)/share

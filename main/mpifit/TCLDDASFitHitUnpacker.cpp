@@ -447,7 +447,7 @@ CTCLDDASFitHitUnpacker::addKeyValues(
 // Package initialization called by package require:
 
 extern "C" {
-    int Fitter_Init(Tcl_Interp* pRaw)
+    int Tclunpacker_Init(Tcl_Interp* pRaw)
     {
         Tcl_PkgProvide(pRaw, "ddasunpack", "1.0");
         

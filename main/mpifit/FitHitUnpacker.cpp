@@ -26,7 +26,7 @@
 
 #include <string.h>
 #include <stdexcept>
-#include <FitExtender.h>
+#include "FitExtender.h"
 
 /**
  * decode
