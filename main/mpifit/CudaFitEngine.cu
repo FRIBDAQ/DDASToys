@@ -757,6 +757,51 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
     }
 }
 /**
+ * residuals
+ *    Fire off the kernel to compute the pointwise residuals.
+ *
+ * @param p - fit parameters
+ * @param r - residuals
+ */
+void
+CudaFitEngine2::residuals(const gsl_vectsor* p, gsl_vector* r)
+{
+    // Pull out the current fit parameters:
+    
+    float A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
+    float k1    = gsl_vector_get(p, P2K1_INDEX);
+    float k2    = gsl_vector_get(p, P2K2_INDEX);
+    float x1    = gsl_vector_get(p, P2X1_INDEX);
+    
+    
+    float A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
+    float k3    = gsl_vector_get(p, P2K3_INDEX);
+    float k4    = gsl_vector_get(p, P2K4_INDEX);
+    float x2    = gsl_vector_get(p, P2X2_INDEX);
+    
+    float C     = gsl_vector_get(p, P2C_INDEX);    // constant.
+ 
+    // Fire off the kernel to do all this in pointwise parallel.
+    
+    residual2<<<(m_npts+31)/32,  32>>>(
+        m_dXtrace, m_dYtrace, m_dResiduals, m_npts,
+        A1, k1, k2, x1, A2, k3, k4, x2, C
+    );
+    
+    // Now we pull out the residuals vector and put it into r:
+    
+    float residuals[m_npts];
+    if (cudaMemcpy(
+        residuals, m_dResiduals, m_npts*sizeof(float), cudaMemcpyDeviceToHost
+        ) != cudaSuccess) {
+        throwCudaError("Unable to fetch residuals from GPU")
+    }
+    
+    for (int i =0; i < m_npts; i++) {
+        gsl_vector_set(r, i, residuals[i]);
+    }
+}
+/**
  * throwCudaError
  *     See this method in CudaFitEngine1 - here's a source for factorization
  *     into a base class...along with the allocation of the trace and residual
