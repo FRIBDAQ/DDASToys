@@ -93,6 +93,8 @@ public:
   ~CudaFitEngine2();
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
+private:
+    throwCudaError(const char* msg);
 };
 
 class FitEngineFactory {

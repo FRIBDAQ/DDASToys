@@ -23,6 +23,7 @@
 
 #include "jacobian.h"
 #include <stdexcept>
+#include <math.h>
 
 // From functions.cpp -> device:
 
@@ -498,3 +499,242 @@ CudaFitEngine1::throwCudaError(const char* msg)
 ///////////////////////////////////////////////////////////////////////////
 // CudaFitEngine2 implementation - double pulse fits.
 //
+
+// Device (GPU) kernels needed:
+
+/**
+ * residual2
+ *   Computes the two pulse residual pointwise parallel:
+ *
+ *   @param xc   - Xcoordinates of trace.
+ *   @param yc   - Ycoordinates of trace.
+ *   @param r    - Residuals to compute.
+ *   @param npts - Number of trace points.
+ *   @param C    - Constant offset fit parameter.
+ *   @param A1   - Scale factor for pulse1.
+ *   @param k11  - K1 for pulse 1.
+ *   @param k12  - K2 for pulse 1.
+ *   @param x1   - position of pulse 1
+ *   @param A2   - Scale factof for pulse 2.
+ *   @param k21  - k1 for pulse 2.
+ *   @param k22  - k2 for pulse 2.
+ *   @param x2   - position of pulse 2.
+ */
+__global__
+void residual2(
+    unsigned short* xc, unsigned short* yc, float* r, unsigned npts,
+    float C,
+    float A1, float k11, float k12, float x1,
+    float A2, float k21, float k22, float x2
+)
+{
+    // compute our index and only do anything if its < npts:
+    
+    int i  = blockIdx.x*blockDim.x + threadIdx.x;
+    if (i < npts) {
+        float x = xc[i]
+        float y = yc[i];
+        float fit = doublePulse(A1, k11, k12, x1, A2, k21, k22, x2, C, x);
+        r[i] = fit - y;
+    }
+}
+
+/**
+ * jacobian2
+ *    Compute the 2 pulse jacobian on a point of the pulse
+ *    The jacobian matrix is an npts x 9 matrix.
+ *
+ * @param xc - x coordinates of the trace.
+ * @param j  - jacobian matrix.
+ * @param npts - Number of points in the fit.
+ * @param A1, k1, k2, x1  - FIt parameters for first pulse.
+ * @param A2, k3, k4, x2  - Fit parameters for the second pulse.
+ * @param C               - constant term of the fit.
+ * 
+ */
+__global__
+void jacobian2(
+    unsigned short* xc,  float* j, unsigned npts,
+    float A1, float k1, float k2, float x1,
+    float A2, float k3, float k4, float x2,
+    float C
+)
+{
+    // figure out which point we're doing and compute if it's in the range
+    // of the trace:
+    
+    int i  = blockIdx.x*blockDim.x + threadIdx.x;
+    if (i < npts) {
+        // now the jacobian elements:
+        
+        int k = i;            // We'll increment this by npts for each j element
+        float x = xc[i];
+        
+        // Common subexpression elmiination between functions:
+        
+        float erise1 = exp(-k1*(xc - x1));
+        float efall1 = exp(-k2*(xc - x1));
+        
+        float erise2 = exp(-k3*(xc - x2));
+        float efall2 = exp(-k4*(xc - x2));
+        
+        // Pulse 1 elements.
+        
+        j[k] = dp1dA(k1, k2, x1, x, 1.0, erise1, efall1);      k += npts;
+        j[k] = dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        j[k] = dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        j[k] = dp1kx1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        
+        // Pulse 2 elements.
+        
+        j[k] = dp1dA(k3, k4,x2,x, 1.0, erise2, efall2);        k += npts;
+        j[k] = dp1dk1(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
+        j[k] = dp1dk2(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
+        j[k] = dp1dx1(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
+        
+        // constant element.
+        
+        j[k] = 1.0;
+    }
+}
+////////////////////
+// Host class implementation:
+
+/**
+ * constructor
+ *   - Allocate the GPU resources:
+ *     *   trace x array
+ *     *   trace y array.
+ *     *   residual array.
+ *     *   Jacobian vector (m_npts * 9)
+ *   - Move the trace into the GPU where it stays for all iterations of the fit.
+ *
+ * @param data - the trace data in x/y pairs.
+ */
+CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data)
+{
+    // Make separate x/y arrays from the data:
+    
+    m_npts = data.size();
+    unsigned short x[npts];
+    unsigned short y[npts];
+    
+    // Allocate the trace arrays and move the trace in:
+    
+    if (cudaMalloc(&m_dXtrace, m_npts*sizeof(unsigned short)) != cudaSuccess) {
+        throwCudaError("Unable to allocate GPU x trace array");
+    }
+    if (cudaMalloc(&m_dYtrace, m_npts*sizeof(unsigned short)) != cudaSuccess) {
+        throwCudaError("Unable to allocate CPU y trace array");
+    }
+    
+    if(
+        cudaMemcpy(
+            m_nXtrace, x, m_npts*sizeof(unsigned short), cudaMemcpyHostToDevice
+        ) != cudaSuccess
+    ) {
+        throwCudaError("Unable to move x coords of trace -> GPU");
+    }
+    if(cudaMemcpy(
+        m_nYtrace, y, m_npts*sizeof(unsigned short), cudaMemcpyHostToDevice
+    ) != cudaSuccess ) {
+        throwCudaError("Unable to move y coords of trace -> GPU");
+    }
+     // Allocate the residuals and jacobian:
+     
+    if(cudaMalloc(&m_dResiduals, m_npts*sizeof(float)) != cudaSuccess) {
+        throwCudaError("Unable to allocate residual array in GPU");
+    }
+    if (cudaMalloc(&m_dJacobian, m_npts*9*sizeof(float)) != cudaSuccess) {
+        throwCudaError("Unable to allocated jacobian matrix in GPU");
+    }
+}
+/**
+ * destructor just frees the device blocks
+ */
+CudaFitEngine2::CudaFitEngine2()
+{
+    // No point in looking for errors since we don't know how to recover:
+    
+    cudaFree(m_dXtrace);
+    cudaFree(m_dYtrace);
+    cudaFree(m_dResiduals);
+    cudaFree(m_dJacobian);
+}
+/**
+ * jacobian
+ *    Marshall the parameter and call the jacobian2 kernel.  Then
+ *    pull the jacobian matrix out of the GPU and marshall it back into
+ *    the gsl Jacobian matrix.
+ *
+ * @param p   - parameter vector from gsl.
+ * @param j   - jacobian matrix to output.
+ * @note we organize the computing into 32 thread blocks because there are 32 thread
+ *       per warp.
+ */
+void
+CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
+{
+    // Fish the current fit parameters from p:
+    
+    float A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
+    float k1    = gsl_vector_get(p, P2K1_INDEX);
+    float k2    = gsl_vector_get(p, P2K2_INDEX);
+    float x1    = gsl_vector_get(p, P2X1_INDEX);
+    
+    
+    float A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
+    float k3    = gsl_vector_get(p, P2K3_INDEX);
+    float k4    = gsl_vector_get(p, P2K4_INDEX);
+    float x2    = gsl_vector_get(p, P2X2_INDEX);
+    
+    float C     = gsl_vector_get(p, P2C_INDEX);    // constant.
+    
+    jacobian2<<<(m_npts + 31)/32, 32>>>(
+        m_dXtrace, m_dJacobian, m_npts,
+        A1, k1, k2, x1,
+        A2, k3, k4, x2,
+        C
+    );
+    
+    // Fetch the jacobian and marshall it into j.
+    
+    float jac[m_npts*9];
+    if (cudaMemcpy(jac, m_dJacobian, npts*9*sizeof(float), cudaMemcpyDeviceToHost)
+        != cudaSuccess) {
+        throwCudaError("Failed to fetch 2 pulse jacobian from gpu");
+    }
+    
+    for (int i =0; i < m_npts; i++) {
+        int k = i;
+        gsl_matrix_set(j, i, 0, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 1, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 2, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 3, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 4, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 5, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 6, jac[k]);  k += m_npts;
+        gsl_matrix_set(j, i, 7, jack[k]); k += m_npts;
+        gsl_matrix_set(j, i, 8, jack[k]); k += m_npts;    
+    }
+}
+/**
+ * throwCudaError
+ *     See this method in CudaFitEngine1 - here's a source for factorization
+ *     into a base class...along with the allocation of the trace and residual
+ *     as well as the push of the trace into the GPU.
+ * @param msg - message used to construct the exception messgae.
+ */
+void
+CudaFitEngine2::throwCudaError(const char* msg)
+{
+    std::string e="Error: ";
+    e += msg;
+    e += " : ";
+    
+    cudaError_t status = cudaGetLastError();
+    e += cudaGetErrorString(status);
+    
+    throw std::runtime_error(e);    
+}
+
