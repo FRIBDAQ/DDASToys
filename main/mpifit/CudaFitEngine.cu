@@ -24,6 +24,30 @@
 #include "jacobian.h"
 #include <stdexcept>
 #include <math.h>
+// Single pulse fit parameter indices:
+
+static const int P1A_INDEX(0);
+static const int P1K1_INDEX(1);
+static const int P1K2_INDEX(2);
+static const int P1X1_INDEX(3);
+static const int P1C_INDEX(4);
+
+
+// Double pulse fit with all parameters free:
+
+static const int P2A1_INDEX(0);
+static const int P2K1_INDEX(1);
+static const int P2K2_INDEX(2);
+static const int P2X1_INDEX(3);
+ 
+static const int P2A2_INDEX(4);
+static const int P2K3_INDEX(5);
+static const int P2K4_INDEX(6);
+static const int P2X2_INDEX(7);
+
+static const int P2C_INDEX(8);
+
+
 
 // From functions.cpp -> device:
 
@@ -269,7 +293,7 @@ dp1dC(float A, float k1, float k2, float x1, float x, float w)
  */
 __global__
 void residual1(
-    unsigned short* tracex, unsigned short* tracey, float* resid, unsigned len,
+    void* tx, void* ty, void* res, unsigned len,
     float C, float A, float k1, float k2, float x1)
 {
     // Figure out our index... we just don't do anything if it's
@@ -277,6 +301,9 @@ void residual1(
     
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < len) {
+      unsigned short* tracex = static_cast<unsigned short*>(tx);
+      unsigned short* tracey = static_cast<unsigned short*>(ty);
+      float* resid  = static_cast<float*>(res);
         float x = tracex[i];
         float y = tracey[i];
         
@@ -305,24 +332,27 @@ void residual1(
  */
 __global__
 void jacobian1(
-    unsigned short* tracex, unsigned short* tracey, float* j, unsigned len,
-    float A, float k1, float k2, x1
+    void* tx, void* ty, void* jac, unsigned len,
+    float A, float k1, float k2, float x1
 )
 {
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < len) {
+      unsigned short* tracex = static_cast<unsigned short*>(tx);
+
+      float* j = static_cast<float*>(jac);
         float x = tracex[i];
         
         // Common sub-expression elimination:
         
-        float erise = exp(-k1*(xi - x1));
-        float efall = exp(-k2*(xi - x1));
+        float erise = exp(-k1*(x - x1));
+        float efall = exp(-k2*(x - x1));
         
         float dA = dp1dA(k1, k2, x1, x, 1.0, erise, efall);
-        float dk1= dp1k1(A, k1, k2, x1, x, 1.0, erise, efall);
-        float dk2= dp1k2(A, k1, k2, x1m xm 1,9m erise, efall);
+        float dk1= dp1dk1(A, k1, k2, x1, x, 1.0, erise, efall);
+        float dk2= dp1dk2(A, k1, k2, x1, x, 1.0, erise, efall);
         float dx = dp1dx1(A, k1, k2, x1, x, 1.0, erise, efall);
-        float dC = dp1dC(a, k1, k2, x1, x, 1.0);
+        float dC = dp1dC(A, k1, k2, x1, x, 1.0);
         
         // Put these results in the appropriate Jacobian element:
         
@@ -344,7 +374,8 @@ void jacobian1(
  *   - Allocate the device vectors/matrices.
  *   - push the trace x/y points into the GPU where they stay until we're destroyed.
  */
-CudaFitEngine1::CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data)
+CudaFitEngine1::CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data) :
+  FitEngine(data)
 {
     // Mashall the trace into x/y arrays.. this lets them be cuda memcpied to the
     // GPU
@@ -360,7 +391,7 @@ CudaFitEngine1::CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data)
     
     // The trace:
     
-    if (cudaMalloc(&m_dxTrace, m_npts*sizeof(unsigned short)) != cudaSuccess) {
+    if (cudaMalloc(&m_dXtrace, m_npts*sizeof(unsigned short)) != cudaSuccess) {
         throwCudaError("Failed to allocated X trace points");
     }
     if (cudaMalloc(&m_dYtrace, m_npts*sizeof(unsigned short)) != cudaSuccess) {
@@ -394,10 +425,10 @@ CudaFitEngine1::~CudaFitEngine1()
     // Not much point in error checking as we're not going to be able to
     // do anything about errors here anyway.
     
-    CudaFree(m_dXtrace);
-    CudaFree(m_dYtrace);
-    CudaFree(m_dResiduals);
-    CudaFree(m_dJacobian);
+    cudaFree(m_dXtrace);
+    cudaFree(m_dYtrace);
+    cudaFree(m_dResiduals);
+    cudaFree(m_dJacobian);
 }
 /**
  * jacobian
@@ -416,15 +447,15 @@ CudaFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
     float x1  = gsl_vector_get(p, P1X1_INDEX);
     float C   = gsl_vector_get(p, P1C_INDEX);
     
-    jacobian1<<<(m_npts+31)/32 32>>>(
+    jacobian1<<<(m_npts+31)/32, 32>>>(
         m_dXtrace, m_dYtrace, m_dJacobian, m_npts,
         A, k1, k2, x1
     );
     // Now we need to pull the jacobian out of the device:
     
-    float Jac[npts*5];       // we'll do it flat:
+    float Jac[m_npts*5];       // we'll do it flat:
     if(
-        cudaMemcpy(Jac, m_dJacobian, npts*5*sizeof(float), cudaMemcpyDeviceToHost)
+        cudaMemcpy(Jac, m_dJacobian, m_npts*5*sizeof(float), cudaMemcpyDeviceToHost)
         != cudaSuccess
     ) {
         throwCudaError("failed to copy Jacobian from device");
@@ -522,7 +553,7 @@ CudaFitEngine1::throwCudaError(const char* msg)
  */
 __global__
 void residual2(
-    unsigned short* xc, unsigned short* yc, float* r, unsigned npts,
+    void* xtc, void* ytc, void* res, unsigned npts,
     float C,
     float A1, float k11, float k12, float x1,
     float A2, float k21, float k22, float x2
@@ -532,7 +563,10 @@ void residual2(
     
     int i  = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < npts) {
-        float x = xc[i]
+      unsigned short* xc = static_cast<unsigned short*>(xtc);
+      unsigned short* yc = static_cast<unsigned short*>(ytc);
+      float* r = static_cast<float*>(res);
+      float x = xc[i];
         float y = yc[i];
         float fit = doublePulse(A1, k11, k12, x1, A2, k21, k22, x2, C, x);
         r[i] = fit - y;
@@ -554,7 +588,7 @@ void residual2(
  */
 __global__
 void jacobian2(
-    unsigned short* xc,  float* j, unsigned npts,
+    void* xtc,  void* jac, unsigned npts,
     float A1, float k1, float k2, float x1,
     float A2, float k3, float k4, float x2,
     float C
@@ -565,6 +599,9 @@ void jacobian2(
     
     int i  = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < npts) {
+      unsigned short* xc = static_cast<unsigned short*>(xtc);
+      float* j = static_cast<float*>(jac);
+      
         // now the jacobian elements:
         
         int k = i;            // We'll increment this by npts for each j element
@@ -572,18 +609,18 @@ void jacobian2(
         
         // Common subexpression elmiination between functions:
         
-        float erise1 = exp(-k1*(xc - x1));
-        float efall1 = exp(-k2*(xc - x1));
+        float erise1 = exp(-k1*(x - x1));
+        float efall1 = exp(-k2*(x - x1));
         
-        float erise2 = exp(-k3*(xc - x2));
-        float efall2 = exp(-k4*(xc - x2));
+        float erise2 = exp(-k3*(x - x2));
+        float efall2 = exp(-k4*(x - x2));
         
         // Pulse 1 elements.
         
         j[k] = dp1dA(k1, k2, x1, x, 1.0, erise1, efall1);      k += npts;
         j[k] = dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
         j[k] = dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
-        j[k] = dp1kx1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        j[k] = dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
         
         // Pulse 2 elements.
         
@@ -611,13 +648,14 @@ void jacobian2(
  *
  * @param data - the trace data in x/y pairs.
  */
-CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data)
+CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data) :
+  FitEngine(data)
 {
     // Make separate x/y arrays from the data:
     
     m_npts = data.size();
-    unsigned short x[npts];
-    unsigned short y[npts];
+    unsigned short x[m_npts];
+    unsigned short y[m_npts];
     
     // Allocate the trace arrays and move the trace in:
     
@@ -630,13 +668,13 @@ CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data
     
     if(
         cudaMemcpy(
-            m_nXtrace, x, m_npts*sizeof(unsigned short), cudaMemcpyHostToDevice
+            m_dXtrace, x, m_npts*sizeof(unsigned short), cudaMemcpyHostToDevice
         ) != cudaSuccess
     ) {
         throwCudaError("Unable to move x coords of trace -> GPU");
     }
     if(cudaMemcpy(
-        m_nYtrace, y, m_npts*sizeof(unsigned short), cudaMemcpyHostToDevice
+        m_dYtrace, y, m_npts*sizeof(unsigned short), cudaMemcpyHostToDevice
     ) != cudaSuccess ) {
         throwCudaError("Unable to move y coords of trace -> GPU");
     }
@@ -652,7 +690,7 @@ CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data
 /**
  * destructor just frees the device blocks
  */
-CudaFitEngine2::CudaFitEngine2()
+CudaFitEngine2::~CudaFitEngine2()
 {
     // No point in looking for errors since we don't know how to recover:
     
@@ -700,7 +738,7 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
     // Fetch the jacobian and marshall it into j.
     
     float jac[m_npts*9];
-    if (cudaMemcpy(jac, m_dJacobian, npts*9*sizeof(float), cudaMemcpyDeviceToHost)
+    if (cudaMemcpy(jac, m_dJacobian, m_npts*9*sizeof(float), cudaMemcpyDeviceToHost)
         != cudaSuccess) {
         throwCudaError("Failed to fetch 2 pulse jacobian from gpu");
     }
@@ -714,8 +752,8 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
         gsl_matrix_set(j, i, 4, jac[k]);  k += m_npts;
         gsl_matrix_set(j, i, 5, jac[k]);  k += m_npts;
         gsl_matrix_set(j, i, 6, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 7, jack[k]); k += m_npts;
-        gsl_matrix_set(j, i, 8, jack[k]); k += m_npts;    
+        gsl_matrix_set(j, i, 7, jac[k]); k += m_npts;
+        gsl_matrix_set(j, i, 8, jac[k]); k += m_npts;    
     }
 }
 /**
