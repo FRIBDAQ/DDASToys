@@ -764,7 +764,7 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
  * @param r - residuals
  */
 void
-CudaFitEngine2::residuals(const gsl_vectsor* p, gsl_vector* r)
+CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
 {
     // Pull out the current fit parameters:
     
@@ -794,7 +794,7 @@ CudaFitEngine2::residuals(const gsl_vectsor* p, gsl_vector* r)
     if (cudaMemcpy(
         residuals, m_dResiduals, m_npts*sizeof(float), cudaMemcpyDeviceToHost
         ) != cudaSuccess) {
-        throwCudaError("Unable to fetch residuals from GPU")
+        throwCudaError("Unable to fetch residuals from GPU");
     }
     
     for (int i =0; i < m_npts; i++) {
