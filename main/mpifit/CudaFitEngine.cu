@@ -380,7 +380,7 @@ CudaFitEngine1::CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data)
     // Mashall the trace into x/y arrays.. this lets them be cuda memcpied to the
     // GPU
     
-    unsigned m_npts = data.size();
+    m_npts = data.size();
     
     unsigned short x[m_npts];
     unsigned short y[m_npts];
@@ -451,6 +451,8 @@ CudaFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
         m_dXtrace, m_dYtrace, m_dJacobian, m_npts,
         A, k1, k2, x1
     );
+    if(cudaDeviceSynchronize() != cudaSuccess) throwCudaError("Synchronizing kernel");              // Block until kernel done.
+    
     // Now we need to pull the jacobian out of the device:
     
     float Jac[m_npts*5];       // we'll do it flat:
@@ -492,6 +494,7 @@ CudaFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
         m_dXtrace, m_dYtrace, m_dResiduals, m_npts,
         C, A, k1, k2, x1
     );
+    if(cudaDeviceSynchronize() != cudaSuccess) throwCudaError("Synchronizing kernel");	// Block for kernel completion.
     // Fetch out the residuals and push the minto the r vector:
     
     float resids[m_npts];
@@ -734,6 +737,7 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
         A2, k3, k4, x2,
         C
     );
+    if(cudaDeviceSynchronize() != cudaSuccess) throwCudaError("Failed kernel synchronization");
     
     // Fetch the jacobian and marshall it into j.
     
@@ -787,6 +791,7 @@ CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
         m_dXtrace, m_dYtrace, m_dResiduals, m_npts,
         A1, k1, k2, x1, A2, k3, k4, x2, C
     );
+    if(cudaDeviceSynchronize() != cudaSuccess) throwCudaError("Failed to synchronize kernel");
     
     // Now we pull out the residuals vector and put it into r:
     
