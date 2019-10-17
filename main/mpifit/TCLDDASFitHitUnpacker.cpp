@@ -380,6 +380,7 @@ CTCLDDASFitHitUnpacker::makeFit1Dict(
     addKeyValue(interp, result, "decaytime", f.pulse.decayTime);
     addKeyValue(interp, result, "fitstatus", (int)f.fitStatus);
     addKeyValue(interp, result, "chisquare", f.chiSquare);
+    addKeyValue(interp, result, "iterations", (int)f.iterations);
     addKeyValue(interp, result, "offset",    f.offset);
     
 }
@@ -415,10 +416,10 @@ CTCLDDASFitHitUnpacker::makeFit2Dict(
         interp, result,  "decaytime",
         f.pulses[0].decayTime, f.pulses[1].decayTime
     );
-    
     addKeyValue(interp, result, "fitstatus", (int)f.fitStatus);
     addKeyValue(interp, result, "chisquare", f.chiSquare);
     addKeyValue(interp, result, "offset",    f.offset);
+    addKeyValue(interp, result, "iterations", (int)(f.iterations));
     
 }
 /**

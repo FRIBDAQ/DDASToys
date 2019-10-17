@@ -102,8 +102,8 @@ proc amplitude {fit} {
 proc showFits fits {
     if {[dict exists $fits fit1]} {
         set fit1 [dict get $fits fit1]
-        foreach w [list spos samp ssteep sdecay soffset schi]  \
-                k [list position amplitude steepness decaytime offset chisquare] {
+        foreach w [list spos samp ssteep sdecay soffset schi iter1]  \
+                k [list position amplitude steepness decaytime offset chisquare iterations] {
             set value [dict get $fit1 $k]
             set value [format %7.4f $value]
             .data.$w configure -text $value
@@ -117,8 +117,8 @@ proc showFits fits {
     if {[dict exists $fits fit2]} {
         set fit2 [dict get $fits fit2]
         set first [dict create]
-        foreach w [list pos1 amp1 steep1 decay1 doffset dchi] \
-            k [list position amplitude steepness decaytime offset chisquare] {
+        foreach w [list pos1 amp1 steep1 decay1 doffset dchi iter2] \
+            k [list position amplitude steepness decaytime offset chisquare iterations] {
             
             set value [lindex [dict get $fit2 $k] 0];    # first pulse.
             dict set first $k $value
@@ -523,6 +523,7 @@ proc setupUi {} {
     ttk::label $d.dlabel -text {Decay Time}
     ttk::label $d.olabel -text {Offset}
     ttk::label $d.chlabel -text {Chi Squre}
+    ttk::label $d.iterlabel -text {Iterations}
 
     
     #  Single pulse items:
@@ -534,6 +535,7 @@ proc setupUi {} {
     ttk::label $d.sdecay -text {***}
     ttk::label $d.soffset -text {***}
     ttk::label $d.schi  -text {***}
+    ttk::label $d.iter1 -text {***}
 
     
     # First of two pulse itesm:
@@ -545,6 +547,7 @@ proc setupUi {} {
     ttk::label $d.decay1 -text {***}
     ttk::label $d.doffset -text {***}
     ttk::label $d.dchi -text {***}
+    ttk::label $d.iter2  -text {***}
 
     
     ttk::label $d.pos2 -text {***}
@@ -561,6 +564,7 @@ proc setupUi {} {
     grid $d.dlabel  $d.sdecay  $d.decay1 $d.decay2 -sticky w
     grid $d.olabel  $d.soffset $d.doffset -sticky w
     grid $d.chlabel $d.schi    $d.dchi -sticky w
+    grid $d.iterlabel $d.iter1 $d.iter2 -stick w
     
     grid $d -sticky nsew
     
