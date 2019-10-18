@@ -87,7 +87,7 @@ private:
     void* m_dResiduals;       // device ptr to residuals. [out]
     void* m_dJacobian;        // device ptr to jacobian [out]
     unsigned m_npts;          // # points in the trace.
-        
+    SerialFitEngine2  m_check;
 public:
   CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   ~CudaFitEngine2();

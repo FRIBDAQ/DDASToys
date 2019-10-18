@@ -549,7 +549,7 @@ DDAS::lmfit1(
   *     there are just almost twice as many.
   *
   * @param[in] p   - gsl_vector of current fit parameters.
-  * @param[in] pData - Actually a pointer to a GslFitParameterse struct.
+  * @param[in] pData - Actully a pointer to a GslFitParameterse struct.
   * @param[out] j  - gsl_matrix into which the jacobian will be computed.
   * @result int - GSL_SUCCESS - I don't see how this can fail (flw).
   * @note the weights are all set to 1.0.

@@ -47,19 +47,6 @@ static const int P2X2_INDEX(7);
 
 static const int P2C_INDEX(8);
 
-// Parameter indices are a bit different!!!
-
-static const int P2FTA1_INDEX(0);
-static const int P2FTK1_INDEX(1);
-static const int P2FTK2_INDEX(2);
-static const int P2FTX1_INDEX(3);
-
-static const int P2FTA2_INDEX(4);
-static const int P2FTX2_INDEX(5);
- 
-static const int P2FTC_INDEX(6);
-
-
 // From functions.cpp -> device:
 
 
@@ -663,14 +650,17 @@ void jacobian2(
  * @param data - the trace data in x/y pairs.
  */
 CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data) :
-  FitEngine(data)
+  FitEngine(data), m_check(data)
 {
     // Make separate x/y arrays from the data:
     
     m_npts = data.size();
     unsigned short x[m_npts];
     unsigned short y[m_npts];
-    
+    for (int i =0; i < m_npts; i++) {
+      x[i] = data[i].first;
+      y[i] = data[i].second;
+    }
     // Allocate the trace arrays and move the trace in:
     
     if (cudaMalloc(&m_dXtrace, m_npts*sizeof(unsigned short)) != cudaSuccess) {
@@ -727,20 +717,22 @@ CudaFitEngine2::~CudaFitEngine2()
 void
 CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
 {
+  //  m_check.jacobian(p, j);
+
     // Fish the current fit parameters from p:
     
-    float A1    = gsl_vector_get(p, P2FTA1_INDEX);   // Pulse 1.
-    float k1    = gsl_vector_get(p, P2FTK1_INDEX);
-    float k2    = gsl_vector_get(p, P2FTK2_INDEX);
-    float x1    = gsl_vector_get(p, P2FTX1_INDEX);
+    float A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
+    float k1    = gsl_vector_get(p, P2K1_INDEX);
+    float k2    = gsl_vector_get(p, P2K2_INDEX);
+    float x1    = gsl_vector_get(p, P2X1_INDEX);
     
     
-    float A2    = gsl_vector_get(p, P2FTA2_INDEX);   // Pulse 2.
-    float k3    = gsl_vector_get(p, P2FTK3_INDEX);
-    float k4    = gsl_vector_get(p, P2FTK4_INDEX);
-    float x2    = gsl_vector_get(p, P2FTX2_INDEX);
+    float A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
+    float k3    = gsl_vector_get(p, P2K3_INDEX);
+    float k4    = gsl_vector_get(p, P2K4_INDEX);
+    float x2    = gsl_vector_get(p, P2X2_INDEX);
     
-    float C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
+    float C     = gsl_vector_get(p, P2C_INDEX);    // constant.
     
     jacobian2<<<(m_npts + 31)/32, 32>>>(
         m_dXtrace, m_dJacobian, m_npts,
@@ -781,6 +773,8 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
 void
 CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
 {
+
+
     // Pull out the current fit parameters:
     
     float A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
@@ -800,7 +794,9 @@ CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
     
     residual2<<<(m_npts+31)/32,  32>>>(
         m_dXtrace, m_dYtrace, m_dResiduals, m_npts,
-        A1, k1, k2, x1, A2, k3, k4, x2, C
+        C, 
+	A1, k1, k2, x1, 
+	A2, k3, k4, x2
     );
     if(cudaDeviceSynchronize() != cudaSuccess) throwCudaError("Failed to synchronize kernel");
     
