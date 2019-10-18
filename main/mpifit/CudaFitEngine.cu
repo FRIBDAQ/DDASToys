@@ -152,6 +152,10 @@ doublePulse(
 }
 
 // Support functions that are in the device:
+// Note - experimentally the jacobian for double pulses needs to be
+//        double precision so we've got functions named xxxx which are float
+//        and identical functions named xxxxd which are double.
+//
 
 /**
  * dp1dA
@@ -172,6 +176,15 @@ dp1dA(float k1, float k2, float x1, float x, float w,
 {
     float d = efall;                      // decay(1.0, k2, x1, x);
     float l = 1.0/(1.0 + erise);              // logistic(1.0, k1, x1, x);
+    return d*l / w;
+}
+__device__
+static double
+dp1dAd(double k1, double k2, double x1, double x, double w,
+      double erise, double efall)
+{
+    double d = efall;                      // decay(1.0, k2, x1, x);
+    double l = 1.0/(1.0 + erise);              // logistic(1.0, k1, x1, x);
     return d*l / w;
 }
 /**
@@ -199,6 +212,19 @@ dp1dk1(float A, float k1, float k2, float x1, float x, float w,
     
     return (num*l*l)/w;
 }
+__device__
+static double
+dp1dk1d(double A, double k1, double k2, double x1, double x, double w,
+       double erise, double efall)
+{
+    double d1 =   A*efall;               // decay(A, k2, x1, x);  
+    double d2 =   erise; //              // decay(1.0, k1, x1,  x);   // part of logistic deriv.
+    double num = d1*d2*(x - x1);
+    double l   =  1.0/(1.0 + erise);     //  logistic(1.0, k1, x1, x);   
+    
+    
+    return (num*l*l)/w;
+}
 /**
  * dp1dk2
  *    Partial of a single pulse with respect to the decay time constant.
@@ -221,6 +247,19 @@ dp1dk2(float A, float k1, float k2, float x1, float x, float w,
     
     return (num*l)/w;
 }
+
+__device__
+static double
+dp1dk2d(double A, double k1, double k2, double x1, double x, double w,
+       double erise, double efall)
+{
+    double d1 = A*efall;                   // decay(A, k2, x1, x);
+    double num = d1*(x1 - x);
+    double l = 1.0/(1.0 + erise);          // logistic(1.0, k1, x1, x);
+    
+    return (num*l)/w;
+}
+
 /**
  * dp1dx1
  *    Partial of a single pulse with respect to the time at the middle
@@ -248,6 +287,21 @@ dp1dx1(float A, float k1, float k2, float x1, float x, float w,
     
     return (left - right)/w;
 }
+
+__device__
+static double
+dp1dx1d(double A, double k1, double k2, double x1, double x, double w,
+       double erise, double efall)
+{
+    double dk1 = erise;                   // = decay(1.0, k1, x1, x);
+    double dk2 = efall;                   // decay (1.0, k2, x1, x);
+    double l   = 1.0/(1.0 + erise);       // logistic(1.0, k1, x1, x);
+    
+    double left = A*k2*dk2*l;
+    double right = A*k1*dk1*dk2*l*l;
+    
+    return (left - right)/w;
+}
 /**
  * dp1dC
  *    Partial derivative of single pulse with respect to the constant term
@@ -269,7 +323,13 @@ dp1dC(float A, float k1, float k2, float x1, float x, float w)
     return 1.0/w;
 }
 
-
+__device__
+static double
+dp1dCd(double A, double k1, double k2, double x1, double x, double w)
+{
+    
+    return 1.0/w;
+}
 /**
  * The residual and jacobian copmutations are pointwise parallel in the device
  *  (GPU)
@@ -590,9 +650,9 @@ void residual2(
 __global__
 void jacobian2(
     void* xtc,  void* jac, unsigned npts,
-    float A1, float k1, float k2, float x1,
-    float A2, float k3, float k4, float x2,
-    float C
+    double A1, double k1, double k2, double x1,
+    double A2, double k3, double k4, double x2,
+    double C
 )
 {
     // figure out which point we're doing and compute if it's in the range
@@ -601,20 +661,20 @@ void jacobian2(
     int i  = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < npts) {
       unsigned short* xc = static_cast<unsigned short*>(xtc);
-      float* j = static_cast<float*>(jac);
+      double* j = static_cast<double*>(jac);
       
         // now the jacobian elements:
         
         int k = i;            // We'll increment this by npts for each j element
-        float x = xc[i];
+        double x = xc[i];
         
         // Common subexpression elmiination between functions:
         
-        float erise1 = exp(-k1*(x - x1));
-        float efall1 = exp(-k2*(x - x1));
+        double erise1 = exp(-k1*(x - x1));
+        double efall1 = exp(-k2*(x - x1));
         
-        float erise2 = exp(-k3*(x - x2));
-        float efall2 = exp(-k4*(x - x2));
+        double erise2 = exp(-k3*(x - x2));
+        double efall2 = exp(-k4*(x - x2));
         
         // Pulse 1 elements.
         
@@ -650,7 +710,7 @@ void jacobian2(
  * @param data - the trace data in x/y pairs.
  */
 CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data) :
-  FitEngine(data), m_check(data)
+  FitEngine(data)
 {
     // Make separate x/y arrays from the data:
     
@@ -687,7 +747,7 @@ CudaFitEngine2::CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data
     if(cudaMalloc(&m_dResiduals, m_npts*sizeof(float)) != cudaSuccess) {
         throwCudaError("Unable to allocate residual array in GPU");
     }
-    if (cudaMalloc(&m_dJacobian, m_npts*9*sizeof(float)) != cudaSuccess) {
+    if (cudaMalloc(&m_dJacobian, m_npts*9*sizeof(double)) != cudaSuccess) {
         throwCudaError("Unable to allocated jacobian matrix in GPU");
     }
 }
@@ -717,22 +777,19 @@ CudaFitEngine2::~CudaFitEngine2()
 void
 CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
 {
-  //  m_check.jacobian(p, j);
 
-    // Fish the current fit parameters from p:
-    
-    float A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
-    float k1    = gsl_vector_get(p, P2K1_INDEX);
-    float k2    = gsl_vector_get(p, P2K2_INDEX);
-    float x1    = gsl_vector_get(p, P2X1_INDEX);
+    double A1    = gsl_vector_get(p, P2FTA1_INDEX);   // Pulse 1.
+    double k1    = gsl_vector_get(p, P2FTK1_INDEX);
+    double k2    = gsl_vector_get(p, P2FTK2_INDEX);
+    double x1    = gsl_vector_get(p, P2FTX1_INDEX);
     
     
-    float A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
-    float k3    = gsl_vector_get(p, P2K3_INDEX);
-    float k4    = gsl_vector_get(p, P2K4_INDEX);
-    float x2    = gsl_vector_get(p, P2X2_INDEX);
+    double A2    = gsl_vector_get(p, P2FTA2_INDEX);   // Pulse 2.
+    double k3    = gsl_vector_get(p, P2FTK3_INDEX);
+    double k4    = gsl_vector_get(p, P2FTK4_INDEX);
+    double x2    = gsl_vector_get(p, P2FTX2_INDEX);
     
-    float C     = gsl_vector_get(p, P2C_INDEX);    // constant.
+    double C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
     
     jacobian2<<<(m_npts + 31)/32, 32>>>(
         m_dXtrace, m_dJacobian, m_npts,
@@ -744,8 +801,8 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
     
     // Fetch the jacobian and marshall it into j.
     
-    float jac[m_npts*9];
-    if (cudaMemcpy(jac, m_dJacobian, m_npts*9*sizeof(float), cudaMemcpyDeviceToHost)
+    double jac[m_npts*9];
+    if (cudaMemcpy(jac, m_dJacobian, m_npts*9*sizeof(double), cudaMemcpyDeviceToHost)
         != cudaSuccess) {
         throwCudaError("Failed to fetch 2 pulse jacobian from gpu");
     }
