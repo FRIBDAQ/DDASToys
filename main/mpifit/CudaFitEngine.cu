@@ -323,13 +323,7 @@ dp1dC(float A, float k1, float k2, float x1, float x, float w)
     return 1.0/w;
 }
 
-__device__
-static double
-dp1dCd(double A, double k1, double k2, double x1, double x, double w)
-{
-    
-    return 1.0/w;
-}
+
 /**
  * The residual and jacobian copmutations are pointwise parallel in the device
  *  (GPU)
@@ -678,17 +672,17 @@ void jacobian2(
         
         // Pulse 1 elements.
         
-        j[k] = dp1dA(k1, k2, x1, x, 1.0, erise1, efall1);      k += npts;
-        j[k] = dp1dk1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
-        j[k] = dp1dk2(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
-        j[k] = dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        j[k] = dp1dAd(k1, k2, x1, x, 1.0, erise1, efall1);      k += npts;
+        j[k] = dp1dk1d(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        j[k] = dp1dk2d(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
+        j[k] = dp1dx1d(A1, k1, k2, x1, x, 1.0, erise1, efall1); k += npts;
         
         // Pulse 2 elements.
         
-        j[k] = dp1dA(k3, k4,x2,x, 1.0, erise2, efall2);        k += npts;
-        j[k] = dp1dk1(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
-        j[k] = dp1dk2(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
-        j[k] = dp1dx1(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
+        j[k] = dp1dAd(k3, k4,x2,x, 1.0, erise2, efall2);        k += npts;
+        j[k] = dp1dk1d(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
+        j[k] = dp1dk2d(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
+        j[k] = dp1dx1d(A2, k3, k4, x2, x, 1.0, erise2, efall2); k += npts;
         
         // constant element.
         
@@ -778,18 +772,18 @@ void
 CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
 {
 
-    double A1    = gsl_vector_get(p, P2FTA1_INDEX);   // Pulse 1.
-    double k1    = gsl_vector_get(p, P2FTK1_INDEX);
-    double k2    = gsl_vector_get(p, P2FTK2_INDEX);
-    double x1    = gsl_vector_get(p, P2FTX1_INDEX);
+    double A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
+    double k1    = gsl_vector_get(p, P2K1_INDEX);
+    double k2    = gsl_vector_get(p, P2K2_INDEX);
+    double x1    = gsl_vector_get(p, P2X1_INDEX);
     
     
-    double A2    = gsl_vector_get(p, P2FTA2_INDEX);   // Pulse 2.
-    double k3    = gsl_vector_get(p, P2FTK3_INDEX);
-    double k4    = gsl_vector_get(p, P2FTK4_INDEX);
-    double x2    = gsl_vector_get(p, P2FTX2_INDEX);
+    double A2    = gsl_vector_get(p, P2A2_INDEX);   // Pulse 2.
+    double k3    = gsl_vector_get(p, P2K3_INDEX);
+    double k4    = gsl_vector_get(p, P2K4_INDEX);
+    double x2    = gsl_vector_get(p, P2X2_INDEX);
     
-    double C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
+    double C     = gsl_vector_get(p, P2C_INDEX);    // constant.
     
     jacobian2<<<(m_npts + 31)/32, 32>>>(
         m_dXtrace, m_dJacobian, m_npts,
