@@ -9,7 +9,7 @@
  */
 
 /**
- * The concept is that each GSL lmfitter has to supply a pair of methods:
+ *   The concept is that each GSL lmfitter has to supply a pair of methods:
  * One that computes a vector of residuals and one that computes a Jacobian
  * matrix of partial derivatives.
  * At the implementation level we have two types of fits we need done:
@@ -87,7 +87,7 @@ private:
     void* m_dResiduals;       // device ptr to residuals. [out]
     void* m_dJacobian;        // device ptr to jacobian [out]
     unsigned m_npts;          // # points in the trace.
-public:
+public: 
   CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
   ~CudaFitEngine2();
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
