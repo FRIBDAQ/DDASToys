@@ -70,7 +70,7 @@ __device__
 static float
 logistic(float A, float k, float x1, float x)
 {
-    return A/(1+exp(-k*(x-x1)));
+    return A/(1+expf(-k*(x-x1)));
 }
 
 /**
@@ -88,7 +88,7 @@ __device__
 static float
 decay(float A, float k, float x1, float x)
 {
-    return A*(exp(-k*(x-x1)));
+    return A*(expf(-k*(x-x1)));
 }
 
 /**
@@ -397,8 +397,8 @@ void jacobian1(
         
         // Common sub-expression elimination:
         
-        float erise = exp(-k1*(x - x1));
-        float efall = exp(-k2*(x - x1));
+        float erise = expf(-k1*(x - x1));
+        float efall = expf(-k2*(x - x1));
         
         float dA = dp1dA(k1, k2, x1, x, 1.0, erise, efall);
         float dk1= dp1dk1(A, k1, k2, x1, x, 1.0, erise, efall);
