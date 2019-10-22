@@ -1,6 +1,10 @@
 # SPECTCLHOME must be define externally to point to a SpecTcl that has
 # the fragment index stuff built in.
 
+#  Note MAXPOINTS should  be modified to match the longest trace we're fitting
+#  if this is CUDA enabled.
+
+MAXPOINTS=200
 
 SPECINC=$(SPECTCLHOME)/include
 SPECLIB=$(SPECTCLHOME)/lib
@@ -13,7 +17,8 @@ CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
 	-ldaqio -ldataformat -lDataFlow -lurl -ldaqshm \
 	-lgsl -lgslcblas -ltcl8.6 
 
-CUDACXXFLAGS= -DCUDA --compiler-options -fPIC -I/usr/opt/libcudaoptimize/include
+CUDACXXFLAGS= -DCUDA --compiler-options -fPIC -I/usr/opt/libcudaoptimize/include \
+	-DMAXPOINTS=$(MAXPOINTS)
 GNUCXXFLAGS=  -fPIC
 
 CUDALDFLAGS= 	-L/usr/opt/libcudaoptimize/lib -lCudaOptimize \

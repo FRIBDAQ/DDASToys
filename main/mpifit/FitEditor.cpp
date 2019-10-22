@@ -38,6 +38,9 @@
 #include <algorithm>
 #include <locale>
 #include <cctype>
+#ifdef CUDA
+#include "cudafit.cuh"
+#endif
 
 using namespace  DDAS;
 
@@ -189,25 +192,34 @@ CFitEditor::operator()(
                     // Bit 1 do double fit.
                     
                     if (classification & 1) {
-                        DDAS::lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
+#ifdef CUDA
+		      cudafit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat, true);
+#else		      
+		      DDAS::lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
+#endif
                     }
                     
                     if (classification & 2 ) {
                         fit1Info guess;
                     
                         // Since the guess for the fit info depends on the
-                        // sincle pule fit, we may need to do it if not requested
+                        // sincle pulse fit, we may need to do it if not requested
                         
-                        
+#ifndef CUDA                        
                         if ((classification & 1) == 0) {
-                            DDAS::lmfit1(&guess, trace, l.first, sat);
+			  DDAS::lmfit1(&guess, trace, l.first, sat);
                         } else {
                             guess = pFit->s_extension.onePulseFit;
                         }
+#endif			
+#ifdef CUDA
+			cudafit2(&(pFit->s_extension.twoPulseFit), trace, l.first, sat, true);
+#else			
                         lmfit2(
                             &(pFit->s_extension.twoPulseFit), trace, l.first,
                             &guess, sat
                         );
+#endif			    
                     }
                     
                 }

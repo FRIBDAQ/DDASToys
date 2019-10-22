@@ -495,7 +495,7 @@ void
 cudafit1(
 	 DDAS::fit1Info* pResult, const std::vector<uint16_t>& trace,
 	 const std::pair<unsigned, unsigned>& limits,
-	 uint16_t saturation = 0xffff, bool freeTraceWhenDone=true
+	 uint16_t saturation, bool freeTraceWhenDone
 )
 {
   size_t nPoints = traceToGPU(trace, limits, saturation);
