@@ -8,6 +8,7 @@
  */
 
 #include "lmfit.h"             // For the fit extension formats.
+#include "reductions.cu"
 #include <limits>
 #include <ctime>
 #include <iostream>
@@ -283,7 +284,7 @@ float chiFitness2(const float* pParams, float x, float y, float wt)
   float c  = pParams[C];
 
   float fit = doublePulse(a1, k1, k2, x1, a2, k3, k4, x2, c, x);
-  float d   = y = fit;
+  float d   = y - fit;
   return d*d;
 
 }
@@ -326,16 +327,16 @@ void d_fitness1(const float* pSolutions, float* pFitnesses, int nParams, int nSo
     int ipt = ptno + swarm*nPoints;
     float x = pXcoords[ipt];
     float y = pYcoords[ipt];
-    sqdiff[ptno]  = chiFitness1(solno + (solno*nParams), x, y, weights[ipt]*npts);
+    sqdiff[ptno]  = chiFitness1(pSolutions + (solno*nParams), x, y, 1.0);
 
     // Can't do the fanin sum until all threads have computed:
 
-    __synchthreads();
+    __syncthreads();
 
-    reduceToSum<float, nPoints>(sqdiff, ptno);
-    __synchthreads();   // The sum is now done into sqdiff[0]:
+    reduceToSum<float, MAXPOINTS>(sqdiff, ptno);
+    __syncthreads();   // The sum is now done into sqdiff[0]:
     if(ptno == 0) {
-      fitnesses[solno] = sqdiff[0];
+      pFitnesses[solno] = sqdiff[0];
     }
   }
   
@@ -370,23 +371,23 @@ void d_fitness2(const float* pSolutions, float* pFitnesses, int nParams, int nSo
   // on our place in the computation's geometry:
 
   int swarm = blockIdx.x;
-  int solno = blockIdx.y + swar*nSol; // Our solution.
+  int solno = blockIdx.y + swarm*nSol; // Our solution.
   int ptno  = threadIdx.x;	      // Our point.
 
   if ((solno <  nSol*gridDim.x) && (ptno < nPoints)) {
-    int ipt = ptno + swarm*npts;
+    int ipt = ptno + swarm*nPoints;
     float x = pXcoords[ipt];
     float y = pYcoords[ipt];
-    sqdiff[ptno]  = chiFitness2(solutions + (solno*nparam), x, y, weights[ipt]*npts);
+    sqdiff[ptno]  = chiFitness2(pSolutions + (solno*nParams), x, y, 1.0);
 
     // Can't do the fanin sum until all threads have computed:
 
-    __synchthreads();
+    __syncthreads();
 
-    reduceToSum<float, nPoints>(sqdiff, ptno);
-    __synchthreads();   // The sum is now done into sqdiff[0]:
+    reduceToSum<float, MAXPOINTS>(sqdiff, ptno);
+    __syncthreads();   // The sum is now done into sqdiff[0]:
     if(ptno == 0) {
-      fitnesses[solno] = sqdiff[0];
+      pFitnesses[solno] = sqdiff[0];
     }
   }
   
@@ -409,14 +410,14 @@ h_fitSingle(
    dim3 grid, dim3 block
 )
 {
-  const float_d* d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
+  const float*   d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
   float*         d_fitnesses = fitnesses->get();                        // Where fitnesses go.
 
   // Figure out how many warps the fitnesses require:
 
-  int nParams = solutionsn->getProblemDimension();
-  nparams     = (nparams + 31)/32;
-  nparams     = nparams*32;
+  int nParams = solutions->getProblemDimension();
+  nParams     = (nParams + 31)/32;
+  nParams     = nParams*32;
 
   // Which solution:
 
@@ -426,11 +427,11 @@ h_fitSingle(
 
   dim3 myBlockSize(n_tracePoints, 1, 1);
   d_fitness1<<< grid, myBlockSize, n_tracePoints*sizeof(float) >>>(
-    d_solutions, d_fitnesses, nparams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
+    d_solutions, d_fitnesses, nParams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
   );
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
-    throwCudaError("Failed to run single pulsse fitness kernel");
+    reportCudaError("Failed to run single pulsse fitness kernel");
   }
 
 }
@@ -453,14 +454,14 @@ h_fitDouble(
    dim3 grid, dim3 block
 )
 {
-  const float_d* d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
+  const float*   d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
   float*         d_fitnesses = fitnesses->get();                        // Where fitnesses go.
 
   // Figure out how many warps the fitnesses require:
 
-  int nParams = solutionsn->getProblemDimension();
-  nparams     = (nparams + 31)/32;
-  nparams     = nparams*32;
+  int nParams = solutions->getProblemDimension();
+  nParams     = (nParams + 31)/32;
+  nParams     = nParams*32;
 
   // Which solution:
 
@@ -470,11 +471,11 @@ h_fitDouble(
 
   dim3 myBlockSize(n_tracePoints, 1, 1);
   d_fitness2<<< grid, myBlockSize, n_tracePoints*sizeof(float) >>>(
-    d_solutions, d_fitnesses, nparams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
+    d_solutions, d_fitnesses, nParams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
   );
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
-    throwCudaError("Failed to run single pulsse fitness kernel");
+    reportCudaError("Failed to run single pulsse fitness kernel");
   }
   
 }
@@ -492,9 +493,9 @@ h_fitDouble(
  */
 void
 cudafit1(
-	 fit1Info* pResult, const std::vector<uint16_t>& trace,
+	 DDAS::fit1Info* pResult, const std::vector<uint16_t>& trace,
 	 const std::pair<unsigned, unsigned>& limits,
-	 uint16_t saturation = 0xffff, bool freeTraceWhenDone=true;
+	 uint16_t saturation = 0xffff, bool freeTraceWhenDone=true
 )
 {
   size_t nPoints = traceToGPU(trace, limits, saturation);
@@ -526,9 +527,9 @@ cudafit1(
 
   pResult->chiSquare =  opt.getBestFitness(0);
   pResult->fitStatus =  0;
-  pResult->iterations = opt.getFunctionEvals(0);	// closest to an iteration count we have.
+  pResult->iterations = opt.getFunctionEvals();	// closest to an iteration count we have.
   float* pParams      = opt.getBestSolution(0);
-  pResult->offset   = float[C];
+  pResult->offset     = pParams[C];
   pResult->pulse.position = pParams[X1];
   pResult->pulse.amplitude= pParams[A1];
   pResult->pulse.steepness= pParams[K1];
@@ -550,9 +551,9 @@ cudafit1(
  */
 void
 cudafit2(
-	 fit2Info* pResult, const std::vector<uint16_t>& trace,
+	 DDAS::fit2Info* pResult, const std::vector<uint16_t>& trace,
 	 const std::pair<unsigned, unsigned>& limits,
-	 uint16_t saturation = 0xffff, traceIsLoaded = false
+	 uint16_t saturation = 0xffff, bool traceIsLoaded = false
 )
 {
   // If needed get the trace into the GPU
@@ -593,16 +594,16 @@ cudafit2(
   
   // We only allowed one case so pull the best fitness and best solution from it:
 
-  pResult->chiSquare = opt.getBetFitness(0);
+  pResult->chiSquare = opt.getBestFitness(0);
   pResult->fitStatus = 0;
-  pResult->iterations= opt.getFunctionEvals(0);
+  pResult->iterations= opt.getFunctionEvals();
   float * pParams    = opt.getBestSolution(0);
   pResult->offset    = pParams[C];
 
   pResult->pulses[0].position = pParams[X1];
-  pResult->pulse[0].amplitude= pParams[A1];
-  pResult->pulse[0].steepness= pParams[K1];
-  pResult->pulse[0].decayTime = pParams[K2];
+  pResult->pulses[0].amplitude= pParams[A1];
+  pResult->pulses[0].steepness= pParams[K1];
+  pResult->pulses[0].decayTime = pParams[K2];
 
   pResult->pulses[1].position = pParams[X2];
   pResult->pulses[1].amplitude= pParams[A2];
