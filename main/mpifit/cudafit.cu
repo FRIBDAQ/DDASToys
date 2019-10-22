@@ -197,6 +197,39 @@ singlePulse(
         + C;                                        // constant.
 }
 /**
+ * doublePulse - GPU FUNCTION!!!
+ *    Evaluate the canonical form of a double pulse.  This is done
+ *    by summing two single pulses.  The constant term is thrown into the
+ *    first pulse.  The second pulse gets a constant term of 0.
+ *
+ * @param A1   - Amplitude of the first pulse.
+ * @param k1   - Steepness of first pulse rise.
+ * @param k2   - Decay time of the first pulse.
+ * @param x1   - position of the first pulse.
+ *
+ * @param A2   - Amplitude of the second pulse.
+ * @param k3   - Steepness of second pulse rise.
+ * @param k4   - Decay time of second pulse.
+ * @param x2   - position of second pulse.
+ *
+ * @param C    - Constant offset the pulses sit on.
+ * @param x    - position at which to evaluate the pulse.
+ * @return double.
+ * 
+*/
+__device__ float
+doublePulse(
+    float A1, float k1, float k2, float x1,
+    float A2, float k3, float  k4, float  x2,
+    float  C, float  x    
+)
+{
+    float  p1 = singlePulse(A1, k1, k2, x1, C, x);
+    float  p2 = singlePulse(A2, k3, k4, x2, 0.0, x);
+    return p1 + p2;
+}
+
+/**
  * chiFitness1  -- GPU FUNCTION!!!!
  *
  *   Computes the chisquare fitness for one point in one solution given that d_fitness
@@ -225,10 +258,41 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
   
 }
 /**
- * d_fitness   -- GPU FUNCTION!!!!
+ * chiFitness2 -- GPU FUNCTION
+ *   Cmoputes the chi squre fitness contribution for one point in one solution
+ *   given that our caller has pulled out what we need:
+ *   @param pParams - pointer to this solutions parameters.
+ *   @param x       - X coordinate.
+ *   @param y       - Y coordinate.
+ *   @param wt      - weight for this coordinate (for now unused).
+ *   @return float  - square of difference between solution and actual.
+ */
+__device__
+float chiFitness2(const float* pParams, float x, float y, float wt)
+{
+  // Get the parameters from the fit:
+
+  float a1 = pParams[A1];
+  float a2 = pParams[A2];
+  float k1 = pParams[K1];
+  float k3 = pParams[K3];
+  float k2 = pParams[K2];
+  float k4 = pParams[K4];
+  float x1 = pParams[X1];
+  float x2 = pParams[X2];
+  float c  = pParams[C];
+
+  float fit = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+  float d   = y = fit;
+  return d*d;
+
+}
+
+/**
+ * d_fitness1   -- GPU FUNCTION!!!!
  *   This function lives in the GPU and:
  *   - Computes the chi-square contribution for a single point for a single solution 
- *     in the swarm.
+ *     in the swarm for a single pulse with an offset.
  *   - Uses reduceToSum to sum the chisquare contributions over the entire
  *     trace.
  *   The result is put into the fitness value for our solution.
@@ -244,7 +308,7 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
  *
  */
 __global__
-void d_fitness(const float* pSolutions, float* pFitnesses, int nParams, int nSol,
+void d_fitness1(const float* pSolutions, float* pFitnesses, int nParams, int nSol,
 	       unsigned short* pXcoords, unsigned short* pYcoords, float* pWeights,
 	       int nPoints)
 {
@@ -276,6 +340,58 @@ void d_fitness(const float* pSolutions, float* pFitnesses, int nParams, int nSol
   }
   
 }
+/**
+ *  d_fitness2  - GPU FUNCTION!!!
+ *    Compute the chisquare fitness for one point of one solution in the swarm.
+ *    Once that's done in all threads, we fire off our part of a fan-in parallel
+ *    sum over our solution.
+ *    Much of what we do is figure out our place in the world so that we can pass
+ *    the right stuff to chiFitness2 which does the actual computation.
+ *
+ *  @param pSolutions - pointer to solutions array in the GPU.
+ *  @param pFitnesses - pointer to the array of fitnesse for all solutions in the swarm.
+ *  @param nParams    - Number of parameters in the fit (should be 5).
+ *  @param nSol       - Number of solutions in the swarm.
+ *  @param pXcoords   - Trace xcoordinates array.
+ *  @param pYcoords   - Trae y coordinates array.
+ *  @param pWeights   - Y weights to apply.
+ *  @param nPoints    - Number of points in the trace.
+ *
+ */
+__global__
+void d_fitness2(const float* pSolutions, float* pFitnesses, int nParams, int nSol,
+	       unsigned short* pXcoords, unsigned short* pYcoords, float* pWeights,
+	       int nPoints)
+{
+  extern __shared__ float sqdiff[];  // Locate the chisqr contribs in shared mem.
+
+
+  // Figure out which solution and point we're working on.  This is based 
+  // on our place in the computation's geometry:
+
+  int swarm = blockIdx.x;
+  int solno = blockIdx.y + swar*nSol; // Our solution.
+  int ptno  = threadIdx.x;	      // Our point.
+
+  if ((solno <  nSol*gridDim.x) && (ptno < nPoints)) {
+    int ipt = ptno + swarm*npts;
+    float x = pXcoords[ipt];
+    float y = pYcoords[ipt];
+    sqdiff[ptno]  = chiFitness2(solutions + (solno*nparam), x, y, weights[ipt]*npts);
+
+    // Can't do the fanin sum until all threads have computed:
+
+    __synchthreads();
+
+    reduceToSum<float, nPoints>(sqdiff, ptno);
+    __synchthreads();   // The sum is now done into sqdiff[0]:
+    if(ptno == 0) {
+      fitnesses[solno] = sqdiff[0];
+    }
+  }
+  
+}
+
 
 /**
  * h_fitSingle
@@ -288,7 +404,7 @@ void d_fitness(const float* pSolutions, float* pFitnesses, int nParams, int nSol
  * @param block     - Shapes of blocks within the grid.
  */
 void
-h_fitness(
+h_fitSingle(
    const CudaOptimize::SolutionSet* solutions, CudaOptimize::FitnessSet* fitnesses,
    dim3 grid, dim3 block
 )
@@ -319,6 +435,50 @@ h_fitness(
 
 }
 
+
+/**
+ * h_fitDouble
+ *   Host part to setup computation of the fitnesses across the swarm for our
+ *   fits for a double pulse.  Really this just sets up the
+ *   kernel call for fitness2 which does the rest.
+ * 
+ * @param solutions - pointer to the current Solution set.
+ * @param fitnessses - pointer to the current fitness set
+ * @param grid      - Computaional grid geometry.
+ * @param block     - Shapes of the blocks within the grid.
+ */
+void
+h_fitDouble(
+   const CudaOptimize::SolutionSet* solutions, CudaOptimize::FitnessSet* fitnesses,
+   dim3 grid, dim3 block
+)
+{
+  const float_d* d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
+  float*         d_fitnesses = fitnesses->get();                        // Where fitnesses go.
+
+  // Figure out how many warps the fitnesses require:
+
+  int nParams = solutionsn->getProblemDimension();
+  nparams     = (nparams + 31)/32;
+  nparams     = nparams*32;
+
+  // Which solution:
+
+  int nsol = solutions->getSolutionNumber();
+
+  // Figure out the bocksize of the computation:
+
+  dim3 myBlockSize(n_tracePoints, 1, 1);
+  d_fitness2<<< grid, myBlockSize, n_tracePoints*sizeof(float) >>>(
+    d_solutions, d_fitnesses, nparams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
+  );
+  cudaDeviceSynchronize();
+  if (cudaGetLastError() != cudaSuccess) {
+    throwCudaError("Failed to run single pulsse fitness kernel");
+  }
+  
+}
+
 /**
  * cudafit1
  *   Fit a single pulse to the data:
@@ -326,13 +486,15 @@ h_fitness(
  * @param trace   - references the raw trace data.
  * @param limits  - Provides the limits over which the trace is done.
  * @param saturation - Defines the FADC saturation level.
- * @return 
+ * @param freeTraceWhenDone - if true (default) the trace data is freed from the GPU
+ *                     if not it's left allocated.  This allows a double fit to be done
+ *                     immediately after with no reallocation/copy.
  */
 void
 cudafit1(
-	 fitInfo* pResult, const std::vector<uint16_t>& trace,
+	 fit1Info* pResult, const std::vector<uint16_t>& trace,
 	 const std::pair<unsigned, unsigned>& limits,
-	 uint16_t saturation = 0xffff
+	 uint16_t saturation = 0xffff, bool freeTraceWhenDone=true;
 )
 {
   size_t nPoints = traceToGPU(trace, limits, saturation);
@@ -358,19 +520,95 @@ cudafit1(
   
   opt.optimize();
 
-  freeTrace();
+  if (freeTraceWhenDone) freeTrace();
 
   // Pull out the fit values into the pResult.
 
   pResult->chiSquare =  opt.getBestFitness(0);
   pResult->fitStatus =  0;
-  pResult->iterations = opt.getFunctionEvals();	// closest to an iteration count we have.
-  float*             = opt.getBestSolution();
+  pResult->iterations = opt.getFunctionEvals(0);	// closest to an iteration count we have.
+  float* pParams      = opt.getBestSolution(0);
   pResult->offset   = float[C];
-  pResult->pulse.position = float[X1];
-  pResult->pulse.amplitude= float[A1];
-  pResult->pulse.steepness= float[K1];
-  pResult->pulse.decayTime = float[K2];
+  pResult->pulse.position = pParams[X1];
+  pResult->pulse.amplitude= pParams[A1];
+  pResult->pulse.steepness= pParams[K1];
+  pResult->pulse.decayTime = pParams[K2];
 
 
+}
+/**
+ * cudafit2
+ *   Two a double pulse fit using libcudaoptimize.
+ *
+ * @param pResult - pointer to the resulting parameters.
+ * @param trace   - references the raw trace data.
+ * @param limits  - Provides the limits over which the trace is done.
+ * @param saturation - Defines the FADC saturation level.
+ * @param traceIsLoaded - if true, the trace is already loaded into the GPU
+ *                   from a prior cudafit1 call.  Note that regardless the trace is freed
+ *                   after we're run.  The default requires us to copy the trace.
+ */
+void
+cudafit2(
+	 fit2Info* pResult, const std::vector<uint16_t>& trace,
+	 const std::pair<unsigned, unsigned>& limits,
+	 uint16_t saturation = 0xffff, traceIsLoaded = false
+)
+{
+  // If needed get the trace into the GPU
+
+  size_t nPoints;
+  if (traceIsLoaded) {
+    nPoints = n_tracePoints;                     // From prior load.
+  } else {
+    nPoints = traceToGPU(trace, limits, saturation);
+  }
+
+  // Set up the optimizer with the fitness done in the GPU:
+
+  CudaOptimize::DE_Optimizer opt(h_fitDouble, P2_NPARAMS, 1, 200);
+  opt.setTerminationFlags((CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS | CudaOptimize::TERMINATE_FIT));
+  opt.setGenerations(100); 
+  opt.setStoppingFitness(10.0);
+  opt.setMutation(CudaOptimize::DE_RANDOM);
+  opt.setCrossover(CudaOptimize::DE_BINOMIAL);
+  opt.setHostFitnessEvaluation(false);
+
+  // Constrain the parameters - unfortunately we can't constrain x1 < x2 :-(
+  // We give corresponding parameters in the second pulse the same constraints.
+
+  opt.setBounds(0, A1, make_float2(saturation*10, 0.0));
+  opt.setBounds(0, A2, make_float2(saturation*10, 0.0));
+  opt.setBounds(0, K1, make_float2(500.0, 0.0));
+  opt.setBounds(0, K3, make_float2(500.0, 0.0));
+  opt.setBounds(0, K2, make_float2(500.0, 0.0));
+  opt.setBounds(0, K4, make_float2(500.0, 0.0));
+  opt.setBounds(0, X1, make_float2(-50.0, nPoints+50));    // Let the positions go a bit before/past the trace.
+  opt.setBounds(0, X2, make_float2(-50.0, nPoints+50));    // Let the positions go a bit before/past the trace.
+  opt.setBounds(0, C,  make_float2(saturation/4.0, 0.0));  // 25% full scale offset should be generous.
+
+  opt.optimize();
+
+  freeTrace();                                             // Always!!
+  
+  // We only allowed one case so pull the best fitness and best solution from it:
+
+  pResult->chiSquare = opt.getBetFitness(0);
+  pResult->fitStatus = 0;
+  pResult->iterations= opt.getFunctionEvals(0);
+  float * pParams    = opt.getBestSolution(0);
+  pResult->offset    = pParams[C];
+
+  pResult->pulses[0].position = pParams[X1];
+  pResult->pulse[0].amplitude= pParams[A1];
+  pResult->pulse[0].steepness= pParams[K1];
+  pResult->pulse[0].decayTime = pParams[K2];
+
+  pResult->pulses[1].position = pParams[X2];
+  pResult->pulses[1].amplitude= pParams[A2];
+  pResult->pulses[1].steepness= pParams[K3];
+  pResult->pulses[1].decayTime = pParams[K4];
+
+
+ 
 }
