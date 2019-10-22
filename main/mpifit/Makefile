@@ -13,18 +13,20 @@ CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
 	-ldaqio -ldataformat -lDataFlow -lurl -ldaqshm \
 	-lgsl -lgslcblas -ltcl8.6 
 
-CUDACXXFLAGS= -DCUDA --compiler-options -fPIC
+CUDACXXFLAGS= -DCUDA --compiler-options -fPIC -I/usr/opt/libcudaoptimize/include
 GNUCXXFLAGS=  -fPIC
 
-CUDALDFLAGS= --linker-options -rpath=$(DDAS_LIB) \
+CUDALDFLAGS= 	-L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
+	--linker-options -rpath=$(DDAS_LIB) \
 	--linker-options -rpath=$(DAQLIB)        \
-	--linker-options -rpath=$(SPECLIB)
+	--linker-options -rpath=$(SPECLIB) 
+
 GNULDFLAGS=-Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) \
 	-Wl,-rpath=$(SPECLIB)
 
 ifdef CUDA
 CXX=nvcc
-CUDAOBJ=CudaFitEngine.o
+CUDAOBJ=CudaFitEngine.o cudafit.o
 
 .SUFFIXES: .cu
 EXTRACXXFLAGS=$(CUDACXXFLAGS)

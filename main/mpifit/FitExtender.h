@@ -20,7 +20,7 @@
  */
 #ifndef FITEXTENDER_H
 #define FITEXTENDER_H
-#include <lmfit.h>
+#include "lmfit.h"
 #include <string.h>
 
 // Here are the hit extensions, Constructors fil  in the hit extension sizes.

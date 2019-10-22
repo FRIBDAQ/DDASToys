@@ -7,7 +7,7 @@
  *        have global data for the device pointers to the trace.
  */
 
-#include <lmfit.h>             // For the fit extension formats.
+#include "lmfit.h"             // For the fit extension formats.
 #include <limits>
 #include <ctime>
 #include <iostream>
@@ -23,14 +23,14 @@ static const unsigned K2 = 2;	// exponential decay
 static const unsigned X1 = 3;
 static const unsigned C  = 4;
 
-static const P1_NPARAMS = 5;
+static const unsigned P1_NPARAMS = 5;
 
 static const unsigned A2 = 5;
 static const unsigned K3 = 6;
 static const unsigned K4 = 7;
 static const unsigned X2 = 8;
 
-static const P2_NPARAMS = 9;
+static const unsigned P2_NPARAMS = 9;
 
 /**
  *  Here's why we can't have good things (threadable).  The libcudaoptimizer does not let me
@@ -40,7 +40,7 @@ static const P2_NPARAMS = 9;
 
 static unsigned short* d_xCoords;        // trace x coordinates.
 static unsigned short* d_yCoords;        // trace y coordinates.
-static unsigned unsigned n_tracePoints;  // Number of points in the trace.
+static unsigned        n_tracePoints;  // Number of points in the trace.
 static float*          h_pWeights(0);    // Host weights pointer.
 static float*          d_pWeights(0);    // Device weights pointer.
 
@@ -92,17 +92,17 @@ static unsigned traceToGPU(
   if (cudaMalloc(&d_xCoords, xcoords.size()*sizeof(unsigned short)) != cudaSuccess) {
     reportCudaError("Allocating GPU memory for trace x-coordinates");
   }
-  if (cudaMalloc(&d_YCoords, ycoords.size()*sizeof(unsigned short)) != cudaSuccess) {
+  if (cudaMalloc(&d_yCoords, ycoords.size()*sizeof(unsigned short)) != cudaSuccess) {
     reportCudaError("Allocating GPU memory for trace y-coordinates");
   }
 
   if (cudaMemcpy(
-      d_xCoords, xcoords.data(), xcoords.size()*sizeof(unsigned short))
+      d_xCoords, xcoords.data(), xcoords.size()*sizeof(unsigned short), cudaMemcpyHostToDevice)
       != cudaSuccess) {
     reportCudaError("Moving trace x coordinates into the GPU");
   }
   if (cudaMemcpy(
-      d_yCoords, ycoords.data(), ycoords.size()*sizeof(unsigned short))
+      d_yCoords, ycoords.data(), ycoords.size()*sizeof(unsigned short), cudaMemcpyHostToDevice)
       != cudaSuccess) {
     reportCudaError("Moving trace y coordinates into the GPU");
   }
@@ -115,7 +115,7 @@ static unsigned traceToGPU(
   if(!cudaMalloc(&d_pWeights, result*sizeof(float) != cudaSuccess)) {
     reportCudaError("Failed to allocates device weights array");
   }
-  if (!cudaMemcpy(d_pWeights, h_pWeights, result*sizeof(float)) != cudaSuccess) {
+  if (cudaMemcpy(d_pWeights, h_pWeights, result*sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess) {
     reportCudaError("Failed to copy wieghts into the device");
   }
 
@@ -131,8 +131,8 @@ freeTrace()
 {
   cudaFree(d_xCoords);
   cudaFree(d_yCoords);
-  cudaFree(d_weights);
-  free(h_weights);
+  cudaFree(d_pWeights);
+  free(h_pWeights);
 }
 /**
  * logistic - GPU FUNCTION!!!
@@ -251,7 +251,7 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
   float x1 = pParams[X1];
   float c = pParams[C];
 
-  float fit = singlePulse(A1, k1, k2, x1, c, x);
+  float fit = singlePulse(a, k1, k2, x1, c, x);
   float d   = (y  - fit);
   return d*d;
 
@@ -282,7 +282,7 @@ float chiFitness2(const float* pParams, float x, float y, float wt)
   float x2 = pParams[X2];
   float c  = pParams[C];
 
-  float fit = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+  float fit = doublePulse(a1, k1, k2, x1, a2, k3, k4, x2, c, x);
   float d   = y = fit;
   return d*d;
 
@@ -319,14 +319,14 @@ void d_fitness1(const float* pSolutions, float* pFitnesses, int nParams, int nSo
   // on our place in the computation's geometry:
 
   int swarm = blockIdx.x;
-  int solno = blockIdx.y + swar*nSol; // Our solution.
+  int solno = blockIdx.y + swarm*nSol; // Our solution.
   int ptno  = threadIdx.x;	      // Our point.
 
   if ((solno <  nSol*gridDim.x) && (ptno < nPoints)) {
-    int ipt = ptno + swarm*npts;
+    int ipt = ptno + swarm*nPoints;
     float x = pXcoords[ipt];
     float y = pYcoords[ipt];
-    sqdiff[ptno]  = chiFitness1(solutions + (solno*nparam), x, y, weights[ipt]*npts);
+    sqdiff[ptno]  = chiFitness1(solno + (solno*nParams), x, y, weights[ipt]*npts);
 
     // Can't do the fanin sum until all threads have computed:
 
