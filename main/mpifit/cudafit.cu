@@ -14,7 +14,10 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <DE_Optimizer.h>      // Optimizer beast.
+#include <functions.h>
+#include <DE_Optimizer.h>      // differntial evolution Optimizer beast.
+#include <PSO_Optimizer.h>     // Particle swarm
+#include <float.h>
 
 // Define the parameter numbers for the fits:
 
@@ -41,6 +44,8 @@ static const unsigned P2_NPARAMS = 9;
 
 static unsigned short* d_xCoords;        // trace x coordinates.
 static unsigned short* d_yCoords;        // trace y coordinates.
+static std::vector<uint16_t> xcoords;	 // The trace locally
+static std::vector<uint16_t> ycoords;	 // for debugging.
 static unsigned        n_tracePoints;  // Number of points in the trace.
 static float*          h_pWeights(0);    // Host weights pointer.
 static float*          d_pWeights(0);    // Device weights pointer.
@@ -76,8 +81,9 @@ static unsigned traceToGPU(
    uint16_t saturation
 )
 {
-  std::vector<uint16_t> xcoords;
-  std::vector<uint16_t> ycoords;
+  xcoords.clear();
+  ycoords.clear();
+ 
 
   int result(0);
   for (int i = limits.first; i < limits.second; i++) {
@@ -113,10 +119,13 @@ static unsigned traceToGPU(
   for (int i =0; i < result; i++) {
     h_pWeights[i] = 1.0;
   }
-  if(!cudaMalloc(&d_pWeights, result*sizeof(float) != cudaSuccess)) {
+  if(cudaMalloc(&d_pWeights, result*sizeof(float)) != cudaSuccess) {
     reportCudaError("Failed to allocates device weights array");
   }
-  if (cudaMemcpy(d_pWeights, h_pWeights, result*sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess) {
+
+  if (cudaMemcpy(
+     d_pWeights, h_pWeights, result*sizeof(float), cudaMemcpyHostToDevice)
+     != cudaSuccess) {
     reportCudaError("Failed to copy wieghts into the device");
   }
 
@@ -149,7 +158,7 @@ freeTrace()
  * @param x  = Location at which to evaluate the function.
  * @return double
  */
-__device__ float
+__host__ __device__ float
 logistic(float A, float  k, float x1, float x)
 {
     return A/(1+expf(-k*(x-x1)));
@@ -166,7 +175,7 @@ logistic(float A, float  k, float x1, float x)
  *  @param x  - Where to evaluate the signal.
  *  @return double
  */
-__device__ float
+__host__ __device__ float
 decay(float A, float k, float  x1, float x)
 {
     return A*(expf(-k*(x-x1)));
@@ -189,7 +198,7 @@ decay(float A, float k, float  x1, float x)
  * @param x   - Position at which to evaluat this function
  * @return double
  */
-__device__ float
+__host__ __device__ float
 singlePulse(
     float A1, float  k1, float  k2, float x1, float  C, float  x
 )
@@ -218,7 +227,7 @@ singlePulse(
  * @return double.
  * 
 */
-__device__ float
+__host__ __device__ float
 doublePulse(
     float A1, float k1, float k2, float x1,
     float A2, float k3, float  k4, float  x2,
@@ -241,7 +250,7 @@ doublePulse(
  *   @param wt      - weight for this coordinate (for now unused).
  *   @return float  - square of difference between solution and actual.
  */
-__device__
+__host__ __device__
 float chiFitness1(const float* pParams, float x, float y, float wt)
 {
   // Get the parameters from the fit:
@@ -254,7 +263,7 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
 
   float fit = singlePulse(a, k1, k2, x1, c, x);
   float d   = (y  - fit);
-  return d*d;
+  return (d*d*wt);
 
   
 }
@@ -268,7 +277,7 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
  *   @param wt      - weight for this coordinate (for now unused).
  *   @return float  - square of difference between solution and actual.
  */
-__device__
+__host__ __device__
 float chiFitness2(const float* pParams, float x, float y, float wt)
 {
   // Get the parameters from the fit:
@@ -285,8 +294,23 @@ float chiFitness2(const float* pParams, float x, float y, float wt)
 
   float fit = doublePulse(a1, k1, k2, x1, a2, k3, k4, x2, c, x);
   float d   = y - fit;
-  return d*d;
+  return abs(d*wt);
 
+}
+
+static float h_fit1(float* params)
+{
+  float result = 0;
+  int npts = xcoords.size();
+  
+  for (int i =0; i < npts; i++) {
+    float x = xcoords[i];
+    float y = ycoords[i];
+    
+    result += chiFitness1(params, x, y, 1.0)/npts;
+  }
+  if (!isfinite(result)) result = FLT_MAX;
+  return result;
 }
 
 /**
@@ -323,22 +347,33 @@ void d_fitness1(const float* pSolutions, float* pFitnesses, int nParams, int nSo
   int solno = blockIdx.y + swarm*nSol; // Our solution.
   int ptno  = threadIdx.x;	      // Our point.
 
-  if ((solno <  nSol*gridDim.x) && (ptno < nPoints)) {
-    int ipt = ptno + swarm*nPoints;
-    float x = pXcoords[ipt];
-    float y = pYcoords[ipt];
-    sqdiff[ptno]  = chiFitness1(pSolutions + (solno*nParams), x, y, 1.0);
+  if ((solno <  nSol*gridDim.x)) {
+    if (ptno < nPoints) {
+      int ipt = ptno + swarm*nPoints;
+      float x = pXcoords[ipt];
+      float y = pYcoords[ipt];
 
-    // Can't do the fanin sum until all threads have computed:
+     
+      sqdiff[ptno]  = chiFitness1(pSolutions + (solno*nParams), x, y, 1.0)/nPoints; // do the division point-wise
 
+      // Serial sum - if we are ptno 0 the we sum all npoints of sqdiff into the solution
+
+
+    } else {
+      //sqdiff[ptno] = 0;
+    }
+    // Reduce threads won't work for us evidently.
+    
     __syncthreads();
-
-    reduceToSum<float, MAXPOINTS>(sqdiff, ptno);
-    __syncthreads();   // The sum is now done into sqdiff[0]:
-    if(ptno == 0) {
-      pFitnesses[solno] = sqdiff[0];
+    if (ptno == 0)  {
+      pFitnesses[solno] = 0;
+      for (int i =0; i < nPoints; i++) {
+	pFitnesses[solno] += sqdiff[i];
+      }
+      if (!isfinite(pFitnesses[solno])) pFitnesses[solno] = FLT_MAX;
     }
   }
+
   
 }
 /**
@@ -374,23 +409,28 @@ void d_fitness2(const float* pSolutions, float* pFitnesses, int nParams, int nSo
   int solno = blockIdx.y + swarm*nSol; // Our solution.
   int ptno  = threadIdx.x;	      // Our point.
 
-  if ((solno <  nSol*gridDim.x) && (ptno < nPoints)) {
-    int ipt = ptno + swarm*nPoints;
-    float x = pXcoords[ipt];
-    float y = pYcoords[ipt];
-    sqdiff[ptno]  = chiFitness2(pSolutions + (solno*nParams), x, y, 1.0);
-
-    // Can't do the fanin sum until all threads have computed:
-
-    __syncthreads();
-
-    reduceToSum<float, MAXPOINTS>(sqdiff, ptno);
-    __syncthreads();   // The sum is now done into sqdiff[0]:
-    if(ptno == 0) {
-      pFitnesses[solno] = sqdiff[0];
+  if (solno <  nSol*gridDim.x) {
+    if (ptno < nPoints) {
+      int ipt = ptno + swarm*nPoints;
+      float x = pXcoords[ipt];
+      float y = pYcoords[ipt];
+      sqdiff[ptno]  = chiFitness2(pSolutions + (solno*nParams), x, y, 1.0)/nPoints;
+      
+      
+    }  else {
+      sqdiff[ptno] = 0.0;                // So it won't contribute to the chisquare sum.
+      
+      
+    }
+    __syncthreads();                 // ensure all elements of sqdiff are in.
+    if (ptno == 0) {
+      pFitnesses[solno] = 0;
+      for (int i =0; i < nPoints; i++) {
+	pFitnesses[solno] += sqdiff[i];
+      }
+      if(!isfinite(pFitnesses[solno])) pFitnesses[solno] = FLT_MAX;
     }
   }
-  
 }
 
 
@@ -410,30 +450,54 @@ h_fitSingle(
    dim3 grid, dim3 block
 )
 {
+  static int  calls = 0;
   const float*   d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
   float*         d_fitnesses = fitnesses->get();                        // Where fitnesses go.
+  calls++;
 
+  std::cerr << " fitness 1 " << calls << std::endl;
+  
   // Figure out how many warps the fitnesses require:
 
-  int nParams = solutions->getProblemDimension();
-  nParams     = (nParams + 31)/32;
-  nParams     = nParams*32;
-
-  // Which solution:
-
-  int nsol = solutions->getSolutionNumber();
+  //int nParams = solutions->getProblemDimension();
+  //  nParamBlocks     = (nParams + 31)/32;
+  //nParamBlocks     = nParamBlocks*32;
+  
+  int nsol = solutions->getSolutionNumber(); // Number of solutions we're floating around.
 
   // Figure out the bocksize of the computation:
 
   dim3 myBlockSize(n_tracePoints, 1, 1);
+  
+
   d_fitness1<<< grid, myBlockSize, n_tracePoints*sizeof(float) >>>(
-    d_solutions, d_fitnesses, nParams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
+        d_solutions, d_fitnesses, P1_NPARAMS, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
   );
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
-    reportCudaError("Failed to run single pulsse fitness kernel");
+    reportCudaError("Failed to run single pulse fitness kernel");
   }
 
+  // Fetch solutions and fitnesses and compare them with host computed values
+
+#define DEBUG1
+#ifdef DEBUG1
+  float computedF[nsol];
+  float computedP[nsol*P1_NPARAMS];
+
+  cudaMemcpy(computedF, d_fitnesses, nsol*sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(computedP, d_solutions, nsol*P1_NPARAMS*sizeof(float), cudaMemcpyDeviceToHost);
+
+  for (int i =0; i < nsol; i++) {
+    float* pSol = computedP + i*P1_NPARAMS;
+    float fit = h_fit1(pSol);
+    if (fit != computedF[i]) {
+      std::cerr << "Pass : " << calls << " Solution: " << i << " mismatch "
+		<< "host: " << fit << " gpu " << computedF[i] << std::endl;
+    }
+  }
+#endif
+  
 }
 
 
@@ -457,21 +521,16 @@ h_fitDouble(
   const float*   d_solutions = solutions->getDevicePositionsConst();    // Current solutions.
   float*         d_fitnesses = fitnesses->get();                        // Where fitnesses go.
 
-  // Figure out how many warps the fitnesses require:
 
-  int nParams = solutions->getProblemDimension();
-  nParams     = (nParams + 31)/32;
-  nParams     = nParams*32;
-
-  // Which solution:
+  // How big is the swarm?
 
   int nsol = solutions->getSolutionNumber();
 
   // Figure out the bocksize of the computation:
 
-  dim3 myBlockSize(n_tracePoints, 1, 1);
-  d_fitness2<<< grid, myBlockSize, n_tracePoints*sizeof(float) >>>(
-    d_solutions, d_fitnesses, nParams, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
+  dim3 myBlockSize(MAXPOINTS, 1, 1);
+  d_fitness2<<< grid, myBlockSize, MAXPOINTS*sizeof(float) >>>(
+    d_solutions, d_fitnesses, P2_NPARAMS, nsol, d_xCoords, d_yCoords, d_pWeights, n_tracePoints
   );
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
@@ -502,9 +561,11 @@ cudafit1(
 
   // Create and setup the optimizer - fitness function will be done in the device:
 
-  CudaOptimize::DE_Optimizer opt(&h_fitSingle, P1_NPARAMS, 1, 200);   // last parameter the swarmsize?
+  CudaOptimize::DE_Optimizer opt(&h_fitSingle, P1_NPARAMS, 1,  200);   // last parameter the swarmsize?
+
+   
   opt.setTerminationFlags((CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS | CudaOptimize::TERMINATE_FIT));
-  opt.setGenerations(100); 
+  opt.setGenerations(10000);
   opt.setStoppingFitness(10.0);
   opt.setMutation(CudaOptimize::DE_RANDOM);
   opt.setCrossover(CudaOptimize::DE_BINOMIAL);
@@ -514,9 +575,9 @@ cudafit1(
   // Set constraints on the parameters.
 
   opt.setBounds(0, A1, make_float2(saturation*10, 0.0));
-  opt.setBounds(0, K1, make_float2(500.0, 0.0));
-  opt.setBounds(0, K2, make_float2(500.0, 0.0));
-  opt.setBounds(0, X1, make_float2(-50.0, nPoints+50));    // Let the positions go a bit before/past the trace.
+  opt.setBounds(0, K1, make_float2(2, 0.0));
+  opt.setBounds(0, K2, make_float2(0.1, 0.0));
+  opt.setBounds(0, X1, make_float2(nPoints, 0));    // Let the positions go a bit before/past the trace.
   opt.setBounds(0, C,  make_float2(saturation/4.0, 0.0));  // 25% full scale offset should be generous.
   
   opt.optimize();
@@ -525,7 +586,7 @@ cudafit1(
 
   // Pull out the fit values into the pResult.
 
-  pResult->chiSquare =  opt.getBestFitness(0);
+
   pResult->fitStatus =  0;
   pResult->iterations = opt.getFunctionEvals();	// closest to an iteration count we have.
   float* pParams      = opt.getBestSolution(0);
@@ -535,6 +596,9 @@ cudafit1(
   pResult->pulse.steepness= pParams[K1];
   pResult->pulse.decayTime = pParams[K2];
 
+  pResult->chiSquare =  DDAS::chiSquare1(
+     pParams[A1], pParams[K1], pParams[K2], pParams[X1], pParams[C],
+     trace, limits.first, limits.second);
 
 }
 /**
@@ -567,9 +631,9 @@ cudafit2(
 
   // Set up the optimizer with the fitness done in the GPU:
 
-  CudaOptimize::DE_Optimizer opt(h_fitDouble, P2_NPARAMS, 1, 200);
+  CudaOptimize::DE_Optimizer opt(&h_fitDouble, P2_NPARAMS, 1, 200);
   opt.setTerminationFlags((CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS | CudaOptimize::TERMINATE_FIT));
-  opt.setGenerations(100); 
+  opt.setGenerations(1000); 
   opt.setStoppingFitness(10.0);
   opt.setMutation(CudaOptimize::DE_RANDOM);
   opt.setCrossover(CudaOptimize::DE_BINOMIAL);
@@ -580,12 +644,12 @@ cudafit2(
 
   opt.setBounds(0, A1, make_float2(saturation*10, 0.0));
   opt.setBounds(0, A2, make_float2(saturation*10, 0.0));
-  opt.setBounds(0, K1, make_float2(500.0, 0.0));
-  opt.setBounds(0, K3, make_float2(500.0, 0.0));
-  opt.setBounds(0, K2, make_float2(500.0, 0.0));
-  opt.setBounds(0, K4, make_float2(500.0, 0.0));
-  opt.setBounds(0, X1, make_float2(-50.0, nPoints+50));    // Let the positions go a bit before/past the trace.
-  opt.setBounds(0, X2, make_float2(-50.0, nPoints+50));    // Let the positions go a bit before/past the trace.
+  opt.setBounds(0, K1, make_float2(2.0, 0.0));
+  opt.setBounds(0, K3, make_float2(2.0, 0.0));
+  opt.setBounds(0, K2, make_float2(0.1, 0.0));
+  opt.setBounds(0, K4, make_float2(0.1, 0.0));
+  opt.setBounds(0, X1, make_float2(nPoints+50, -50));    // Let the positions go a bit before/past the trace.
+  opt.setBounds(0, X2, make_float2(nPoints+50, -50));    // Let the positions go a bit before/past the trace.
   opt.setBounds(0, C,  make_float2(saturation/4.0, 0.0));  // 25% full scale offset should be generous.
 
   opt.optimize();
@@ -594,9 +658,9 @@ cudafit2(
   
   // We only allowed one case so pull the best fitness and best solution from it:
 
-  pResult->chiSquare = opt.getBestFitness(0);
+
   pResult->fitStatus = 0;
-  pResult->iterations= opt.getFunctionEvals();
+  pResult->iterations= opt.getCurrentEvals();
   float * pParams    = opt.getBestSolution(0);
   pResult->offset    = pParams[C];
 
@@ -609,7 +673,9 @@ cudafit2(
   pResult->pulses[1].amplitude= pParams[A2];
   pResult->pulses[1].steepness= pParams[K3];
   pResult->pulses[1].decayTime = pParams[K4];
-
-
+  pResult->chiSquare = DDAS::chiSquare2(
+    pParams[A1], pParams[K1], pParams[K2], pParams[X1],
+    pParams[A2], pParams[K3], pParams[K4], pParams[X2],
+    pParams[C], trace, limits.first, limits.second);
  
 }
