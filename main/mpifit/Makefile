@@ -48,10 +48,12 @@ endif
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
+all: libFitter.so libFitEditor.so libTclUnpacker.so
+
+
 TCLDDASFitHitUnpacker.o: TCLDDASFitHitUnpacker.cpp
 	g++ -c $^ $(CXXFLAGS) $(GNUCXXFLAGS)
 
-all: libFitter.so libFitEditor.so libTclUnpacker.so
 
 libFitter.so: FitExtender.o functions.o lmfit.o FitEngine.o serialJacobian.o \
 	FitHitUnpacker.o \
