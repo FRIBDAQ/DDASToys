@@ -384,8 +384,23 @@ proc showFrag {w {init 1}} {
         
         set selection [$w get $i]
         set frag [getFragment $selection]
-        
-        
+
+	#  Put in the classifier probabilities if they're there:
+
+	if {[dict exists $frag singlePulseProbability]} {
+	    set single [dict get $frag singlePulseProbability]
+	} else {
+	    set single ****
+	}
+	if {[dict exists $frag doublePulseProbability]} {
+	    set double [dict get $frag doublePulseProbability]
+	} else {
+	    set double ****
+	}
+
+	.data.singleprob configure -text $single
+	.data.doubleprob configure -text $double
+	
         if {[dict exists $frag fits]} {
             showFits [dict get $frag fits]
         }
@@ -555,9 +570,18 @@ proc setupUi {} {
     ttk::label $d.amplitude2 -text {***}
     ttk::label $d.steep2 -text {***}
     ttk::label $d.decay2 -text {***}
+
+    # Classifier items:
+
+    ttk::label $d.psinglel   -text {Single pulse probability}
+    ttk::label $d.singleprob -text {****}
+    ttk::label $d.pdoublel   -text {Double pulse probability}
+    ttk::label $d.doubleprob -text {****}
     
-    grid x $d.slabel $d.p1label $d.p2label   -sticky w
-    grid $d.plabel $d.spos     $d.pos1  $d.pos2     -sticky w
+    grid x $d.slabel $d.p1label $d.p2label \
+	$d.psinglel $d.singleprob    -sticky w
+    grid $d.plabel $d.spos     $d.pos1  $d.pos2 \
+	$d.pdoublel $d.doubleprob     -sticky w
     grid $d.alabel $d.samp     $d.amp1  $d.amp2 -sticky w
     grid $d.amplabel $d.amplitude $d.amplitude1 $d.amplitude2 -sticky w
     grid $d.stlabel $d.ssteep  $d.steep1 $d.steep2 -sticky w
@@ -575,7 +599,7 @@ proc setupUi {} {
 #   Clears the fit data
 #
 proc clearData {} {
-    foreach w [list spos samp amplitude ssteep sdecay soffset schi] {
+    foreach w [list spos samp amplitude ssteep sdecay soffset schi singleprob doubleprob] {
         .data.$w configure -text {***}
     }
     foreach w [list pos1 pos2 amp1 amplitude1  amp2  amplitude2 steep1 steep2 decay1 decay2 doffset dchi] {
