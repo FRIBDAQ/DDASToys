@@ -184,9 +184,31 @@ CTCLDDASFitHitUnpacker::next(CTCLInterpreter& interp, std::vector<CTCLObject>& o
                 
                 DAQ::DDAS::DDASFitHit hit;
                 unpacker.decode(frag.s_itemhdr, hit);
+
                 
                 CTCLObject hitDict;
                 hitDict.Bind(interp);
+
+		// If the hit's body header is longer than sizeof(BodyHeader)
+		// by sizeof(uint32_t), the extension is assumed to be classification
+		// probabilities and we'll add an entry in the hit dict for the
+		// two clasification probabilities.
+
+		pRingItem prItem = reinterpret_cast<pRingItem>(frag.s_itemhdr);
+		pBodyHeader pBH= &(prItem->s_body.u_hasBodyHeader.s_bodyHeader);
+		if (pBH->s_size == (sizeof(BodyHeader) + sizeof(uint32_t))) {
+		  uint32_t* pClass = reinterpret_cast<uint32_t*>(pBH+1);  // Just past the 'standard' body header.
+		  uint32_t scaledClass = *pClass;
+		  double pSingle = scaledClass & 0xffff;
+		  pSingle /= 10000;                  // Now it's a probability.
+
+		  double pDouble = scaledClass >> 16;
+		  pDouble /= 10000;
+
+		  addKeyValue(interp, hitDict, "singlePulseProbability", pSingle);
+		  addKeyValue(interp, hitDict, "doublePulseProbability", pDouble);
+		}
+		
                 makeHitDict(interp, hitDict, hit);
                 result += hitDict;
                 
