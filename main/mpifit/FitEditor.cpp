@@ -190,7 +190,7 @@ CFitEditor::operator()(
                     // Bit 1 do double fit.
                     
                     if (classification & 1) {
-		      DDAS::lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
+                        DDAS::lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
 
                     }
                     
@@ -202,7 +202,7 @@ CFitEditor::operator()(
                         
 
                         if ((classification & 1) == 0) {
-			  DDAS::lmfit1(&guess, trace, l.first, sat);
+                            DDAS::lmfit1(&guess, trace, l.first, sat);
                         } else {
                             guess = pFit->s_extension.onePulseFit;
                         }

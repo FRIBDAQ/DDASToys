@@ -52,25 +52,25 @@
  *  The ranges for all but noise are fixed values:
  */
 
-const unsigned SAMPLES(500);        // Samples in a trace.
+const unsigned SAMPLES(250);        // Samples in a trace.
 
-const unsigned A_LOW(10);            // Smallest allowed amplitude.
-const unsigned A_HIGH(8192);        // '14 bit adc'.
+const unsigned A_LOW(100);            // Smallest allowed amplitude.
+const unsigned A_HIGH(1000);        // '14 bit adc'.
 
-const unsigned BASELINE_LOW(10);
+const unsigned BASELINE_LOW(0);
 const unsigned BASELINE_HIGH(100);
 
-const double K1_LOW(0.1);          // Shallowest rise.
-const double K1_HIGH(0.9);         // steepest rise.
+const double K1_LOW(0.01);          // Shallowest rise.
+const double K1_HIGH(0.02);         // steepest rise.
 
-const double K2_LOW(0.00005);           // Shallowest decay.
-const double K2_HIGH(0.00007);          // Steepest decay.
+const double K2_LOW(0.01);           // Shallowest decay.
+const double K2_HIGH(0.02);          // Steepest decay.
 
 // These interact with SAMPLES -- if pulses are to be fully in the trace.
 
 const unsigned X_LOW(100);             // earliest pulse1 onset.
 const unsigned X1_HIGH(250);            // latest pulse1  onset.
-const unsigned X2_HIGH(400);            // latest pulse 2 onset (earliest is X1 position).
+const unsigned X2_HIGH(250);            // latest pulse 2 onset (earliest is X1 position).
 
 unsigned saturation(0xffff);      // If pulse saturation level not set.
 /**
