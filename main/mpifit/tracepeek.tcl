@@ -50,6 +50,12 @@ set endY    0
 
 set rubberBox "";        # canvas id of the rubbrerband box.
 
+# This array helps us properly handle multiple hits from the same channel.
+#  populateListbox uses it to maintain a correspondence between the
+#  indices in the listbox and fragment indices in the event.
+
+array set listboxFragmentIndices [list];    # List box index -> fragment index map.
+
 ##
 # pulse
 #   For a given set of pulse parameters and x position, compute
@@ -383,7 +389,8 @@ proc showFrag {w {init 1}} {
         #  There's a selection.
         
         set selection [$w get $i]
-        set frag [getFragment $selection]
+        set frag [lindex $::currentEvent $::listboxFragmentIndices($i)]
+        #  set frag [getFragment $selection]
 
 	#  Put in the classifier probabilities if they're there:
 
@@ -439,8 +446,14 @@ proc showFrag {w {init 1}} {
 #   have traces and match the glob patterns in the cratemask, slotmask and chanmask
 #   globals.
 #
+
 proc populateListbox {} {
+    array unset ::listboxFragmentIndices *;   # Clear the correspondences.
+    
     .control.fraglist delete 0 end;           # clear
+    set fragno 0
+    set itemno 0
+    
     foreach fragment $::currentEvent {
         set crate [dict get $fragment crate]
         set slot  [dict get $fragment slot]
@@ -460,11 +473,14 @@ proc populateListbox {} {
                             if {!$populated} {
                                 .control.fraglist insert end $crate:$slot:$ch
                                 set populated 1;   #in case of multiple matches.
+                                set ::listboxFragmentIndices($itemno) $fragno
+                                incr itemno
                             }
                         }
                 }
             }
         }
+        incr fragno
 
     }
 }
