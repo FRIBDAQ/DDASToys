@@ -107,44 +107,48 @@ proc amplitude {fit} {
 #
 proc showFits fits {
     if {[dict exists $fits fit1]} {
-        set fit1 [dict get $fits fit1]
-        foreach w [list spos samp ssteep sdecay soffset schi iter1]  \
+	set fit1 [dict get $fits fit1]
+	if {[dict get $fit1 iterations] != 0} { #  fit actually performed.
+
+	    foreach w [list spos samp ssteep sdecay soffset schi iter1]  \
                 k [list position amplitude steepness decaytime offset chisquare iterations] {
-            set value [dict get $fit1 $k]
-            set value [format %7.4f $value]
-            .data.$w configure -text $value
-        }
-        # The actual amplitude:
-        
-        set amp [amplitude $fit1]
-        .data.amplitude config -text [format %7.4f $amp]
+		    set value [dict get $fit1 $k]
+		    set value [format %7.4f $value]
+		    .data.$w configure -text $value
+		}
+	    # The actual amplitude:
+	    
+	    set amp [amplitude $fit1]
+	    .data.amplitude config -text [format %7.4f $amp]
+	}
     }
-    
     if {[dict exists $fits fit2]} {
-        set fit2 [dict get $fits fit2]
-        set first [dict create]
-        foreach w [list pos1 amp1 steep1 decay1 doffset dchi iter2] \
-            k [list position amplitude steepness decaytime offset chisquare iterations] {
-            
-            set value [lindex [dict get $fit2 $k] 0];    # first pulse.
-            dict set first $k $value
-            set value [format %7.4f $value]
-            .data.$w configure -text $value
-            
-        }
-        set second [dict create]
-        foreach w [list pos2 amp2 steep2 decay2] \
-            k [list position amplitude steepness decaytime] {
-            set value [lindex [dict get $fit2 $k] 1]
-            dict set second $k $value
-            set value [format %7.4f $value]
-            .data.$w configure -text $value
-        }
-        set a1 [amplitude $first]
-        set a2 [amplitude $second]
-        
-        .data.amplitude1 config -text [format %7.4f $a1] 
-        .data.amplitude2 config -text [format %7.4f $a2]
+	set fit2 [dict get $fits fit2]
+	if {[dict get $fit2 iterations] != 0} {
+	    set first [dict create]
+	    foreach w [list pos1 amp1 steep1 decay1 doffset dchi iter2] \
+		k [list position amplitude steepness decaytime offset chisquare iterations] {
+		    
+		    set value [lindex [dict get $fit2 $k] 0];    # first pulse.
+		    dict set first $k $value
+		    set value [format %7.4f $value]
+		    .data.$w configure -text $value
+		    
+		}
+	    set second [dict create]
+	    foreach w [list pos2 amp2 steep2 decay2] \
+		k [list position amplitude steepness decaytime] {
+		    set value [lindex [dict get $fit2 $k] 1]
+		    dict set second $k $value
+		    set value [format %7.4f $value]
+		    .data.$w configure -text $value
+		}
+	    set a1 [amplitude $first]
+	    set a2 [amplitude $second]
+	    
+	    .data.amplitude1 config -text [format %7.4f $a1] 
+	    .data.amplitude2 config -text [format %7.4f $a2]
+	}
     }
 }
 ##
@@ -387,7 +391,8 @@ proc showFrag {w {init 1}} {
     set i [$w curselection]
     if {$i ne ""} {
         #  There's a selection.
-        
+        clearData
+	
         set selection [$w get $i]
         set frag [lindex $::currentEvent $::listboxFragmentIndices($i)]
         #  set frag [getFragment $selection]
@@ -428,14 +433,20 @@ proc showFrag {w {init 1}} {
         if {[dict exists $frag fits] } {
             set fits [dict get $frag fits]
             if {[dict exists $fits fit2]} {
-                set y [computeDoublePulse $x [dict get $fits fit2]]
-                plot double-pulse $x $y blue
-            }
+		set fit2 [dict get $fits fit2]
+		if {[dict get $fit2 iterations] != 0} {
+		    set y [computeDoublePulse $x [dict get $fit2]]
+		    plot double-pulse $x $y blue
+		}
+	    }
             
             if {[dict exists $fits fit1]} {
-                set y [computeSinglePulse $x [dict get $fits fit1]]
-                plot single-pulse $x $y red
-            }
+		set fit1 [dict get $fits fit1]
+		if {[dict get $fit1, iterations] != 0} {
+		    set y [computeSinglePulse $x $fit1]
+		    plot single-pulse $x $y red
+		}
+	    }
         }
 
     } 
