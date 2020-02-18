@@ -132,6 +132,6 @@ DAQ::DDAS::FitHitUnpacker::decode(
     } else {
         throw std::length_error("Inconsistent event size for DDASHit or extended hit");
     }
-    
+    return nullptr;		// should not get here .
     
 }
