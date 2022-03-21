@@ -11,6 +11,8 @@
 
 #  Required definitions:
 #  SPECTCLHOME - Base of SpecTcl.
+#  If SpecTcl 5.10 or later is used, the root for that version must also be setupe
+#  (e.g. /usr/opt/root/some-version/bin/thisroot.sh).
 #  A version of NSCLDAQ has been set up.
 #  A version of DDAS has been set up.
 #  Define XIAAPI to point to the XIAAPI version used by your NSCLDAQ setup.
