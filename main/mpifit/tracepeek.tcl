@@ -649,25 +649,35 @@ proc notifyEndFile {} {
 #   Remain.
 #
 proc nextEvent {} {
-    set rawEvent [ddasunpack next $::handle]
+    set status [catch  {ddasunpack next $::handle} rawEvent]
+    if {$status} {
+	tk_messageBox -icon warning     \
+	    -title "Event Decode error" \
+	    -type ok                    \
+	    -icon warning               \
+	    -message "Failed to decode hits in event: $rawEvent"
+	set ::currentEvent [list]
+	
+    } else {
     
-    if {$rawEvent eq ""} {         ; # End of file.
-        notifyEndFile
-    } else  {
-        incr ::eventNumber        
-        set ::currentEvent [list]
-    
-        foreach hit $rawEvent {
-            
-            if {[dict exists $hit trace]} {
-                
-                lappend ::currentEvent $hit
-                set crate [dict get $hit crate]
-                set slot  [dict get $hit slot]
-                set chan  [dict get $hit channel]
-                
-            }
-        }
+	if {$rawEvent eq ""} {         ; # End of file.
+	    notifyEndFile
+	} else  {
+	    incr ::eventNumber        
+	    set ::currentEvent [list]
+	    
+	    foreach hit $rawEvent {
+		
+		if {[dict exists $hit trace]} {
+		    
+		    lappend ::currentEvent $hit
+		    set crate [dict get $hit crate]
+		    set slot  [dict get $hit slot]
+		    set chan  [dict get $hit channel]
+		    
+		}
+	    }
+	}
         populateListbox
         
         clearData

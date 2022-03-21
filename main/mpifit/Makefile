@@ -1,8 +1,19 @@
 # SPECTCLHOME must be define externally to point to a SpecTcl that has
-# the fragment index stuff built in.
+# the fragment index stuff built in. Furthermore, an NSCLDAQ 11.4 or higher
+# must have been set up (daqsetup.bash sourced in).
+# XIAAPIDIR must be defined to point to the XIA API directory used by that
+# NSCLDAQ distro.
+
+
 
 #  Note MAXPOINTS should  be modified to match the longest trace we're fitting
 #  if this is CUDA enabled.
+
+#  Required definitions:
+#  SPECTCLHOME - Base of SpecTcl.
+#  A version of NSCLDAQ has been set up.
+#  A version of DDAS has been set up.
+#  Define XIAAPI to point to the XIAAPI version used by your NSCLDAQ setup.
 
 MAXPOINTS=200
 
@@ -10,7 +21,7 @@ SPECINC=$(SPECTCLHOME)/include
 SPECLIB=$(SPECTCLHOME)/lib
 
 CXXFLAGS=-I$(DAQINC)  -std=c++11 -I$(DDAS_INC) -I. -g \
-	-I/usr/include/tcl8.6 -I$(SPECINC)
+	-I/usr/include/tcl8.6 -I$(SPECINC) -I$(XIAAPIDIR)/include
 CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
 	-lSwTrigger -L$(DDAS_LIB) -lddasformat \
 	-ltclPlus -lException -lTclGrammerApp -lDDASUnpacker \
