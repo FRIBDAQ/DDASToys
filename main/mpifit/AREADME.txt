@@ -10,7 +10,19 @@ To build this code you must:
 3. source the ddassetup.bash script from DDAS 3.2-001 or later.
    Note this should be done last so that it does not override
    the NSCLDAQ definition.
-   
+4. If the version of DDAS/NSCLDAQ use the broken out XIAAPI, define
+   XIAAPIDIR to point to the top of the API version installed tree.
+5. If SpecTcl is 5.10 or higher (or if the build fails with a segfault  when making the
+   package index file for the Tcl unpacker) the version of root used
+   to make the SpecTcl used by this product must also be setup by sourcing it's
+   ....../bin/thisroot.sh
+
+Note:  The repository is not the NSCL gitlab repo because this is shared with
+non FRIB/NSCL folks but
+https://your-netid@gitlab.msu.edu/foxr/ParallelAnalysis.git
+
+This is a public repository
+
 The Makefile produces the libFitter.so shared object.  This can be
 
 1. Used as the extension library for $DAQBIN/Transformer allowing fits to be
