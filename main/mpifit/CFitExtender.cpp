@@ -21,7 +21,14 @@
  */
 #include "CFitExtender.h"
 
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+
 #include <DDASHit.h>
+#include <DDASHitUnpacker.h>
 
 /*
   This file contains code that computes fits of waveforms and, using the Transformer framework provides the fit parameters as extensions to the fragments in each event. An extension is added to each fragmnt. The extension provides a uint32_t self inclusive extension size which may be sizeof(uint32_t) or, if larger a HitExtension struct (see fitinfo.h)
@@ -73,6 +80,12 @@ CFitExtender::CFitExtender()
     exit(EXIT_FAILURE);
   }
 }
+
+
+// /**
+//  * Destructor
+//  */
+// CFitExtender::~CFitExtender() {}
 
 /**
  * operator()
@@ -130,7 +143,7 @@ CFitExtender::operator()(pRingItem item)
 	  
 	  if (classification & 2) {
 	    // Single pulse fit guides initial guess for double pulse. If the single pulse fit does not exist, we do it here.
-	    fit1Info guess;
+	    DDAS::fit1Info guess;
                         
 	    if ((classification & 1) == 0) {
 	      fitSinglePulse(pFit->s_extension.onePulseFit, trace,
@@ -348,6 +361,5 @@ CFitExtender::fitLimits(DAQ::DDAS::DDASHit& hit)
     
     std::pair<std::pair<unsigned, unsigned>, unsigned> result = m_fitChannels[index];
     
-    return result;
-       
+    return result;       
 }

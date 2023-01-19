@@ -28,7 +28,7 @@ class FitExtenderAnalytic: public CFitExtender
 {
  public:
   FitExtenderAnalytic();
-  ~FitExtenderAnalytic();
+  virtual ~FitExtenderAnalytic();
   
  private:
   virtual void fitSinglePulse(DDAS::fit1Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, uint16_t saturation);

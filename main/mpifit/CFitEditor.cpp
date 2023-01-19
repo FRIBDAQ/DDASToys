@@ -19,7 +19,16 @@
 /** @file:  CFitExtender.cpp
  *  @brief: Provides a fitting extender base class for DDAS Data.
  */
-#include "CFitExtender.h"
+#include "CFitEditor.h"
+
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+
+#include <DDASHit.h>
+#include <DDASHitUnpacker.h>
 
 /*
   This file contains code that computes fits of waveforms and, using the Transformer framework provides the fit parameters as extensions to the fragments in each event. An extension is added to each fragmnt. The extension provides a uint32_t self inclusive extension size which may be sizeof(uint32_t) or, if larger a HitExtension struct (see fitinfo.h)
@@ -115,6 +124,9 @@ CFitEditor::operator()(
     
   if (doFit(hit)) {
     std::vector<uint16_t> trace = hit.GetTrace();
+
+    // \TODO (ASC 1/18/23): What happens to this memory? Do we need to explicitly free it or wrap it in a smart ptr to automatically delete it when its out of scope?
+    pFitInfo pFit = new FitInfo; // Have an extension tho may be zero
     
     if (trace.size() > 0) {   /// Need a trace to fit
       auto l = fitLimits(hit);
@@ -126,9 +138,6 @@ CFitEditor::operator()(
 	int classification = pulseCount(hit);
 	
 	if (classification) {
-	  // \TODO (ASC 1/18/23): What happens to this memory? Do we need to explicitly free it or wrap it in a smart ptr to automatically delete it when its out of scope?
-	  pFitInfo pFit = new FitInfo; // Have an extension tho may be zero
-
 	  
 	  // Bit 0 do single fit.
 	  // Bit 1 do double fit.
@@ -140,7 +149,7 @@ CFitEditor::operator()(
                     
 	  if (classification & 2 ) {
 	    // Single pulse fit guides initial guess for double pulse. If the single pulse fit does not exist, we do it here.
-	    fit1Info guess;                    
+	    DDAS::fit1Info guess;                    
 
 	    if ((classification & 1) == 0) {
 	      fitSinglePulse(pFit->s_extension.onePulseFit, trace,
@@ -354,3 +363,12 @@ CFitEditor::fitLimits(DAQ::DDAS::DDASHit& hit)
     
     return result;   
 }
+
+// /////////////////////////////////////////////////////////////////////////////
+// // Factory for our editor:
+// //
+// extern "C" {
+//   CFitEditor* createEditor() {
+//     return new CFitEditor;
+//   }
+// }

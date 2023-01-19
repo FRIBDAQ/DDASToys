@@ -47,6 +47,7 @@ FitExtenderAnalytic::fitDoublePulse(DDAS::fit2Info& result, std::vector<uint16_t
 
 /////////////////////////////////////////////////////////////////////////////
 // Factory for our extender:
+//
 extern "C" {
   FitExtenderAnalytic* createExtender() {
     return new FitExtenderAnalytic;

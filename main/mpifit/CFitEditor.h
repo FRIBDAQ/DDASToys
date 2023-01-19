@@ -47,7 +47,7 @@ class CFitEditor : public CBuiltRingItemEditor::BodyEditor
 {  
 public:
   CFitEditor();
-  virtual ~CFitEditor();
+  virtual ~CFitEditor() {};
 
   // Mandatory interface from CBuiltRingItemEditor
   virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody);

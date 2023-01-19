@@ -60,6 +60,18 @@ namespace DDAS {
     fit1Info onePulseFit;
     fit2Info twoPulseFit;
   };
+  
 }
+
+typedef struct _nullExtension {
+  uint32_t s_size;
+  _nullExtension() : s_size(sizeof(uint32_t)) {}
+} nullExtension, *pNullExtension;
+
+typedef struct _FitInfo {
+  uint32_t  s_size;
+  DDAS::HitExtension s_extension;
+  _FitInfo();
+} FitInfo, *pFitInfo;
 
 #endif

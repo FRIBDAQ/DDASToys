@@ -28,7 +28,7 @@
 
 #include "fit_extension.h"
 
-// \TODO (ASC 1/18/23): These additional structs are used by the unpacker. Can they either bypassed somehow or moved into the fit_extension header so that we don't need to include this header in the unpacker?
+// \TODO (ASC 1/18/23): These additional structs are used by the unpacker, editor, etc. Can they either bypassed somehow or moved into the fit_extension header so that we don't need to include this (or CFitEditor) header in the unpacker?
 
 namespace DAQ {
   namespace DDAS {
@@ -38,16 +38,16 @@ namespace DAQ {
 
 // Here are the hit extensions, Constructors fill in the hit extension sizes
 
-typedef struct _nullExtension {
-    uint32_t s_size;
-    _nullExtension() : s_size(sizeof(uint32_t)) {}
-} nullExtension, *pNullExtension;
+// typedef struct _nullExtension {
+//     uint32_t s_size;
+//     _nullExtension() : s_size(sizeof(uint32_t)) {}
+// } nullExtension, *pNullExtension;
 
-typedef struct _FitInfo {
-    uint32_t  s_size;
-    DDAS::HitExtension s_extension;
-    _FitInfo();
-} FitInfo, *pFitInfo;
+// typedef struct _FitInfo {
+//     uint32_t  s_size;
+//     DDAS::HitExtension s_extension;
+//     _FitInfo();
+// } FitInfo, *pFitInfo;
 
 /**
  * The extender base class definition, derived from CRingItemExtender
@@ -56,7 +56,7 @@ class CFitExtender : public CBuiltRingItemExtender::CRingItemExtender
 {    
 public:
   CFitExtender();
-  virtual ~CFitExtender();
+  virtual ~CFitExtender() {};
   
   // Mandatory interface from CRingItemExtender
   virtual iovec operator()(pRingItem item);
