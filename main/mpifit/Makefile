@@ -24,7 +24,7 @@ SPECLIB=$(SPECTCLHOME)/lib
 
 CXXFLAGS=-I$(DAQINC)  -std=c++11 -I$(DDAS_INC) -I. -g \
 	-I/usr/include/tcl8.6 -I$(SPECINC) -I$(XIAAPIDIR)/include
-CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB)	\
+CXXLDFLAGS=-g -L$(DAQLIB) -L$(SPECLIB) \
 	-lSwTrigger -L$(DDAS_LIB) -lddasformat \
 	-ltclPlus -lException -lTclGrammerApp -lDDASUnpacker \
 	-ldaqio -ldataformat -lDataFlow -lurl -ldaqshm \
@@ -36,11 +36,10 @@ GNUCXXFLAGS=  -fPIC
 
 CUDALDFLAGS= 	-L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
 	--linker-options -rpath=$(DDAS_LIB) \
-	--linker-options -rpath=$(DAQLIB)        \
+	--linker-options -rpath=$(DAQLIB) \
 	--linker-options -rpath=$(SPECLIB) 
 
-GNULDFLAGS=-Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) \
-	-Wl,-rpath=$(SPECLIB)
+GNULDFLAGS=-Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) -Wl,-rpath=$(SPECLIB)
 
 ifdef CUDA
 CXX=nvcc
@@ -54,35 +53,35 @@ EXTRALDFLAGS=$(CUDALDFLAGS)
 else
 EXTRACXXFLAGS=$(GNUCXXFLAGS)
 EXTRALDFLAGS=$(GNULDFLAGS)
-#CXXLDFLAGS+=-#	-Wl,-z,defs
 endif
 
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
-all: libFitter.so libFitEditor.so libTclUnpacker.so
+#all: libFitter.so libFitEditor.so libFitterAnalytic.so libTclUnpacker.so
+all: libFitterAnalytic.so libFitEditorAnalytic.so libTclUnpacker.so
 
 
 TCLDDASFitHitUnpacker.o: TCLDDASFitHitUnpacker.cpp
 	g++ -c $^ $(CXXFLAGS) $(GNUCXXFLAGS)
 
-
-libFitter.so: FitExtender.o functions.o lmfit.o FitEngine.o serialJacobian.o \
-	FitHitUnpacker.o \
-	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o \
-	$(CUDAOBJ)
-	$(CXX) -o libFitter.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
-
-
-
 libTclUnpacker.so: TCLDDASFitHitUnpacker.o
 	g++ -o libTclUnpacker.so -shared $^ $(CXXLDFLAGS) $(GNULDFLAGS)
 	echo  pkg_mkIndex -verbose . libTclUnpacker.so | tclsh
 
-libFitEditor.so: FitEditor.o functions.o lmfit.o FitEngine.o serialJacobian.o \
-	FitHitUnpacker.o $(CUDAOBJ)
-	$(CXX) -o libFitEditor.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+libFitterAnalytic.so: FitExtenderAnalytic.o \
+	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
+	FitHitUnpacker.o \
+	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o \
+	$(CUDAOBJ)
+	$(CXX) -o libFitterAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+
+libFitEditorAnalytic.so: FitEditorAnalytic.o \
+	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
+	FitHitUnpacker.o \
+	$(CUDAOBJ)
+	$(CXX) -o libFitEditorAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:

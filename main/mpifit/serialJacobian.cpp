@@ -19,10 +19,12 @@
  *  @brief: Implement the serial fit engines for single and double pulse fits.
  *  
  */
-#include "jacobian.h"
-#include "functions.h"
-#include <math.h>
+
+#include <cmath>
 #include <vector>
+
+#include "jacobian.h"
+#include "functions_analytic.h"
 
 // Single pulse fit parameter indices:
 
@@ -203,7 +205,7 @@ SerialFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
         double xi = x[i];
         double yactual = y[i];
         
-        double fitted  = singlePulse(A, k1, k2, x1, C, xi);
+        double fitted  = DDAS::AnalyticFit::singlePulse(A, k1, k2, x1, C, xi);
         gsl_vector_set(r, i, (fitted - yactual));
     }
 }
@@ -291,7 +293,7 @@ SerialFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
     for (size_t i = 0; i < npts; i++) {
         double xc = x[i];
         double yc = y[i];
-        double p  = DDAS::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xc);
+        double p  = DDAS::AnalyticFit::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xc);
         gsl_vector_set(r, i, (p - yc));
     }
 }

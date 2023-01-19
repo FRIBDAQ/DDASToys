@@ -16,45 +16,33 @@
 */
 #ifndef FITHITUNPACKER_H
 #define FITHITUNPACKER_H
+
 /** @file:  FitHitUnpacker.h
  *  @brief: Unpack DDAS data where the traces _may_ have a HitExtension
  *          that contains one and two pulse fits.
  */
 
-
-
-
 #include <DDASHitUnpacker.h>
-
-
-
 
 // Let's put this sob in the same namespace as the DDASHitUnpacker method.
 
 namespace DAQ {
-    namespace DDAS {
-        class DDASFitHit;
-/**
- *  @class FitHitUnpacker
- *  
- * DAQ::DDAS::DDASHitUnpacker is capable of unpacking raw hits from DDAS
- * files. Typical trace analysis may involve fitting traces to one or two pulses.
- * This class extends the DDASHitUnpacker class to support access to the results
- * of the fit which have been tacked on the back end of a hit by
- * CDDASAnalyzer.cpp.
- */
-
- class FitHitUnpacker : public DAQ::DDAS::DDASHitUnpacker
- {
- public:
-    const void* decode(const void* p, DDASFitHit& hit
-    );
-;
- };
- 
- ////////////////////
-    }                                   // namespace DDAS
-}                                       // namespace DAQ
-
+  namespace DDAS {
+    class DDASFitHit;
+      
+    /**
+     *  @class FitHitUnpacker
+     *  
+     * DAQ::DDAS::DDASHitUnpacker is capable of unpacking raw hits from DDAS files. Typical trace analysis may involve fitting traces to one or two pulses This class extends the DDASHitUnpacker class to support access to the results of the fit which have been tacked on the back end of a hit by
+     * CDDASAnalyzer.cpp.
+     */
+    class FitHitUnpacker : public DAQ::DDAS::DDASHitUnpacker
+    {
+    public:
+      const void* decode(const void* p, DDASFitHit& hit);
+    };
+    
+  }
+}
 
 #endif

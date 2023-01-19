@@ -7,14 +7,14 @@
  *        have global data for the device pointers to the trace.
  */
 
-#include "lmfit.h"             // For the fit extension formats.
+#include "lmfit_analytic.h"             // For the fit extension formats.
+#include "functions_analytic.h"
 #include "reductions.cu"
 #include <limits>
 #include <ctime>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <functions.h>
 #include <DE_Optimizer.h>      // differntial evolution Optimizer beast.
 #include <PSO_Optimizer.h>     // Particle swarm
 #include <float.h>

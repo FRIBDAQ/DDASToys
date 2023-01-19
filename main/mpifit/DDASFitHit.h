@@ -10,6 +10,7 @@
      Authors:
              Ron Fox
              Jeromy Tompkins 
+	     Aaron Chester
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -23,8 +24,7 @@
  */
 
 #include "DDASHit.h"               // Base class
-#include "functions.h"              // Defines HitExtension.
-#include "lmfit.h"
+#include "fit_extension.h"         // Defines HitExtension.
 #include <stdexcept>
 
 namespace DAQ {

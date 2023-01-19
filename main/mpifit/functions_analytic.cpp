@@ -20,18 +20,12 @@
  *  @note all functions are in the DDAS namespace.
  *  
  */
-#include "functions.h"
-#include <math.h>
-
+#include "functions_analytic.h"
 
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <stdexcept>
-
-using namespace DDAS;
-
-
 
 /**
  * logistic
@@ -48,7 +42,7 @@ using namespace DDAS;
  * @return double
  */
 double
-DDAS::logistic(double A, double k, double x1, double x)
+DDAS::AnalyticFit::logistic(double A, double k, double x1, double x)
 {
     return A/(1+exp(-k*(x-x1)));
 }
@@ -65,7 +59,7 @@ DDAS::logistic(double A, double k, double x1, double x)
  *  @return double
  */
 double
-DDAS::decay(double A, double k, double x1, double x)
+DDAS::AnalyticFit::decay(double A, double k, double x1, double x)
 {
     return A*(exp(-k*(x-x1)));
 }
@@ -85,7 +79,7 @@ DDAS::decay(double A, double k, double x1, double x)
  *               the right of x1.
  */
 double
-DDAS::switchOn(double x1, double x)
+DDAS::AnalyticFit::switchOn(double x1, double x)
 {
     return logistic(1.0, 10000.0, x1, x);
 }
@@ -107,7 +101,7 @@ DDAS::switchOn(double x1, double x)
  * @return double
  */
 double
-DDAS::singlePulse(
+DDAS::AnalyticFit::singlePulse(
     double A1, double k1, double k2, double x1, double C, double x
 )
 {
@@ -136,7 +130,7 @@ DDAS::singlePulse(
  * 
 */
 double
-DDAS::doublePulse(
+DDAS::AnalyticFit::doublePulse(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C, double x    
@@ -169,7 +163,7 @@ DDAS::doublePulse(
  *  @note   the return value will be negative for pulses where k1/k2 <= 1.
  */
 double
-DDAS::pulseAmplitude(double A, double k1, double k2, double x0)
+DDAS::AnalyticFit::pulseAmplitude(double A, double k1, double k2, double x0)
 {
     double frac = k1/k2;
     if (frac <= 1.0) {
@@ -185,10 +179,10 @@ double pulseAmplitude(double A, double k1, double k2,double x0)
     static bool warned(false);
     if(!warned) {
         std::cerr << "WARNING the pulseAmplitude function is in the DDAS namespace\n";
-        std::cerr << "It should be called as DDAS::pulseAmplitude(...);\n";
+        std::cerr << "It should be called as DDAS::AnalyticFit::pulseAmplitude(...);\n";
         warned = true;
     }
-   return  DDAS::pulseAmplitude(A, k1, k2, x0);
+   return  DDAS::AnalyticFit::pulseAmplitude(A, k1, k2, x0);
 }
 
 
@@ -208,7 +202,7 @@ double pulseAmplitude(double A, double k1, double k2,double x0)
  * 
  */
 double
-DDAS::chiSquare1(
+DDAS::AnalyticFit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
     const std::vector<uint16_t>& trace, int low, int high    
 )
@@ -233,7 +227,7 @@ DDAS::chiSquare1(
  * rather than a trace.
  */
 double
-DDAS::chiSquare1(
+DDAS::AnalyticFit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
     const std::vector<std::pair<uint16_t, uint16_t> >& points
 )
@@ -275,7 +269,7 @@ DDAS::chiSquare1(
  * @return double
  */
 double
-DDAS::chiSquare2(
+DDAS::AnalyticFit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,    
@@ -306,7 +300,7 @@ DDAS::chiSquare2(
 // trace:
 
 double
-DDAS::chiSquare2(
+DDAS::AnalyticFit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,
@@ -339,7 +333,7 @@ DDAS::chiSquare2(
  *  @param trace    - the trace.
  */
 void
-DDAS::writeTrace(
+DDAS::AnalyticFit::writeTrace(
     const char* filename, const char* title, const std::vector<uint16_t>& trace
 )
 {
@@ -356,7 +350,7 @@ DDAS::writeTrace(
  *   @note the traces must be the same length.
  */
 void
-DDAS::writeTrace2(
+DDAS::AnalyticFit::writeTrace2(
     const char* filename, const char* title,
     const std::vector<uint16_t>& t1, const std::vector<uint16_t>& t2
 )

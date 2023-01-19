@@ -20,13 +20,14 @@
  */
 
 #include "FitHitUnpacker.h"
-#include "DDASFitHit.h"
-#include <DataFormat.h>
-
 
 #include <string.h>
 #include <stdexcept>
-#include "FitExtender.h"
+
+#include <DataFormat.h>
+
+#include "DDASFitHit.h"
+#include "CFitExtender.h"
 
 /**
  * decode
