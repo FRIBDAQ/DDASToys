@@ -26,7 +26,7 @@
 
 #include <CBuiltRingItemEditor.h>
 
-#include "fit_extension.h"
+#include "fit_extensions.h"
 
 namespace DAQ {
   namespace DDAS {

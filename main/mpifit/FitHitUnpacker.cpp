@@ -27,7 +27,7 @@
 #include <DataFormat.h>
 
 #include "DDASFitHit.h"
-#include "fit_extension.h"
+#include "fit_extensions.h"
 
 /**
  * decode

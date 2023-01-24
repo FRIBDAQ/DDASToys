@@ -23,7 +23,7 @@
 #define FUNCTIONS_ANALYTIC_H
 
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 
 namespace DDAS {
   namespace AnalyticFit {

@@ -23,10 +23,11 @@
 #define CFITEXTENDER_H
 
 #include <map>
+#include <vector>
 
 #include <CBuiltRingItemExtender.h>
 
-#include "fit_extension.h"
+#include "fit_extensions.h"
 
 // \TODO (ASC 1/18/23): These additional structs are used by the unpacker, editor, etc. Can they either bypassed somehow or moved into the fit_extension header so that we don't need to include this (or CFitEditor) header in the unpacker?
 

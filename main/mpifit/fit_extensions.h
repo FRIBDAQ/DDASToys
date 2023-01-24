@@ -15,14 +15,13 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  fit_extension.h
+/** @file:  fit_extensions.h
  *  @brief: Define structs used by fitting functions and to extend DDAS hits
  */
 
-#ifndef FIT_EXTENSION_H
-#define FIT_EXTENSION_H
+#ifndef FIT_EXTENSIONS_H
+#define FIT_EXTENSIONS_H
 
-#include <vector>
 #include <cstdint>
 
 namespace DDAS {

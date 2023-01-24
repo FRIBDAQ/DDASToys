@@ -22,15 +22,17 @@ MAXPOINTS = 200
 SPECINC = $(SPECTCLHOME)/include
 SPECLIB = $(SPECTCLHOME)/lib
 
-CXXFLAGS = -I$(DAQINC)  -std=c++11 -I$(DDAS_INC) -I. -g \
-	-I/usr/include/tcl8.6 -I$(SPECINC) -I$(XIAAPIDIR)/include
-CXXLDFLAGS = -g -L$(DAQLIB) -L$(SPECLIB) \
+CXXFLAGS = -std=c++11 -g -O2 -Wall -I. \
+	-I$(DAQINC) -I$(DDAS_INC) -I/usr/include/tcl8.6 \
+	-I$(SPECINC) -I$(XIAAPIDIR)/include
+CXXLDFLAGS = -L$(DAQLIB) -L$(SPECLIB) \
 	-lSwTrigger -L$(DDAS_LIB) -lddasformat \
 	-ltclPlus -lException -lTclGrammerApp -lDDASUnpacker \
 	-ldaqio -ldataformat -lDataFlow -lurl -ldaqshm \
 	-lgsl -lgslcblas -ltcl8.6 
 
-CUDACXXFLAGS = -DCUDA --compiler-options -fPIC -I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
+CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
+	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
 GNUCXXFLAGS = -fPIC
 
 CUDALDFLAGS = -L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
@@ -89,12 +91,12 @@ install:
 	install -d $(PREFIX)
 	install -d $(PREFIX)/include
 	install -d $(PREFIX)/lib
-	install -d $(PREFIX)/bin
+	#install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
 	install -m 0755 *.so $(PREFIX)/lib
 	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
-	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
+	#install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
 	install -m 0644 AREADME.txt $(PREFIX)/share
 
 clean:

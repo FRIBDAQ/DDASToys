@@ -24,7 +24,7 @@
  */
 
 #include "DDASHit.h"               // Base class
-#include "fit_extension.h"         // Defines HitExtension.
+#include "fit_extensions.h"         // Defines HitExtension.
 #include <stdexcept>
 
 namespace DAQ {

@@ -44,3 +44,12 @@ FitEditorAnalytic::fitDoublePulse(DDAS::fit2Info& result, std::vector<uint16_t>&
   DDAS::AnalyticFit::lmfit2(&result, trace, limits,
 			    &singlePulseFit, saturation);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// Factory for our editor:
+//
+extern "C" {
+  FitEditorAnalytic* createEditor() {
+    return new FitEditorAnalytic;
+  }
+}

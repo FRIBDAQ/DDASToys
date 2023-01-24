@@ -21,7 +21,9 @@
 #ifndef LMFIT_ANALYTIC_H
 #define LMFIT_ANALYTIC_H
 
-#include "fit_extension.h"
+#include <vector>
+
+#include "fit_extensions.h"
 
 namespace DDAS {
   namespace AnalyticFit {
