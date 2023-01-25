@@ -25,7 +25,6 @@
 #include <vector>
 #include <stdint.h>
 
-
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>

@@ -42,8 +42,8 @@ static const double ln9(log(9));
 double DDAS_FALLBACK_K1(0.1);
 double DDAS_FALLBACK_K2(0.1);
 
-int SINGLE_MAXITERATIONS(50);
-int DOUBLE_MAXITERATIONS(50);
+size_t SINGLE_MAXITERATIONS(50);
+size_t DOUBLE_MAXITERATIONS(50);
 
 // Single pulse fit parameter indices:
 
@@ -114,14 +114,11 @@ static void reduceTrace(
     
 }
 
-
 /*-----------------------------------------------------------------------------
  *  Fitting via Levenberg-Marquardt in the GSL.
  *
  *  First we need some useful functions to compute Jacobian elements:
  */
-
-
 
 /**
  * dp1dA
@@ -143,6 +140,7 @@ dp1dA(double k1, double k2, double x1, double x, double w,
     double l = 1.0/(1.0 + erise);              // logistic(1.0, k1, x1, x);
     return d*l / w;
 }
+
 /**
  * dp1dk1
  *    Partial of single pulse with respect to the rise time constant k1.
@@ -167,6 +165,7 @@ dp1dk1(double A, double k1, double k2, double x1, double x, double w,
     
     return (num*l*l)/w;
 }
+
 /**
  * dp1dk2
  *    Partial of a single pulse with respect to the decay time constant.
@@ -188,6 +187,7 @@ dp1dk2(double A, double k1, double k2, double x1, double x, double w,
     
     return (num*l)/w;
 }
+
 /**
  * dp1dx1
  *    Partial of a single pulse with respect to the time at the middle
@@ -214,6 +214,7 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
     
     return (left - right)/w;
 }
+
 /**
  * dp1dC
  *    Partial derivative of single pulse with respect to the constant term
@@ -229,10 +230,10 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
  */
 static double
 dp1dC(double A, double k1, double k2, double x1, double x, double w)
-{
-    
+{    
     return 1.0/w;
 }
+
 /*
  *   GSL's LM  fitter requires that we provide:
  *   *  A function that can produce the residuals (gsl_p1Residuals).
@@ -258,11 +259,10 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  {
     FitEngine* pEngine =  reinterpret_cast<FitEngine*>(pData);
-    pEngine->residuals(p, r);
-    
+    pEngine->residuals(p, r);    
     return GSL_SUCCESS;
-
  }
+
  /**
   *  Compute the Jacobian matrix - partial derivatives evaluated at each data point.
   *  @param[in] p       - Current fit parameterization.
@@ -278,9 +278,8 @@ static int
     FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
     pEngine->jacobian(p, J);
     return GSL_SUCCESS;
-
-
  }
+
  /**
   * calls gsl_p1Residuals and gsl_p1Jacobian.
   *
@@ -295,14 +294,12 @@ static int
 static int
 gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J)
  {
-    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
-    
+    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);    
     pEngine->residuals(p, resids);
-    pEngine->jacobian(p, J);
-
-    
+    pEngine->jacobian(p, J);   
     return GSL_SUCCESS;
  }
+
  /**
   * estimateK2
   *   Estimate the decay constant for a single trace given that we know where
@@ -329,7 +326,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
     double k34   = -1.0;
     int    maxval = trace[x0] - C0;
     
-    for (int i = x0; i < trace.size(); i++) {
+    for (size_t i = x0; i < trace.size(); i++) {
         
         // If we've not computed k34 and we crossed the 3/4 threshold
         // compute k34:
@@ -354,6 +351,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
     if (k34 > 0) return k34;              // Only have k34.
     return DDAS_FALLBACK_K2;                           // desparation measures.
  }
+
  /**
   * estimateK1
   *   Estimate a value for the steepness parameter of the rising side of the
@@ -450,7 +448,7 @@ DDAS::AnalyticFit::lmfit1(
     
     double   max = 0;
     unsigned maxchan = 0;
-    for (int i =low; i <= high; i++) {
+    for (unsigned i =low; i <= high; i++) {
         if (trace[i] > max) {
             max = trace[i];
             maxchan = i;
@@ -516,6 +514,7 @@ DDAS::AnalyticFit::lmfit1(
     gsl_multifit_fdfsolver_free(solver);
     gsl_vector_free(initialGuess);
  }
+
  /**
   * For the double pulse case we have a constant and a parameters for two
   * independently variable pulses.  The first pulse characterized by A1, k2, k2, x1,
@@ -709,7 +708,7 @@ DDAS::AnalyticFit::lmfit2(
     
     int maxchannel = 0;
     double maxvalue = -1.0e6;
-    for (int i = limits.first; i <= limits.second; i++)  {
+    for (unsigned i = limits.first; i <= limits.second; i++)  {
       
         double single = singlePulse(A0, K10, K20, X10, C0, (double)i);
         double diff = trace[i] - single;
@@ -839,7 +838,7 @@ DDAS::AnalyticFit::lmfit2(
     
     // Compute double pulse residuals for each point:
     
-    for (int i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         double x = points[i].first;
         double y = points[i].second;
         double p = DDAS::AnalyticFit::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
@@ -876,9 +875,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     double k3    = gsl_vector_get(p, P2FTK1_INDEX);   // k3 = k1
     double k4    = gsl_vector_get(p, P2FTK2_INDEX);   // k4 = k2
     double x2    = gsl_vector_get(p, P2FTX2_INDEX);
-    
-    double C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
-    
+        
     // Recast pData as a reference to the trace vector:
     
     DDAS::AnalyticFit::GslFitParameters* pParams = reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
@@ -889,7 +886,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     // case since the two pulses are independent and have identical functional forms.
     
     
-    for (int i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         double x = points[i].first;
         
         // Pulse 1 terms (A, k1, k2, x1):
@@ -922,7 +919,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
         
         // Don't forget the constant term
         
-        gsl_matrix_set(j, i, P2FTC_INDEX, 1.0);     // Don't bother with the function call.
+        gsl_matrix_set(j, i, P2FTC_INDEX, dp1dC(A1, k1, k2, x1, x, 1.0));     
     }
     
     
@@ -947,8 +944,6 @@ gsl_p2ftCompute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix
 {
     gsl_p2ftResiduals(p, pData, resids);
     gsl_p2ftJacobian(p, pData, J);
-    
-    
     return GSL_SUCCESS;
 }
 
@@ -1066,7 +1061,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
     
     int maxchannel = 0;
     double maxvalue = -1.0e6;
-    for (int i = limits.first; i <= limits.second; i++)  {
+    for (unsigned i = limits.first; i <= limits.second; i++)  {
       
         double single = singlePulse(A0, K10, K20, X10, C0, (double)i);
         double diff = trace[i] - single;

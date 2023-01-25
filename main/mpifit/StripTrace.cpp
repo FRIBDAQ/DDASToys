@@ -70,7 +70,7 @@ StripTrace::operator()(
     
     
     uint32_t* pExt = pB + 2 + evtlen  + traceLen16/2;      // Point past trace.
-    int extSize =
+    uint32_t extSize =
         bodySize - (2 + evtlen + traceLen16/sizeof(uint16_t))*sizeof(uint32_t); // left over bytes:
     
     /// There's an extension, and hence a fit, if

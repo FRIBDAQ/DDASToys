@@ -19,6 +19,9 @@
  *  @brief: Unpacker for ddas hit data in Tcl.
  */
 #include "TCLDDASFitHitUnpacker.h"
+
+#include <sstream>
+
 #include <CDataSource.h>
 #include <CRingItem.h>
 #include <CDataSourceFactory.h>
@@ -30,10 +33,8 @@
 #include "DDASFitHit.h"
 #include <stdexcept>
 #include <FragmentIndex.h>
+
 #include "FitHitUnpacker.h"
-
-
-#include <sstream>
 
 int CTCLDDASFitHitUnpacker::m_openIndex(0);       // Used to create handles.
 
@@ -179,7 +180,7 @@ CTCLDDASFitHitUnpacker::next(CTCLInterpreter& interp, std::vector<CTCLObject>& o
             result.Bind(interp);
             uint16_t* pBody = static_cast<uint16_t*>(pItem->getBodyPointer());
             FragmentIndex frags(pBody);
-            for (int i =0; i < frags.getNumberFragments(); i++) {
+            for (size_t i =0; i < frags.getNumberFragments(); i++) {
                 FragmentInfo frag = frags.getFragment(i);
                 
                 DAQ::DDAS::DDASFitHit hit;
@@ -339,7 +340,7 @@ CTCLDDASFitHitUnpacker::addKeyValue(
 {
     CTCLObject v;
     v.Bind(interp);
-    for (int i =0; i < value.size(); i++) {
+    for (size_t i =0; i < value.size(); i++) {
         v += value[i];
     }
     addKeyValue(interp, dict, key, v);

@@ -234,7 +234,7 @@ DDAS::AnalyticFit::chiSquare1(
 {
     
     double result = 0.0;
-    for  (int i = 0; i < points.size(); i++) {
+    for  (size_t i = 0; i < points.size(); i++) {
         double x = points[i].first;
         double y = points[i].second;
         double pulse = singlePulse(A1, k1, k2, x1 ,C, x);  // Fitted pulse.
@@ -309,7 +309,7 @@ DDAS::AnalyticFit::chiSquare2(
 {
     double result = 0.0;
     
-    for (int i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         double x = points[i].first;
         double y = points[i].second;
         double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
@@ -339,7 +339,7 @@ DDAS::AnalyticFit::writeTrace(
 {
     std::ofstream o(filename);
     o << title << std::endl;    
-    for (int i =0; i < trace.size(); i++) {
+    for (size_t i = 0; i < trace.size(); i++) {
         o << i << " " << trace[i] << std::endl;
     }
 }
@@ -358,7 +358,7 @@ DDAS::AnalyticFit::writeTrace2(
     std::ofstream o(filename);
     
     o << title << std::endl;
-    for (int i = 0; i < t1.size(); i++) {
+    for (size_t i = 0; i < t1.size(); i++) {
         uint16_t diff = t1[i] - t2[i];
         o << i << " " << t1[i] << " " << t2[i]
           << " " << diff*diff/t1[i] <<std::endl;

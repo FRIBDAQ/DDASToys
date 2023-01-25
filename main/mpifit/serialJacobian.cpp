@@ -71,6 +71,7 @@ dp1dA(double k1, double k2, double x1, double x, double w,
     double l = 1.0/(1.0 + erise);              // logistic(1.0, k1, x1, x);
     return d*l / w;
 }
+
 /**
  * dp1dk1
  *    Partial of single pulse with respect to the rise time constant k1.
@@ -95,6 +96,7 @@ dp1dk1(double A, double k1, double k2, double x1, double x, double w,
     
     return (num*l*l)/w;
 }
+
 /**
  * dp1dk2
  *    Partial of a single pulse with respect to the decay time constant.
@@ -116,6 +118,7 @@ dp1dk2(double A, double k1, double k2, double x1, double x, double w,
     
     return (num*l)/w;
 }
+
 /**
  * dp1dx1
  *    Partial of a single pulse with respect to the time at the middle
@@ -142,6 +145,7 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
     
     return (left - right)/w;
 }
+
 /**
  * dp1dC
  *    Partial derivative of single pulse with respect to the constant term
@@ -161,8 +165,6 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
     
     return 1.0/w;
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 // Serial fit engine 1
@@ -201,14 +203,14 @@ SerialFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
     double C  = gsl_vector_get(p, P1C_INDEX);
     
     size_t npts = x.size();
-    for (int i =0; i < npts; i++) {
+    for (size_t i =0; i < npts; i++) {
         double xi = x[i];
-        double yactual = y[i];
-        
+        double yactual = y[i];        
         double fitted  = DDAS::AnalyticFit::singlePulse(A, k1, k2, x1, C, xi);
         gsl_vector_set(r, i, (fitted - yactual));
     }
 }
+
 /**
  * jacobian
  *    Compute the jacobian of the fit for the current fit parameters.
@@ -226,10 +228,9 @@ SerialFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
     double k1  = gsl_vector_get(p, P1K1_INDEX);
     double k2  = gsl_vector_get(p, P1K2_INDEX);
     double x1  = gsl_vector_get(p, P1X1_INDEX);
-    double C   = gsl_vector_get(p, P1C_INDEX);
     
     size_t npts = x.size();
-    for (int i =0; i < npts; i++) {
+    for (size_t i =0; i < npts; i++) {
         double xi = x[i];
         double erise = exp(-k1*(xi - x1));   // these are common subexpressions
         double efall = exp(-k2*(xi - x1));   // we can factor out here:
@@ -297,6 +298,7 @@ SerialFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
         gsl_vector_set(r, i, (p - yc));
     }
 }
+
 /**
  * jacobian
  *    Compute the jacobian matrix of the fit with respect to current values
@@ -320,13 +322,10 @@ SerialFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
     double k3    = gsl_vector_get(p, P2K3_INDEX);
     double k4    = gsl_vector_get(p, P2K4_INDEX);
     double x2    = gsl_vector_get(p, P2X2_INDEX);
-    
-    double C     = gsl_vector_get(p, P2C_INDEX);    // constant.
-    
+        
     size_t npts = x.size();
     for (size_t i = 0; i < npts; i++) {
         double xc = x[i];
-        double yc = y[i];
         
         double erise1 = exp(-k1*(xc - x1));
         double efall1 = exp(-k2*(xc - x1));
@@ -364,7 +363,9 @@ SerialFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* j)
         
         // Don't forget the constant term
         
-        gsl_matrix_set(j, i, P2C_INDEX, 1.0);     // Don't bother with the function call.
+        gsl_matrix_set(
+            j, i, P2C_INDEX, dp1dC(A1, k1, k2, x1, xc, 1.0)
+        ); // Need to make the function call if weights are != 1
     }
     
 }

@@ -18,15 +18,6 @@
 /** @file:  ThresholdClassifier.cpp
  *  @brief: Classifier that requires one of some present set of channels be above threshold.
  */
-
-#include <CRingItemMarkingWorker.h>
-#include <CRingItem.h>
-#include <DataFormat.h>
-#include <map>
-#include <string>
-#include <stdexcept>
-#include <DataFormat.h>
-#include <FragmentIndex.h>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
@@ -36,6 +27,16 @@
 #include <functional>
 #include <cctype>
 #include <locale>
+#include <map>
+#include <string>
+#include <stdexcept>
+
+#include <CRingItemMarkingWorker.h>
+#include <CRingItem.h>
+#include <DataFormat.h>
+#include <DataFormat.h>
+#include <FragmentIndex.h>
+
 ////////////////////////////// local trim functions   /////////////////////////
 
 static inline std::string &ltrim(std::string &s) {
@@ -163,18 +164,17 @@ CThresholdClassifier::operator()(CRingItem& item)
     
     size_t nFrags = frags.getNumberFragments();
     int    matches(0);
-    int    goodValues(0);
-    for (int i =0; i < nFrags; i++) {
+    for (size_t i =0; i < nFrags; i++) {
         pRingItem pFrag =
             reinterpret_cast<pRingItem>(frags.getFragment(i).s_itemhdr);
         uint32_t* pHit = reinterpret_cast<uint32_t*>(
             pFrag->s_body.u_hasBodyHeader.s_body    
         );
-        int channelId = pHit[2] & 0xfff;    // The encoded hit.
+        unsigned channelId = pHit[2] & 0xfff;    // The encoded hit.
         auto p = m_channelThresholds.find(channelId);
         if (p != m_channelThresholds.end()) {
             matches++;                    // We've got a match.
-            int e = pHit[5] & 0xffff;
+            unsigned e = pHit[5] & 0xffff;
             if (e >= p->second) {
                 return 0;                 // We only need one.
             }
