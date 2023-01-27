@@ -14,13 +14,15 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-#ifndef FITHITUNPACKER_H
-#define FITHITUNPACKER_H
 
 /** @file:  FitHitUnpacker.h
  *  @brief: Unpack DDAS data where the traces _may_ have a HitExtension
  *          that contains one and two pulse fits.
  */
+
+
+#ifndef FITHITUNPACKER_H
+#define FITHITUNPACKER_H
 
 #include <DDASHitUnpacker.h>
 

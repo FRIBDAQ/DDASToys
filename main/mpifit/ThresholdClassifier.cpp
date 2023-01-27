@@ -16,13 +16,13 @@
 */
 
 /** @file:  ThresholdClassifier.cpp
- *  @brief: Classifier that requires one of some present set of channels be above threshold.
+ *  @brief: Classifier that requires one of some present set of channels be 
+ *  above threshold.
  */
-#include <stdlib.h>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string.h>
 #include <algorithm>
 #include <functional>
 #include <cctype>
@@ -96,7 +96,7 @@ private:
 public:
     CThresholdClassifier();
     
-    virtual uint32_t operator()(CRingItem& item);
+    virtual std::uint32_t operator()(CRingItem& item);
 private:
     std::string getThresholdFile(const char* envName);
     void readThresholdFile(const char* filename);
@@ -140,10 +140,10 @@ CThresholdClassifier::CThresholdClassifier()
  *      m_nRejects % m_nScaledown == 0 the result is 2 else 0.  Allowing
  *      for accepting scaled down rejections.
  */
-uint32_t
+std::uint32_t
 CThresholdClassifier::operator()(CRingItem& item)
 {
-    FragmentIndex frags(static_cast<uint16_t*>(item.getBodyPointer()));
+    FragmentIndex frags(static_cast<std::uint16_t*>(item.getBodyPointer()));
     
     /* Rather than use the DDASHit which has a pile of overhead we know
      * The fragment bodies are ring items with body headers and the bodies are:
@@ -154,7 +154,7 @@ CThresholdClassifier::operator()(CRingItem& item)
      *  +--------------------------------+
      *  | Module id info (among others)  | uint32_t
      *  +--------------------------------+
-     *  |  Don't really care             |q
+     *  |  Don't really care             |
      *  |  Really don't care             |
      *  +--------------------------------+
      *  | Energy in bottom 16 bits       |
@@ -167,7 +167,7 @@ CThresholdClassifier::operator()(CRingItem& item)
     for (size_t i =0; i < nFrags; i++) {
         pRingItem pFrag =
             reinterpret_cast<pRingItem>(frags.getFragment(i).s_itemhdr);
-        uint32_t* pHit = reinterpret_cast<uint32_t*>(
+        std::uint32_t* pHit = reinterpret_cast<std::uint32_t*>(
             pFrag->s_body.u_hasBodyHeader.s_body    
         );
         unsigned channelId = pHit[2] & 0xfff;    // The encoded hit.
@@ -245,9 +245,8 @@ CThresholdClassifier::readThresholdFile(const char* filename)
             std::stringstream s(line);
             s >> crate >>  slot >> channel >> thresh;
             if (s.fail()) {
-                std::string msg("Incorrect format of line in threshold file: '");
+                std::string msg("Incorrect format of line in threshold file: ");
                 msg += line;
-                msg += "'";
                 throw std::invalid_argument(msg);
             }
             
@@ -302,8 +301,6 @@ CThresholdClassifier::isComment(std::string line)
 
 /////////////////////////////////////////////////////////////////////////////
 // Factory method:
-
-
 extern "C" {
     CRingMarkingWorker::Classifier* createClassifier()
     {

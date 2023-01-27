@@ -10,6 +10,7 @@
      Authors:
              Ron Fox
              Giordano Cerriza
+	     Aaron Chester
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -18,13 +19,13 @@
 /** @file:  CFitEditor.h
  *  @brief: Similar to FitExtender.cpp, pastes a fit to select traces.
  */
+
 #ifndef CFITEDITOR_H
 #define CFITEDITOR_H
 
-#include <vector>
-#include <map>
-
 #include <CBuiltRingItemEditor.h>
+
+#include <map>
 
 #include "fit_extensions.h"
 
@@ -43,33 +44,29 @@ namespace DAQ {
  *   use with the EventEditor framework providing a complete description of 
  *   the new event body.
  */
+
 class CFitEditor : public CBuiltRingItemEditor::BodyEditor
-{  
+{    
 public:
   CFitEditor();
   virtual ~CFitEditor() {};
+  
+  // Overridden virtual methods from base class
+  virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody) = 0;
+  virtual void free(iovec& e) = 0;
 
-  // Mandatory interface from CBuiltRingItemEditor
-  virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody);
-  virtual void free(iovec& item);
+protected:
+  int channelIndex(unsigned crate, unsigned slot, unsigned channel);
+  
+  // Virtual functions related to reading configuration file which may be overridden in derived classes as well as a predicate function to decide whether to fit a channel and a metho
+protected:
+  virtual std::string getConfigFilename(const char* envname);
+  virtual void readConfigFile(const char* filename);
+  virtual std::string isComment(std::string line);
 
   // Data accessible to derived classes
 protected:
   std::map <int, std::pair<std::pair<unsigned, unsigned>, unsigned>> m_fitChannels;
-  
-  // Pure virtual methods that need to be implemented in derived classes
-private:
-  virtual void fitSinglePulse(DDAS::fit1Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, uint16_t saturation) = 0;
-  virtual void fitDoublePulse(DDAS::fit2Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, DDAS::fit1Info& singlePulseFit, uint16_t saturation) = 0;
-
-  // Private methods
-private:
-  int pulseCount(DAQ::DDAS::DDASHit& hit);
-  bool doFit(DAQ::DDAS::DDASHit& hit);
-  std::pair<std::pair<unsigned, unsigned>, unsigned> fitLimits(DAQ::DDAS::DDASHit& hit);
-  std::string getConfigFilename(const char* envname);
-  void readConfigFile(const char* filename);
-  std::string isComment(std::string line);
 };
 
 #endif

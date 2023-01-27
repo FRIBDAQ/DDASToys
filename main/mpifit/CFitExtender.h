@@ -19,17 +19,15 @@
 /** @file:  CFitExtender.h
  *  @brief: Public base class exports of data structures from FitExtender.
  */
+
 #ifndef CFITEXTENDER_H
 #define CFITEXTENDER_H
 
-#include <map>
-#include <vector>
-
 #include <CBuiltRingItemExtender.h>
 
-#include "fit_extensions.h"
+#include <map>
 
-// \TODO (ASC 1/18/23): These additional structs are used by the unpacker, editor, etc. Can they either bypassed somehow or moved into the fit_extension header so that we don't need to include this (or CFitEditor) header in the unpacker?
+#include "fit_extensions.h"
 
 namespace DAQ {
   namespace DDAS {
@@ -37,49 +35,37 @@ namespace DAQ {
   }
 }
 
-// Here are the hit extensions, Constructors fill in the hit extension sizes
-
-// typedef struct _nullExtension {
-//     uint32_t s_size;
-//     _nullExtension() : s_size(sizeof(uint32_t)) {}
-// } nullExtension, *pNullExtension;
-
-// typedef struct _FitInfo {
-//     uint32_t  s_size;
-//     DDAS::HitExtension s_extension;
-//     _FitInfo();
-// } FitInfo, *pFitInfo;
-
 /**
- * The extender base class definition, derived from CRingItemExtender
+ * The extender abstract base class definition, derived from CRingItemExtender.
+ * A pure virutal method to fit traces in a DDASHit is provided which must be 
+ * implemented in derived classes. Some default virtual methods for reading 
+ * configuration files from the FIT_CONFIGFILE environment variable are 
+ * provided but can be overridden in the derived classes.
  */
+
 class CFitExtender : public CBuiltRingItemExtender::CRingItemExtender
 {    
 public:
   CFitExtender();
   virtual ~CFitExtender() {};
   
-  // Mandatory interface from CRingItemExtender
-  virtual iovec operator()(pRingItem item);
-  virtual void free(iovec& e);
+  // Mandatory interface from CRingItemExtender... which is again pure virtual and implemented by specific fitters
+public:
+  virtual iovec operator()(pRingItem item) = 0;
+  virtual void free(iovec& e) = 0;
+
+protected:
+  int channelIndex(unsigned crate, unsigned slot, unsigned channel);
+  
+  // Virtual functions related to reading configuration file which may be overridden in derived classes as well as a predicate function to decide whether to fit a channel and a metho
+protected:
+  virtual std::string getConfigFilename(const char* envname);
+  virtual void readConfigFile(const char* filename);
+  virtual std::string isComment(std::string line);
 
   // Data accessible to derived classes
 protected:
   std::map <int, std::pair<std::pair<unsigned, unsigned>, unsigned>> m_fitChannels;
-  
-  // Pure virtual methods that need to be implemented in derived classes
-private:
-  virtual void fitSinglePulse(DDAS::fit1Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, uint16_t saturation) = 0;
-  virtual void fitDoublePulse(DDAS::fit2Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, DDAS::fit1Info& singlePulseFit, uint16_t saturation) = 0;
-
-  // Private methods
-private:
-  int pulseCount(DAQ::DDAS::DDASHit& hit);
-  bool doFit(DAQ::DDAS::DDASHit& hit);
-  std::pair<std::pair<unsigned, unsigned>, unsigned> fitLimits(DAQ::DDAS::DDASHit& hit);
-  std::string getConfigFilename(const char* envname);
-  void readConfigFile(const char* filename);
-  std::string isComment(std::string line);  
 };
 
 #endif

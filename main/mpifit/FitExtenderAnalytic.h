@@ -19,6 +19,7 @@
 /** @file:  FitExtenderAnalytic.h
  *  @brief: FitExtender class for analytic fitting
  */
+
 #ifndef FITEXTENDERANALYTIC_H
 #define FITEXTENDERANALYTIC_H
 
@@ -26,13 +27,21 @@
 
 class FitExtenderAnalytic: public CFitExtender
 {
- public:
+  // Canonicals
+public:
   FitExtenderAnalytic();
   virtual ~FitExtenderAnalytic();
-  
- private:
-  virtual void fitSinglePulse(DDAS::fit1Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, uint16_t saturation);
-  virtual void fitDoublePulse(DDAS::fit2Info& result, std::vector<uint16_t>& trace, const std::pair<unsigned, unsigned>& limits, DDAS::fit1Info& singlePulseFit, uint16_t saturation);
+
+  // Mandatory interface from CFitExtender
+public:
+  virtual iovec operator()(pRingItem item);
+  virtual void free(iovec& e);
+
+  // Utilities
+private:
+  int pulseCount(DAQ::DDAS::DDASHit& hit);
+  bool doFit(DAQ::DDAS::DDASHit& hit);
+  std::pair<std::pair<unsigned, unsigned>, unsigned> fitLimits(DAQ::DDAS::DDASHit& hit);
 };
 
 #endif

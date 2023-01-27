@@ -15,8 +15,9 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  lmfit.cpp
- *  @brief: Contains the functions needed to drive GSL's Levenberg Marquart fitter.
+/** @file:  lmfit_analytic.cpp
+ *  @brief: Contains the functions needed to drive GSL's Levenberg Marquart 
+ *  fitter.
  */
 
 #include "lmfit_analytic.h"
@@ -33,6 +34,8 @@
 
 #include "functions_analytic.h"
 #include "jacobian.h"
+
+using namespace DDAS::AnalyticFit;
 
 /** Constants used in deriving estimates of k1, k2:
  */
@@ -100,13 +103,13 @@ static const int P2FT_PARAM_COUNT(7);
  * @param      saturation - Saturation level.
  */
 static void reduceTrace(
-   std::vector<std::pair<uint16_t, uint16_t>>& points,
+   std::vector<std::pair<std::uint16_t, std::uint16_t>>& points,
    int low, int high,
-   const std::vector<uint16_t>& trace, uint16_t saturation)
+   const std::vector<std::uint16_t>& trace, std::uint16_t saturation)
 {
     for (int i =  low; i <= high; i++) {
         if (trace[i] < saturation) {
-            points.push_back(std::pair<uint16_t, uint16_t>(
+            points.push_back(std::pair<std::uint16_t, std::uint16_t>(
                 i, trace[i]
             ));
         }
@@ -249,7 +252,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
   *  parameters.
   *
   *  @param[in]  p     - current parameters of the fit (see indices above).
-  *  @param[in]  pData - Actually a pointer to a DDAS::AnalyticFit::GslFitParameters struct.
+  *  @param[in]  pData - Actually a pointer to a GslFitParameters struct.
   *  @param[out] r     - Function residuals for each data point.
   *  @return int  - Status of the computation (GSL_SUCCESS).  Note all points are
   *                 weighted by 1.0 in this computation.
@@ -266,7 +269,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  /**
   *  Compute the Jacobian matrix - partial derivatives evaluated at each data point.
   *  @param[in] p       - Current fit parameterization.
-  *  @param[in] pdata   - Actually a pointer to a DDAS::AnalyticFit::GslFitParameters struct.
+  *  @param[in] pdata   - Actually a pointer to a GslFitParameters struct.
   *  @param[out] J      - The Jacobian for this iteration of the fit.
   *  @return int GSL_SUCCESS if all computations work.
   *  @note the weights will all be 1.0.
@@ -320,7 +323,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
   *          exist.  In the future could confine the search to the AOI.
   *  @note - for now we're not correcting for flat-tops. 
   */
- static double estimateK2(int x0, double C0, const std::vector<uint16_t>& trace)
+ static double estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
  {
     double khalf = -1.0;             // Assume k is positive.
     double k34   = -1.0;
@@ -368,7 +371,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
   *   @note for now assume that the .5 position is within the AOI
   *   @note for now we're not correcting for flattops.
   */
- double estimateK1(int xmax, double C0, const std::vector<uint16_t>& trace)
+ double estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
  {
     double max = trace[xmax] - C0;       // Background subtracted max.
     
@@ -397,8 +400,8 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
   */
 void
 DDAS::AnalyticFit::lmfit1(
-    fit1Info* pResult, std::vector<uint16_t>& trace,
-    const std::pair<unsigned, unsigned>& limits, uint16_t saturation
+    fit1Info* pResult, std::vector<std::uint16_t>& trace,
+    const std::pair<unsigned, unsigned>& limits, std::uint16_t saturation
 )
  {
     unsigned low  = limits.first;
@@ -407,7 +410,7 @@ DDAS::AnalyticFit::lmfit1(
     // Produce the set of x/y points that are to be fit.  This is the trace
     // within the limits and with points at or above saturation removed:
     
-    std::vector<std::pair<uint16_t, uint16_t>> points;
+    std::vector<std::pair<std::uint16_t, std::uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);
 #ifdef CUDA
     CudaFitEngine1 engine(points);
@@ -529,7 +532,7 @@ DDAS::AnalyticFit::lmfit1(
   *     weight of 1.0 for each point.
   *
   * @param[in]  p     - The fit parameters (see indices above).
-  * @param[in]  pData - Actuall a pointer to a DDAS::AnalyticFit::GslFitParameters object.
+  * @param[in]  pData - Actuall a pointer to a GslFitParameters object.
   * @param[out] r     - Pointer to the vector to contain the residuals.
   * @return int  GSL_SUCCESS - can't really fail.
   */
@@ -548,7 +551,7 @@ DDAS::AnalyticFit::lmfit1(
   *     there are just almost twice as many.
   *
   * @param[in] p   - gsl_vector of current fit parameters.
-  * @param[in] pData - Actully a pointer to a DDAS::AnalyticFit::GslFitParameterse struct.
+  * @param[in] pData - Actully a pointer to a GslFitParameterse struct.
   * @param[out] j  - gsl_matrix into which the jacobian will be computed.
   * @result int - GSL_SUCCESS - I don't see how this can fail (flw).
   * @note the weights are all set to 1.0.
@@ -567,7 +570,7 @@ gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
  *    As with the p1 fitter, we need a function to call them both:
  *
  * @param[in]  p        - The current fit parameterization.
- * @param[in] pData     - std::vector<uint16_t>*
+ * @param[in] pData     - std::vector<std::uint16_t>*
  * @param[out] resids   - Will have residuals stored here.
  * @param[out] J        - Will have the Jacobian elements stored here.
  *
@@ -603,9 +606,9 @@ gsl_p2Compute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix* 
  */
 void
 DDAS::AnalyticFit::lmfit2(
-    fit2Info* pResult, std::vector<uint16_t>& trace,
+    fit2Info* pResult, std::vector<std::uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    fit1Info* pSinglePulseFit, uint16_t saturation
+    fit1Info* pSinglePulseFit, std::uint16_t saturation
 )
 {
     unsigned low = limits.first;
@@ -615,7 +618,7 @@ DDAS::AnalyticFit::lmfit2(
     // Now produce a set of x/y points to be fit from the trace,
     // limits and saturation value:
     
-    std::vector<std::pair<uint16_t, uint16_t> > points;
+    std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
 #ifdef CUDA
@@ -678,7 +681,7 @@ DDAS::AnalyticFit::lmfit2(
     double X20;
     if ((A0 < 0) || (K10 < 0) || (K20 < 0) || (X10 < 0)) {
        
-       std::vector<uint16_t> reversed = trace;
+       std::vector<std::uint16_t> reversed = trace;
        std::reverse(reversed.begin(), reversed.end());
        std::pair<unsigned, unsigned> revLimits;
        revLimits.second = trace.size() - limits.first;
@@ -809,7 +812,7 @@ DDAS::AnalyticFit::lmfit2(
   *     weight of 1.0 for each point.
   *
   * @param[in]  p     - The fit parameters (see indices above).
-  * @param[in]  pData - Actuall a pointer to a DDAS::AnalyticFit::GslFitParameters object.
+  * @param[in]  pData - Actuall a pointer to a GslFitParameters object.
   * @param[out] r     - Pointer to the vector to contain the residuals.
   * @return int  GSL_SUCCESS - can't really fail.
   */
@@ -833,15 +836,15 @@ DDAS::AnalyticFit::lmfit2(
     
     // Recast pData as a reference to the trace:
     
-    DDAS::AnalyticFit::GslFitParameters* pParams = reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
-    const std::vector<std::pair<uint16_t, uint16_t>> & points(*pParams->s_pPoints);
+    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>> & points(*pParams->s_pPoints);
     
     // Compute double pulse residuals for each point:
     
     for (size_t i = 0; i < points.size(); i++) {
         double x = points[i].first;
         double y = points[i].second;
-        double p = DDAS::AnalyticFit::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+        double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
         gsl_vector_set(r, i, (p - y));     // divided by w = 1.0.
     }
     
@@ -855,7 +858,7 @@ DDAS::AnalyticFit::lmfit2(
   *     there are just almost twice as many.
   *
   * @param[in] p   - gsl_vector of current fit parameters.
-  * @param[in] pData - Actually a pointer to a DDAS::AnalyticFit::GslFitParameterse struct.
+  * @param[in] pData - Actually a pointer to a GslFitParameterse struct.
   * @param[out] j  - gsl_matrix into which the jacobian will be computed.
   * @result int - GSL_SUCCESS - I don't see how this can fail (flw).
   * @note the weights are all set to 1.0.
@@ -878,8 +881,8 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
         
     // Recast pData as a reference to the trace vector:
     
-    DDAS::AnalyticFit::GslFitParameters* pParams = reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
-    const std::vector<std::pair<uint16_t, uint16_t>>& points(*pParams->s_pPoints);
+    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>>& points(*pParams->s_pPoints);
    
     // Loop over the data points producing the Jacobian for each point.
     // Note we can re-use the partial derivative functions for the single pulse
@@ -932,7 +935,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
  *    As with the p1 fitter, we need a function to call them both:
  *
  * @param[in]  p        - The current fit parameterization.
- * @param[in] pData     - std::vector<uint16_t>*
+ * @param[in] pData     - std::vector<std::uint16_t>*
  * @param[out] resids   - Will have residuals stored here.
  * @param[out] J        - Will have the Jacobian elements stored here.
  *
@@ -964,9 +967,9 @@ gsl_p2ftCompute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix
  */
 void
 DDAS::AnalyticFit::lmfit2fixedT(
-    fit2Info* pResult, std::vector<uint16_t>& trace,
+    fit2Info* pResult, std::vector<std::uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    fit1Info* pSinglePulseFit, uint16_t saturation
+    fit1Info* pSinglePulseFit, std::uint16_t saturation
 )
 {
     unsigned low = limits.first;
@@ -976,7 +979,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
     // Now produce a set of x/y points to be fit from the trace,
     // limits and saturation value:
     
-    std::vector<std::pair<uint16_t, uint16_t> > points;
+    std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
     
@@ -1002,7 +1005,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
     function.n   = npts;
     function.p   = P2FT_PARAM_COUNT;
     
-    DDAS::AnalyticFit::GslFitParameters params = {&points};
+    GslFitParameters params = {&points};
     
     function.params = &params;    
     
@@ -1031,7 +1034,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
     double X20;
     
     if ((A0 < 0) || (K10 < 0) || (K20 < 0) || (X10 < 0)) {       
-       std::vector<uint16_t> reversed = trace;
+       std::vector<std::uint16_t> reversed = trace;
        std::reverse(reversed.begin(), reversed.end());
        std::pair<unsigned, unsigned> revLimits;
        revLimits.second = trace.size() - limits.first;

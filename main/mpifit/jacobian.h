@@ -1,29 +1,45 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
 
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Ron Fox
+             Girodano Cerizza
+	     Aaron Chester
+	     NSCL
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
+/**
+ * @file: jacobian.h
+ * @brief: Provides class definitions for families of engines to support lmfit.
+ */
 
 #ifndef JACOBIAN_H
 #define JACOBIAN_H
 
 /**
- * @file jacobian.h
- * @brief Provides class definitions for families of engines to support lmfit.
- */
-
-/**
- *   The concept is that each GSL lmfitter has to supply a pair of methods:
+ * The concept is that each GSL lmfitter has to supply a pair of methods:
  * One that computes a vector of residuals and one that computes a Jacobian
- * matrix of partial derivatives.
- * At the implementation level we have two types of fits we need done:
- *    Single pulse fits and double pulse fits (the engines with names ending in 1 or 2).
- * For each fit type we have two fit engines:
- *    Serial computation (the engines with names starting with Serial)
- *    GPU accelerated (the engines with names starting with Cuda).
+ * matrix of partial derivatives. At the implementation level we have two 
+ * types of fits we need done: Single pulse fits and double pulse fits (the 
+ * engines with names ending in 1 or 2). For each fit type we have two fit 
+ * engines:
+ *    1) Serial computation (the engines with names starting with Serial)
+ *    2) GPU accelerated (the engines with names starting with Cuda).
  *
  *  Finally a fit factory can generate the appropriate fit engine as desired
  *  by the actual fit.
- *
  */
+
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
@@ -36,10 +52,10 @@
 
 class FitEngine {
  protected:
-  std::vector<uint16_t> x;           // Trace x coords
-  std::vector<uint16_t> y;           // Trace y coords
+  std::vector<std::uint16_t> x;           // Trace x coords
+  std::vector<std::uint16_t> y;           // Trace y coords
  public:
-  FitEngine(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  FitEngine(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   virtual ~FitEngine(){}
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
   virtual void residuals(const gsl_vector*p, gsl_vector* r)  = 0;
@@ -49,7 +65,7 @@ class FitEngine {
 
 class SerialFitEngine1 : public FitEngine {
 public:
-  SerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  SerialFitEngine1(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   ~SerialFitEngine1() {}
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
@@ -64,7 +80,7 @@ private:
     unsigned m_npts;          // # points in the trace.
     
 public:
-  CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  CudaFitEngine1(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   ~CudaFitEngine1();             // Deallocate dev resources.
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
@@ -74,7 +90,7 @@ private:
 
 class SerialFitEngine2 : public FitEngine {
 public:
-  SerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  SerialFitEngine2(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
@@ -87,7 +103,7 @@ private:
     void* m_dJacobian;        // device ptr to jacobian [out]
     unsigned m_npts;          // # points in the trace.
 public: 
-  CudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  CudaFitEngine2(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   ~CudaFitEngine2();
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
@@ -97,11 +113,15 @@ private:
 
 class FitEngineFactory {
 public:
-  FitEngine* createSerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
-  FitEngine*  createCudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  FitEngine* createSerialFitEngine1(std::vector<std::pair<std::uint16_t,
+				    std::uint16_t>>&  data);
+  FitEngine*  createCudaFitEngine1(std::vector<std::pair<std::uint16_t,
+				   std::uint16_t>>&  data);
 
-  FitEngine*  createSerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
-  FitEngine*  createCudaFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data);
+  FitEngine*  createSerialFitEngine2(std::vector<std::pair<std::uint16_t,
+				                      std::uint16_t>>&  data);
+  FitEngine*  createCudaFitEngine2(std::vector<std::pair<std::uint16_t,
+				                      std::uint16_t>>&  data);
 
 };
 

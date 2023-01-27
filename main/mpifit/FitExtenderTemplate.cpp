@@ -16,25 +16,47 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  FitExtenderAnalytic.cpp
+/** @file:  FitExtenderTemplate.cpp
  *  @brief: FitExtender class for analytic fitting.
  */
 
-#include "FitExtenderAnalytic.h"
+#include "FitExtenderTemplate.h"
 
 #include <iostream>
+#include <fstream>
 
 #include <DDASHit.h>
 #include <DDASHitUnpacker.h>
 
-#include "lmfit_analytic.h"
+#include "lmfit_template.h"
 
-using namespace DDAS::AnalyticFit;
+using namespace DDAS::TemplateFit;
 
-FitExtenderAnalytic::FitExtenderAnalytic()
-{}
+/**
+ * Construtor
+ *   Read the template fit configuration file upon creation
+ */
+FitExtenderTemplate::FitExtenderTemplate()
+{
+  // For the template fit we also need to read in the template data. We read
+  // a file pointed to by the environment variable TEMPLATE_CONFIGFILE similar
+  // to how the fitting configuration is read.
+  
+  try {
+    std::string name = getTemplateFilename("TEMPLATE_CONFIGFILE");
+    readTemplateFile(name.c_str());
+  }
+  catch (std::exception& e) {
+    std::cerr << "Error processing template configuration file: "
+	      << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
 
-FitExtenderAnalytic::~FitExtenderAnalytic()
+/**
+ * Destructor
+ */
+FitExtenderTemplate::~FitExtenderTemplate()
 {}
 
 /**
@@ -52,7 +74,7 @@ FitExtenderAnalytic::~FitExtenderAnalytic()
  * @note we use new so free has to use delete.
  */
 iovec
-FitExtenderAnalytic::operator()(pRingItem item)
+FitExtenderTemplate::operator()(pRingItem item)
 {
   iovec result;
   // Get a pointer to the beginning of the body and
@@ -88,7 +110,8 @@ FitExtenderAnalytic::operator()(pRingItem item)
 	  // bit 1 - do double pulse fit.
                     
 	  if (classification & 1) {
-	    lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
+	    lmfit1(&(pFit->s_extension.onePulseFit), trace, m_template,
+		   m_alignPoint, l.first, sat);
 	  }
 	  
 	  if (classification & 2) {
@@ -97,14 +120,13 @@ FitExtenderAnalytic::operator()(pRingItem item)
 	    DDAS::fit1Info guess;
                         
 	    if ((classification & 1) == 0) {
-	      lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first,
-		     sat);
-
+	      lmfit1(&(pFit->s_extension.onePulseFit), trace, m_template,
+		     m_alignPoint, l.first, sat);
 	    } else {
 	      guess = pFit->s_extension.onePulseFit; // Already got it
 	    }
-	    lmfit2(&(pFit->s_extension.twoPulseFit), trace, l.first,
-		   &guess, sat);
+	    lmfit2(&(pFit->s_extension.twoPulseFit), trace, m_template,
+		   m_alignPoint, l.first, &guess, sat);
 	  }
 	  
 	  // Note that classification == 0 leaves us with a fit full-o-zeroes
@@ -112,7 +134,6 @@ FitExtenderAnalytic::operator()(pRingItem item)
 	  result.iov_base = pFit;
 	  
 	  return result;
-                    
 	}
       }
     }
@@ -134,7 +155,7 @@ FitExtenderAnalytic::operator()(pRingItem item)
  * @param v - Description of the extension we passed to our clients
  */
 void
-FitExtenderAnalytic::free(iovec& v)
+FitExtenderTemplate::free(iovec& v)
 {
   if (v.iov_len == sizeof(nullExtension)) {
     pNullExtension pE = static_cast<pNullExtension>(v.iov_base);
@@ -145,10 +166,97 @@ FitExtenderAnalytic::free(iovec& v)
   } else {
     /// bad bad bad.        
     std::string msg;
-    msg = "FitExtenderAnalytic asked to free something it never made";
+    msg = "FitExtenderTemplate asked to free something it never made";
     std::cerr << msg << std::endl;
     throw std::logic_error(msg);
   }
+}
+
+//
+// Private methods
+//
+
+/**
+ * getTemplateFilename
+ *   Get template configuratin file name pointed to by an environment variable
+ *
+ * @param envname - the name of the environment variable pointing to the 
+ *                  configuration file
+ *
+ * @return std::string - the filename
+ *
+ * @throw std::logic_error - if the envname does not point to a file
+ */
+std::string
+FitExtenderTemplate::getTemplateFilename(const char* envname)
+{
+    const char* pFilename = getenv(envname);
+    if (!pFilename) {
+        std::string msg("No translation for environment variable: ");
+        msg += envname;
+        msg += " Point that to the template configuration file and re-run";
+        throw std::invalid_argument(msg);
+    }
+    
+    return std::string(pFilename);
+}
+
+/**
+ * readTemplateFile
+ *   Read the formatted tempalate configuration in formation and template data 
+ *   from a file.
+ *
+ * @param filename - file name to read config info from
+ *
+ * @throw std::length_error - if the number of template data points is 
+ *                            different than what the configuration file expects
+ * @throw std::invalid_arugment - if the alignment point of the template is 
+ *                                not contained in the trace (eg align to 
+ *                                sample 101 on a 100 sample trace)
+ * @throw std::invalid_argument - if the template data file cannot be opened
+ */
+void
+FitExtenderTemplate::readTemplateFile(const char* filename)
+{
+  std::ifstream fileIn;
+  fileIn.open(filename, std::ifstream::in);
+  if (fileIn.is_open()) {
+    unsigned npts;
+    double val;
+
+    // \TODO (ASC 1/25/23): What happens when there are fewer than two values on the first line? Should report an error and stop trying to do the fit.
+    fileIn >> m_alignPoint >> npts;    
+    while (fileIn >> val) {
+      m_template.push_back(val);
+    }
+
+    // The template should know how long it is. If you read in more data
+    // points throw an exception.
+    if (m_template.size() != npts) {
+      std::string errmsg("Template configfile thinks the trace is ");
+      errmsg += npts;
+      errmsg += " samples but read in ";
+      errmsg += m_template.size();
+      throw std::length_error(errmsg); // I guess this is the right one?
+    }
+
+    // Ensure the alignment point is contained in the trace. Note that because
+    // m_alignPoint is an unsigned type it cannot be negative.
+    if (m_alignPoint >= m_template.size()) {
+      std::string errmsg("Invalid template alignment point ");
+      errmsg += m_alignPoint;
+      errmsg += " >= template size ";
+      errmsg += m_template.size();
+      throw std::invalid_argument(errmsg);
+    }
+    
+  } else {
+    std::string errmsg("Cannot open template data file: ");
+    errmsg += filename;
+    throw std::invalid_argument(errmsg);
+  }
+
+  fileIn.close();
 }
 
 /**
@@ -164,7 +272,7 @@ FitExtenderAnalytic::free(iovec& v)
  * @retval 3  - Fit both one and double hit.
  */
 int
-FitExtenderAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
+FitExtenderTemplate::pulseCount(DAQ::DDAS::DDASHit& hit)
 {
     return 3;                  // in absence of classifier.
 }
@@ -182,7 +290,7 @@ FitExtenderAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
  * @note This sample predicate requests that all channels be fit.
  */
 bool
-FitExtenderAnalytic::doFit(DAQ::DDAS::DDASHit& hit)
+FitExtenderTemplate::doFit(DAQ::DDAS::DDASHit& hit)
 {
     int crate = hit.GetCrateID();
     int slot  = hit.GetSlotID();
@@ -209,7 +317,7 @@ FitExtenderAnalytic::doFit(DAQ::DDAS::DDASHit& hit)
 * @note the caller must have ensured there's a map entry for this channel.
 */
 std::pair<std::pair<unsigned, unsigned>, unsigned>
-FitExtenderAnalytic::fitLimits(DAQ::DDAS::DDASHit& hit)
+FitExtenderTemplate::fitLimits(DAQ::DDAS::DDASHit& hit)
 {
     int crate = hit.GetCrateID();
     int slot  = hit.GetSlotID();
@@ -222,10 +330,11 @@ FitExtenderAnalytic::fitLimits(DAQ::DDAS::DDASHit& hit)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Factory for our extender:
+// Factory for our editor:
 //
 extern "C" {
-  FitExtenderAnalytic* createExtender() {
-    return new FitExtenderAnalytic;
+  FitExtenderTemplate* createExtender() {
+    return new FitExtenderTemplate;
   }
 }
+

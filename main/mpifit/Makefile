@@ -56,11 +56,12 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
-all: libFitterAnalytic.so libFitEditorAnalytic.so libTclUnpacker.so
+LIBS = libFitterAnalytic.so libFitEditorAnalytic.so libFitterTemplate.so libFitEditorTemplate.so libTclUnpacker.so
+
+all: $(LIBS)
 
 TCLDDASFitHitUnpacker.o: TCLDDASFitHitUnpacker.cpp
 	g++ -c $^ $(CXXFLAGS) $(GNUCXXFLAGS)
@@ -82,6 +83,19 @@ libFitEditorAnalytic.so: CFitEditor.o FitEditorAnalytic.o \
 	$(CUDAOBJ)
 	$(CXX) -o libFitEditorAnalytic.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
+libFitterTemplate.so: CFitExtender.o FitExtenderTemplate.o \
+	functions_template.o lmfit_template.o \
+	FitHitUnpacker.o \
+	StripTrace.o ThresholdClassifier.o \
+	$(CUDAOBJ)
+	$(CXX) -o libFitterTemplate.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+
+libFitEditorTemplate.so: CFitEditor.o FitEditorTemplate.o \
+	functions_template.o lmfit_template.o \
+	FitHitUnpacker.o \
+	$(CUDAOBJ)
+	$(CXX) -o libFitEditorTemplate.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
 #
@@ -91,12 +105,12 @@ install:
 	install -d $(PREFIX)
 	install -d $(PREFIX)/include
 	install -d $(PREFIX)/lib
-	#install -d $(PREFIX)/bin
+	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
 	install -m 0755 *.so $(PREFIX)/lib
 	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
-	#install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
+	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
 	install -m 0644 AREADME.txt $(PREFIX)/share
 
 clean:

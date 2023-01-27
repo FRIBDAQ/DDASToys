@@ -17,9 +17,9 @@
 
 /** @file:  functions.h
  *  @brief: Implement functions used to fit DDAS pulses.
- *  @note all functions are in the DDAS namespace.
- *  
+ *  @note - all functions are in the DDAS namespace.
  */
+
 #include "functions_analytic.h"
 
 #include <iostream>
@@ -75,8 +75,8 @@ DDAS::AnalyticFit::decay(double A, double k, double x1, double x)
  *
  *  @param x1  - Point at which the function turns on (to the right of that point).
  *  @param x   - Point in space at which to evaluate the switch.
- *  @double    - A value that's very nearly 0.0 left of x1 and very nearly 1.0 to
- *               the right of x1.
+ *  @double    - A value that's very nearly 0.0 left of x1 and very nearly 
+ *               1.0 to the right of x1.
  */
 double
 DDAS::AnalyticFit::switchOn(double x1, double x)
@@ -204,7 +204,7 @@ double pulseAmplitude(double A, double k1, double k2,double x0)
 double
 DDAS::AnalyticFit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
-    const std::vector<uint16_t>& trace, int low, int high    
+    const std::vector<std::uint16_t>& trace, int low, int high    
 )
 {
     if (high == -1) high = trace.size() -1;
@@ -229,7 +229,7 @@ DDAS::AnalyticFit::chiSquare1(
 double
 DDAS::AnalyticFit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
-    const std::vector<std::pair<uint16_t, uint16_t> >& points
+    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
 )
 {
     
@@ -264,7 +264,8 @@ DDAS::AnalyticFit::chiSquare1(
  * @param C    - Constant offset the pulses sit on.
  * @param trace - Trace to compute the chisquare with respect to.
  * @param low   - low limit of trace over which to compute.
- * @param highy - hitgh limit of trace over which to compute,  -1 means full trace.
+ * @param highy - high limit of trace over which to compute,  
+ *                -1 means full trace.
  * 
  * @return double
  */
@@ -273,7 +274,7 @@ DDAS::AnalyticFit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,    
-    const std::vector<uint16_t>& trace,
+    const std::vector<std::uint16_t>& trace,
     int low, int high
 )
 {
@@ -304,7 +305,7 @@ DDAS::AnalyticFit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,
-    const std::vector<std::pair<uint16_t, uint16_t> >& points
+    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
 )
 {
     double result = 0.0;
@@ -334,7 +335,7 @@ DDAS::AnalyticFit::chiSquare2(
  */
 void
 DDAS::AnalyticFit::writeTrace(
-    const char* filename, const char* title, const std::vector<uint16_t>& trace
+    const char* filename, const char* title, const std::vector<std::uint16_t>& trace
 )
 {
     std::ofstream o(filename);
@@ -352,14 +353,14 @@ DDAS::AnalyticFit::writeTrace(
 void
 DDAS::AnalyticFit::writeTrace2(
     const char* filename, const char* title,
-    const std::vector<uint16_t>& t1, const std::vector<uint16_t>& t2
+    const std::vector<std::uint16_t>& t1, const std::vector<std::uint16_t>& t2
 )
 {
     std::ofstream o(filename);
     
     o << title << std::endl;
     for (size_t i = 0; i < t1.size(); i++) {
-        uint16_t diff = t1[i] - t2[i];
+        std::uint16_t diff = t1[i] - t2[i];
         o << i << " " << t1[i] << " " << t2[i]
           << " " << diff*diff/t1[i] <<std::endl;
     }

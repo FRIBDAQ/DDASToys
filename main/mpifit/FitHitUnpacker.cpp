@@ -21,7 +21,7 @@
 
 #include "FitHitUnpacker.h"
 
-#include <string.h>
+#include <string>
 #include <stdexcept>
 
 #include <DataFormat.h>
@@ -50,22 +50,22 @@ DAQ::DDAS::FitHitUnpacker::decode(
     // Find the ring item body:
     
     const RingItem* pItem = reinterpret_cast<const RingItem*>(p);
-    const uint8_t*  pBody;
-    uint32_t bodyHeaderSize;                // Number of bytes in the body header.
+    const std::uint8_t*  pBody;
+    std::uint32_t bodyHeaderSize;                // Number of bytes in the body header.
     if (pItem->s_body.u_noBodyHeader.s_mbz) {
-        pBody = reinterpret_cast<const uint8_t*>(
+        pBody = reinterpret_cast<const std::uint8_t*>(
             pItem->s_body.u_hasBodyHeader.s_body
         );
         bodyHeaderSize = pItem->s_body.u_hasBodyHeader.s_bodyHeader.s_size;
 
     } else {
-        pBody = reinterpret_cast<const uint8_t*>(pItem->s_body.u_noBodyHeader.s_body);
-        bodyHeaderSize = sizeof(uint32_t);
+        pBody = reinterpret_cast<const std::uint8_t*>(pItem->s_body.u_noBodyHeader.s_body);
+        bodyHeaderSize = sizeof(std::uint32_t);
     }
     // Generate a pointer to off the end of the body.
     
-    uint32_t bodySize = pItem->s_header.s_size - bodyHeaderSize - sizeof(RingItemHeader);
-    const uint8_t* pEnd = pBody + bodySize;
+    std::uint32_t bodySize = pItem->s_header.s_size - bodyHeaderSize - sizeof(RingItemHeader);
+    const std::uint8_t* pEnd = pBody + bodySize;
     
     /*
      * The first 32 bits of the body is the number of 16 bit words of
@@ -75,8 +75,8 @@ DAQ::DDAS::FitHitUnpacker::decode(
      *     as well as fitextender, we have the followin cases:
      *     *    The extra data is the size of HitExtension
      *          The extra data is a HitExtension from ringblockdealer.
-     *     *    The extra data is sizeof(uint32_t) the extra data is
-     *          must contain sizeof(uint32_t) and is a null extension
+     *     *    The extra data is sizeof(std::uint32_t) the extra data is
+     *          must contain sizeof(std::uint32_t) and is a null extension
      *          from the FitExtender.
      *     *    The extra data is sizeof(FitInfo) from FitExtender -
      *          the extra data is FitExtender fit information
@@ -84,17 +84,17 @@ DAQ::DDAS::FitHitUnpacker::decode(
      *          with an error message.
      */
     
-    const uint32_t* pHitSize = reinterpret_cast<const uint32_t*>(pBody);
-    uint32_t bodyWords = *pHitSize;
-    uint32_t bodyBytes = bodyWords*sizeof(uint16_t);
+    const std::uint32_t* pHitSize = reinterpret_cast<const std::uint32_t*>(pBody);
+    std::uint32_t bodyWords = *pHitSize;
+    std::uint32_t bodyBytes = bodyWords*sizeof(std::uint16_t);
     
 
     if (bodyBytes == bodySize) {
         // This is just an ordinary HIT:
         
         unpack(
-            reinterpret_cast<const uint32_t*>(pBody),
-            reinterpret_cast<const uint32_t*>(pEnd),
+            reinterpret_cast<const std::uint32_t*>(pBody),
+            reinterpret_cast<const std::uint32_t*>(pEnd),
             hit
         );
         
@@ -103,19 +103,19 @@ DAQ::DDAS::FitHitUnpacker::decode(
         
         pEnd -= sizeof(::DDAS::HitExtension);  // also points to extension.
         unpack(
-            reinterpret_cast<const uint32_t*>(pBody),
-            reinterpret_cast<const uint32_t*>(pEnd),
+            reinterpret_cast<const std::uint32_t*>(pBody),
+            reinterpret_cast<const std::uint32_t*>(pEnd),
             hit
         );
         hit.setExtension(*(reinterpret_cast<const ::DDAS::HitExtension*>(pEnd)));
-    } else if (bodyBytes + sizeof(uint32_t) == bodySize) {
+    } else if (bodyBytes + sizeof(std::uint32_t) == bodySize) {
         
         // There's no hit extension actually -- it's a FitExtender null extension.
         
-        pEnd -= sizeof(uint32_t);
+        pEnd -= sizeof(std::uint32_t);
         unpack(
-            reinterpret_cast<const uint32_t*>(pBody),
-            reinterpret_cast<const uint32_t*>(pEnd),
+            reinterpret_cast<const std::uint32_t*>(pBody),
+            reinterpret_cast<const std::uint32_t*>(pEnd),
             hit
         );
                 
@@ -124,8 +124,8 @@ DAQ::DDAS::FitHitUnpacker::decode(
         
         pEnd -= sizeof(FitInfo);
         unpack(
-            reinterpret_cast<const uint32_t*>(pBody),
-            reinterpret_cast<const uint32_t*>(pEnd),
+            reinterpret_cast<const std::uint32_t*>(pBody),
+            reinterpret_cast<const std::uint32_t*>(pEnd),
             hit
         );
         const FitInfo* pExtension = reinterpret_cast<const FitInfo*>(pEnd);

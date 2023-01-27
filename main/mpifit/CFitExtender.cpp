@@ -19,6 +19,7 @@
 /** @file:  CFitExtender.cpp
  *  @brief: Provides a fitting extender base class for DDAS Data.
  */
+
 #include "CFitExtender.h"
 
 #include <cstring>
@@ -31,7 +32,12 @@
 #include <DDASHitUnpacker.h>
 
 /*
-  This file contains code that computes fits of waveforms and, using the Transformer framework provides the fit parameters as extensions to the fragments in each event. An extension is added to each fragmnt. The extension provides a uint32_t self inclusive extension size which may be sizeof(uint32_t) or, if larger a HitExtension struct (see fitinfo.h)
+  This file contains code that computes fits of waveforms and, using the 
+  Transformer framework provides the fit parameters as extensions to the 
+  fragments in each event. An extension is added to each fragmnt. The 
+  extension provides a std::uint32_t self inclusive extension size which 
+  may be sizeof(std::uint32_t) or, if larger a HitExtension struct (see 
+  fit_extensions.h)
 */
 
 _FitInfo::_FitInfo() : s_size(sizeof(FitInfo)) {
@@ -57,14 +63,6 @@ static inline std::string &trim(std::string &s) {
   return ltrim(rtrim(s));
 }
 
-////////////////////////////////
-
-// Get global channel index from crate/slot/channel
-static inline int channelIndex(unsigned crate, unsigned slot, unsigned channel)
-{
-  return (crate << 8) | (slot << 4)  | channel;
-}
-
 /**
  * Constructor
  *   Read and parse minimum configuration on construction
@@ -81,120 +79,20 @@ CFitExtender::CFitExtender()
   }
 }
 
-
-// /**
-//  * Destructor
-//  */
-// CFitExtender::~CFitExtender() {}
-
 /**
- * operator()
- *   - Parse the fragment into a hit.
- *   - See if the predicate say we should fit it.
- *   - If so ensure there's a trace.
- *   - Get the fit limits.
- *   - Get the number of pulses to fit.
- *   - Fit them
- *   - Create the appropriate extension.
+ * channelIndex
+ *   Get global channel index from crate/slot/channel information
  *
- * @param item - pointer to an event fragment ring item.
- * @return iovec - Describes the extension.
- * @note we use new so free has to use delete.
- */
-iovec
-CFitExtender::operator()(pRingItem item)
-{
-  iovec result;
-  // Get a pointer to the beginning of the body and
-  // parse out the hit:
-    
-  uint32_t* pBody =
-    reinterpret_cast<uint32_t*>(item->s_body.u_hasBodyHeader.s_body);
-  DAQ::DDAS::DDASHit hit;
-  DAQ::DDAS::DDASHitUnpacker unpacker;
-  unpacker.unpack(pBody, nullptr, hit);
-    
-  if (doFit(hit)) {
-    std::vector<uint16_t> trace = hit.GetTrace();
-    
-    if (trace.size() > 0) { // Need a trace to fit.
-      std::pair<std::pair<unsigned, unsigned>, unsigned> l = fitLimits(hit);
-      unsigned low = l.first.first;
-      unsigned hi  = l.first.second;
-      unsigned sat = l.second;
-      
-      if (low != hi) {
-	int classification = pulseCount(hit);
-	
-	if(classification) {	  
-	  // Now we can do a fit
-
-	  // \TODO (ASC 1/18/23): What happens to this memory? Do we need to explicitly free it or wrap it in a smart ptr to automatically delete it when its out of scope?
-	  pFitInfo pFit = new FitInfo;
-                    
-	  // The classification is 'cleverly' bit encoded:
-	  // bit 0 - do single pusle fit.
-	  // bit 1 - do double pulse fit.
-                    
-	  if (classification & 1) {
-	    fitSinglePulse(pFit->s_extension.onePulseFit, trace,
-			   l.first, sat);
-	  }
-	  
-	  if (classification & 2) {
-	    // Single pulse fit guides initial guess for double pulse. If the single pulse fit does not exist, we do it here.
-	    DDAS::fit1Info guess;
-                        
-	    if ((classification & 1) == 0) {
-	      fitSinglePulse(pFit->s_extension.onePulseFit, trace,
-			     l.first, sat);
-	    } else {
-	      guess = pFit->s_extension.onePulseFit; // Already got it
-	    }
-	    fitDoublePulse(pFit->s_extension.twoPulseFit, trace,
-			   l.first, guess, sat);
-	  }
-	  
-	  // Note that classification == 0 leaves us with a fit full-o-zeroes
-	  result.iov_len = sizeof(FitInfo);
-	  result.iov_base = pFit;
-	  return result;
-                    
-	}
-      }
-    }
-  }
-  
-  // If we got here we can't do a fit:    
-  pNullExtension ext = new nullExtension;
-  result.iov_len = sizeof(nullExtension);
-  result.iov_base = ext;
-  return result;
-}
-
-/**
- * free
- *   Free the storage created by an iovec. We use the size to figure out 
- *   which type of extension it is.
+ * @param crate - The crate ID
+ * @param slot - The slot ID
+ * @param channel - The channel ID
  *
- * @param v - Description of the extension we passed to our clients
+ * @return int - the global channel index
  */
-void
-CFitExtender::free(iovec& v)
+int
+CFitExtender::channelIndex(unsigned crate, unsigned slot, unsigned channel)
 {
-  if (v.iov_len == sizeof(nullExtension)) {
-    pNullExtension pE = static_cast<pNullExtension>(v.iov_base);
-    delete pE;
-  } else if (v.iov_len == sizeof(FitInfo)) {
-    pFitInfo pF = static_cast<pFitInfo>(v.iov_base);
-    delete pF;
-  } else {
-    /// bad bad bad.        
-    std::string msg;
-    msg = "CFitExtender asked to free something it never made";
-    std::cerr << msg << std::endl;
-    throw std::logic_error(msg);
-  }
+  return (crate << 8) | (slot << 4)  | channel;
 }
 
 /**
@@ -258,7 +156,7 @@ CFitExtender::readConfigFile(const char* filename)
         if (line != "") {
             unsigned crate, slot, channel, low, high, saturation;
             std::stringstream sline(line);
-            sline >> crate >> slot >>channel >> low  >> high >> saturation;
+            sline >> crate >> slot >> channel >> low  >> high >> saturation;
 	    
             if (sline.fail()) {
                 std::string msg("Error processing line in configuration file '");
@@ -276,6 +174,7 @@ CFitExtender::readConfigFile(const char* filename)
         }
     }
 }
+
 /**
  * isComment
  *   Determines if a line is a comment or not
@@ -292,74 +191,4 @@ CFitExtender::isComment(std::string line)
     if (line[0] == '#') return std::string("");
     
     return line;
-}
-
-/**
- * pulseCount
- *   This is a hook into which to add the ML classifier
- *
- * @param hit - references a hit.
- *
- * @return int
- * @retval 0  - On the basis of the trace no fitting.
- * @retval 1  - Only fit a single trace.
- * @retval 2  - Only fit two traces.
- * @retval 3  - Fit both one and double hit.
- */
-int
-CFitExtender::pulseCount(DAQ::DDAS::DDASHit& hit)
-{
-    return 3;                  // in absence of classifier.
-}
-
-/*
- * doFit
- *   This is a predicate function:
- *
- * @param crate - crate a hit comes from.
- * @param slot  - slot a hit comes from.
- * @param channel - channel within the slot the hit comes from
- *
- * @return bool - if true, the channel is fit.
- *
- * @note This sample predicate requests that all channels be fit.
- */
-bool
-CFitExtender::doFit(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();
-    int chan  = hit.GetChannelID();    
-    int index = channelIndex(crate, slot, chan);
-    
-    return (m_fitChannels.find(index) != m_fitChannels.end());
-}
-
-/**
-* fitLimits
-*   For each channel we're fitting, we need to know
-*   - The left and right limits of the waveform that will be fitted
-*   - The digitizer saturation level
-*
-*
-* @param hit - reference to a single hit
-*
-* @return std::pair<std::pair<unsigned, unsigned>, unsigned>
-*   The first element of the outer pair are the left and right
-*   fit limits respectively. The second element of the outer pair
-*   is the saturation level.
-*
-* @note the caller must have ensured there's a map entry for this channel.
-*/
-std::pair<std::pair<unsigned, unsigned>, unsigned>
-CFitExtender::fitLimits(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();
-    int chan  = hit.GetChannelID();    
-    int index = channelIndex(crate, slot, chan);
-    
-    std::pair<std::pair<unsigned, unsigned>, unsigned> result = m_fitChannels[index];
-    
-    return result;       
 }

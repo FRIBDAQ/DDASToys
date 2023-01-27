@@ -17,7 +17,6 @@
 
 /** @file:  serialJacobian.cpp
  *  @brief: Implement the serial fit engines for single and double pulse fits.
- *  
  */
 
 #include <cmath>
@@ -176,7 +175,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  *    Delegates to base class construction.
  *    @param data - the trace data.
  */
-SerialFitEngine1::SerialFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data) :
+SerialFitEngine1::SerialFitEngine1(std::vector<std::pair<std::uint16_t, std::uint16_t>>& data) :
     FitEngine(data)
 {}
 
@@ -261,7 +260,7 @@ SerialFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
  * constructor
  *  @param data - the trace.
  */
-SerialFitEngine2::SerialFitEngine2(std::vector<std::pair<uint16_t, uint16_t>>&  data) :
+SerialFitEngine2::SerialFitEngine2(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data) :
     FitEngine(data) {}
 
 /**

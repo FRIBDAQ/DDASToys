@@ -15,9 +15,10 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  lmfit.h
+/** @file:  lmfit_analytic.h
  *  @brief: Define the fitting functions and data structures for L-M fits.
  */
+
 #ifndef LMFIT_ANALYTIC_H
 #define LMFIT_ANALYTIC_H
 

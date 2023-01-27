@@ -41,7 +41,6 @@ namespace DDAS {
     double chiSquare;
     PulseDescription pulse;
     double  offset;      // Constant offset.
-
   };
     
   // Full fitting information for the double pulse
@@ -63,12 +62,12 @@ namespace DDAS {
 }
 
 typedef struct _nullExtension {
-  uint32_t s_size;
-  _nullExtension() : s_size(sizeof(uint32_t)) {}
+  std::uint32_t s_size;
+  _nullExtension() : s_size(sizeof(std::uint32_t)) {}
 } nullExtension, *pNullExtension;
 
 typedef struct _FitInfo {
-  uint32_t  s_size;
+  std::uint32_t  s_size;
   DDAS::HitExtension s_extension;
   _FitInfo();
 } FitInfo, *pFitInfo;

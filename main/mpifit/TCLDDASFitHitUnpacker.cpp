@@ -18,9 +18,11 @@
 /** @file:  TCLDDASFitHitUnpacker.cpp
  *  @brief: Unpacker for ddas hit data in Tcl.
  */
+
 #include "TCLDDASFitHitUnpacker.h"
 
 #include <sstream>
+#include <stdexcept>
 
 #include <CDataSource.h>
 #include <CRingItem.h>
@@ -30,10 +32,9 @@
 #include <TCLObject.h>
 #include <FragmentIndex.h>
 #include <DataFormat.h>
-#include "DDASFitHit.h"
-#include <stdexcept>
 #include <FragmentIndex.h>
 
+#include "DDASFitHit.h"
 #include "FitHitUnpacker.h"
 
 int CTCLDDASFitHitUnpacker::m_openIndex(0);       // Used to create handles.
@@ -123,7 +124,7 @@ CTCLDDASFitHitUnpacker::use(CTCLInterpreter& interp, std::vector<CTCLObject>& ob
 {
     requireExactly(objv, 3);
     std::string source = objv[2];
-    std::vector<uint16_t> empty;
+    std::vector<std::uint16_t> empty;
     
     CDataSource* pSource =
         CDataSourceFactory::makeSource(source, empty, empty);
@@ -178,7 +179,7 @@ CTCLDDASFitHitUnpacker::next(CTCLInterpreter& interp, std::vector<CTCLObject>& o
             DAQ::DDAS::FitHitUnpacker unpacker;
             CTCLObject result;
             result.Bind(interp);
-            uint16_t* pBody = static_cast<uint16_t*>(pItem->getBodyPointer());
+            std::uint16_t* pBody = static_cast<std::uint16_t*>(pItem->getBodyPointer());
             FragmentIndex frags(pBody);
             for (size_t i =0; i < frags.getNumberFragments(); i++) {
                 FragmentInfo frag = frags.getFragment(i);
@@ -191,15 +192,15 @@ CTCLDDASFitHitUnpacker::next(CTCLInterpreter& interp, std::vector<CTCLObject>& o
                 hitDict.Bind(interp);
 
 		// If the hit's body header is longer than sizeof(BodyHeader)
-		// by sizeof(uint32_t), the extension is assumed to be classification
+		// by sizeof(std::uint32_t), the extension is assumed to be classification
 		// probabilities and we'll add an entry in the hit dict for the
 		// two clasification probabilities.
 
 		pRingItem prItem = reinterpret_cast<pRingItem>(frag.s_itemhdr);
 		pBodyHeader pBH= &(prItem->s_body.u_hasBodyHeader.s_bodyHeader);
-		if (pBH->s_size == (sizeof(BodyHeader) + sizeof(uint32_t))) {
-		  uint32_t* pClass = reinterpret_cast<uint32_t*>(pBH+1);  // Just past the 'standard' body header.
-		  uint32_t scaledClass = *pClass;
+		if (pBH->s_size == (sizeof(BodyHeader) + sizeof(std::uint32_t))) {
+		  std::uint32_t* pClass = reinterpret_cast<std::uint32_t*>(pBH+1);  // Just past the 'standard' body header.
+		  std::uint32_t scaledClass = *pClass;
 		  double pSingle = scaledClass & 0xffff;
 		  pSingle /= 10000;                  // Now it's a probability.
 
@@ -270,7 +271,7 @@ CTCLDDASFitHitUnpacker::makeHitDict(
     // Note that there might not be a trace:
     
     if (hit.GetTraceLength() > 0)  {
-        std::vector<uint16_t> t = hit.GetTrace();
+        std::vector<std::uint16_t> t = hit.GetTrace();
         addKeyValue(interp, result, "trace", t);
     }
     if (hit.hasExtension()) {
@@ -331,11 +332,11 @@ CTCLDDASFitHitUnpacker::addKeyValue(
     dict += key;
     dict += value;
 }
-        // Vector of uint16_t (tracxe) value
+        // Vector of std::uint16_t (trace) value
 void
 CTCLDDASFitHitUnpacker::addKeyValue(
     CTCLInterpreter& interp, CTCLObject& dict, const char*  key,
-    std::vector<uint16_t>& value
+    std::vector<std::uint16_t>& value
 )
 {
     CTCLObject v;

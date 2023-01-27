@@ -15,16 +15,17 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-#ifndef DDASFITHIT_H
-#define DDASFITHIT_H
 
 /** @file:  DDASFitHit.h
  *  @brief: Extends DDASHit to include fit data that's been tacked on to the
  *          end of a hit with traces.
  */
 
-#include "DDASHit.h"               // Base class
-#include "fit_extensions.h"         // Defines HitExtension.
+#ifndef DDASFITHIT_H
+#define DDASFITHIT_H
+
+#include "DDASHit.h" // Base class
+#include "fit_extensions.h" // Defines HitExtension.
 #include <stdexcept>
 
 namespace DAQ {

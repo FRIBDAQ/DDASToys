@@ -19,8 +19,10 @@
 /** @file:  CFitExtender.cpp
  *  @brief: Provides a fitting extender base class for DDAS Data.
  */
+
 #include "CFitEditor.h"
 
+#include <string>
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -31,7 +33,12 @@
 #include <DDASHitUnpacker.h>
 
 /*
-  This file contains code that computes fits of waveforms and, using the Transformer framework provides the fit parameters as extensions to the fragments in each event. An extension is added to each fragmnt. The extension provides a uint32_t self inclusive extension size which may be sizeof(uint32_t) or, if larger a HitExtension struct (see fitinfo.h)
+  This file contains code that computes fits of waveforms and, using the 
+  Transformer framework provides the fit parameters as extensions to the 
+  fragments in each event. An extension is added to each fragmnt. The 
+  extension provides a std::uint32_t self inclusive extension size which 
+  may be sizeof(std::uint32_t) or, if larger a HitExtension struct (see f
+  it_extensions.h)
 */
 
 _FitInfo::_FitInfo() : s_size(sizeof(FitInfo)) {
@@ -57,14 +64,6 @@ static inline std::string &trim(std::string &s) {
   return ltrim(rtrim(s));
 }
 
-////////////////////////////////
-
-// Get global channel index from crate/slot/channel
-static inline int channelIndex(unsigned crate, unsigned slot, unsigned channel)
-{
-  return (crate << 8) | (slot << 4)  | channel;
-}
-
 /**
  * Constructor
  *   Read and parse minimum configuration on construction
@@ -75,130 +74,26 @@ CFitEditor::CFitEditor()
     std::string name = getConfigFilename("FIT_CONFIGFILE");
     readConfigFile(name.c_str());
   } catch (std::exception& e) {
-    std::cerr << "Error Processing configuration file: " << e.what() << std::endl;
+    std::cerr << "Error processing fit configuration file: " << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
 }
 
 /**
- * operator()
- *    - Parse the fragment into a hit.
- *    - Produce a IOvec element for the existing hit (without any fit
- *      that migh thave been there).
- *    - See if the predicate says we should fit.
- *    - If so, create the trae.
- *    - Get the fit limits, and saturation.
- *    - Get the number of pulses to fit.
- *    - Do the fits.
- *    - Create an Iovec entry for the extension we created (dynamic).
+ * channelIndex
+ *   Get global channel index from crate/slot/channel information
  *
- * @param pHdr - Pointer to the rin gitem header of the hit.
- * @param bhdr - Pointer to the body header pointer for the hit.
- * @param bodySize - number of _bytes_ in the body.
- * @param pBody    - pointer to the body.
- * @return std::vector<CBuiltRingItemEditor::BodySegment>
- *            final segment descriptors.
- */
-std::vector<CBuiltRingItemEditor::BodySegment>
-CFitEditor::operator()(
-    pRingItemHeader pHdr, pBodyHeader bhdr, size_t bodySize, void* pBody
-)
-{
-  std::vector<CBuiltRingItemEditor::BodySegment> result;
-    
-  // Regardless we want a segment that includes the hit.  Note
-  // that the first uint32_t of the body is the size of the
-  // standard hit part in uint16_t words.
-    
-  uint16_t* pSize = static_cast<uint16_t*>(pBody);
-  CBuiltRingItemEditor::BodySegment hitInfo(*pSize*sizeof(uint16_t), pSize, false);
-  result.push_back(hitInfo);
-    
-  // Make the hit:
-    
-  DAQ::DDAS::DDASHit hit;
-  DAQ::DDAS::DDASHitUnpacker unpacker;
-  unpacker.unpack(static_cast<uint32_t*>(pBody),
-		  static_cast<uint32_t*>(nullptr),
-		  hit);
-    
-  if (doFit(hit)) {
-    std::vector<uint16_t> trace = hit.GetTrace();
-
-    // \TODO (ASC 1/18/23): What happens to this memory? Do we need to explicitly free it or wrap it in a smart ptr to automatically delete it when its out of scope?
-    pFitInfo pFit = new FitInfo; // Have an extension tho may be zero
-    
-    if (trace.size() > 0) {   /// Need a trace to fit
-      auto l = fitLimits(hit);
-      unsigned low = l.first.first;   // Left fit limit
-      unsigned hi  = l.first.second;  // Right fit limit
-      unsigned sat = l.second;        // Saturation value
-           
-      if (low != hi) {	
-	int classification = pulseCount(hit);
-	
-	if (classification) {
-	  
-	  // Bit 0 do single fit.
-	  // Bit 1 do double fit.
-                    
-	  if (classification & 1) {
-	    fitSinglePulse(pFit->s_extension.onePulseFit, trace,
-			   l.first, sat);
-	  }
-                    
-	  if (classification & 2 ) {
-	    // Single pulse fit guides initial guess for double pulse. If the single pulse fit does not exist, we do it here.
-	    DDAS::fit1Info guess;                    
-
-	    if ((classification & 1) == 0) {
-	      fitSinglePulse(pFit->s_extension.onePulseFit, trace,
-			     l.first, sat);
-	    } else {
-	      guess = pFit->s_extension.onePulseFit;
-	    }
-	    fitDoublePulse(pFit->s_extension.twoPulseFit, trace,
-			   l.first, guess, sat); 
-	  }
-	  
-	}
-      }
-      
-    }
-    
-    CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
-    result.push_back(fit);
-    
-  } else { // No fit performed
-    pNullExtension p = new nullExtension;
-    CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
-    result.push_back(nofit);
-  }    
-    
-  return result; // Return the description
-}
-
-/**
- * free
- *   We get handed our fit extension descriptor(s) to free
+ * @param crate - The crate ID
+ * @param slot - The slot ID
+ * @param channel - The channel ID
  *
- * @param info - iovec we need to free
+ * @return int - the global channel index
  */
-void
-CFitEditor::free(iovec& item)
+int
+CFitEditor::channelIndex(unsigned crate, unsigned slot, unsigned channel)
 {
-  if (item.iov_len == sizeof(FitInfo)) {
-    pFitInfo pFit = static_cast<pFitInfo>(item.iov_base);
-    delete pFit;
-  } else {
-    pNullExtension p = static_cast<pNullExtension>(item.iov_base);
-    delete p;
-  }
+  return (crate << 8) | (slot << 4)  | channel;
 }
-
-/**
- * Private methods
- */
 
 /**
  * getConfigFilename
@@ -291,84 +186,3 @@ CFitEditor::isComment(std::string line)
     if (line[0] == '#') return std::string("");
     return line;
 }
-
-/**
- * pulseCount
- *   This is a hook into which to add the ML classifier
- *
- * @param hit - references a hit
- *
- * @return int
- * @retval 0  - On the basis of the trace no fitting
- * @retval 1  - Only fit a single trace
- * @retval 2  - Only fit two traces
- * @retval 3  - Fit both one and double hit
- */
-int
-CFitEditor::pulseCount(DAQ::DDAS::DDASHit& hit)
-{
-    return 3;                  // in absence of classifier.
-}
-
-/*
- * doFit
- *    This is a predicate function:
- *
- * @param crate - crate a hit comes from
- * @param slot  - Slot a hit comes from
- * @param channel - Channel within the slot the hit comes from
- *
- * @return bool - if true, the channel is fit
- *
- * @note This sample predicate requests that all channels be fit
- */
-bool
-CFitEditor::doFit(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();           // In case we are channel dependent.
-    int chan  = hit.GetChannelID();
-    
-    int index = channelIndex(crate, slot, chan);
-    return (m_fitChannels.find(index) != m_fitChannels.end());
-    
-    return true;
-}
-
-/**
-* fitLimits
-*   For each channel we're fitting, we need to know
-*   -  The left and right limits of the waveform that will be fitted
-*   -  The digitizer saturation level
-*
-*
-* @param hit - reference to a single hit
-*
-* @return std::pair<std::pair<unsigned, unsigned>, unsigned>
-*   The first element of the outer pair are the left and right
-*   fit limits respectively. The second element of the outer pair
-*   is the saturation level.
-*
-* @note the caller must have ensured there's a map entry for this channel.
-*/
-std::pair<std::pair<unsigned, unsigned>, unsigned>
-CFitEditor::fitLimits(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();           // In case we are channel dependent.
-    int chan  = hit.GetChannelID();
-    
-    int index = channelIndex(crate, slot, chan);
-    std::pair<std::pair<unsigned, unsigned>, unsigned> result = m_fitChannels[index];
-    
-    return result;   
-}
-
-// /////////////////////////////////////////////////////////////////////////////
-// // Factory for our editor:
-// //
-// extern "C" {
-//   CFitEditor* createEditor() {
-//     return new CFitEditor;
-//   }
-// }

@@ -19,8 +19,9 @@
  *  @brief: Shared library code for event editor that strips traces.
  */
 
-#include <CBuiltRingItemEditor.h>
 #include <stdexcept>
+
+#include <CBuiltRingItemEditor.h>
 
 class StripTrace : public CBuiltRingItemEditor::BodyEditor
 {
@@ -55,13 +56,13 @@ StripTrace::operator()(
 {
     std::vector<CBuiltRingItemEditor::BodySegment> result;
     
-    // The body is a set of uint32_t's.  Note that it has a
+    // The body is a set of std::uint32_t's.  Note that it has a
     // size longword and a digitizer type longword in front of the
     // hit.
     
-    uint32_t* pB = static_cast<uint32_t*>(pBody);
-    uint32_t traceLen16 = ((pB[5] >> 16) & 0x3fff); // # 32 bit trace uint16's
-    uint32_t evtlen     = (pB[2] >> 17) & 0x3fff;   // Initial eventlen.
+    std::uint32_t* pB = static_cast<std::uint32_t*>(pBody);
+    std::uint32_t traceLen16 = ((pB[5] >> 16) & 0x3fff); // # 32 bit trace std::uint16's
+    std::uint32_t evtlen     = (pB[2] >> 17) & 0x3fff;   // Initial eventlen.
     evtlen -= traceLen16/2;                        // 2 samples/long
                          // update word count.
     
@@ -69,24 +70,24 @@ StripTrace::operator()(
     // extension instead.  Otherwise, keep the entire ring item.
     
     
-    uint32_t* pExt = pB + 2 + evtlen  + traceLen16/2;      // Point past trace.
-    uint32_t extSize =
-        bodySize - (2 + evtlen + traceLen16/sizeof(uint16_t))*sizeof(uint32_t); // left over bytes:
+    std::uint32_t* pExt = pB + 2 + evtlen  + traceLen16/2;      // Point past trace.
+    std::uint32_t extSize =
+        bodySize - (2 + evtlen + traceLen16/sizeof(std::uint16_t))*sizeof(std::uint32_t); // left over bytes:
     
     /// There's an extension, and hence a fit, if
     // there's more than a longword following the trace.
     // In that case, there are two possibilities:
     //  - old style fit  - the next word starts the exytension.
     //  - new style fit  - the next word is the size of the extension
-    //                     which is null if it's sizeof(uint32_t).
+    //                     which is null if it's sizeof(std::uint32_t).
     
-    if (extSize > sizeof(uint32_t)) {                    // There's an extension
+    if (extSize > sizeof(std::uint32_t)) { // There's an extension
         pB[2] = (pB[2] & 0x8001ffff) | (evtlen << 17); // Update event len.
         pB[5] = (pB[2] & 0x8000ffff);                  // Zero out the trace len.
     
         *pB  -= traceLen16;    
         CBuiltRingItemEditor::BodySegment hit(   // Wave form removed 
-            (evtlen+2)*sizeof(uint32_t), pBody
+            (evtlen+2)*sizeof(std::uint32_t), pBody
         );
         result.push_back(hit);                   // fit extension.
         CBuiltRingItemEditor::BodySegment extension(extSize, pExt);
