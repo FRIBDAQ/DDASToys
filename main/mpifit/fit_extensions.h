@@ -23,6 +23,7 @@
 #define FIT_EXTENSIONS_H
 
 #include <cstdint>
+#include <cstring>
 
 namespace DDAS {
 
@@ -69,7 +70,9 @@ typedef struct _nullExtension {
 typedef struct _FitInfo {
   std::uint32_t  s_size;
   DDAS::HitExtension s_extension;
-  _FitInfo();
+  _FitInfo() : s_size(sizeof(_FitInfo)) {
+    memset(&s_extension, 0,sizeof(DDAS::HitExtension)); // Zero fit params.
+  }
 } FitInfo, *pFitInfo;
 
 #endif

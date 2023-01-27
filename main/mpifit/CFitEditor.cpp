@@ -23,7 +23,6 @@
 #include "CFitEditor.h"
 
 #include <string>
-#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -40,10 +39,6 @@
   may be sizeof(std::uint32_t) or, if larger a HitExtension struct (see f
   it_extensions.h)
 */
-
-_FitInfo::_FitInfo() : s_size(sizeof(FitInfo)) {
-  memset(&s_extension, 0,sizeof(DDAS::HitExtension));  // Zero fit params.
-}
 
 ///// Local trim functions /////
 
