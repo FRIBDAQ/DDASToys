@@ -59,42 +59,42 @@ endif
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
-LIBS = libFitterAnalytic.so libFitEditorAnalytic.so libFitterTemplate.so libFitEditorTemplate.so libTclUnpacker.so
+LIBS = libFitterAnalytic.so libFitEditorAnalytic.so libFitterTemplate.so libFitEditorTemplate.so libTclUnpacker.so libMyFitHitUnpacker.so
 
 all: $(LIBS)
 
-TCLDDASFitHitUnpacker.o: TCLDDASFitHitUnpacker.cpp
-	g++ -c $^ $(CXXFLAGS) $(GNUCXXFLAGS)
-
-libTclUnpacker.so: TCLDDASFitHitUnpacker.o
+libTclUnpacker.so: TCLDDASFitHitUnpacker.o MyFitHitUnpacker.o
 	g++ -o libTclUnpacker.so -shared $^ $(CXXLDFLAGS) $(GNULDFLAGS)
 	echo  pkg_mkIndex -verbose . libTclUnpacker.so | tclsh
 
 libFitterAnalytic.so: CFitExtender.o FitExtenderAnalytic.o \
 	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
-	FitHitUnpacker.o \
+	MyFitHitUnpacker.o \
 	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o \
 	$(CUDAOBJ)
-	$(CXX) -o libFitterAnalytic.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libFitterAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitEditorAnalytic.so: CFitEditor.o FitEditorAnalytic.o \
 	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
-	FitHitUnpacker.o \
+	MyFitHitUnpacker.o \
 	$(CUDAOBJ)
-	$(CXX) -o libFitEditorAnalytic.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libFitEditorAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitterTemplate.so: CFitExtender.o FitExtenderTemplate.o \
 	functions_template.o lmfit_template.o \
-	FitHitUnpacker.o \
+	MyFitHitUnpacker.o \
 	StripTrace.o ThresholdClassifier.o \
 	$(CUDAOBJ)
-	$(CXX) -o libFitterTemplate.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libFitterTemplate.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitEditorTemplate.so: CFitEditor.o FitEditorTemplate.o \
 	functions_template.o lmfit_template.o \
-	FitHitUnpacker.o \
+	MyFitHitUnpacker.o \
 	$(CUDAOBJ)
-	$(CXX) -o libFitEditorTemplate.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libFitEditorTemplate.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+
+libMyFitHitUnpacker.so: MyFitHitUnpacker.o
+	$(CXX) -o libMyFitHitUnpacker.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:

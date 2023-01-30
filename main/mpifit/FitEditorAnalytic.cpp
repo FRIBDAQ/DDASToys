@@ -64,9 +64,9 @@ FitEditorAnalytic::~FitEditorAnalytic()
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
 FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody)
-{
+{  
   std::vector<CBuiltRingItemEditor::BodySegment> result;
-    
+  
   // Regardless we want a segment that includes the hit. Note that the first
   // std::uint32_t of the body is the size of the standard hit part in
   // std::uint16_t words.
@@ -123,16 +123,16 @@ FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
 	}	
       }      
     }
-    
+
     CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
-    result.push_back(fit);
+    result.push_back(fit);   
     
   } else { // No fit performed
     pNullExtension p = new nullExtension;
     CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
     result.push_back(nofit);
-  }    
-    
+  }
+  
   return result; // Return the description
 }
 

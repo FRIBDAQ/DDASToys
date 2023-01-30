@@ -53,8 +53,9 @@ FitExtenderAnalytic::~FitExtenderAnalytic()
  */
 iovec
 FitExtenderAnalytic::operator()(pRingItem item)
-{
+{  
   iovec result;
+  
   // Get a pointer to the beginning of the body and
   // parse out the hit:
     

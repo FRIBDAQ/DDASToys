@@ -35,7 +35,7 @@
 #include <FragmentIndex.h>
 
 #include "DDASFitHit.h"
-#include "FitHitUnpacker.h"
+#include "MyFitHitUnpacker.h"
 
 int CTCLDDASFitHitUnpacker::m_openIndex(0);       // Used to create handles.
 
@@ -176,7 +176,7 @@ CTCLDDASFitHitUnpacker::next(CTCLInterpreter& interp, std::vector<CTCLObject>& o
         CDataSource* pSource = p->second;
         CRingItem*   pItem   = nextPhysicsItem(pSource);
         if (pItem) {
-            DAQ::DDAS::FitHitUnpacker unpacker;
+            DAQ::DDAS::MyFitHitUnpacker unpacker;
             CTCLObject result;
             result.Bind(interp);
             std::uint16_t* pBody = static_cast<std::uint16_t*>(pItem->getBodyPointer());

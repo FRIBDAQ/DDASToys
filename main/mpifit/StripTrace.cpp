@@ -21,6 +21,8 @@
 
 #include <stdexcept>
 
+#include <iostream>
+
 #include <CBuiltRingItemEditor.h>
 
 class StripTrace : public CBuiltRingItemEditor::BodyEditor
@@ -30,11 +32,11 @@ class StripTrace : public CBuiltRingItemEditor::BodyEditor
         );
     virtual void free(iovec& item);    
 };
+
 /**
  * operator()
- *    Strips any traces off a DDAS hit if it has an extension(fit).
- *    Note that if there are
- *    fits at the end of the event they are retained:
+ *    Strips any traces off a DDAS hit if it has an extension(fit). Note that 
+ *    if there are fits at the end of the event they are retained:
  *    - Gets the length of the trace.
  *    - Sets the hit trace length to zero.
  *    - Subtracts trace length/2 from the event length.
@@ -54,56 +56,55 @@ StripTrace::operator()(
     pRingItemHeader pHdr, pBodyHeader bhdr, size_t bodySize, void* pBody
 )
 {
-    std::vector<CBuiltRingItemEditor::BodySegment> result;
+  std::vector<CBuiltRingItemEditor::BodySegment> result;
     
-    // The body is a set of std::uint32_t's.  Note that it has a
-    // size longword and a digitizer type longword in front of the
-    // hit.
+  // The body is a set of std::uint32_t's.  Note that it has a
+  // size longword and a digitizer type longword in front of the
+  // hit.
     
-    std::uint32_t* pB = static_cast<std::uint32_t*>(pBody);
-    std::uint32_t traceLen16 = ((pB[5] >> 16) & 0x3fff); // # 32 bit trace std::uint16's
-    std::uint32_t evtlen     = (pB[2] >> 17) & 0x3fff;   // Initial eventlen.
-    evtlen -= traceLen16/2;                        // 2 samples/long
-                         // update word count.
+  std::uint32_t* pB = static_cast<std::uint32_t*>(pBody);
+  std::uint32_t traceLen16 = ((pB[5] >> 16) & 0x3fff); // In 16 bit words
+  std::uint32_t evtlen     = (pB[2] >> 17) & 0x3fff; // Initial eventlen.
+  evtlen -= traceLen16/2; // 2 samples/long
     
-    //  If there's an extension, we can kill off the trace and keep the
-    // extension instead.  Otherwise, keep the entire ring item.
+  //  If there's an extension, we can kill off the trace and keep the
+  // extension instead.  Otherwise, keep the entire ring item.    
     
+  std::uint32_t* pExt = pB + 2 + evtlen + traceLen16/2; // Point past trace.
+  std::uint32_t extSize = bodySize - (2 + evtlen + traceLen16/sizeof(std::uint16_t))*sizeof(std::uint32_t); // left over bytes
     
-    std::uint32_t* pExt = pB + 2 + evtlen  + traceLen16/2;      // Point past trace.
-    std::uint32_t extSize =
-        bodySize - (2 + evtlen + traceLen16/sizeof(std::uint16_t))*sizeof(std::uint32_t); // left over bytes:
+  /// There's an extension, and hence a fit, if
+  // there's more than a longword following the trace.
+  // In that case, there are two possibilities:
+  //  - old style fit  - the next word starts the exytension.
+  //  - new style fit  - the next word is the size of the extension
+  //                     which is null if it's sizeof(std::uint32_t).
     
-    /// There's an extension, and hence a fit, if
-    // there's more than a longword following the trace.
-    // In that case, there are two possibilities:
-    //  - old style fit  - the next word starts the exytension.
-    //  - new style fit  - the next word is the size of the extension
-    //                     which is null if it's sizeof(std::uint32_t).
+  if (extSize > sizeof(std::uint32_t)) { // There's an extension
+    pB[2] = (pB[2] & 0x8001ffff) | (evtlen << 17); // Update event len.
+    pB[5] = (pB[2] & 0x8000ffff);                  // Zero out the trace len.
     
-    if (extSize > sizeof(std::uint32_t)) { // There's an extension
-        pB[2] = (pB[2] & 0x8001ffff) | (evtlen << 17); // Update event len.
-        pB[5] = (pB[2] & 0x8000ffff);                  // Zero out the trace len.
-    
-        *pB  -= traceLen16;    
-        CBuiltRingItemEditor::BodySegment hit(   // Wave form removed 
-            (evtlen+2)*sizeof(std::uint32_t), pBody
-        );
-        result.push_back(hit);                   // fit extension.
-        CBuiltRingItemEditor::BodySegment extension(extSize, pExt);
-        result.push_back(extension);
-    } else {                    // Keep the whole ring item.
-        // One descriptor for the entire body:
-        CBuiltRingItemEditor::BodySegment body(bodySize, pBody);
-        result.push_back(body);
+    *pB  -= traceLen16;    
+    CBuiltRingItemEditor::BodySegment hit( // Waveform removed 
+					  (evtlen+2)*sizeof(std::uint32_t),
+					  pBody
+					   );
+    result.push_back(hit);                   // fit extension.
+    CBuiltRingItemEditor::BodySegment extension(extSize, pExt);
+    result.push_back(extension);
+  } else { // Keep the whole ring item.
+    // One descriptor for the entire body:
+    CBuiltRingItemEditor::BodySegment body(bodySize, pBody);
+    result.push_back(body);
         
-    }
+  }
        
-    return result;
+  return result;
 }
+
 /**
  * free
- *    Nothing is dynamic so throw std::logic_error
+ *   Nothing is dynamic so throw std::logic_error
  *
  * @para item - item descriptor.
  */
@@ -117,10 +118,8 @@ StripTrace::free(iovec& item)
  *  Now the factory so that the framework can make StripTrace
  *  instances.
  */
-
 extern "C" {
-    CBuiltRingItemEditor::BodyEditor* createEditor()
-    {
-        return new StripTrace;
-    }
+  CBuiltRingItemEditor::BodyEditor* createEditor() {
+    return new StripTrace;
+  }
 }
