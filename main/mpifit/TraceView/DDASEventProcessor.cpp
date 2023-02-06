@@ -5,11 +5,11 @@
 #include <FragmentIndex.h>
 #include <CPhysicsEventItem.h>
 
-#include <MyFitHitUnpacker.h>
 #include <DDASFitHit.h>
+#include <DDASFitHitUnpacker.h>
 
 DDASEventProcessor::DDASEventProcessor() :
-  m_pUnpacker(new DAQ::DDAS::MyFitHitUnpacker)
+  m_pUnpacker(new DAQ::DDAS::DDASFitHitUnpacker)
 {}
 
 DDASEventProcessor::~DDASEventProcessor()

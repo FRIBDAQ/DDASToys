@@ -58,8 +58,7 @@ namespace DDAS {
   struct HitExtension { // Data added to hits with traces:
     fit1Info onePulseFit;
     fit2Info twoPulseFit;
-  };
-  
+  };  
 }
 
 typedef struct _nullExtension {

@@ -2,8 +2,8 @@
  *  @file cudafit.cuh 
  *  @brief header for the cuda swarm fitting code.
  */
-#ifndef CUDAFIT_CUH
-#define CUDAFIT_CUH
+#ifndef CUDAFIT_ANALYTIC_CUH
+#define CUDAFIT_ANALYTIC_CUH
 // Forward definitions.
 
 namespace DDAS {
@@ -12,7 +12,6 @@ namespace DDAS {
 }
 
 // fit one pulse:
-
 
 extern void
 cudafit1(

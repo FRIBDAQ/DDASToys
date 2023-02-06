@@ -15,17 +15,17 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  FitEngine.cpp
+/** @file:  CFitEngine.cpp
  *  @brief: Implement base class.
  */
 
-#include "jacobian.h"
+#include "CFitEngine.h"
 
 /**
- * FitEngine constructor
+ * CFitEngine constructor
  *   Just marshall the x/y points.
  */
-FitEngine::FitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)
+CFitEngine::CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)
 {
     for (size_t i = 0; i < data.size(); i++) {
         x.push_back(data[i].first);

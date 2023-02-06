@@ -7,11 +7,10 @@
 
 class CPhysicsEventItem;
 
-class MyFitHitUnpacker;
 namespace DAQ {
   namespace DDAS {
     class DDASFitHit;
-    class MyFitHitUnpacker;
+    class DDASFitHitUnpacker;
   }
 }
 
@@ -30,7 +29,7 @@ public:
 
   // Unique to this class
 private:
-  DAQ::DDAS::MyFitHitUnpacker* m_pUnpacker;
+  DAQ::DDAS::DDASFitHitUnpacker* m_pUnpacker;
   std::vector<DAQ::DDAS::DDASFitHit> m_hits; 
 };
 

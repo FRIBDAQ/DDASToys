@@ -7,8 +7,7 @@
  *        have global data for the device pointers to the trace.
  */
 
-#include "lmfit_analytic.h"             // For the fit extension formats.
-#include "functions_analytic.h"
+#include "fit_extensions.h"             // For the fit extension formats.
 #include "reductions.cu"
 #include <limits>
 #include <ctime>

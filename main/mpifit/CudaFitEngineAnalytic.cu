@@ -21,7 +21,7 @@
  */
 
 
-#include "jacobian.h"
+#include "jacobian_analytic.h"
 #include <stdexcept>
 #include <math.h>
 // Single pulse fit parameter indices:

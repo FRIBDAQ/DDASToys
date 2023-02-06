@@ -4,8 +4,6 @@
 # XIAAPIDIR must be defined to point to the XIA API directory used by that
 # NSCLDAQ distro.
 
-
-
 #  Note MAXPOINTS should  be modified to match the longest trace we're fitting
 #  if this is CUDA enabled.
 
@@ -44,7 +42,7 @@ GNULDFLAGS = -Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) -Wl,-rpath=$(SPECLIB)
 
 ifdef CUDA
 CXX = nvcc
-CUDAOBJ = CudaFitEngine.o cudafit.o
+CUDAOBJ = CudaFitEngineAnalytic.o cudafit_analytic.o
 
 .SUFFIXES: .cu
 EXTRACXXFLAGS = $(CUDACXXFLAGS)
@@ -56,9 +54,9 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-LIBS = libFitterAnalytic.so libFitEditorAnalytic.so libFitterTemplate.so libFitEditorTemplate.so libMyFitHitUnpacker.so
+LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
-all: $(LIBS) traceview
+all: $(LIBS)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
@@ -66,34 +64,20 @@ all: $(LIBS) traceview
 traceview:
 	(cd TraceView; qmake -qt=5 traceview.pro; make)
 
-libFitterAnalytic.so: CFitExtender.o FitExtenderAnalytic.o \
-	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
-	MyFitHitUnpacker.o \
-	StripTrace.o ThresholdClassifier.o \
-	$(CUDAOBJ)
-	$(CXX) -o libFitterAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
-
-libFitEditorAnalytic.so: CFitEditor.o FitEditorAnalytic.o \
-	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
-	MyFitHitUnpacker.o \
+libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
+	functions_analytic.o lmfit_analytic.o \
+	CFitEngine.o SerialFitEngineAnalytic.o \
+	DDASFitHitUnpacker.o \
 	$(CUDAOBJ)
 	$(CXX) -o libFitEditorAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
-libFitterTemplate.so: CFitExtender.o FitExtenderTemplate.o \
+libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o \
 	functions_template.o lmfit_template.o \
-	MyFitHitUnpacker.o \
-	StripTrace.o ThresholdClassifier.o \
-	$(CUDAOBJ)
-	$(CXX) -o libFitterTemplate.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
-
-libFitEditorTemplate.so: CFitEditor.o FitEditorTemplate.o \
-	functions_template.o lmfit_template.o \
-	MyFitHitUnpacker.o \
-	$(CUDAOBJ)
+	DDASFitHitUnpacker.o
 	$(CXX) -o libFitEditorTemplate.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
-libMyFitHitUnpacker.so: MyFitHitUnpacker.o
-	$(CXX) -o libMyFitHitUnpacker.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
+	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
@@ -107,9 +91,8 @@ install:
 	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
 	install -m 0755 *.so $(PREFIX)/lib
-	install -m 0644 pkgIndex.tcl $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
-	install -m 0755 tracepeek.tcl $(PREFIX)/bin/tracepeek
+	install -m 0755 TraceView/traceview $(PREFIX)/bin/traceview
 	install -m 0644 AREADME.txt $(PREFIX)/share
 
 clean:

@@ -32,7 +32,7 @@ namespace DDAS {
   // This struct is passed around the fitting subsystem to Jacobian and
   // function evaluators
   struct GslFitParameters {
-    const std::vector<std::pair<uint16_t, uint16_t> >* s_pPoints;
+    const std::vector<std::pair<uint16_t, uint16_t>>* s_pPoints;
   };
     
   void lmfit1(

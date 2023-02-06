@@ -10,7 +10,6 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     Aaron Chester
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -27,6 +26,7 @@
 #include <DDASHit.h>
 #include <DDASHitUnpacker.h>
 
+#include "Configuration.h"
 #include "lmfit_analytic.h"
 
 using namespace DDAS::AnalyticFit;
@@ -35,13 +35,23 @@ using namespace DDAS::AnalyticFit;
  * Constructor
  */
 FitEditorAnalytic::FitEditorAnalytic()
-{}
+{
+  try {
+    m_pConfig->readConfigFile();
+  }
+  catch (std::exception& e) {
+    std::cerr << "Error configuring FitExtender: " << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
 
 /*
  * Destructor
  */
 FitEditorAnalytic::~FitEditorAnalytic()
-{}
+{
+  delete m_pConfig;
+}
 
 /**
  * operator()
@@ -64,9 +74,9 @@ FitEditorAnalytic::~FitEditorAnalytic()
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
 FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody)
-{  
+{
   std::vector<CBuiltRingItemEditor::BodySegment> result;
-  
+    
   // Regardless we want a segment that includes the hit. Note that the first
   // std::uint32_t of the body is the size of the standard hit part in
   // std::uint16_t words.
@@ -83,19 +93,28 @@ FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
   unpacker.unpack(static_cast<std::uint32_t*>(pBody),
 		  static_cast<std::uint32_t*>(nullptr),
 		  hit);
-    
-  if (doFit(hit)) {
-    std::vector<std::uint16_t> trace = hit.GetTrace();
 
-    // \TODO (ASC 1/18/23): new'd without a delete, what happens?  
-    pFitInfo pFit = new FitInfo; // Have an extension tho may be zero
+  unsigned crate = hit.GetCrateID();
+  unsigned slot  = hit.GetSlotID();
+  unsigned chan  = hit.GetChannelID();
+  
+  if (m_pConfig->fitChannel(crate, slot, chan)) {
+    std::vector<std::uint16_t> trace = hit.GetTrace();
+    
+    // \TODO (ASC 1/27/23): Any reason to have this defined in the
+    // fit_extensions.h instead of:
+    //   FitInfo* pInfo = new FitInfo;
+    //   std::unique_ptr<FitInfo> info(pInfo);
+    // and let ot clean up after itself?
+    pFitInfo pFit = new FitInfo; // Have an extension tho may be zero 
     
     if (trace.size() > 0) { // Need a trace to fit
-      auto l = fitLimits(hit);
+      std::pair<std::pair<unsigned, unsigned>, unsigned> l
+	= m_pConfig->getFitLimits(crate, slot, chan);
       unsigned low = l.first.first;   // Left fit limit
       unsigned hi  = l.first.second;  // Right fit limit
       unsigned sat = l.second;        // Saturation value
-           
+      
       if (low != hi) {	
 	int classification = pulseCount(hit);
 	
@@ -105,34 +124,34 @@ FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
 	  // Bit 1 do double fit.
                     
 	  if (classification & 1) {
-	    lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
+	    DDAS::AnalyticFit::lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
 	  }
                     
 	  if (classification & 2 ) {
-	    // Single pulse fit guides initial guess for double pulse. If the single pulse fit does not exist, we do it here.
+	    // Single pulse fit guides initial guess for double pulse. If the
+	    // single pulse fit does not exist, we do it here.
 	    DDAS::fit1Info guess;                    
 
 	    if ((classification & 1) == 0) {
-	      lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
+	      DDAS::AnalyticFit::lmfit1(&(pFit->s_extension.onePulseFit), trace, l.first, sat);
 	    } else {
 	      guess = pFit->s_extension.onePulseFit;
 	    }
-	    lmfit2(&(pFit->s_extension.twoPulseFit), trace, l.first,
-		   &guess, sat);
+	    DDAS::AnalyticFit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, l.first, &guess, sat);
 	  }	  
 	}	
       }      
     }
-
+    
     CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
-    result.push_back(fit);   
+    result.push_back(fit);
     
   } else { // No fit performed
     pNullExtension p = new nullExtension;
     CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
     result.push_back(nofit);
-  }
-  
+  }    
+    
   return result; // Return the description
 }
 
@@ -174,60 +193,6 @@ int
 FitEditorAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
 {
     return 3; // In absence of classifier.
-}
-
-/*
- * doFit
- *    This is a predicate function:
- *
- * @param crate - crate a hit comes from
- * @param slot  - Slot a hit comes from
- * @param channel - Channel within the slot the hit comes from
- *
- * @return bool - if true, the channel is fit
- *
- * @note This sample predicate requests that all channels be fit
- */
-bool
-FitEditorAnalytic::doFit(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();           // In case we are channel dependent.
-    int chan  = hit.GetChannelID();
-    
-    int index = channelIndex(crate, slot, chan);
-    return (m_fitChannels.find(index) != m_fitChannels.end());
-    
-    return true;
-}
-
-/**
-* fitLimits
-*   For each channel we're fitting, we need to know
-*   -  The left and right limits of the waveform that will be fitted
-*   -  The digitizer saturation level
-*
-*
-* @param hit - reference to a single hit
-*
-* @return std::pair<std::pair<unsigned, unsigned>, unsigned>
-*   The first element of the outer pair are the left and right
-*   fit limits respectively. The second element of the outer pair
-*   is the saturation level.
-*
-* @note the caller must have ensured there's a map entry for this channel.
-*/
-std::pair<std::pair<unsigned, unsigned>, unsigned>
-FitEditorAnalytic::fitLimits(DAQ::DDAS::DDASHit& hit)
-{
-    int crate = hit.GetCrateID();
-    int slot  = hit.GetSlotID();           // In case we are channel dependent.
-    int chan  = hit.GetChannelID();
-    
-    int index = channelIndex(crate, slot, chan);
-    std::pair<std::pair<unsigned, unsigned>, unsigned> result = m_fitChannels[index];
-    
-    return result;   
 }
 
 /////////////////////////////////////////////////////////////////////////////

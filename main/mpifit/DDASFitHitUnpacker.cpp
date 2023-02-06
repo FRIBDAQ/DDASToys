@@ -15,11 +15,11 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  MyFitHitUnpacker.cpp
- *  @brief: Implements MyFitHitUnpacker.
+/** @file:  DDASFitHitUnpacker.cpp
+ *  @brief: Implements DDASFitHitUnpacker.
  */
 
-#include "MyFitHitUnpacker.h"
+#include "DDASFitHitUnpacker.h"
 
 #include <string>
 #include <stdexcept>
@@ -44,7 +44,7 @@
  *    @return Pointer just after the ring item.
  */
 const void*
-DAQ::DDAS::MyFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
+DAQ::DDAS::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
 {  
   // Find the ring item body:
     

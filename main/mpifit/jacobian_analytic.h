@@ -10,19 +10,19 @@
      Authors:
              Ron Fox
              Girodano Cerizza
-	     Aaron Chester
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
 
 /**
- * @file: jacobian.h
- * @brief: Provides class definitions for families of engines to support lmfit.
+ * @file: jacobian_analytic.h
+ * @brief: Provides class definitions for families of engines to support 
+ *         analytic lmfit.
  */
 
-#ifndef JACOBIAN_H
-#define JACOBIAN_H
+#ifndef JACOBIAN_ANALYTIC_H
+#define JACOBIAN_ANALYTIC_H
 
 /**
  * The concept is that each GSL lmfitter has to supply a pair of methods:
@@ -38,32 +38,11 @@
  *  by the actual fit.
  */
 
-#include <vector>
-#include <cstdint>
+#include "CFitEngine.h"
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_fit.h>
-#include <gsl/gsl_multimin.h>
-#include <gsl/gsl_multifit_nlin.h>  
+// Concrete classes
 
-// Abstract base class.
-
-class FitEngine {
- protected:
-  std::vector<std::uint16_t> x;           // Trace x coords
-  std::vector<std::uint16_t> y;           // Trace y coords
- public:
-  FitEngine(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
-  virtual ~FitEngine(){}
-  virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
-  virtual void residuals(const gsl_vector*p, gsl_vector* r)  = 0;
-};
-
-// concrete classes:
-
-class SerialFitEngine1 : public FitEngine {
+class SerialFitEngine1 : public CFitEngine {
 public:
   SerialFitEngine1(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   ~SerialFitEngine1() {}
@@ -71,7 +50,7 @@ public:
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
-class CudaFitEngine1 : public FitEngine {
+class CudaFitEngine1 : public CFitEngine {
 private:
     void* m_dXtrace;          // Device ptr to trace x. [in]
     void* m_dYtrace;          // device ptr to trace y. [in]
@@ -88,14 +67,14 @@ private:
   void throwCudaError(const char* msg);
 };
 
-class SerialFitEngine2 : public FitEngine {
+class SerialFitEngine2 : public CFitEngine {
 public:
   SerialFitEngine2(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J);
   virtual void residuals(const gsl_vector*p, gsl_vector* r);
 };
 
-class CudaFitEngine2 : public FitEngine {
+class CudaFitEngine2 : public CFitEngine {
 private:
     void* m_dXtrace;          // Device ptr to trace x. [in]
     void* m_dYtrace;          // device ptr to trace y. [in]
@@ -113,14 +92,14 @@ private:
 
 class FitEngineFactory {
 public:
-  FitEngine* createSerialFitEngine1(std::vector<std::pair<std::uint16_t,
+  CFitEngine* createSerialFitEngine1(std::vector<std::pair<std::uint16_t,
 				    std::uint16_t>>&  data);
-  FitEngine*  createCudaFitEngine1(std::vector<std::pair<std::uint16_t,
+  CFitEngine*  createCudaFitEngine1(std::vector<std::pair<std::uint16_t,
 				   std::uint16_t>>&  data);
 
-  FitEngine*  createSerialFitEngine2(std::vector<std::pair<std::uint16_t,
+  CFitEngine*  createSerialFitEngine2(std::vector<std::pair<std::uint16_t,
 				                      std::uint16_t>>&  data);
-  FitEngine*  createCudaFitEngine2(std::vector<std::pair<std::uint16_t,
+  CFitEngine*  createCudaFitEngine2(std::vector<std::pair<std::uint16_t,
 				                      std::uint16_t>>&  data);
 
 };

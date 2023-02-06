@@ -20,9 +20,8 @@
  */
 
 #include <cmath>
-#include <vector>
 
-#include "jacobian.h"
+#include "jacobian_analytic.h"
 #include "functions_analytic.h"
 
 // Single pulse fit parameter indices:
@@ -87,11 +86,10 @@ static double
 dp1dk1(double A, double k1, double k2, double x1, double x, double w,
        double erise, double efall)
 {
-    double d1 =   A*efall;               // decay(A, k2, x1, x);  
-    double d2 =   erise; //              // decay(1.0, k1, x1,  x);   // part of logistic deriv.
+    double d1 =   A*efall; // decay(A, k2, x1, x);  
+    double d2 =   erise;  // part of logistic deriv.
     double num = d1*d2*(x - x1);
-    double l   =  1.0/(1.0 + erise);     //  logistic(1.0, k1, x1, x);   
-    
+    double l   =  1.0/(1.0 + erise); //  logistic(1.0, k1, x1, x);
     
     return (num*l*l)/w;
 }
@@ -176,7 +174,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  *    @param data - the trace data.
  */
 SerialFitEngine1::SerialFitEngine1(std::vector<std::pair<std::uint16_t, std::uint16_t>>& data) :
-    FitEngine(data)
+    CFitEngine(data)
 {}
 
 /**
@@ -261,7 +259,7 @@ SerialFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
  *  @param data - the trace.
  */
 SerialFitEngine2::SerialFitEngine2(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data) :
-    FitEngine(data) {}
+    CFitEngine(data) {}
 
 /**
  * residuals

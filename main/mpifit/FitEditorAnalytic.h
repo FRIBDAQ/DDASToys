@@ -10,7 +10,6 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     Aaron Chester
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -23,27 +22,43 @@
 #ifndef FITEDITORANALYTIC_H
 #define FITEDITORANALYTIC_H
 
-#include "CFitEditor.h"
+#include <CBuiltRingItemEditor.h>
 
 #include <vector>
 
-class FitEditorAnalytic : public CFitEditor
+namespace DAQ {
+  namespace DDAS {
+    class DDASHit;
+  }
+}
+
+class Configuration;
+
+/**
+ * @class FitEditorTemplate
+ *   Extend the hit with the analytic fitting information, overwriting any 
+ *   existing extension. It's intended for use with the EventEditor framework 
+ *   providing a complete description of the new event body.
+ */
+
+class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
 {
-  // Canonicals
 public:
   FitEditorAnalytic();
-  ~FitEditorAnalytic();
- 
-  // Mandatory interface from CFitEditor
+  virtual ~FitEditorAnalytic();
+
+  // Mandatory interface from CBuiltRingItemEditor::BodyEditor
 public:
   virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody);
   virtual void free(iovec& e);
 
-  // Utilities
+  // Additional functionality for this class
 private:
   int pulseCount(DAQ::DDAS::DDASHit& hit);
-  bool doFit(DAQ::DDAS::DDASHit& hit);
-  std::pair<std::pair<unsigned, unsigned>, unsigned> fitLimits(DAQ::DDAS::DDASHit& hit);
+  
+  // Private member data
+private:
+  Configuration* m_pConfig;
 };
 
 #endif

@@ -33,12 +33,10 @@
 #include <gsl/gsl_multifit_nlin.h>
 
 #include "functions_analytic.h"
-#include "jacobian.h"
+#include "jacobian_analytic.h"
 
-using namespace DDAS::AnalyticFit;
+// Constants used in deriving estimates of k1, k2:
 
-/** Constants used in deriving estimates of k1, k2:
- */
 static const double ln2(log(2));
 static const double ln3over4(log(3) - log(4));
 static const double ln9(log(9));
@@ -261,7 +259,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  static int
  gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  {
-    FitEngine* pEngine =  reinterpret_cast<FitEngine*>(pData);
+    CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->residuals(p, r);    
     return GSL_SUCCESS;
  }
@@ -278,7 +276,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
 static int
  gsl_p1Jacobian(const gsl_vector* p, void* pData, gsl_matrix* J)
  {
-    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->jacobian(p, J);
     return GSL_SUCCESS;
  }
@@ -297,7 +295,7 @@ static int
 static int
 gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J)
  {
-    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);    
+    CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);    
     pEngine->residuals(p, resids);
     pEngine->jacobian(p, J);   
     return GSL_SUCCESS;
@@ -420,9 +418,9 @@ DDAS::AnalyticFit::lmfit1(
     unsigned npts = points.size();
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
-    gsl_multifit_fdfsolver*     solver;
-    gsl_multifit_function_fdf  function;
-    gsl_vector*                initialGuess;
+    gsl_multifit_fdfsolver* solver;
+    gsl_multifit_function_fdf function;
+    gsl_vector* initialGuess;
     
     // Make the solver workspace:
     
@@ -539,7 +537,7 @@ DDAS::AnalyticFit::lmfit1(
  static int
  gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  {
-    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->residuals(p, r);
     return GSL_SUCCESS;
  }
@@ -559,7 +557,7 @@ DDAS::AnalyticFit::lmfit1(
 static int
 gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 {
-    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->jacobian(p, j);
     return GSL_SUCCESS;
 
@@ -580,7 +578,7 @@ gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 static int
 gsl_p2Compute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix* J)
 {
-    FitEngine* pEngine = reinterpret_cast<FitEngine*>(pData);
+    CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->residuals(p, resids);
     pEngine->jacobian(p, J);
     return GSL_SUCCESS;
@@ -622,16 +620,16 @@ DDAS::AnalyticFit::lmfit2(
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size();              // Number of points to fit.
 #ifdef CUDA
-    CudaFitEngine2   engine(points);
+    CudaFitEngine2 engine(points);
 #else
     SerialFitEngine2 engine(points);
 #endif
     // Set up basic solver stuff:
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
-    gsl_multifit_fdfsolver*     solver;
-    gsl_multifit_function_fdf  function;
-    gsl_vector*                initialGuess;
+    gsl_multifit_fdfsolver* solver;
+    gsl_multifit_function_fdf function;
+    gsl_vector* initialGuess;
     
     // Make the solver workspace:
     
@@ -836,7 +834,7 @@ DDAS::AnalyticFit::lmfit2(
     
     // Recast pData as a reference to the trace:
     
-    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
+    DDAS::AnalyticFit::GslFitParameters* pParams = reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
     const std::vector<std::pair<std::uint16_t, std::uint16_t>> & points(*pParams->s_pPoints);
     
     // Compute double pulse residuals for each point:
@@ -844,7 +842,9 @@ DDAS::AnalyticFit::lmfit2(
     for (size_t i = 0; i < points.size(); i++) {
         double x = points[i].first;
         double y = points[i].second;
-        double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+        double p = DDAS::AnalyticFit::doublePulse(A1, k1, k2, x1,
+						  A2, k3, k4, x2,
+						  C, x);
         gsl_vector_set(r, i, (p - y));     // divided by w = 1.0.
     }
     
@@ -881,7 +881,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
         
     // Recast pData as a reference to the trace vector:
     
-    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
+    DDAS::AnalyticFit::GslFitParameters* pParams = reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
     const std::vector<std::pair<std::uint16_t, std::uint16_t>>& points(*pParams->s_pPoints);
    
     // Loop over the data points producing the Jacobian for each point.
@@ -1005,7 +1005,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
     function.n   = npts;
     function.p   = P2FT_PARAM_COUNT;
     
-    GslFitParameters params = {&points};
+    DDAS::AnalyticFit::GslFitParameters params = {&points};
     
     function.params = &params;    
     

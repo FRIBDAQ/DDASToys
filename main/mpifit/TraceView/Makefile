@@ -38,7 +38,7 @@ DISTNAME      = traceview1.0.0
 DISTDIR = /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/.tmp/traceview1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lGui -lRGL ../MyFitHitUnpacker.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
+LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lGui -lRGL ../DDASFitHitUnpacker.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -617,11 +617,11 @@ DDASEventProcessor.o: DDASEventProcessor.cpp DDASEventProcessor.h \
 		$(DAQINC)/FragmentIndex.h \
 		$(DAQINC)/CPhysicsEventItem.h \
 		$(DAQINC)/CRingItem.h \
-		../MyFitHitUnpacker.h \
-		$(DDAS_INC)/DDASHitUnpacker.h \
-		$(DDAS_INC)/DDASHit.h \
 		../DDASFitHit.h \
-		../fit_extensions.h
+		$(DDAS_INC)/DDASHit.h \
+		../fit_extensions.h \
+		../DDASFitHitUnpacker.h \
+		$(DDAS_INC)/DDASHitUnpacker.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DDASEventProcessor.o DDASEventProcessor.cpp
 
 DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \

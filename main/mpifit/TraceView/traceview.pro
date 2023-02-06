@@ -18,7 +18,7 @@ LIBS += -L$(ROOTSYS)/lib -lCore -lRIO -lNet \
         -lGui -lRGL
 
 # Object files to link from the top build directory
-LIBS += ../MyFitHitUnpacker.o
+LIBS += ../DDASFitHitUnpacker.o
 
 HEADERS += QTraceView.h QHitData.h QRootCanvas.h CRingItemProcessor.h DDASEventProcessor.h DDASDecoder.h
 SOURCES += main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp CRingItemProcessor.cpp DDASEventProcessor.cpp DDASDecoder.cpp 
