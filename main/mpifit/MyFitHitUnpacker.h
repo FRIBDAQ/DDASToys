@@ -41,7 +41,7 @@ namespace DAQ {
      * hit by some hit extender.
      */
     
-    class MyFitHitUnpacker : public DAQ::DDAS::DDASHitUnpacker
+    class MyFitHitUnpacker : public DDASHitUnpacker
     {
     public:
       const void* decode(const void* p, DDASFitHit& hit);

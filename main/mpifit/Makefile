@@ -56,21 +56,20 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
+LIBS = libFitterAnalytic.so libFitEditorAnalytic.so libFitterTemplate.so libFitEditorTemplate.so libMyFitHitUnpacker.so
+
+all: $(LIBS) traceview
+
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
-LIBS = libFitterAnalytic.so libFitEditorAnalytic.so libFitterTemplate.so libFitEditorTemplate.so libTclUnpacker.so libMyFitHitUnpacker.so
-
-all: $(LIBS)
-
-libTclUnpacker.so: TCLDDASFitHitUnpacker.o MyFitHitUnpacker.o
-	g++ -o libTclUnpacker.so -shared $^ $(CXXLDFLAGS) $(GNULDFLAGS)
-	echo  pkg_mkIndex -verbose . libTclUnpacker.so | tclsh
+traceview:
+	(cd TraceView; qmake -qt=5 traceview.pro; make)
 
 libFitterAnalytic.so: CFitExtender.o FitExtenderAnalytic.o \
 	functions_analytic.o lmfit_analytic.o FitEngine.o serialJacobian.o \
 	MyFitHitUnpacker.o \
-	TCLDDASFitHitUnpacker.o StripTrace.o ThresholdClassifier.o \
+	StripTrace.o ThresholdClassifier.o \
 	$(CUDAOBJ)
 	$(CXX) -o libFitterAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
@@ -114,5 +113,6 @@ install:
 	install -m 0644 AREADME.txt $(PREFIX)/share
 
 clean:
-	rm -f *.so *.o pkgIndex.tcl
-
+	rm -f *.so *.o
+	make -C TraceView clean
+	rm -f TraceView/traceview
