@@ -12,6 +12,7 @@ class QAction;
 class QGroupBox;
 class QStatusBar;
 class QPushButton;
+class QComboBox;
 class QLineEdit;
 class QListView;
 class QStandardItemModel;
@@ -23,8 +24,10 @@ namespace DAQ {
   }
 }
 class DDASDecoder;
+class Configuration;
 class QHitData;
 class QRootCanvas;
+class FitManager;
 
 class QTraceView : public QWidget
 {
@@ -35,7 +38,7 @@ public:
   virtual ~QTraceView();
 
   // Overridden from base class
-protected:
+private:
   virtual void changeEvent(QEvent* e);
 
 private:
@@ -60,14 +63,20 @@ private slots:
   void processHit();
   void handleRootEvents();
   void test();
-
-protected:
-  QRootCanvas* m_pRootCanvas;
-  QTimer* m_pTimer;
   
 private:
+  // Our member data
   DDASDecoder* m_pDecoder;
+  FitManager* m_pFitManager;
 
+  int m_count;
+  bool m_config;
+  bool m_templateConfig;
+  std::string m_fileName;
+  std::vector<DAQ::DDAS::DDASFitHit> m_hits;
+  std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
+  
+  // Added to the top widget, Qt _should_ handle cleanup
   QMenuBar* m_pMenuBar;
   QMenu* m_pFileMenu;
   QAction* m_pOpenAction;
@@ -80,13 +89,10 @@ private:
   QHitData* m_pHitData;
   
   QListView* m_pHitSelectList;
+  QRootCanvas* m_pRootCanvas;
+  QTimer* m_pTimer;
   
   QStatusBar* m_pStatusBar;
-
-  int m_count;
-  std::string m_fileName;
-  std::vector<DAQ::DDAS::DDASFitHit> m_hits;
-  std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
 };
 
 #endif

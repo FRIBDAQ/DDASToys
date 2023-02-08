@@ -1,35 +1,59 @@
 #ifndef QHITDATA_H
 #define QHITDATA_H
 
-#include <QGroupBox>
+#include <QWidget>
+
+#include <string>
 
 namespace DAQ {
   namespace DDAS {
     class DDASFitHit;
   }
 }
-class QLabel;
+namespace DDAS{
+  struct HitExtension;
+}
 
-class QHitData : public QGroupBox
+class QLabel;
+class QComboBox;
+class QPushButton;
+class QGroupBox;
+
+class FitManager;
+
+class QHitData : public QWidget
 {
   Q_OBJECT
 
 public:
-  QHitData();
+  QHitData(FitManager* pFitMgr);
   ~QHitData();
 
-  void update(const DAQ::DDAS::DDASFitHit& hit);
+  void update(DAQ::DDAS::DDASFitHit& hit);
 
 private:
-  void updateRawData(const DAQ::DDAS::DDASFitHit& hit);
+  QGroupBox* createHitBox();
+  QGroupBox* createClassifierBox();
+  QGroupBox* createFitBox();
+  void createConnections();
+  void updateHitData();
+
+private slots:
+  void configureFit();
+  void printFitResults();
   
 private:
-  struct RawHitData
-  {
-    QLabel* s_pId;
-    QLabel* s_pRawData;
-  } m_rawHitData;
+  FitManager* m_pFitManager;
+  DAQ::DDAS::DDASFitHit* m_pHit;
   
+  QLabel* m_pId;
+  QLabel* m_pRawData;
+  QLabel* m_pFit1Prob;
+  QLabel* m_pFit2Prob;
+  QComboBox* m_pFitMethod;
+  QPushButton* m_pPrintFit;
 };
+
+
 
 #endif

@@ -70,7 +70,7 @@ typedef struct _FitInfo {
   std::uint32_t  s_size;
   DDAS::HitExtension s_extension;
   _FitInfo() : s_size(sizeof(_FitInfo)) {
-    memset(&s_extension, 0,sizeof(DDAS::HitExtension)); // Zero fit params.
+    memset(&s_extension, 0, sizeof(DDAS::HitExtension)); // Zero fit params.
   }
 } FitInfo, *pFitInfo;
 

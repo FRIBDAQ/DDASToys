@@ -29,13 +29,12 @@
 #include "Configuration.h"
 #include "lmfit_analytic.h"
 
-using namespace DDAS::AnalyticFit;
-
 /*
  * Constructor
  */
-FitEditorAnalytic::FitEditorAnalytic()
-{
+FitEditorAnalytic::FitEditorAnalytic() :
+  m_pConfig(new Configuration)
+{  
   try {
     m_pConfig->readConfigFile();
   }
@@ -74,7 +73,7 @@ FitEditorAnalytic::~FitEditorAnalytic()
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
 FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody)
-{
+{ 
   std::vector<CBuiltRingItemEditor::BodySegment> result;
     
   // Regardless we want a segment that includes the hit. Note that the first

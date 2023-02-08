@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 //
 // Local trim functions
@@ -69,14 +70,14 @@ Configuration::readConfigFile()
   }
     
   while (!f.eof()) {
-    std::string originalline("");
-    std::getline(f, originalline, '\n');
+    std::string originalline("");    
+    std::getline(f, originalline, '\n');   
     std::string line = isComment(originalline);
-	
+    
     if (line != "") {
       unsigned crate, slot, channel, low, high, saturation;
       std::stringstream sline(line);
-      sline >> crate >> slot >>channel >> low  >> high >> saturation;
+      sline >> crate >> slot >> channel >> low  >> high >> saturation;
 	    
       if (sline.fail()) {
 	std::string msg("Error processing line in configuration file '");
@@ -87,9 +88,10 @@ Configuration::readConfigFile()
 	    
       // Compute the channel index:
             
-      int index = channelIndex(crate, slot, channel);
+      unsigned index = channelIndex(crate, slot, channel);
       std::pair<unsigned, unsigned> limits(low, high);
-      std::pair<std::pair<unsigned, unsigned>, unsigned> value(limits, saturation);
+      std::pair<std::pair<unsigned, unsigned>, unsigned>
+	value(limits, saturation);     
       m_fitChannels[index] = value;
     }
   }
@@ -119,7 +121,8 @@ Configuration::readTemplateFile()
     double val;
 
     // \TODO (ASC 1/25/23): What happens when there are fewer than two values on the first line? Should report an error and stop trying to do the fit.
-    f >> m_alignPoint >> npts;    
+    f >> m_alignPoint >> npts;
+    if (!m_template.empty()) m_template.clear();
     while (f >> val) {
       m_template.push_back(val);
     }
@@ -212,7 +215,7 @@ Configuration::isComment(std::string line)
 {
   trim(line); // Modifies it
   if (line[0] == '#') return std::string("");
-  
+
   return line;
 }
 

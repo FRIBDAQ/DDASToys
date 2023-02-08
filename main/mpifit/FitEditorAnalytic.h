@@ -45,7 +45,7 @@ class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
 {
 public:
   FitEditorAnalytic();
-  virtual ~FitEditorAnalytic();
+  ~FitEditorAnalytic();
 
   // Mandatory interface from CBuiltRingItemEditor::BodyEditor
 public:

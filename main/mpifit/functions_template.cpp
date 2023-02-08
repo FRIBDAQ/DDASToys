@@ -65,7 +65,9 @@ DDAS::TemplateFit::singlePulse(
  */
 double
 DDAS::TemplateFit::doublePulse(
-		  double A1, double x1, double A2, double x2, double C, double x,
+		  double A1, double x1,
+		  double A2, double x2,
+		  double C, double x,
 		  const std::vector<double>& trace_template
 		  )
 {

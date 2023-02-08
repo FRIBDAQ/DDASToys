@@ -30,7 +30,7 @@ public:
   // Unique to this class
 private:
   DAQ::DDAS::DDASFitHitUnpacker* m_pUnpacker;
-  std::vector<DAQ::DDAS::DDASFitHit> m_hits; 
+  std::vector<DAQ::DDAS::DDASFitHit> m_hits;
 };
 
 #endif

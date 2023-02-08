@@ -38,7 +38,7 @@ DISTNAME      = traceview1.0.0
 DISTDIR = /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/.tmp/traceview1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lGui -lRGL ../DDASFitHitUnpacker.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
+LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lGui -lRGL ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -56,7 +56,8 @@ SOURCES       = main.cpp \
 		QRootCanvas.cpp \
 		CRingItemProcessor.cpp \
 		DDASEventProcessor.cpp \
-		DDASDecoder.cpp moc_QTraceView.cpp \
+		DDASDecoder.cpp \
+		FitManager.cpp moc_QTraceView.cpp \
 		moc_QHitData.cpp \
 		moc_QRootCanvas.cpp
 OBJECTS       = main.o \
@@ -66,6 +67,7 @@ OBJECTS       = main.o \
 		CRingItemProcessor.o \
 		DDASEventProcessor.o \
 		DDASDecoder.o \
+		FitManager.o \
 		moc_QTraceView.o \
 		moc_QHitData.o \
 		moc_QRootCanvas.o
@@ -149,13 +151,15 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		QRootCanvas.h \
 		CRingItemProcessor.h \
 		DDASEventProcessor.h \
-		DDASDecoder.h main.cpp \
+		DDASDecoder.h \
+		FitManager.h main.cpp \
 		QTraceView.cpp \
 		QHitData.cpp \
 		QRootCanvas.cpp \
 		CRingItemProcessor.cpp \
 		DDASEventProcessor.cpp \
-		DDASDecoder.cpp
+		DDASDecoder.cpp \
+		FitManager.cpp
 QMAKE_TARGET  = traceview
 DESTDIR       = 
 TARGET        = traceview
@@ -341,8 +345,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents QTraceView.h QHitData.h QRootCanvas.h CRingItemProcessor.h DDASEventProcessor.h DDASDecoder.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp CRingItemProcessor.cpp DDASEventProcessor.cpp DDASDecoder.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents QTraceView.h QHitData.h QRootCanvas.h CRingItemProcessor.h DDASEventProcessor.h DDASDecoder.h FitManager.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp CRingItemProcessor.cpp DDASEventProcessor.cpp DDASDecoder.cpp FitManager.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -515,7 +519,9 @@ QTraceView.o: QTraceView.cpp QTraceView.h \
 		../DDASFitHit.h \
 		$(DDAS_INC)/DDASHit.h \
 		../fit_extensions.h \
+		../Configuration.h \
 		DDASDecoder.h \
+		FitManager.h \
 		QHitData.h \
 		QRootCanvas.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o QTraceView.o QTraceView.cpp
@@ -523,7 +529,8 @@ QTraceView.o: QTraceView.cpp QTraceView.h \
 QHitData.o: QHitData.cpp QHitData.h \
 		../DDASFitHit.h \
 		$(DDAS_INC)/DDASHit.h \
-		../fit_extensions.h
+		../fit_extensions.h \
+		FitManager.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o QHitData.o QHitData.cpp
 
 QRootCanvas.o: QRootCanvas.cpp QRootCanvas.h \
@@ -595,7 +602,12 @@ QRootCanvas.o: QRootCanvas.cpp QRootCanvas.h \
 		/usr/opt/root/root-6.24.06/include/TVectorDfwd.h \
 		/usr/opt/root/root-6.24.06/include/TFitResultPtr.h \
 		$(ROOTSYS)/include/TStyle.h \
-		/usr/opt/root/root-6.24.06/include/TColor.h
+		/usr/opt/root/root-6.24.06/include/TColor.h \
+		../Configuration.h \
+		../DDASFitHit.h \
+		$(DDAS_INC)/DDASHit.h \
+		../fit_extensions.h \
+		FitManager.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o QRootCanvas.o QRootCanvas.cpp
 
 CRingItemProcessor.o: CRingItemProcessor.cpp CRingItemProcessor.h \
@@ -646,6 +658,15 @@ DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \
 		DDASEventProcessor.h \
 		CRingItemProcessor.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DDASDecoder.o DDASDecoder.cpp
+
+FitManager.o: FitManager.cpp FitManager.h \
+		../Configuration.h \
+		../DDASFitHit.h \
+		$(DDAS_INC)/DDASHit.h \
+		../fit_extensions.h \
+		../functions_analytic.h \
+		../functions_template.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o FitManager.o FitManager.cpp
 
 moc_QTraceView.o: moc_QTraceView.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_QTraceView.o moc_QTraceView.cpp

@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QComboBox>
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
@@ -27,7 +28,10 @@
 #include <TCanvas.h>
 
 #include <DDASFitHit.h>
+#include <Configuration.h>
+#include <fit_extensions.h>
 #include "DDASDecoder.h"
+#include "FitManager.h"
 #include "QHitData.h"
 #include "QRootCanvas.h"
 
@@ -44,9 +48,12 @@
 // being initialized to configure children or actions.
 QTraceView::QTraceView(QWidget* parent) :
   QWidget(parent),
-  m_pRootCanvas(new QRootCanvas),
-  m_pTimer(new QTimer),
   m_pDecoder(new DDASDecoder),
+  m_pFitManager(new FitManager),
+  m_count(0),
+  m_config(false),
+  m_templateConfig(false),
+  m_fileName(""),
   m_pMenuBar(new QMenuBar),
   m_pFileMenu(nullptr),
   m_pOpenAction(nullptr),
@@ -54,15 +61,17 @@ QTraceView::QTraceView(QWidget* parent) :
   m_pButtons{nullptr},
   m_pHitFilter{nullptr},
   m_pTopGroupBox(createTopGroupBox()),
-  m_pHitData(new QHitData),
-  m_pHitSelectList(createHitSelectList()),
-  m_pStatusBar(new QStatusBar),
-  m_count(0),
-  m_fileName("")
+  m_pHitData(new QHitData(m_pFitManager)),
+  m_pHitSelectList(createHitSelectList()),  
+  m_pRootCanvas(new QRootCanvas(m_pFitManager)),
+  m_pTimer(new QTimer),
+  m_pStatusBar(new QStatusBar)
 {
+
+  
   createActions();
   configureMenu();
-
+  
   // Combine hit selection list and canvas into a single horizontally
   // aligned widget which we add to the main layout
   QWidget* plotWidget = createPlotWidget();  
@@ -75,7 +84,7 @@ QTraceView::QTraceView(QWidget* parent) :
   mainLayout->addWidget(m_pStatusBar);
   setLayout(mainLayout);
 
-  createConnections();  
+  createConnections();
   m_pStatusBar->showMessage(tr(""));  
   disableAll();
   
@@ -87,11 +96,12 @@ QTraceView::~QTraceView()
   // Qt _should_ manage deletion of child objects when each parent is destroyed
   // upon application exit. But we still should clean up our own stuff.
   delete m_pDecoder;
+  delete m_pFitManager;
   delete m_pHitData;
 }
 
 //
-// Protected member functions
+// Private member functions inherited from QWidget
 // 
 
 void
@@ -205,12 +215,20 @@ QTraceView::createActions()
 QWidget*
 QTraceView::createPlotWidget()
 {
-  // Combine channel list and plot into a widget
-  QWidget* plot = new QWidget;
-  QHBoxLayout* layout = new QHBoxLayout;
+  // Set a label for the selection list
+  QWidget* labeledList = new QWidget;
+  QVBoxLayout* layout = new QVBoxLayout;
+  QLabel* label = new QLabel("Crate:slot:channel hits with traces");
+  layout->addWidget(label);
   layout->addWidget(m_pHitSelectList);
-  layout->addWidget(m_pRootCanvas);
-  plot->setLayout(layout);
+  labeledList->setLayout(layout);
+  
+  // Combine channel list and plot into a widget  
+  QWidget* plot = new QWidget;
+  QHBoxLayout* mainLayout = new QHBoxLayout;
+  mainLayout->addWidget(labeledList);
+  mainLayout->addWidget(m_pRootCanvas);
+  plot->setLayout(mainLayout);
 
   return plot;
 }
@@ -321,7 +339,7 @@ QTraceView::getNextEvent()
     m_count++;
   }
   updateSelectableHits();
-  m_pRootCanvas->Clear();
+  m_pRootCanvas->clear();
   
   std::string msg = m_fileName + " -- Event " + std::to_string(m_count);
   setStatusBar(msg);
@@ -350,12 +368,8 @@ QTraceView::processHit()
 {
   QItemSelectionModel* itemSelect = m_pHitSelectList->selectionModel();
   int idx = itemSelect->currentIndex().row();
-  m_pHitData->update(m_filteredHits[idx]);
-
-  std::vector<std::uint16_t> trace = m_filteredHits[idx].GetTrace();
-  if (!trace.empty()) {
-    m_pRootCanvas->DrawTrace(trace);
-  } 
+  m_pRootCanvas->drawEvent(m_filteredHits[idx]);
+  m_pHitData->update(m_filteredHits[idx]);  
 }
 
 // Call inner loop of Root
@@ -369,7 +383,7 @@ void
 QTraceView::test()
 {
   std::time_t result = std::time(nullptr);
-  std::cout << "Test signal emitted at: "
+  std::cout << "Test slot call at: "
 	    << std::asctime(std::localtime(&result))
 	    << std::endl;
 }
