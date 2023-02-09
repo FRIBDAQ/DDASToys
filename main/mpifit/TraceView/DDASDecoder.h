@@ -19,7 +19,17 @@ namespace DAQ {
   }
 }
 
-class DDASEventProcessor;
+class DDASRingItemProcessor;
+
+/**
+ * @class DDASDecoder
+ *
+ *   An event processor class broken into parts performing specific actions 
+ *   like creating a data source or getting the next PHYSICS_EVENT. These 
+ *   functions can be hooked into the signal and slot framework used by Qt. 
+ *   See latest $DAQROOT/share/recipes/process/process.cpp for a more general 
+ *   example.
+ */
 
 class DDASDecoder
 {
@@ -27,7 +37,7 @@ class DDASDecoder
 private:
   URL* m_pSourceURL;
   CDataSource* m_pSource;
-  DDASEventProcessor* m_pProcessor;
+  DDASRingItemProcessor* m_pProcessor;
 
   // Canonicals
 public:

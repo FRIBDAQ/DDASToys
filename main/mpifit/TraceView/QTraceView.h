@@ -1,3 +1,7 @@
+/** @file: QTraceView.h
+ *  @brief: Defines a Qt main applicaiton window class
+ */
+
 #ifndef QTRACEVIEW_H
 #define QTRACEVIEW_H
 
@@ -24,10 +28,17 @@ namespace DAQ {
   }
 }
 class DDASDecoder;
-class Configuration;
+class FitManager;
 class QHitData;
 class QRootCanvas;
-class FitManager;
+
+/**
+ * @class QTraceView
+ *
+ *   Main window class for traceview responsible for management and high-level
+ *   control over the application. Uses Qt's signal and slot framework to
+ *   communicate between objects. See Qt documentation for details.
+ */
 
 class QTraceView : public QWidget
 {
@@ -42,12 +53,12 @@ private:
   virtual void changeEvent(QEvent* e);
 
 private:
-  QGroupBox* createTopGroupBox();
-  QListView* createHitSelectList();
-  QWidget* createPlotWidget();  
-  void createConnections();
   void createActions();
   void configureMenu();
+  QGroupBox* createTopGroupBox();
+  QListView* createHitSelectList();
+  QWidget* createPlotWidget();
+  void createConnections();
 
   void setStatusBar(std::string msg);
   bool isValidHit(const DAQ::DDAS::DDASFitHit& hit);
@@ -76,7 +87,7 @@ private:
   std::vector<DAQ::DDAS::DDASFitHit> m_hits;
   std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
   
-  // Added to the top widget, Qt _should_ handle cleanup
+  // Added to this widget, Qt _should_ handle cleanup on destruction
   QMenuBar* m_pMenuBar;
   QMenu* m_pFileMenu;
   QAction* m_pOpenAction;

@@ -12,23 +12,22 @@
 #include <sstream>
 
 #include <URL.h>
-#include <CDataSource.h>                  // Abstract source of ring items
-#include <CDataSourceFactory.h>           // URI to a concrete data source
-#include <CRingItem.h>                    // Base class for ring items
-#include <DataFormat.h>                   // Ring item data formats
-#include <Exception.h>                    // Base class for exception handling
-#include <CRingItemFactory.h>             // Create specific item from generic
-#include <CRingScalerItem.h>              // Specific ring item classes
-#include <CRingStateChangeItem.h>         //                 |
-#include <CRingTextItem.h>                //                 |
-#include <CPhysicsEventItem.h>            //                 |
-#include <CRingPhysicsEventCountItem.h>   //                 |
-#include <CDataFormatItem.h>              //                 |
-#include <CGlomParameters.h>              //                 |
-#include <CDataFormatItem.h>              //             ----+----
+#include <CDataSource.h>                // Abstract source of ring items.
+#include <CDataSourceFactory.h>         // Turn URI into a concrete data source
+#include <CRingItem.h>                  // Base class for ring items.
+#include <DataFormat.h>                 // Ring item data formats.
+#include <Exception.h>                  // Base class for exception handling.
+#include <CRingItemFactory.h>           // Creates ring item from generic.
+#include <CRingScalerItem.h>            // Specific ring item classes.
+#include <CRingStateChangeItem.h>       //              |
+#include <CRingTextItem.h>              //              |
+#include <CPhysicsEventItem.h>          //              |
+#include <CRingPhysicsEventCountItem.h> //              |
+#include <CGlomParameters.h>            //              |
+#include <CDataFormatItem.h>            //          ----+----
 
 #include <DDASFitHit.h>
-#include "DDASEventProcessor.h"
+#include "DDASRingItemProcessor.h"
 
 //____________________________________________________________________________
 /**
@@ -37,7 +36,7 @@
 DDASDecoder::DDASDecoder() :
   m_pSourceURL(nullptr),
   m_pSource(nullptr),
-  m_pProcessor(new DDASEventProcessor)
+  m_pProcessor(new DDASRingItemProcessor)
 {}
 
 //____________________________________________________________________________
@@ -51,6 +50,13 @@ DDASDecoder::~DDASDecoder()
   delete m_pProcessor;
 }
 
+//____________________________________________________________________________
+/**
+ * createDataSource
+ *   Create a data source from the input string.
+ *
+ * @param src - name of the data source to create
+ */
 void
 DDASDecoder::createDataSource(std::string src)
 {
@@ -70,9 +76,19 @@ DDASDecoder::createDataSource(std::string src)
   }
 }
 
+//____________________________________________________________________________
+/**
+ * getEvent
+ *   Return the next PHYSICS_EVENT type data. An event is a collection of 
+ *   DDASFitHits stored in a container.
+ *
+ * @return vector<DDASFitHit> - the event data
+ */
 std::vector<DAQ::DDAS::DDASFitHit>
 DDASDecoder::getEvent()
 {
+  // Iterate over ring items until we encounter a PHYSICS_EVENT
+  
   while(true) {
     CRingItem* pItem;
     pItem = m_pSource->getItem();
@@ -90,12 +106,13 @@ DDASDecoder::getEvent()
 // Private methods
 //
 
+//____________________________________________________________________________
 /**
  * processRingItem.
  *   Type-independent processing of ring items. The processor will handle 
  *   specifically what to do with each ring item.
  *
- *   @param item - References the ring item we got
+ *   @param item - references the ring item we got
  */
 void
 DDASDecoder::processRingItem(CRingItem& item)
@@ -121,11 +138,12 @@ DDASDecoder::processRingItem(CRingItem& item)
   case PAUSE_RUN:
   case RESUME_RUN:
     {
-      CRingStateChangeItem& statechange(dynamic_cast<CRingStateChangeItem&>(*castableItem));
+      CRingStateChangeItem&
+	statechange(dynamic_cast<CRingStateChangeItem&>(*castableItem));
       m_pProcessor->processStateChangeItem(statechange);
       break;
     }
-  case PACKET_TYPES:        // Both are textual item types
+  case PACKET_TYPES: // Both are textual item types
   case MONITORED_VARIABLES:
     {
       CRingTextItem& text(dynamic_cast<CRingTextItem&>(*castableItem));
@@ -134,14 +152,15 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
   case PHYSICS_EVENT:
     {
-      CPhysicsEventItem& event(dynamic_cast<CPhysicsEventItem&>(*castableItem));
+      CPhysicsEventItem&
+	event(dynamic_cast<CPhysicsEventItem&>(*castableItem));
       m_pProcessor->processEvent(event);
       break;
     }
   case PHYSICS_EVENT_COUNT:
     {
       CRingPhysicsEventCountItem&
-      	eventcount(dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem));
+	eventcount(dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem));
       m_pProcessor->processEventCount(eventcount);
       break;
     }
@@ -153,7 +172,8 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
   case EVB_GLOM_INFO:
     {
-      CGlomParameters& glomparams(dynamic_cast<CGlomParameters&>(*castableItem));
+      CGlomParameters&
+	glomparams(dynamic_cast<CGlomParameters&>(*castableItem));
       m_pProcessor->processGlomParams(glomparams);
       break;
     }

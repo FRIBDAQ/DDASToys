@@ -1,9 +1,19 @@
+/** @file: QHitData.h
+ *  @breif: Definition of class to handle disaplying hit data on the main 
+ *  window UI.
+ */
+
 #ifndef QHITDATA_H
 #define QHITDATA_H
 
 #include <QWidget>
 
 #include <string>
+
+class QLabel;
+class QComboBox;
+class QPushButton;
+class QGroupBox;
 
 namespace DAQ {
   namespace DDAS {
@@ -13,20 +23,22 @@ namespace DAQ {
 namespace DDAS{
   struct HitExtension;
 }
-
-class QLabel;
-class QComboBox;
-class QPushButton;
-class QGroupBox;
-
 class FitManager;
+
+/**
+ * @class QHitData
+ *
+ *   Widget class for managing UI related to the hit data. Displays relavent 
+ *   infomration for the currently displayed hit with optional UI elements to
+ *   see more information e.g. a button to print the fit results to stdout.
+ */
 
 class QHitData : public QWidget
 {
   Q_OBJECT
 
 public:
-  QHitData(FitManager* pFitMgr);
+  QHitData(FitManager* pFitMgr, QWidget* parent = nullptr);
   ~QHitData();
 
   void update(DAQ::DDAS::DDASFitHit& hit);

@@ -1,3 +1,7 @@
+/** @file: QHitData.cpp
+ *  @brief: Implementation of hit data management class.
+ */
+
 #include "QHitData.h"
 
 #include <iostream>
@@ -13,9 +17,18 @@
 #include <DDASFitHit.h>
 #include "FitManager.h"
 
-QHitData::QHitData(FitManager* pFitMgr) :
-  m_pFitManager(pFitMgr),
-  m_pHit(new DAQ::DDAS::DDASFitHit)
+//____________________________________________________________________________
+/**
+ * Constructor
+ *   Initialize child widgets and define main layout.
+ *
+ * @param pFitMgr - pointer to FitManager object used by this class, managed 
+ *                  by caller
+ * @param parent - pointer to QWidget parent object, default = nullptr
+ */
+QHitData::QHitData(FitManager* pFitMgr, QWidget* parent) :
+  QWidget(parent),
+  m_pFitManager(pFitMgr)
 {
   QGroupBox* hitBox = createHitBox();
   QGroupBox* classifierBox = createClassifierBox();
@@ -34,17 +47,30 @@ QHitData::QHitData(FitManager* pFitMgr) :
   //   - Pointing to the wrong files exits with no chance to correct
   //   - No ability to reconfigure on the fly (why would you want to?)
   // Then create the connections to handle switches between fitting methods.
+  
   configureFit();
   createConnections();
 }
 
+//____________________________________________________________________________
+/**
+ * Destructor
+ */
 QHitData::~QHitData()
 {}
 
+//____________________________________________________________________________
+/**
+ * update
+ *   Update hit data and enable printing of fit information to stdout if the 
+ *   hit has an extension.
+ *
+ * @param hit - references the hit we are processing
+ */ 
 void
 QHitData::update(DAQ::DDAS::DDASFitHit& hit)
 {
-  m_pHit = &hit;
+  m_pHit = &hit;  
   updateHitData();
   if (hit.hasExtension()) {
     m_pPrintFit->setEnabled(true);
@@ -57,6 +83,14 @@ QHitData::update(DAQ::DDAS::DDASFitHit& hit)
 // Private methods
 //
 
+//____________________________________________________________________________
+/**
+ * createHitBox
+ *   Create and configure the hit group box containing widgets to display 
+ *   basic hit information.
+ *
+ * @return QGroupBox* - pointer to the created QGroupBox object
+ */
 QGroupBox*
 QHitData::createHitBox()
 {
@@ -74,6 +108,14 @@ QHitData::createHitBox()
   return box;
 }
 
+//____________________________________________________________________________
+/**
+ * createHitBox
+ *   Create and configure the classifier group box containing widgets to 
+ *   display machine learning pulse classifier probabilities.
+ *
+ * @return QGroupBox* - pointer to the created QGroupBox object
+ */
 QGroupBox*
 QHitData::createClassifierBox()
 {
@@ -91,7 +133,14 @@ QHitData::createClassifierBox()
   return box;
 }
 
-
+//____________________________________________________________________________
+/**
+ * createFitBox
+ *   Create and configure the fit group box containing widgets to select a 
+ *   fit method and print fit results to stdout.
+ *
+ * @return QGroupBox* - pointer to the created QGroupBox object
+ */
 QGroupBox*
 QHitData::createFitBox()
 {
@@ -114,6 +163,12 @@ QHitData::createFitBox()
   return box;
 }
 
+//____________________________________________________________________________
+/**
+ * createConnections
+ *   Create signal/slot connections for the hit data top widget. See Qt 
+ *   documentation for more information.
+ */
 void
 QHitData::createConnections()
 {
@@ -121,6 +176,12 @@ QHitData::createConnections()
   connect(m_pPrintFit, SIGNAL(clicked()), this, SLOT(printFitResults()));
 }
 
+//____________________________________________________________________________
+/**
+ * updateHitData
+ *   Update the data displayed in the hit data group box. Basic hit information
+ *    contains at minimum and ID (crate/slot/channel), an energy and a time.
+ */
 void
 QHitData::updateHitData()
 { 
@@ -130,6 +191,13 @@ QHitData::updateHitData()
   m_pRawData->setText(data);
 }
 
+//____________________________________________________________________________
+/**
+ * configureFit
+ *   Get the current text from the fit method box and pass it to the 
+ *   FitManager to set which fitting functions to call when reconstructing 
+ *   the fit data for display.
+ */
 void
 QHitData::configureFit()
 {  
@@ -137,6 +205,12 @@ QHitData::configureFit()
   m_pFitManager->configure(method);  
 }
 
+//____________________________________________________________________________
+/**
+ * printFitResults
+ *   Print formatted fit results for the single and double pulse fits 
+ *   to stdout.
+ */
 void
 QHitData::printFitResults()
 {

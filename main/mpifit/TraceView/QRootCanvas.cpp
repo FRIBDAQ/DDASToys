@@ -1,3 +1,7 @@
+/** @file: QRootCanvas.cpp
+ *  @breif: Implementation of Qt-embedded Root canvas class
+ */
+
 #include "QRootCanvas.h"
 
 #include <utility>
@@ -18,6 +22,15 @@
 #include <DDASFitHit.h>
 #include "FitManager.h"
 
+//____________________________________________________________________________
+/**
+ * Constructor
+ *   Create QWidget and register it with the Root graphics backend.
+ *
+ * @param pFitMgr - pointer to a FitManager for plotting fit data. The 
+ *                  FitManager object is handled by the caller.
+ * @param parent  - pointer to QWidget parent object, default = nullptr
+ */
 QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
   QWidget(parent),
   m_pFitManager(pFitMgr),
@@ -48,6 +61,10 @@ QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
   gStyle->SetOptTitle(0);
 }
 
+//____________________________________________________________________________
+/**
+ * Destructor
+ */
 QRootCanvas::~QRootCanvas()
 {
   delete m_pCanvas;
@@ -60,8 +77,15 @@ QRootCanvas::~QRootCanvas()
 // Public methods
 // 
 
+//____________________________________________________________________________
+/**
+ * drawHit
+ *   Draw hit data on the canvas.
+ * 
+ * @param hit - references the hit we're plotting data from
+ */
 void
-QRootCanvas::drawEvent(DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
 {
   drawTrace(hit);
 
@@ -77,6 +101,11 @@ QRootCanvas::drawEvent(DAQ::DDAS::DDASFitHit& hit)
   m_pCanvas->Update();
 }
 
+//____________________________________________________________________________
+/**
+ * clear
+ *   Clear and update the Root canvas.
+ */
 void
 QRootCanvas::clear()
 {
@@ -91,6 +120,13 @@ QRootCanvas::clear()
 // Protected methods
 //
 
+//____________________________________________________________________________
+/**
+ * mouseMoveEvent
+ *   Handle Qt mouse move events on the Root canvas.
+ *
+ * @param e - pointer to the QMouseEvent to handle
+ */
 void
 QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 {
@@ -107,6 +143,13 @@ QRootCanvas::mouseMoveEvent(QMouseEvent *e)
   }
 }
 
+//____________________________________________________________________________
+/**
+ * mousePressEvent
+ *   Handle Qt mouse press events on the Root canvas.
+ *
+ * @param e - pointer to the QMouseEvent to handle
+ */
 void
 QRootCanvas::mousePressEvent(QMouseEvent *e)
 {
@@ -127,6 +170,13 @@ QRootCanvas::mousePressEvent(QMouseEvent *e)
   }
 }
 
+//____________________________________________________________________________
+/**
+ * mouseReleaseEvent
+ *   Handle Qt mouse release events on the Root canvas.
+ *
+ * @param e - pointer to the QMouseEvent to handle
+ */
 void
 QRootCanvas::mouseReleaseEvent(QMouseEvent *e)
 {
@@ -147,6 +197,13 @@ QRootCanvas::mouseReleaseEvent(QMouseEvent *e)
   }
 }
 
+//____________________________________________________________________________
+/**
+ * resizeEvent
+ *   Handle resize events in Root. See Qt documentation for details.
+ *
+ * @param - pointer to resize event
+ */
 void
 QRootCanvas::resizeEvent(QResizeEvent*)
 {
@@ -156,6 +213,13 @@ QRootCanvas::resizeEvent(QResizeEvent*)
   }
 }
 
+//____________________________________________________________________________
+/**
+ * paintEvent
+ *   Handle paint events in Root. See Qt documentaiton for details.
+ *
+ * @param - pointer to paint event
+ */
 void
 QRootCanvas::paintEvent(QPaintEvent*)
 {
@@ -169,8 +233,16 @@ QRootCanvas::paintEvent(QPaintEvent*)
 // Private methods
 //
 
+//____________________________________________________________________________
+/**
+ * drawTrace
+ *   Draw a trace on the Root canvas. Expects a trace of uint16_t from a 
+ *   DDAS hit.
+ *
+ * @param hit - references the hit we extract and plot the trace from
+ */
 void
-QRootCanvas::drawTrace(DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
 {
   std::vector<std::uint16_t> trace = hit.GetTrace();
   
@@ -194,8 +266,18 @@ QRootCanvas::drawTrace(DAQ::DDAS::DDASFitHit& hit)
   m_pTraceHist->Draw("hist");
 }
 
+//____________________________________________________________________________
+/**
+ * drawSingleFit
+ *   Draw fit data for a single pulse fit on the current axes. Note that this 
+ *   function expects that the hit has a fit extension which must be checked
+ *   by the caller using hit.hasExtension().
+ * 
+ * @param hit - references the hit containing with fit parameters stored in 
+ *              a HitExtension appended to the end of the "normal" hit
+ */
 void
-QRootCanvas::drawSingleFit(DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
 {  
   unsigned low = m_pFitManager->getLowFitLimit(hit);
   unsigned high = m_pFitManager->getHighFitLimit(hit);
@@ -225,8 +307,18 @@ QRootCanvas::drawSingleFit(DAQ::DDAS::DDASFitHit& hit)
   m_pFit1Hist->Draw(options.c_str());
 }
 
+//____________________________________________________________________________
+/**
+ * drawDoubleFit
+ *   Draw fit data for a double pulse fit on the current axes. Note that this 
+ *   function expects that the hit has a fit extension which must be checked
+ *   by the caller using hit.hasExtension().
+ *
+ * @param hit - references the hit containing with fit parameters stored in 
+ *              a HitExtension appended to the end of the "normal" hit
+ */
 void
-QRootCanvas::drawDoubleFit(DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
 { 
   unsigned low = m_pFitManager->getLowFitLimit(hit);
   unsigned high = m_pFitManager->getHighFitLimit(hit);

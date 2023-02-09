@@ -54,8 +54,7 @@ SOURCES       = main.cpp \
 		QTraceView.cpp \
 		QHitData.cpp \
 		QRootCanvas.cpp \
-		CRingItemProcessor.cpp \
-		DDASEventProcessor.cpp \
+		DDASRingItemProcessor.cpp \
 		DDASDecoder.cpp \
 		FitManager.cpp moc_QTraceView.cpp \
 		moc_QHitData.cpp \
@@ -64,8 +63,7 @@ OBJECTS       = main.o \
 		QTraceView.o \
 		QHitData.o \
 		QRootCanvas.o \
-		CRingItemProcessor.o \
-		DDASEventProcessor.o \
+		DDASRingItemProcessor.o \
 		DDASDecoder.o \
 		FitManager.o \
 		moc_QTraceView.o \
@@ -149,15 +147,13 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		traceview.pro QTraceView.h \
 		QHitData.h \
 		QRootCanvas.h \
-		CRingItemProcessor.h \
-		DDASEventProcessor.h \
+		DDASRingItemProcessor.h \
 		DDASDecoder.h \
 		FitManager.h main.cpp \
 		QTraceView.cpp \
 		QHitData.cpp \
 		QRootCanvas.cpp \
-		CRingItemProcessor.cpp \
-		DDASEventProcessor.cpp \
+		DDASRingItemProcessor.cpp \
 		DDASDecoder.cpp \
 		FitManager.cpp
 QMAKE_TARGET  = traceview
@@ -345,8 +341,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents QTraceView.h QHitData.h QRootCanvas.h CRingItemProcessor.h DDASEventProcessor.h DDASDecoder.h FitManager.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp CRingItemProcessor.cpp DDASEventProcessor.cpp DDASDecoder.cpp FitManager.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents QTraceView.h QHitData.h QRootCanvas.h DDASRingItemProcessor.h DDASDecoder.h FitManager.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp DDASRingItemProcessor.cpp DDASDecoder.cpp FitManager.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -519,9 +515,8 @@ QTraceView.o: QTraceView.cpp QTraceView.h \
 		../DDASFitHit.h \
 		$(DDAS_INC)/DDASHit.h \
 		../fit_extensions.h \
-		../Configuration.h \
-		DDASDecoder.h \
 		FitManager.h \
+		DDASDecoder.h \
 		QHitData.h \
 		QRootCanvas.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o QTraceView.o QTraceView.cpp
@@ -610,38 +605,28 @@ QRootCanvas.o: QRootCanvas.cpp QRootCanvas.h \
 		FitManager.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o QRootCanvas.o QRootCanvas.cpp
 
-CRingItemProcessor.o: CRingItemProcessor.cpp CRingItemProcessor.h \
+DDASRingItemProcessor.o: DDASRingItemProcessor.cpp DDASRingItemProcessor.h \
+		$(DAQINC)/FragmentIndex.h \
 		$(DAQINC)/CRingItem.h \
-		$(DAQINC)/CRingScalerItem.h \
-		/usr/opt/daq/12.0-pre6-dev/include/DataFormat.h \
+		$(DAQINC)/CRingStateChangeItem.h \
+		$(DAQINC)/DataFormat.h \
 		$(DAQINC)/RangeError.h \
 		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
-		$(DAQINC)/CRingTextItem.h \
-		$(DAQINC)/CRingStateChangeItem.h \
 		$(DAQINC)/CPhysicsEventItem.h \
-		$(DAQINC)/CRingPhysicsEventCountItem.h \
 		$(DAQINC)/CDataFormatItem.h \
-		$(DAQINC)/CGlomParameters.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o CRingItemProcessor.o CRingItemProcessor.cpp
-
-DDASEventProcessor.o: DDASEventProcessor.cpp DDASEventProcessor.h \
-		CRingItemProcessor.h \
-		$(DAQINC)/FragmentIndex.h \
-		$(DAQINC)/CPhysicsEventItem.h \
-		$(DAQINC)/CRingItem.h \
 		../DDASFitHit.h \
 		$(DDAS_INC)/DDASHit.h \
 		../fit_extensions.h \
 		../DDASFitHitUnpacker.h \
 		$(DDAS_INC)/DDASHitUnpacker.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DDASEventProcessor.o DDASEventProcessor.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DDASRingItemProcessor.o DDASRingItemProcessor.cpp
 
 DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \
 		$(DAQINC)/URL.h \
 		$(DAQINC)/CDataSource.h \
 		$(DAQINC)/CDataSourceFactory.h \
 		$(DAQINC)/CRingItem.h \
-		/usr/opt/daq/12.0-pre6-dev/include/DataFormat.h \
+		$(DAQINC)/DataFormat.h \
 		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
 		$(DAQINC)/CRingItemFactory.h \
 		$(DAQINC)/CRingScalerItem.h \
@@ -650,13 +635,12 @@ DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \
 		$(DAQINC)/CRingTextItem.h \
 		$(DAQINC)/CPhysicsEventItem.h \
 		$(DAQINC)/CRingPhysicsEventCountItem.h \
-		$(DAQINC)/CDataFormatItem.h \
 		$(DAQINC)/CGlomParameters.h \
+		$(DAQINC)/CDataFormatItem.h \
 		../DDASFitHit.h \
 		$(DDAS_INC)/DDASHit.h \
 		../fit_extensions.h \
-		DDASEventProcessor.h \
-		CRingItemProcessor.h
+		DDASRingItemProcessor.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DDASDecoder.o DDASDecoder.cpp
 
 FitManager.o: FitManager.cpp FitManager.h \

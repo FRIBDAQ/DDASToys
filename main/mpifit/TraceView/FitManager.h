@@ -1,3 +1,9 @@
+/** @file: FitManager.h
+ *  @brief: Defines a class for managing fits including calulating fit function
+ *  values from fit parameters and fit configuration settings using the 
+ *  Configuraton class.
+ */
+
 #ifndef FITMANAGER_H
 #define FITMANAGER_H
 
@@ -28,6 +34,10 @@ class Configuration;
  *   switching based on the enum type.
  */
 
+// Overkill probably but:
+//   1) I don't want to remember flag values
+//   2) Adding more fitting methods by name may be nice
+//   3) I felt like making an enum
 enum fitMethod {ANALYTIC, TEMPLATE};
 
 class FitManager
@@ -39,10 +49,10 @@ public:
   void configure(std::string method); 
   void readConfigFile();
   void readTemplateFile();
-  std::vector<double> getSinglePulseFit(DDAS::HitExtension& ext, unsigned low, unsigned high);
-  std::vector<double> getDoublePulseFit(DDAS::HitExtension& ext, unsigned low, unsigned high);
-  unsigned getLowFitLimit(DAQ::DDAS::DDASFitHit& hit);
-  unsigned getHighFitLimit(DAQ::DDAS::DDASFitHit& hit);
+  std::vector<double> getSinglePulseFit(const DDAS::HitExtension& ext, unsigned low, unsigned high);
+  std::vector<double> getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsigned high);
+  unsigned getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit);
+  unsigned getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit);
   void setMethod(fitMethod m) {m_method = m;};
   enum fitMethod getMethod() {return m_method;};
   

@@ -1,3 +1,7 @@
+/** @file: main.cpp
+ *  @brief: traceview main. Run the Qt application.
+ */
+
 #include <cstdlib>
 
 #include <QApplication>
