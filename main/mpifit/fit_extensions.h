@@ -61,17 +61,30 @@ namespace DDAS {
   };  
 }
 
-typedef struct _nullExtension {
+struct nullExtension {
   std::uint32_t s_size;
-  _nullExtension() : s_size(sizeof(std::uint32_t)) {}
-} nullExtension, *pNullExtension;
+  nullExtension() : s_size(sizeof(std::uint32_t)) {}
+};
 
-typedef struct _FitInfo {
+struct FitInfo {
   std::uint32_t  s_size;
   DDAS::HitExtension s_extension;
-  _FitInfo() : s_size(sizeof(_FitInfo)) {
+  FitInfo() : s_size(sizeof(FitInfo)) {
     memset(&s_extension, 0, sizeof(DDAS::HitExtension)); // Zero fit params.
   }
-} FitInfo, *pFitInfo;
+};
+
+// typedef struct _nullExtension {
+//   std::uint32_t s_size;
+//   _nullExtension() : s_size(sizeof(std::uint32_t)) {}
+// } nullExtension, *pNullExtension;
+
+// typedef struct _FitInfo {
+//   std::uint32_t  s_size;
+//   DDAS::HitExtension s_extension;
+//   _FitInfo() : s_size(sizeof(_FitInfo)) {
+//     memset(&s_extension, 0, sizeof(DDAS::HitExtension)); // Zero fit params.
+//   }
+// } FitInfo, *pFitInfo;
 
 #endif

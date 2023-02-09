@@ -97,12 +97,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
   if (m_pConfig->fitChannel(crate, slot, chan)) {
     std::vector<std::uint16_t> trace = hit.GetTrace();
 
-    // \TODO (ASC 1/27/23): Any reason to have this defined in the
-    // fit_extensions.h instead of:
-    //   FitInfo* pInfo = new FitInfo;
-    //   std::unique_ptr<FitInfo> info(pInfo);
-    // and let ot clean up after itself?
-    pFitInfo pFit = new FitInfo; // Have an extension tho may be zero 
+    FitInfo* pFit = new FitInfo; // Have an extension tho may be zero 
     
     if (trace.size() > 0) { // Need a trace to fit
       std::pair<std::pair<unsigned, unsigned>, unsigned> l
@@ -151,7 +146,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
     result.push_back(fit);
     
   } else { // No fit performed
-    pNullExtension p = new nullExtension;
+    nullExtension* p = new nullExtension;
     CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
     result.push_back(nofit);
   }    
@@ -169,10 +164,10 @@ void
 FitEditorTemplate::free(iovec& e)
 {
   if (e.iov_len == sizeof(FitInfo)) {
-    pFitInfo pFit = static_cast<pFitInfo>(e.iov_base);
+    FitInfo* pFit = static_cast<FitInfo*>(e.iov_base);
     delete pFit;
   } else {
-    pNullExtension p = static_cast<pNullExtension>(e.iov_base);
+    nullExtension* p = static_cast<nullExtension*>(e.iov_base);
     delete p;
   }
 }
