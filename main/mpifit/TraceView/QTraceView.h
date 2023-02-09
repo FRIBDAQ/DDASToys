@@ -27,6 +27,7 @@ namespace DAQ {
     class DDASFitHit;
   }
 }
+
 class DDASDecoder;
 class FitManager;
 class QHitData;
@@ -47,10 +48,9 @@ class QTraceView : public QWidget
 public:
   QTraceView(QWidget* parent = nullptr);
   virtual ~QTraceView();
-
-  // Overridden from base class
+  
 private:
-  virtual void changeEvent(QEvent* e);
+  virtual void changeEvent(QEvent* e);  // Overridden from base class
 
 private:
   void createActions();
@@ -76,7 +76,9 @@ private slots:
   void test();
   
 private:
+  
   // Our member data
+  
   DDASDecoder* m_pDecoder;
   FitManager* m_pFitManager;
 
@@ -88,6 +90,7 @@ private:
   std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
   
   // Added to this widget, Qt _should_ handle cleanup on destruction
+  
   QMenuBar* m_pMenuBar;
   QMenu* m_pFileMenu;
   QAction* m_pOpenAction;

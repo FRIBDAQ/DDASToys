@@ -24,12 +24,8 @@
  * Constructor
  */
 FitManager::FitManager() :
-  m_pConfig(new Configuration),
-  m_pWarning(new QLabel),
-  m_method(ANALYTIC),
-  m_config(false),
-  m_templateConfig(false),
-  m_warned(false)
+  m_pConfig(new Configuration), m_pWarning(new QLabel), m_method(ANALYTIC),
+  m_config(false), m_templateConfig(false), m_warned(false)
 {}
 
 //____________________________________________________________________________
@@ -54,7 +50,7 @@ FitManager::~FitManager()
 void
 FitManager::configure(std::string method)
 {
-  // Regardless we want the config file if we haven't already:
+  // Regardless we want the config file if we haven't already
   
   if (!m_config) {
     readConfigFile();
@@ -66,7 +62,7 @@ FitManager::configure(std::string method)
   } else if (method == "Template") {
     setMethod(TEMPLATE);
     
-    // Read the template file if we haven't already:
+    // Read the template file if we haven't already
     
     if (!m_templateConfig) {
       readTemplateFile();
@@ -274,7 +270,9 @@ FitManager::singlePulse(double A1, double k1, double k2, double x1,
       return DDAS::TemplateFit::singlePulse(A1, x1, C, x, traceTemplate);
     }
   default:
+    
     // This really is an error, but we'll stuff the fit with zeroes
+    
     return 0;
   }
 }
@@ -312,11 +310,12 @@ FitManager::doublePulse(double A1, double k1, double k2, double x1,
     {
       auto traceTemplate = m_pConfig->getTemplate();
       return DDAS::TemplateFit::doublePulse(A1, x1, A2, x2,
-					    C, x,
-					    traceTemplate);
+					    C, x, traceTemplate);
     }
   default:
+    
     // This really is an error, but we'll stuff the fit with zeroes
+    
     return 0;
   }
 }

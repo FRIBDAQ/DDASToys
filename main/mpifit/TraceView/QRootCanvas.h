@@ -10,18 +10,19 @@
 #include <vector>
 #include <cstdint>
 
+class QMouseEvent;
+class QPaintEvent;
+class QResizeEvent;
+
+class TCanvas;
+class TH1D;
+class TLegend;
+
 namespace DAQ {
   namespace DDAS {
     class DDASFitHit;
   }
 }
-
-class TCanvas;
-class TH1D;
-
-class QMouseEvent;
-class QPaintEvent;
-class QResizeEvent;
 
 class FitManager;
 
@@ -46,9 +47,11 @@ public:
   TCanvas* getCanvas() {return m_pCanvas;};
   void drawHit(const DAQ::DDAS::DDASFitHit& hit);
   void clear();
+  
+protected:
 
   // Qt actions to Root
-protected:
+  
   virtual void mouseMoveEvent(QMouseEvent* e);
   virtual void mousePressEvent(QMouseEvent* e);
   virtual void mouseReleaseEvent(QMouseEvent* e);
@@ -59,10 +62,12 @@ private:
   void drawTrace(const DAQ::DDAS::DDASFitHit& hit);
   void drawSingleFit(const DAQ::DDAS::DDASFitHit& hit);
   void drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit);
+  void drawLegend(bool addFits);
   
 private:
   FitManager* m_pFitManager;
   TCanvas* m_pCanvas;
+  TLegend* m_pLegend;
   TH1D* m_pTraceHist;
   TH1D* m_pFit1Hist;
   TH1D* m_pFit2Hist;

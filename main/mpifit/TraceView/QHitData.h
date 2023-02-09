@@ -23,6 +23,7 @@ namespace DAQ {
 namespace DDAS{
   struct HitExtension;
 }
+
 class FitManager;
 
 /**
@@ -41,14 +42,14 @@ public:
   QHitData(FitManager* pFitMgr, QWidget* parent = nullptr);
   ~QHitData();
 
-  void update(DAQ::DDAS::DDASFitHit& hit);
+  void update(const DAQ::DDAS::DDASFitHit& hit);
 
 private:
   QGroupBox* createHitBox();
   QGroupBox* createClassifierBox();
   QGroupBox* createFitBox();
   void createConnections();
-  void updateHitData();
+  void updateHitData(const DAQ::DDAS::DDASFitHit& hit);
 
 private slots:
   void configureFit();
@@ -56,7 +57,7 @@ private slots:
   
 private:
   FitManager* m_pFitManager;
-  DAQ::DDAS::DDASFitHit* m_pHit;
+  DDAS::HitExtension* m_pExtension;
   
   QLabel* m_pId;
   QLabel* m_pRawData;

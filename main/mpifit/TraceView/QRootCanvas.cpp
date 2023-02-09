@@ -11,6 +11,7 @@
 #include <TVirtualX.h>
 #include <TH1D.h>
 #include <TStyle.h>
+#include <TLegend.h>
 
 #include <QMouseEvent>
 #include <QPaintEvent>
@@ -32,11 +33,8 @@
  * @param parent  - pointer to QWidget parent object, default = nullptr
  */
 QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
-  QWidget(parent),
-  m_pFitManager(pFitMgr),
-  m_pCanvas(nullptr),
-  m_pTraceHist(nullptr),
-  m_pFit1Hist(nullptr),
+  QWidget(parent), m_pFitManager(pFitMgr), m_pCanvas(nullptr),
+  m_pLegend(nullptr), m_pTraceHist(nullptr), m_pFit1Hist(nullptr),
   m_pFit2Hist(nullptr)
 {
   // Set options needed to properly update the canvas when resizing the widget
@@ -68,6 +66,7 @@ QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
 QRootCanvas::~QRootCanvas()
 {
   delete m_pCanvas;
+  delete m_pLegend;
   delete m_pTraceHist;
   delete m_pFit1Hist;
   delete m_pFit2Hist;
@@ -86,7 +85,7 @@ QRootCanvas::~QRootCanvas()
  */
 void
 QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
-{
+{  
   drawTrace(hit);
 
   // For single pulses the double fit and single fit frequently look almost
@@ -96,6 +95,8 @@ QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
     drawDoubleFit(hit);
     drawSingleFit(hit);
   }
+
+  drawLegend(hit.hasExtension());
   
   m_pCanvas->Modified();
   m_pCanvas->Update();
@@ -346,4 +347,30 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
     options = "hist c same";
   }
   m_pFit2Hist->Draw(options.c_str());
+}
+
+//____________________________________________________________________________
+/**
+ * drawLegend
+ *   Draw a legend on the canvas depending on what data exists for this hit.
+ *
+ * @param hasFit - true if the hit has a fit extension, false otherwise
+ */
+void
+QRootCanvas::drawLegend(bool hasFit) {
+  if (!m_pLegend) {
+    m_pLegend = new TLegend(0.8, 0.8, 0.95, 0.95);
+    m_pLegend->SetBorderSize(0);
+  } else {
+    m_pLegend->Clear();
+  }
+
+  m_pLegend->AddEntry(m_pTraceHist, "Trace");
+
+  if (hasFit) {
+    m_pLegend->AddEntry(m_pFit1Hist, "Single pulse fit");
+    m_pLegend->AddEntry(m_pFit2Hist, "Double pulse fit");
+  }
+  
+  m_pLegend->Draw();  
 }

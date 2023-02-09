@@ -97,7 +97,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
   if (m_pConfig->fitChannel(crate, slot, chan)) {
     std::vector<std::uint16_t> trace = hit.GetTrace();
 
-    FitInfo* pFit = new FitInfo; // Have an extension tho may be zero 
+    FitInfo* pFit = new FitInfo; // Have an extension though may be zero 
     
     if (trace.size() > 0) { // Need a trace to fit
       std::pair<std::pair<unsigned, unsigned>, unsigned> l

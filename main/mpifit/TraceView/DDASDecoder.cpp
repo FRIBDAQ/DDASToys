@@ -34,8 +34,7 @@
  * Constructor.
  */
 DDASDecoder::DDASDecoder() :
-  m_pSourceURL(nullptr),
-  m_pSource(nullptr),
+  m_pSourceURL(nullptr), m_pSource(nullptr),
   m_pProcessor(new DDASRingItemProcessor)
 {}
 

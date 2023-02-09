@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <string>
 
+class QLabel;
+
 namespace DDAS {
   struct HitExtension;
 }
@@ -19,8 +21,6 @@ namespace DAQ {
     class DDASFitHit;
   }
 }
-
-class QLabel;
 
 class Configuration;
 
@@ -38,6 +38,7 @@ class Configuration;
 //   1) I don't want to remember flag values
 //   2) Adding more fitting methods by name may be nice
 //   3) I felt like making an enum
+
 enum fitMethod {ANALYTIC, TEMPLATE};
 
 class FitManager
@@ -49,8 +50,10 @@ public:
   void configure(std::string method); 
   void readConfigFile();
   void readTemplateFile();
-  std::vector<double> getSinglePulseFit(const DDAS::HitExtension& ext, unsigned low, unsigned high);
-  std::vector<double> getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsigned high);
+  std::vector<double> getSinglePulseFit(const DDAS::HitExtension& ext,
+					unsigned low, unsigned high);
+  std::vector<double> getDoublePulseFit(const DDAS::HitExtension& ext,
+					unsigned low, unsigned high);
   unsigned getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit);
   unsigned getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit);
   void setMethod(fitMethod m) {m_method = m;};

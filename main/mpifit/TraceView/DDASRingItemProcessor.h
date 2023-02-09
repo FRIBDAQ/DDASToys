@@ -15,7 +15,6 @@ class CRingPhysicsEventCountItem;
 class CDataFormatItem;
 class CGlomParameters;
 class CRingItem;
-
 namespace DAQ {
   namespace DDAS {
     class DDASFitHit;

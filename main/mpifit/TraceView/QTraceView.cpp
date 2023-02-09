@@ -63,6 +63,7 @@ QTraceView::QTraceView(QWidget* parent) :
   
   // Combine hit selection list and canvas into a single horizontally
   // aligned widget which we add to the main layout
+  
   QWidget* plotWidget = createPlotWidget();  
   
   QVBoxLayout* mainLayout = new QVBoxLayout;
@@ -231,17 +232,26 @@ void
 QTraceView::createConnections()
 {
   // Next button
+  
   connect(m_pButtons[0], SIGNAL(clicked()), this, SLOT(getNextEvent()));
-  // Update button
+  
+  // Update buttons
+  
   connect(m_pButtons[1], SIGNAL(clicked()), this, SLOT(filterHits()));
   connect(m_pButtons[1], SIGNAL(clicked()), this, SLOT(updateSelectableHits()));
+  
   // Exit button
+  
   connect(m_pButtons[2], SIGNAL(clicked()), this, SLOT(close()));
 
   // Hit selection
-  connect(m_pHitSelectList->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(processHit()));
+  
+  connect(m_pHitSelectList->selectionModel(),
+	  SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
+	  this, SLOT(processHit()));
 
   // Timer to call inner loop of Root
+  
   connect(m_pTimer, SIGNAL(timeout()), this, SLOT(handleRootEvents()));  
 }
 
@@ -345,8 +355,8 @@ QTraceView::updateSelectableHits()
     reinterpret_cast<QStandardItemModel*>(m_pHitSelectList->model());
   model->clear();
 
-  for (unsigned i=0; i<m_filteredHits.size(); i++) {
-    // Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this
+  for (unsigned i=0; i<m_filteredHits.size(); i++) {    
+    // Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
     QString id = QString("%1:%2:%3").arg(m_filteredHits[i].GetCrateID()).arg(m_filteredHits[i].GetSlotID()).arg(m_filteredHits[i].GetChannelID());
     QStandardItem* item = new QStandardItem(id);
     model->setItem(i, item);
@@ -406,6 +416,7 @@ QTraceView::openFile()
     setStatusBar(m_fileName);
     m_pDecoder->createDataSource(m_fileName);
     enableAll();
+    m_count = 0;
   }
 }
 
@@ -419,11 +430,13 @@ void
 QTraceView::getNextEvent()
 {
   m_filteredHits.clear();
+  
   while (m_filteredHits.empty()) {
     m_hits = m_pDecoder->getEvent();
     filterHits();
     m_count++;
   }
+  
   updateSelectableHits();
   m_pRootCanvas->clear();
   
@@ -442,9 +455,6 @@ QTraceView::filterHits()
   if (!m_filteredHits.empty()) {
     m_filteredHits.clear();
   }
-  
-  // Check each hit and if the identifying information matches the filter
-  // settings add it to the filtered hit
   for (auto& hit : m_hits) {
     if (isValidHit(hit)) {
       m_filteredHits.push_back(hit);
