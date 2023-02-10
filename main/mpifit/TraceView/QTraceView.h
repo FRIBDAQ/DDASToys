@@ -63,6 +63,7 @@ private:
   void setStatusBar(std::string msg);
   bool isValidHit(const DAQ::DDAS::DDASFitHit& hit);
   void displayHitData(const DAQ::DDAS::DDASFitHit& hit);
+  void resetGUI();
   void enableAll();
   void disableAll();
 			   

@@ -75,7 +75,7 @@ QTraceView::QTraceView(QWidget* parent) :
   setLayout(mainLayout);
 
   createConnections();
-  m_pStatusBar->showMessage(tr(""));  
+  resetGUI();
   disableAll();
   
   m_pTimer->start(20);
@@ -364,6 +364,23 @@ QTraceView::updateSelectableHits()
   
 }
 
+
+//____________________________________________________________________________
+/**
+ * resetGUI
+ *   Reset and clear all GUI elements to default states.
+ */
+void
+QTraceView::resetGUI()
+{
+  m_count = 0;
+  m_hits.clear();
+  m_filteredHits.clear();
+  updateSelectableHits();
+  m_pRootCanvas->clear();
+  m_pStatusBar->showMessage("");
+}
+
 //____________________________________________________________________________
 /**
  * enableAll
@@ -413,10 +430,10 @@ QTraceView::openFile()
     std::cout << "WARNING: no file selected. Please open a file using File->Open file before continuing." << std::endl;
     return;
   } else {
-    setStatusBar(m_fileName);
     m_pDecoder->createDataSource(m_fileName);
+    resetGUI();
+    setStatusBar(m_fileName);
     enableAll();
-    m_count = 0;
   }
 }
 

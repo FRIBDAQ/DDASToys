@@ -62,12 +62,12 @@ private:
   void drawTrace(const DAQ::DDAS::DDASFitHit& hit);
   void drawSingleFit(const DAQ::DDAS::DDASFitHit& hit);
   void drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit);
-  void drawLegend(bool addFits);
+  void drawFitLegend(); 
   
 private:
   FitManager* m_pFitManager;
   TCanvas* m_pCanvas;
-  TLegend* m_pLegend;
+  TLegend* m_pFitLegend;
   TH1D* m_pTraceHist;
   TH1D* m_pFit1Hist;
   TH1D* m_pFit2Hist;

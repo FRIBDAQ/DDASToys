@@ -49,7 +49,8 @@ DDASRingItemProcessor::processStateChangeItem(CRingStateChangeItem& item)
 {
   time_t tm = item.getTimestamp();
   std::cout << item.typeName() << " item recorded for run "
-	    << item.getRunNumber() << std::endl;
+	    << item.getRunNumber() << " source ID "
+	    << item.getSourceId() << std::endl;
   std::cout << "Title: " << item.getTitle() << std::endl;
   std::cout << "Occured at: " << std::ctime(&tm)
 	    << " " << item.getElapsedTime() << " sec. into the run\n";

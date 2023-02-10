@@ -34,7 +34,7 @@
  */
 QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
   QWidget(parent), m_pFitManager(pFitMgr), m_pCanvas(nullptr),
-  m_pLegend(nullptr), m_pTraceHist(nullptr), m_pFit1Hist(nullptr),
+  m_pFitLegend(nullptr), m_pTraceHist(nullptr), m_pFit1Hist(nullptr),
   m_pFit2Hist(nullptr)
 {
   // Set options needed to properly update the canvas when resizing the widget
@@ -66,7 +66,7 @@ QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
 QRootCanvas::~QRootCanvas()
 {
   delete m_pCanvas;
-  delete m_pLegend;
+  delete m_pFitLegend;
   delete m_pTraceHist;
   delete m_pFit1Hist;
   delete m_pFit2Hist;
@@ -94,9 +94,9 @@ QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
   if (hit.hasExtension()) {
     drawDoubleFit(hit);
     drawSingleFit(hit);
+    drawFitLegend();
   }
 
-  drawLegend(hit.hasExtension());
   
   m_pCanvas->Modified();
   m_pCanvas->Update();
@@ -351,26 +351,18 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * drawLegend
- *   Draw a legend on the canvas depending on what data exists for this hit.
- *
- * @param hasFit - true if the hit has a fit extension, false otherwise
+ * drawFitLegend
+ *   Draw a legend for the trace fits on the canvas.
  */
 void
-QRootCanvas::drawLegend(bool hasFit) {
-  if (!m_pLegend) {
-    m_pLegend = new TLegend(0.8, 0.8, 0.95, 0.95);
-    m_pLegend->SetBorderSize(0);
-  } else {
-    m_pLegend->Clear();
-  }
-
-  m_pLegend->AddEntry(m_pTraceHist, "Trace");
-
-  if (hasFit) {
-    m_pLegend->AddEntry(m_pFit1Hist, "Single pulse fit");
-    m_pLegend->AddEntry(m_pFit2Hist, "Double pulse fit");
+QRootCanvas::drawFitLegend()
+{
+  if (!m_pFitLegend) {
+    m_pFitLegend = new TLegend(0.7, 0.8, 0.95, 0.95);
+    m_pFitLegend->SetBorderSize(0);      
+    m_pFitLegend->AddEntry(m_pFit1Hist, "Single pulse fit");
+    m_pFitLegend->AddEntry(m_pFit2Hist, "Double pulse fit");
   }
   
-  m_pLegend->Draw();  
+  m_pFitLegend->Draw();  
 }

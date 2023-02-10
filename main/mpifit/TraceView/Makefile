@@ -598,6 +598,9 @@ QRootCanvas.o: QRootCanvas.cpp QRootCanvas.h \
 		/usr/opt/root/root-6.24.06/include/TFitResultPtr.h \
 		$(ROOTSYS)/include/TStyle.h \
 		/usr/opt/root/root-6.24.06/include/TColor.h \
+		$(ROOTSYS)/include/TLegend.h \
+		/usr/opt/root/root-6.24.06/include/TPave.h \
+		/usr/opt/root/root-6.24.06/include/TBox.h \
 		../Configuration.h \
 		../DDASFitHit.h \
 		$(DDAS_INC)/DDASHit.h \
