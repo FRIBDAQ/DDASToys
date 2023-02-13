@@ -113,43 +113,61 @@ void
 Configuration::readTemplateFile()
 {
   std::string filename = getFileNameFromEnv("TEMPLATE_CONFIGFILE");
-  
-  std::ifstream f;
-  f.open(filename, std::ifstream::in);
-  if (f.is_open()) {
-    unsigned npts;
-    double val;
 
-    // \TODO (ASC 1/25/23): What happens when there are fewer than two values on the first line? Should report an error and stop trying to do the fit.
-    f >> m_alignPoint >> npts;
-    if (!m_template.empty()) m_template.clear();
-    while (f >> val) {
-      m_template.push_back(val);
-    }
-
-    // The template should know how long it is. If you read in more data
-    // points throw an exception.
-    if (m_template.size() != npts) {
-      std::string errmsg("Template configfile thinks the trace is ");
-      errmsg += npts;
-      errmsg += " samples but read in ";
-      errmsg += m_template.size();
-      throw std::length_error(errmsg); // I guess this is the right one?
-    }
-
-    // Ensure the alignment point is contained in the trace. Note that because
-    // m_alignPoint is an unsigned type it cannot be negative.
-    if (m_alignPoint >= m_template.size()) {
-      std::string errmsg("Invalid template alignment point ");
-      errmsg += m_alignPoint;
-      errmsg += " >= template size ";
-      errmsg += m_template.size();
-      throw std::invalid_argument(errmsg);
-    }
-    
-  } else {
-    std::string errmsg("Cannot open template data file: ");
+  std::ifstream f(filename);
+  if (f.fail()) {
+    std::string errmsg("Unable to open the template file: ");
     errmsg += filename;
+    throw std::invalid_argument(errmsg);
+  }
+
+  if (!m_template.empty()) m_template.clear();
+  
+  int nread = 0;
+  unsigned npts;
+  double val;
+  while (!f.eof()) {
+    std::string originalline("");
+    std::getline(f, originalline, '\n');
+    std::string line = isComment(originalline);
+    if (line != "") {
+      std::stringstream sline(line);
+      
+      if (nread == 0) {
+	sline >> m_alignPoint >> npts;
+      } else {
+	sline >> val;
+	m_template.push_back(val);
+      }
+      
+      if (sline.fail()) {
+	std::string errmsg("Error processing line in template file '");
+	errmsg += originalline;
+	errmsg += "'";
+	throw std::invalid_argument(errmsg);
+      }
+      
+      nread++;
+    }    
+  }
+
+  // The template should know how long it is. If you read in more data
+  // points throw an exception.
+  if (m_template.size() != npts) {
+    std::string errmsg("Template configfile thinks the trace is ");
+    errmsg += npts;
+    errmsg += " samples but read in ";
+    errmsg += m_template.size();
+    throw std::length_error(errmsg); // I guess this is the right one?
+  }
+
+  // Ensure the alignment point is contained in the trace. Note that because
+  // m_alignPoint is an unsigned type it cannot be negative.
+  if (m_alignPoint >= m_template.size()) {
+    std::string errmsg("Invalid template alignment point ");
+    errmsg += m_alignPoint;
+    errmsg += " >= template size ";
+    errmsg += m_template.size();
     throw std::invalid_argument(errmsg);
   }
 

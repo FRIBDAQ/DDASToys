@@ -614,7 +614,7 @@ DDASRingItemProcessor.o: DDASRingItemProcessor.cpp DDASRingItemProcessor.h \
 		$(DAQINC)/CRingStateChangeItem.h \
 		$(DAQINC)/DataFormat.h \
 		$(DAQINC)/RangeError.h \
-		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
+		/usr/opt/nscldaq/experimental/11.4-023/include/Exception.h \
 		$(DAQINC)/CPhysicsEventItem.h \
 		$(DAQINC)/CDataFormatItem.h \
 		../DDASFitHit.h \
@@ -630,7 +630,7 @@ DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \
 		$(DAQINC)/CDataSourceFactory.h \
 		$(DAQINC)/CRingItem.h \
 		$(DAQINC)/DataFormat.h \
-		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
+		/usr/opt/nscldaq/experimental/11.4-023/include/Exception.h \
 		$(DAQINC)/CRingItemFactory.h \
 		$(DAQINC)/CRingScalerItem.h \
 		$(DAQINC)/RangeError.h \

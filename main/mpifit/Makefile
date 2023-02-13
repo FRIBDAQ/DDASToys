@@ -1,44 +1,34 @@
-# SPECTCLHOME must be define externally to point to a SpecTcl that has
-# the fragment index stuff built in. Furthermore, an NSCLDAQ 11.4 or higher
-# must have been set up (daqsetup.bash sourced in).
-# XIAAPIDIR must be defined to point to the XIA API directory used by that
-# NSCLDAQ distro.
-
-#  Note MAXPOINTS should  be modified to match the longest trace we're fitting
-#  if this is CUDA enabled.
-
-#  Required definitions:
-#  SPECTCLHOME - Base of SpecTcl.
-#  If SpecTcl 5.10 or later is used, the root for that version must also be setupe
-#  (e.g. /usr/opt/root/some-version/bin/thisroot.sh).
-#  A version of NSCLDAQ has been set up.
-#  A version of DDAS has been set up.
-#  Define XIAAPI to point to the XIAAPI version used by your NSCLDAQ setup.
+# SPECTCLHOME must be defined externally to point to a SpecTcl that has the
+# fragment index stuff built in. Furthermore, an NSCLDAQ 11.4 or higher must
+# have been set up (daqsetup.bash sourced in) XIAAPIDIR must be defined to
+# point to the XIA API directory used by that NSCLDAQ distro. MAXPOINTS should
+#be modified to match the longest trace we're fitting if this is CUDA enabled.
+#
+# Required definitions:
+# Base of SpecTcl via the SPECTCLHOME environment variable. If SpecTcl 5.10 or
+# later is used, the ROOT for that version must also be setup (e.g.
+# /usr/opt/root/some-version/bin/thisroot.sh).
+# A version of NSCLDAQ has been set up.
+# A version of DDAS has been set up.
+# Define XIAAPIDIR to point to the XIAAPI version used by your NSCLDAQ setup.
 
 MAXPOINTS = 200
 
 SPECINC = $(SPECTCLHOME)/include
 SPECLIB = $(SPECTCLHOME)/lib
 
-CXXFLAGS = -std=c++11 -g -O2 -Wall -I. \
-	-I$(DAQINC) -I$(DDAS_INC) -I/usr/include/tcl8.6 \
-	-I$(SPECINC) -I$(XIAAPIDIR)/include
-CXXLDFLAGS = -L$(DAQLIB) -L$(SPECLIB) \
-	-lSwTrigger -L$(DDAS_LIB) -lddasformat \
-	-ltclPlus -lException -lTclGrammerApp -lDDASUnpacker \
-	-ldaqio -ldataformat -lDataFlow -lurl -ldaqshm \
-	-lgsl -lgslcblas -ltcl8.6 
+CXXFLAGS = -std=c++11 -g -O2 -Wall \
+	-I. -I$(DAQINC) -I$(DDAS_INC) -I$(XIAAPIDIR)/include
+CXXLDFLAGS = -L$(SPECLIB) -lDDASUnpacker
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
 	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
 GNUCXXFLAGS = -fPIC
 
 CUDALDFLAGS = -L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
-	--linker-options -rpath=$(DDAS_LIB) \
-	--linker-options -rpath=$(DAQLIB) \
 	--linker-options -rpath=$(SPECLIB) 
 
-GNULDFLAGS = -Wl,-rpath=$(DDAS_LIB) -Wl,-rpath=$(DAQLIB) -Wl,-rpath=$(SPECLIB)
+GNULDFLAGS = -Wl,-rpath=$(SPECLIB)
 
 ifdef CUDA
 CXX = nvcc
