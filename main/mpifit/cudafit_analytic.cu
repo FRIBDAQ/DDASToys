@@ -8,6 +8,7 @@
  */
 
 #include "fit_extensions.h"             // For the fit extension formats.
+#include "functions_analytic.h"
 #include "reductions.cu"
 #include <limits>
 #include <ctime>
@@ -595,7 +596,7 @@ cudafit1(
   pResult->pulse.steepness= pParams[K1];
   pResult->pulse.decayTime = pParams[K2];
 
-  pResult->chiSquare =  DDAS::chiSquare1(
+  pResult->chiSquare =  DDAS::AnalyticFit::chiSquare1(
      pParams[A1], pParams[K1], pParams[K2], pParams[X1], pParams[C],
      trace, limits.first, limits.second);
 
@@ -672,7 +673,7 @@ cudafit2(
   pResult->pulses[1].amplitude= pParams[A2];
   pResult->pulses[1].steepness= pParams[K3];
   pResult->pulses[1].decayTime = pParams[K4];
-  pResult->chiSquare = DDAS::chiSquare2(
+  pResult->chiSquare = DDAS::AnalyticFit::chiSquare2(
     pParams[A1], pParams[K1], pParams[K2], pParams[X1],
     pParams[A2], pParams[K3], pParams[K4], pParams[X2],
     pParams[C], trace, limits.first, limits.second);

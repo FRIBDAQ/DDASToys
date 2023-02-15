@@ -13,8 +13,6 @@
 #include "Configuration.h"
 #include "lmfit_template.h"
 
-using namespace DDAS::TemplateFit;
-
 /**
  * Constructor
  *   Read the fit configuration file and the template file on creation.
@@ -52,9 +50,9 @@ FitEditorTemplate::~FitEditorTemplate()
  * operator()
  *    - Parse the fragment into a hit.
  *    - Produce a IOvec element for the existing hit (without any fit
- *      that migh thave been there).
+ *      that might have been there).
  *    - See if the predicate says we should fit.
- *    - If so, create the trae.
+ *    - If so, create the trace.
  *    - Get the fit limits, and saturation.
  *    - Get the number of pulses to fit.
  *    - Do the fits.

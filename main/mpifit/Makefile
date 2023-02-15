@@ -44,9 +44,15 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
+DOCS = DDASToys.html
+XSLTPROC = /usr/bin/xsltproc
+XSL = /usr/share/xml/docbook/stylesheet/nwalsh/xhtml/docbook.xsl
+
 LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
-all: $(LIBS) traceview
+all: $(LIBS) traceview $(DOCS)
+libs: $(LIBS)
+docs: $(DOCS)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
@@ -56,24 +62,32 @@ traceview:
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
-	CFitEngine.o SerialFitEngineAnalytic.o \
-	DDASFitHitUnpacker.o \
+	CFitEngine.o SerialFitEngineAnalytic.o 
 	$(CUDAOBJ)
 	$(CXX) -o libFitEditorAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o \
-	functions_template.o lmfit_template.o \
-	DDASFitHitUnpacker.o
+	functions_template.o lmfit_template.o 
 	$(CXX) -o libFitEditorTemplate.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
+# Build docbooks
+#
+
+%.html: DDASToys.xml $(XSL)
+	@$(XSLTPROC) -o $@ $(XSL) $<
+
+all: $(DOCS)
+
+#
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
 #
 # make install PREFIX=/usr/opt/ddastoys
 #
+
 install:
 	install -d $(PREFIX)
 	install -d $(PREFIX)/include
@@ -83,9 +97,10 @@ install:
 	install -m 0755 *.so $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
 	install -m 0755 TraceView/traceview $(PREFIX)/bin/traceview
-	install -m 0644 AREADME.txt $(PREFIX)/share
+	install -m 0644 AREADME.txt DDASToys.html $(PREFIX)/share
 
 clean:
 	rm -f *.so *.o
 	make -C TraceView clean
 	rm -f TraceView/traceview
+	rm -f *.html

@@ -57,8 +57,8 @@ FitEditorAnalytic::~FitEditorAnalytic()
  *    - Parse the fragment into a hit.
  *    - Produce a IOvec element for the existing hit (without any fit
  *      that migh thave been there).
- *    - See if the predicate says we should fit.
- *    - If so, create the trae.
+ *    - See if the configuration manager says we should fit.
+ *    - If so, create the trace.
  *    - Get the fit limits, and saturation.
  *    - Get the number of pulses to fit.
  *    - Do the fits.
