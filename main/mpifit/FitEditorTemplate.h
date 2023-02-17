@@ -1,5 +1,6 @@
-/** @file:  FitEditorTemplate.h
- *  @brief: FitEditor class for analytic fitting
+/** 
+ * @file  FitEditorTemplate.h
+ * @brief Definition of the FitEditor class for template fitting.
  */
 
 #ifndef FITEDITORTEMPLATE_H
@@ -19,9 +20,12 @@ class Configuration;
 
 /**
  * @class FitEditorTemplate
- *   Extend the hit with the template fitting information, overwriting any 
- *   existing extension. It's intended for use with the EventEditor framework 
- *   providing a complete description of the new event body.
+ * @brief Fit trace data with the template fitting functions and add hit 
+ * extensions.
+ *
+ * Editing the hit overwrites any existing extension. This class is intended 
+ * for use with the EventEditor framework providing a complete description of 
+ * the new event body.
  */
 
 class FitEditorTemplate : public CBuiltRingItemEditor::BodyEditor
@@ -32,7 +36,7 @@ public:
 
   // Mandatory interface from CBuiltRingItemEditor::BodyEditor
 public:
-  virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody);
+  virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody);
   virtual void free(iovec& e);
 
   // Additional functionality for this class
@@ -41,7 +45,7 @@ private:
   
   // Private member data
 private:
-  Configuration* m_pConfig;
+  Configuration* m_pConfig; //! Configuration file parser.
 };
 
 #endif

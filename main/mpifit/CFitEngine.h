@@ -15,8 +15,9 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  CFitEngine.h
- *  @brief: Define base class.
+/** 
+ * @file  CFitEngine.h
+ * @brief Define the CFitEngine abstract base class.
  */
 
 #ifndef CFITENGINE_H
@@ -27,15 +28,23 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
+/**
+ * @class CFitEngine
+ * @brief Abstract base class for marshalling data to the fitting subsystems
+ * to calculate Jacobian elements and residuals.
+ */
+
 class CFitEngine {
- protected:
-  std::vector<std::uint16_t> x;           // Trace x coords
-  std::vector<std::uint16_t> y;           // Trace y coords
- public:
-  CFitEngine(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data);
-  virtual ~CFitEngine(){}
+protected:
+  std::vector<std::uint16_t> x; //!< Trace x coords
+  std::vector<std::uint16_t> y; //!< Trace y coords
+public:
+  CFitEngine(std::vector<std::pair<std::uint16_t, std::uint16_t>>& data); //!< Constructor.
+  virtual ~CFitEngine() {} //!< Destructor.
+  /** Pure virtual method for calculating the Jacobian matrix elements. */
   virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
-  virtual void residuals(const gsl_vector*p, gsl_vector* r)  = 0;
+  /** Pure virtual method to calculating the residual vector. */
+  virtual void residuals(const gsl_vector* p, gsl_vector* r)  = 0;
 };
 
 #endif

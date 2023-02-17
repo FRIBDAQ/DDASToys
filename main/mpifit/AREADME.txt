@@ -12,7 +12,7 @@ To build this code you must:
 4. If the version of DDAS/NSCLDAQ use the broken out XIAAPI, define XIAAPIDIR
    to point to the top of the API version installed tree.
 
-Note:  The repository is not the NSCL gitlab repo because this is shared with
+Note: The repository is not the NSCL gitlab repo because this is shared with
 non FRIB/NSCL folks but
 
 https://your-netid@gitlab.msu.edu/foxr/ParallelAnalysis.git

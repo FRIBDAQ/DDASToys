@@ -15,9 +15,10 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  DDASFitHitUnpacker.h
- *  @brief: Unpack DDAS data where the traces _may_ have a HitExtension
- *          that contains one and two pulse fits.
+/** 
+ * @file  DDASFitHitUnpacker.h
+ * @brief Unpack DDAS data where the traces may have a HitExtension
+ *        that contains one and two pulse fits.
  */
 
 #ifndef DDASFITHITUNPACKER_H
@@ -32,15 +33,15 @@ namespace DAQ {
     class DDASFitHit;
     
     /**
-     *  @class DDASFitHitUnpacker
-     *  
+     * @class DDASFitHitUnpacker
+     * @brief Unpack raw hit data from DDAS event files.
+     *
      * DAQ::DDAS::DDASHitUnpacker is capable of unpacking raw hits from DDAS 
      * files. Typical trace analysis may involve fitting traces to one or two 
      * pulses This class extends the DDASHitUnpacker class to support access 
-     * to the results of the fit which have been tacked on the back end of a 
+     * to the results of the fit which have been tacked on the back end of a
      * hit by some hit extender.
-     */
-    
+     */    
     class DDASFitHitUnpacker : public DDASHitUnpacker
     {
     public:

@@ -15,8 +15,9 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  DDASFitHitUnpacker.cpp
- *  @brief: Implements DDASFitHitUnpacker.
+/** 
+ * @file  DDASFitHitUnpacker.cpp
+ * @brief Implements DDASFitHitUnpacker.
  */
 
 #include "DDASFitHitUnpacker.h"
@@ -28,20 +29,26 @@
 #include <DataFormat.h>
 
 #include "DDASFitHit.h"
-#include "fit_extensions.h"
 
 /**
- * decode
- *    - Determines the limits of the old style hit.
- *    - Determines where, or if, there's an extension block.
- *    - Unpacks the original hit using DDASHitUnpacker::unpack.
- *    - Sets the extension if there is one.
- *    @param pRingItem - points to the ring item to decode.  For an event built
- *           fragment, this is normally the FragmentInfo's s_itemhdr pointer.
- *           Note the difference from DDASHitUnpacker which expects a pointer to the
+ * @brief Decode the current event and unpack it into a DDASFitHit.
+ * 
+ * The decode function:
+ * - Determines the limits of the old style hit.
+ * - Determines where, or if, there's an extension block.
+ * - Unpacks the original hit using DDASHitUnpacker::unpack.
+ * - Sets the extension if there is one.
+ * 
+ * @param p  Pointer to the ring item to decode. For an event built fragment, 
+ *           this is normally the FragmentInfo's s_itemhdr pointer. Note the 
+ *           difference from DDASHitUnpacker which expects a pointer to the 
  *           body.
- *    @param hit - hit item that we will unpack.
- *    @return Pointer just after the ring item.
+ * @param hit  Hit item that we will unpack data into.
+ *
+ * @throw std::length_error  An unexpected hit or extension size is 
+ *                           encountered.
+ *
+ * @return void*  A pointer just after the ring item.
  */
 const void*
 DAQ::DDAS::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
@@ -135,5 +142,5 @@ DAQ::DDAS::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
     throw std::length_error("Inconsistent event size for DDASHit or extended hit");
   }
     
-  return nullptr; // should not get here.    
+  return nullptr; // Should not get here.    
 }

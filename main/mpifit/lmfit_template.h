@@ -1,5 +1,8 @@
-/** @file:  lmfit_template.h
- *  @brief: Define the fitting functions and data structures for L-M fits.
+/** 
+ * @file   lmfit_template.h
+ * @brief  Define the template fitting functions and data structures for GSL's 
+ *         Levenburg-Marquardt fitter.
+ * @note Fit functions are in the DDAS::TemplateFit namespace.
  */
 
 #ifndef LMFIT_TEMPLATE_H
@@ -9,30 +12,35 @@
 
 #include "fit_extensions.h"
 
+/** @namespace DDAS */
 namespace DDAS {
+  /** @namespace DDAS::TemplateFit */
   namespace TemplateFit {
 
-    // This struct is passed around the fitting subsystem to Jacobian and
-    // function evaluators
+    /** 
+     * @struct GslFitParameters
+     * @brief Data passed around the fitting subsystem to Jacobian and 
+     * function evaluators 
+     */
     struct GslFitParameters {
-      const std::vector<std::pair<uint16_t, uint16_t> >* s_pPoints;
-      const std::vector<double>* s_pTraceTemplate;
+      const std::vector<std::pair<std::uint16_t, std::uint16_t> >* s_pPoints; //!< Trace data stored as an (x, y) pair.
+      const std::vector<double>* s_pTraceTemplate; //!< Template trace data.
     };
 
     void lmfit1(
-		fit1Info* pResult, std::vector<uint16_t>& trace,
+		fit1Info* pResult, std::vector<std::uint16_t>& trace,
 		std::vector<double>& traceTemplate, unsigned alignPoint,
 		const std::pair<unsigned, unsigned>& limits,
-		uint16_t saturation = 0xffff
+		std::uint16_t saturation = 0xffff
 		);
+    
     void lmfit2(
-		fit2Info* pResult, std::vector<uint16_t>& trace,
+		fit2Info* pResult, std::vector<std::uint16_t>& trace,
 		std::vector<double>& traceTemplate, unsigned alignPoint,
 		const std::pair<unsigned, unsigned>& limits,
 		fit1Info* pSinglePulseFit = nullptr,
-		uint16_t saturation = 0xffff
+		std::uint16_t saturation = 0xffff
 		);
-
   }
 };
 

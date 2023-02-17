@@ -1,7 +1,6 @@
-/** @file:  Configuration.cpp
- *  @brief: Implementation of Abstract base class for reading fit configuration
- *          information from environment variables. Assumes configuration files
- *          use '#' to prepend comments.
+/** 
+ * @file  Configuration.cpp
+ * @brief Configuration manager class implementation.
  */
 
 #include "Configuration.h"
@@ -33,29 +32,31 @@ static inline std::string &trim(std::string &s) {
 }
 
 /**
- * Constructor
+ * Constructor.
  */
 Configuration::Configuration()
 {}
 
 /**
- * Destructor
+ * Destructor.
  */
 Configuration::~Configuration()
 {}
 
 /**
- * readConfigFile
- *   Read the configuration file.  Lines in the configuration file can
- *   be empty or have as their first non-blank character "#" in which case
- *   they are ignored. All other lines specify channels that should be fit and
- *   contain six whitespace integers: crate slot channel low high saturation
- *   The crate, slot, channel identify a channel to fit while low, high are
- *   the limits of the trace to fit (first sample index, last sample index),
- *   and saturation is the level at which the digitizer saturates.
+ * @brief Read the configuration file. 
+ * 
+ * Lines in the configuration file can be empty or have as their first 
+ * non-blank character "#" in which case they are ignored. All other lines 
+ * specify channels that should be fit and contain six whitespace integers: 
+ * crate slot channel low high saturation. The crate, slot, channel identify
+ * a channel to fit while low, high are the limits of  the trace to fit (first 
+ * sample index, last sample index), and the saturation defines a limit above 
+ * which the trace datapoints will not be fit. Most commonly this saturation 
+ * value is set to the saturation value of the ADC.
  *
- * @throw std::invalid_argument - if there are errors processing the file
- *                                including an inability to open the file
+ * @throw std::invalid_argument  If there are errors processing the file,
+ *                               including an inability to open the file.
  */
 void
 Configuration::readConfigFile()
@@ -98,16 +99,21 @@ Configuration::readConfigFile()
 }
 
 /**
- * readTemplateFile
- *   Read the formatted tempalate configuration in formation and template data 
- *   from a file.
+ * @brief Read the formatted tempalate data from a file. 
  *
- * @throw std::length_error - if the number of template data points is 
- *                            different than what the configuration file expects
- * @throw std::invalid_arugment - if the alignment point of the template is 
- *                                not contained in the trace (eg align to 
- *                                sample 101 on a 100 sample trace)
- * @throw std::invalid_argument - if the template data file cannot be opened
+ * Lines in the configuration file can be empty or have as their first 
+ * non-blank character "#" in which case they are ignored. The first line 
+ * consists of two whitespace-separated unsigned integer values which define 
+ * the template metadata: the alignment point and the number of points in 
+ * the template trace. The remaining lines in the configuration file contain 
+ * the floating point template trace data itself.
+ *
+ * @throw std::length_error  If the number of template data points is 
+ *                           different than what the configuration file expects.
+ * @throw std::invalid_arugment  If the alignment point of the template is 
+ *                               not contained in the trace (e.g. align to 
+ *                               sample 101 on a 100 sample trace).
+ * @throw std::invalid_argument  If the template data file cannot be opened.
  */
 void
 Configuration::readTemplateFile()
@@ -153,6 +159,7 @@ Configuration::readTemplateFile()
 
   // The template should know how long it is. If you read in more data
   // points throw an exception.
+  
   if (m_template.size() != npts) {
     std::string errmsg("Template configfile thinks the trace is ");
     errmsg += npts;
@@ -163,6 +170,7 @@ Configuration::readTemplateFile()
 
   // Ensure the alignment point is contained in the trace. Note that because
   // m_alignPoint is an unsigned type it cannot be negative.
+  
   if (m_alignPoint >= m_template.size()) {
     std::string errmsg("Invalid template alignment point ");
     errmsg += m_alignPoint;
@@ -174,6 +182,16 @@ Configuration::readTemplateFile()
   f.close();
 }
 
+/**
+ * @brief Check the map and determine if the channel should be fit.
+ *
+ * @param crate   The crate ID.
+ * @param slot    The slot ID.
+ * @param channel The channel ID.
+ *
+ * @return bool  True if this channel trace should be fit (its in the map), 
+ *               false otherwise.
+ */
 bool
 Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
 {
@@ -184,6 +202,12 @@ Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
 // \TODO (ASC 2/6/23): Up to caller to ensure that there is a map entry for
 // this channel. Should exit with failure message if we attempt to fit an
 // unmapped channel.
+
+/**
+ * @brief Get the fit limits for a single crate/slot/channel combination.
+ *
+ * @return std::pair<std::pair<unsigned, unsigned>, unsigned>  First is pair of fit limits, second is saturation value.
+ */
 std::pair<std::pair<unsigned, unsigned>, unsigned>
 Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
 {
@@ -196,14 +220,13 @@ Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
 //
 
 /**
- * getFileNameFromEnv
- *    Return the name of the configuration file or throw
+ * Read the name of a configuration file pointed to by an environment variable.
  *
- * @param envname - environment variable that points to the file
+ * @param envname  Environment variable that points to the file.
  *
- * @return std::string - translation of envname
+ * @return std::string  Translation of envname.
  *
- * @throw std::invalid_argument - if there's no translation
+ * @throw std::invalid_argument  If there's no translation.
  */
 std::string
 Configuration::getFileNameFromEnv(const char* envname)
@@ -220,13 +243,13 @@ Configuration::getFileNameFromEnv(const char* envname)
 }
 
 /**
- * isComment
- *   Determines if a line is a comment or not
+ * Determines if a line is a comment or not
  *
- * @param line - line to check
+ * @param line  Line to check.
  *
- * @return std::string - if empty this line is comment else it's the 
- *                       trimmed string
+ * @return std::string
+ * @retval Emtpy string if the line is a comment.
+ * @retval The trimmed line if the line is not a comment.
 */
 std::string
 Configuration::isComment(std::string line)
@@ -241,11 +264,11 @@ Configuration::isComment(std::string line)
  * channelIndex
  *   Get global channel index from crate/slot/channel information
  *
- * @param crate - The crate ID
- * @param slot - The slot ID
- * @param channel - The channel ID
+ * @param crate    The crate ID.
+ * @param slot     The slot ID.
+ * @param channel  The channel ID.
  *
- * @return int - the global channel index
+ * @return int  The global channel index.
  */
 unsigned
 Configuration::channelIndex(unsigned crate, unsigned slot, unsigned channel)

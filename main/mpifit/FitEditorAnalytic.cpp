@@ -15,8 +15,9 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  FitEditorAnalytic.cpp
- *  @brief: FitEditor class for analytic fitting.
+/** 
+ * @file  FitEditorAnalytic.cpp
+ * @brief Implementation of the FitEditor class for analytic fitting.
  */
 
 #include "FitEditorAnalytic.h"
@@ -29,8 +30,11 @@
 #include "Configuration.h"
 #include "lmfit_analytic.h"
 
-/*
- * Constructor
+/**
+ * Constructor.
+ *
+ * Sets up the configuration manager to parse config files and manage 
+ * configuration data. Read the fit config file.
  */
 FitEditorAnalytic::FitEditorAnalytic() :
   m_pConfig(new Configuration)
@@ -44,8 +48,8 @@ FitEditorAnalytic::FitEditorAnalytic() :
   }
 }
 
-/*
- * Destructor
+/**
+ * Destructor.
  */
 FitEditorAnalytic::~FitEditorAnalytic()
 {
@@ -53,26 +57,30 @@ FitEditorAnalytic::~FitEditorAnalytic()
 }
 
 /**
- * operator()
- *    - Parse the fragment into a hit.
- *    - Produce a IOvec element for the existing hit (without any fit
- *      that migh thave been there).
- *    - See if the configuration manager says we should fit.
- *    - If so, create the trace.
- *    - Get the fit limits, and saturation.
- *    - Get the number of pulses to fit.
- *    - Do the fits.
- *    - Create an Iovec entry for the extension we created (dynamic).
+ * @brief Perform the fit and create a fit extension for a single event 
+ *        fragment. 
  *
- * @param pHdr - Pointer to the ring item header of the hit.
- * @param bhdr - Pointer to the body header pointer for the hit.
- * @param bodySize - Number of _bytes_ in the body.
- * @param pBody    - Pointer to the body.
- * @return std::vector<CBuiltRingItemEditor::BodySegment>
- *             - final segment descriptors.
+ * This is the hook into the FitEditorAnalytic class. Here we:
+ * - Parse the fragment into a hit.
+ * - Produce a IOvec element for the existing hit (without any fit
+ *   that might have been there).
+ * - See if the configuration manager says we should fit and if so, create 
+ *   the trace.
+ * - Get the fit limits and saturation value.
+ * - Get the number of pulses to fit.
+ * - Do the fits.
+ * - Create an IOvec entry for the extension we created (dynamic).
+ *
+ * @param pHdr      Pointer to the ring item header of the hit.
+ * @param pBHdr     Pointer to the body header pointer for the hit.
+ * @param bodySize  Number of bytes in the body.
+ * @param pBody     Pointer to the body.
+ * 
+ * @return std::vector<CBuiltRingItemEditor::BodySegment>  Final segment 
+ *                                                         descriptors.
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody)
+FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody)
 { 
   std::vector<CBuiltRingItemEditor::BodySegment> result;
     
@@ -150,10 +158,9 @@ FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t body
 }
 
 /**
- * free
- *   We get handed our fit extension descriptor(s) to free
+ * @brief Free the dynamic fit extension descriptor(s).
  *
- * @param e - iovec we need to free
+ * @param e  IOvec we need to free.
  */
 void
 FitEditorAnalytic::free(iovec& e)
@@ -172,16 +179,15 @@ FitEditorAnalytic::free(iovec& e)
 //
 
 /**
- * pulseCount
- *   This is a hook into which to add the ML classifier
+ * This is a hook into which to add the ML classifier
  *
  * @param hit - references a hit
  *
  * @return int
- * @retval 0 - On the basis of the trace no fitting
- * @retval 1 - Only fit a single trace
- * @retval 2 - Only fit two traces
- * @retval 3 - Fit both one and double hit
+ * @retval 0  On the basis of the trace no fitting.
+ * @retval 1  Only fit a single trace.
+ * @retval 2  Only fit two traces.
+ * @retval 3  Fit both one and double hit.
  */
 int
 FitEditorAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
@@ -192,6 +198,14 @@ FitEditorAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
 /////////////////////////////////////////////////////////////////////////////
 // Factory for our editor:
 //
+
+/**
+ * @brief Factory method to create this FitEditor.
+ *
+ * $DAQBIN/EventEditor expects a symbol called createEditor to exist in the 
+ * plugin library it loads at runtime. Wrapping the factory method in 
+ * extern "C" prevents namespace mangling by the C++ compiler.
+ */
 extern "C" {
   FitEditorAnalytic* createEditor() {
     return new FitEditorAnalytic;

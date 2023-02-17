@@ -15,20 +15,20 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  CFitEngine.cpp
- *  @brief: Implement base class.
+/** 
+ * @file  CFitEngine.cpp
+ * @brief Implement constructor for CFitEngine base class.
  */
 
 #include "CFitEngine.h"
 
 /**
- * CFitEngine constructor
- *   Just marshall the x/y points.
+ * Marshall the x/y points into the coordinate vectors.
  */
 CFitEngine::CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)
 {
-    for (size_t i = 0; i < data.size(); i++) {
-        x.push_back(data[i].first);
-        y.push_back(data[i].second);
-    }
+  for (size_t i = 0; i < data.size(); i++) {
+    x.push_back(data[i].first);
+    y.push_back(data[i].second);
+  }
 }

@@ -15,8 +15,10 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  lmfit_analytic.h
- *  @brief: Define the fitting functions and data structures for L-M fits.
+/** 
+ * @file   lmfit_analytic.h
+ * @brief  Define the analytic fitting functions and data structures for GSL's 
+ *         Levenburg-Marquardt fitter.
  */
 
 #ifndef LMFIT_ANALYTIC_H
@@ -26,34 +28,38 @@
 
 #include "fit_extensions.h"
 
+/** @namespace DDAS */
 namespace DDAS {
+  /** @namespace DDAS::AnalyticFit */
   namespace AnalyticFit {
 
-  // This struct is passed around the fitting subsystem to Jacobian and
-  // function evaluators
-  struct GslFitParameters {
-    const std::vector<std::pair<uint16_t, uint16_t>>* s_pPoints;
-  };
-    
-  void lmfit1(
-	      fit1Info* pResult, std::vector<uint16_t>& trace,
-	      const std::pair<unsigned, unsigned>& limits,
-	      uint16_t saturation = 0xffff
-	      );
-  
-  void lmfit2(
-	      fit2Info* pResult, std::vector<uint16_t>& trace,
-	      const std::pair<unsigned, unsigned>& limits,
-	      fit1Info* pSinglePulseFit = nullptr,
-	      uint16_t saturation = 0xffff
-	      );
+    /** 
+     * @struct GslFitParameters
+     * @brief Data passed around the fitting subsystem to Jacobian and 
+     * function evaluators 
+     */
+    struct GslFitParameters {
+      const std::vector<std::pair<std::uint16_t, std::uint16_t>>* s_pPoints; /*!< Data points. Pair is x, y. */
+    };
 
-  void lmfit2fixedT(
-		    fit2Info* pResult, std::vector<uint16_t>& trace,
-		    const std::pair<unsigned, unsigned>& limits,
-		    fit1Info* pSinglePulseFit = nullptr,
-		    uint16_t saturation = 0xffff
-		    );
+    void lmfit1(
+		fit1Info* pResult, std::vector<std::uint16_t>& trace,
+		const std::pair<unsigned, unsigned>& limits,
+		std::uint16_t saturation = 0xffff
+		);
+    void lmfit2(
+		fit2Info* pResult, std::vector<std::uint16_t>& trace,
+		const std::pair<unsigned, unsigned>& limits,
+		fit1Info* pSinglePulseFit = nullptr,
+		std::uint16_t saturation = 0xffff
+		);
+
+    void lmfit2fixedT(
+		      fit2Info* pResult, std::vector<std::uint16_t>& trace,
+		      const std::pair<unsigned, unsigned>& limits,
+		      fit1Info* pSinglePulseFit = nullptr,
+		      std::uint16_t saturation = 0xffff
+		      );
 
   }
 };

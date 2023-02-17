@@ -16,8 +16,11 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  functions_analytic.h
- *  @brief: Provide code to evaluate various functions for the DDAS Fit.
+/** 
+ * @file  functions_analytic.h
+ * @brief Provide code to evaluate various functions used to fit DDAS pulses.
+ * @note  All functions are in the DDAS::AnalyticFit namespace.
+
  */
 
 #ifndef FUNCTIONS_ANALYTIC_H
@@ -26,7 +29,9 @@
 #include <vector>
 #include <cstdint>
 
+/** @namespace DDAS */
 namespace DDAS {
+  /** @namespace DDAS::AnalyticFit */
   namespace AnalyticFit {
     
     double logistic(double A, double k, double x1, double x);

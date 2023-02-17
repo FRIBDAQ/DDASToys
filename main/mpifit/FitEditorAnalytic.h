@@ -15,8 +15,9 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  FitEditorAnalytic.h
- *  @brief: FitEditor class for analytic fitting
+/** 
+ * @file  FitEditorAnalytic.h
+ * @brief Definition of the FitEditor class for analytic fitting.
  */
 
 #ifndef FITEDITORANALYTIC_H
@@ -35,21 +36,23 @@ namespace DAQ {
 class Configuration;
 
 /**
- * @class FitEditorTemplate
- *   Extend the hit with the analytic fitting information, overwriting any 
- *   existing extension. It's intended for use with the EventEditor framework 
- *   providing a complete description of the new event body.
+ * @class FitEditorAnalytic
+ * @brief Fit trace data using the analytic fitting functions and extend hits.
+ *
+ * Extending the hit with this editor overwrites any existing extension. This 
+ * class is intended for use with the EventEditor framework providing a 
+ * complete description of the new event body.
  */
 
 class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
 {
 public:
   FitEditorAnalytic();
-  ~FitEditorAnalytic();
+  virtual ~FitEditorAnalytic();
 
   // Mandatory interface from CBuiltRingItemEditor::BodyEditor
 public:
-  virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader hdr, size_t bodySize, void* pBody);
+  virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody);
   virtual void free(iovec& e);
 
   // Additional functionality for this class
@@ -58,7 +61,7 @@ private:
   
   // Private member data
 private:
-  Configuration* m_pConfig;
+  Configuration* m_pConfig; //!< Configuration file parser.
 };
 
 #endif
