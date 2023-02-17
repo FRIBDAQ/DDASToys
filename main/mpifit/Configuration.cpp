@@ -247,10 +247,9 @@ Configuration::getFileNameFromEnv(const char* envname)
  *
  * @param line  Line to check.
  *
- * @return std::string
- * @retval Emtpy string if the line is a comment.
- * @retval The trimmed line if the line is not a comment.
-*/
+ * @return std::string The trimmed line if the line is not a comment, 
+ *                     otherwise an empty string.
+ */
 std::string
 Configuration::isComment(std::string line)
 {

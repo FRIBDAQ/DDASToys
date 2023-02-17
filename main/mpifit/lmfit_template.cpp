@@ -78,7 +78,7 @@ reduceTrace(
  * @param[out] X10  Guess for the location parameter X1
  * @param[out] C0   Guess for the baseline parameter C
  * 
- * @retval int  Status of the computation (GSL_SUCCESS)
+ * @return int  Status of the computation (GSL_SUCCESS)
  */
 static double
 estimateSinglePulse(
@@ -154,16 +154,18 @@ estimateSinglePulse(
  * @param[in]  pData  Actually a pointer to a GslFitParameters struct.
  * @param[out] r      Function residuals for each data point.
  *
- * @retval int  Status of the computation (GSL_SUCCESS). Note all points are
- *               weighted by 1.0 in this computation.
+ * @return int  Status of the computation (GSL_SUCCESS).
  *
  * @note GPU implementation hint: This function is nicely data parallel.
  */
 static int
 gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
+  
   DDAS::TemplateFit::GslFitParameters* pParams = reinterpret_cast<DDAS::TemplateFit::GslFitParameters*>(pData);
   
+  // Note all points are  weighted by 1.0 in this computation.
+    
   // Pull the fit parameterization from p:
   
   double A1  = gsl_vector_get(p, P1A1_INDEX);
@@ -332,14 +334,15 @@ DDAS::TemplateFit::lmfit1(
  * @param[in]  pData  Actually a pointer to a GslFitParameters struct.
  * @param[out] r      Function residuals for each data point.
  *
- * @retval int        Status of the computation (GSL_SUCCESS). Note all 
- *                     points are weighted by 1.0 in this computation.
+ * @return int  Status of the computation (GSL_SUCCESS).
  * 
  * @note GPU implementation hint: This function is nicely data parallel.
  */
 static int
 gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
+  // Note all points are weighted by 1.0 in this computation.
+  
   DDAS::TemplateFit::GslFitParameters* pParams = reinterpret_cast<DDAS::TemplateFit::GslFitParameters*>(pData); // Data
   
   // Pull the fit parameterization from p:

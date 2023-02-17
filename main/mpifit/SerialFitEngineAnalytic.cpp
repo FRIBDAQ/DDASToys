@@ -62,7 +62,7 @@ using namespace DDAS;
  * @param erise, efall  Pre-computed common exponential terms needed to 
  *                      evaluate the derivative.
  *
- * @retval double  Value of (dP1/dA)(x)/w
+ * @return double  Value of (dP1/dA)(x)/w
  */
 static double
 dp1dA(double k1, double k2, double x1, double x, double w,
@@ -85,7 +85,7 @@ dp1dA(double k1, double k2, double x1, double x, double w,
  * @param erise, efall  Pre-computed common exponential terms needed to 
  *                      evaluate the derivative.
  *
- * @retval double  Value of (dP1/dk1)(x)/w
+ * @return double  Value of (dP1/dk1)(x)/w
  */
 static double
 dp1dk1(double A, double k1, double k2, double x1, double x, double w,
@@ -111,7 +111,7 @@ dp1dk1(double A, double k1, double k2, double x1, double x, double w,
  * @param erise, efall  Pre-computed common exponential terms needed to 
  *                      evaluate the derivative.
  *
- * @retval double  Value of (dP1/dk2)(x)/w
+ * @return double  Value of (dP1/dk2)(x)/w
  */
 static double
 dp1dk2(double A, double k1, double k2, double x1, double x, double w,
@@ -137,7 +137,7 @@ dp1dk2(double A, double k1, double k2, double x1, double x, double w,
  * @param erise, efall  Pre-computed common exponential terms needed to 
  *                      evaluate the derivative.
  *
- * @retval double  Value of (dP1/dk2)(x)/w
+ * @return double  Value of (dP1/dk2)(x)/w
  */
 static double
 dp1dx1(double A, double k1, double k2, double x1, double x, double w,
@@ -164,7 +164,7 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
  * @param x   x value at which to evaluate all this.
  * @param w   weight for the point 
  *
- * @retval double  Value of (dP1/dC)(x)/w
+ * @return double  Value of (dP1/dC)(x)/w
  */
 static double
 dp1dC(double A, double k1, double k2, double x1, double x, double w)

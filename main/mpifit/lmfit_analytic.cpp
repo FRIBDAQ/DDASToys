@@ -124,7 +124,7 @@ static void reduceTrace(
  * @param x   x value at which to evaluate all this.
  * @param w   weight for the point 
  *
- * @retval double  Value of (dP1/dA)(x)/w
+ * @return double  Value of (dP1/dA)(x)/w
  */
 static double
 dp1dA(double k1, double k2, double x1, double x, double w,
@@ -145,7 +145,7 @@ dp1dA(double k1, double k2, double x1, double x, double w,
  * @param x   x value at which to evaluate all this.
  * @param w   weight for the point 
  *
- * @retval double  Value of (dP1/dk1)(x)/w
+ * @return double  Value of (dP1/dk1)(x)/w
  */
 static double
 dp1dk1(double A, double k1, double k2, double x1, double x, double w,
@@ -170,7 +170,7 @@ dp1dk1(double A, double k1, double k2, double x1, double x, double w,
  * @param x   x value at which to evaluate all this.
  * @param w   weight for the point 
  *
- * @retval double  Value of (dP1/dk2)(x)/w
+ * @return double  Value of (dP1/dk2)(x)/w
  */
 static double
 dp1dk2(double A, double k1, double k2, double x1, double x, double w,
@@ -194,7 +194,7 @@ dp1dk2(double A, double k1, double k2, double x1, double x, double w,
  * @param x   x value at which to evaluate all this.
  * @param w   weight for the point 
  *
- * @retval double  Value of (dP1/dk2)(x)/w
+ * @return double  Value of (dP1/dk2)(x)/w
  */
 static double
 dp1dx1(double A, double k1, double k2, double x1, double x, double w,
@@ -221,7 +221,7 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
  * @param x   x value at which to evaluate all this.
  * @param w   weight for the point 
  *
- * @retval double  Value of (dP1/dC)(x)/w
+ * @return double  Value of (dP1/dC)(x)/w
  */
 static double
 dp1dC(double A, double k1, double k2, double x1, double x, double w)
@@ -247,14 +247,14 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  * @param[in]  pData  Actually a pointer to a GslFitParameters struct.
  * @param[out] r      Function residuals for each data point.
  *
- * @retval int  Status of the computation (GSL_SUCCESS).  Note all points are
- *              weighted by 1.0 in this computation.
+ * @return int  Status of the computation (GSL_SUCCESS).  
  *
  * @note GPU implementation hint: This function is nicely data parallel.
  */
 static int
 gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
+  // Note all points are weighted by 1.0 in this computation.
   CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
   pEngine->residuals(p, r);
     
@@ -269,7 +269,7 @@ gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  * @param[in]  pdata  Actually a pointer to a GslFitParameters struct.
  * @param[out] J      The Jacobian for this iteration of the fit.
  * 
- * @retval int  GSL_SUCCESS if all computations work.
+ * @return int  GSL_SUCCESS if all computations work.
  *
  * @note GPU Implementation hint: This function is nicely data parallel.
  */
@@ -291,7 +291,7 @@ gsl_p1Jacobian(const gsl_vector* p, void* pData, gsl_matrix* J)
  * @param[out] resids  Computed vector of residuals.
  * @param[out] J       Computed Jacobian matrix.
  *
- * @retval int  GSL_SUCCESS completion status.
+ * @return int  GSL_SUCCESS completion status.
  *
  * @note GPU implementation hint: That both functions are nicely data parallel
  *       and can run in parallel wrt to each other.
@@ -373,7 +373,7 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
  * @param C0     Estimate for the constant offset.
  * @param trace  The trace data.
  *
- * @retval double  The risetime estimate.
+ * @return double  The risetime estimate.
  *
  * @note For now assume that the half position is within the AOI
  * @note For now we're not correcting for flattops.
@@ -535,7 +535,7 @@ DDAS::AnalyticFit::lmfit1(
  * @param[in]  pData  Actually a pointer to a GslFitParameters object.
  * @param[out] r      Pointer to the vector to contain the residuals.
  * 
- * @retval int  GSL_SUCCESS can't really fail.
+ * @return int  GSL_SUCCESS can't really fail.
  */
 static int
 gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
@@ -798,7 +798,8 @@ DDAS::AnalyticFit::lmfit2(
  * @param[in]  p      The fit parameters (see indices above).
  * @param[in]  pData  Actuall a pointer to a GslFitParameters object.
  * @param[out] r      Pointer to the vector to contain the residuals.
- * @retval int  GSL_SUCCESS  can't really fail.
+ *
+ * @return int  GSL_SUCCESS can't really fail.
  */
 static int
 gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)

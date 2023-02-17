@@ -169,7 +169,6 @@ DDAS::AnalyticFit::doublePulse(
  * @param x0  The position of the pulse.
  *
  * @return double  The corrected amplitude of the fitted pulse.
- *
  * @retval -1  If k1/k2 <= 1.
  */
 double
