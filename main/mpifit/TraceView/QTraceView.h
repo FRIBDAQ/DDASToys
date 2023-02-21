@@ -22,6 +22,7 @@ class QLineEdit;
 class QListView;
 class QStandardItemModel;
 class QTimer;
+class QLabel;
 
 namespace DAQ {
   namespace DDAS {
@@ -67,6 +68,7 @@ private:
   void resetGUI();
   void enableAll();
   void disableAll();
+  void showEOF();
 			   
 private slots:
   void openFile();
@@ -111,6 +113,8 @@ private:
   QTimer* m_pTimer;
   
   QStatusBar* m_pStatusBar;
+
+  QLabel* m_pEOF;
 };
 
 #endif

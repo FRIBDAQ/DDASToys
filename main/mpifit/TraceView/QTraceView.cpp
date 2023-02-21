@@ -59,7 +59,7 @@ QTraceView::QTraceView(QWidget* parent) :
   m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
   m_pHitSelectList(createHitSelectList()),
   m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
-  m_pStatusBar(new QStatusBar)
+  m_pStatusBar(new QStatusBar), m_pEOF(new QLabel)
 { 
   createActions();
   configureMenu();
@@ -95,6 +95,7 @@ QTraceView::~QTraceView()
 {
   delete m_pDecoder;
   delete m_pFitManager;
+  delete m_pEOF;
 }
 
 //
@@ -211,7 +212,7 @@ QTraceView::createTopBoxes()
   QHBoxLayout* layout2 = new QHBoxLayout;
   m_pSkipEvents = new QPushButton(tr("Skip"));
   m_pEventsToSkip = new QLineEdit("1");
-  m_pEventsToSkip->setValidator(new QIntValidator(0, 999999, this));
+  m_pEventsToSkip->setValidator(new QIntValidator(0, 9999999, this));
   layout2->addWidget(m_pSkipEvents);
   layout2->addWidget(m_pEventsToSkip);
   gb2->setLayout(layout2);
@@ -398,9 +399,7 @@ QTraceView::updateSelectableHits()
     QStandardItem* item = new QStandardItem(id);
     model->setItem(i, item);
   }
-  
 }
-
 
 //____________________________________________________________________________
 /**
@@ -435,7 +434,7 @@ QTraceView::enableAll()
  * @brief Disable all UI buttons.
  *
  * Disable everything except exit, which we should always be able to do. Assume
- *  the exit button is the last one in the button list.
+ * the exit button is the last one in the button list.
  */
 void
 QTraceView::disableAll()
@@ -448,7 +447,28 @@ QTraceView::disableAll()
 }
 
 //____________________________________________________________________________
+/** 
+ * @brief Show a message for source data EOF.
+ */
+void
+QTraceView::showEOF()
+{
+  m_pEOF->setWordWrap(true);
+  m_pEOF->setMaximumSize(400, 200);
+  std::string msg = "No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.";
+  m_pEOF->setText(tr(msg.c_str()));
+  
+  QWidget* w = new QWidget;
+  w->setWindowTitle("End of file");
+  QVBoxLayout* l = new QVBoxLayout;
+  l->addWidget(m_pEOF);
+  w->setLayout(l);
+  w->show();
+}
+
+//____________________________________________________________________________
 // Private slots
+//
 
 //____________________________________________________________________________
 /**
@@ -491,14 +511,21 @@ QTraceView::getNextEvent()
   
   while (m_filteredHits.empty()) {
     m_hits = m_pDecoder->getEvent();
+
+    // If the hit list is empty there are no more PHYSICS_EVENTs to grab
+    // so issue the EOF warning and return from the function.
+    if (m_hits.empty()) {
+      showEOF();
+      return;
+    }
+    
     filterHits();
   }
   
   updateSelectableHits();
   m_pRootCanvas->clear();
   
-  std::string msg = m_fileName + " -- Event " +
-    std::to_string(m_pDecoder->getEventCount());
+  std::string msg = m_fileName + " -- Event " + std::to_string(m_pDecoder->getEventCount());
   setStatusBar(msg);
 }
 
@@ -515,11 +542,14 @@ QTraceView::skipEvents()
 {
   std::string msg = "Skipping events, be patient...";
   setStatusBar(msg);
+  
   int events = m_pEventsToSkip->text().toInt();
   int retval = m_pDecoder->skip(events);
+  
   if (retval < 0) {
+    showEOF();
   } else {
-    msg = "Successfully skipped " + std::to_string(events) + " PHYSICS_EVENTs. Hit 'Next' to display the next PHYSICS_EVENT containing trace data.";
+    msg = "Successfully skipped " + std::to_string(events) + " physics events. Hit 'Next' to display the next physics event containing trace data.";
     setStatusBar(msg);
   }
 }
