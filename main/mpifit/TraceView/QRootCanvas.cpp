@@ -282,7 +282,7 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
 {  
   unsigned low = m_pFitManager->getLowFitLimit(hit);
   unsigned high = m_pFitManager->getHighFitLimit(hit);
-  unsigned fitRange = high - low;
+  unsigned fitRange = high - low + 1; // +1 since range is [low, high]
 
   // Get a vector of fit data with a size defined by the fitting range.
   // Note that index 0 of the fit vector corresponds to sample number low
@@ -291,13 +291,13 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
   std::vector<double> fit = m_pFitManager->getSinglePulseFit(ext, low, high);
   
   if (!m_pFit1Hist) {
-    m_pFit1Hist = new TH1D("fit1", "fit1", fitRange, low, high);
+    m_pFit1Hist = new TH1D("fit1", "fit1", fitRange, low, high+1);
   } else {
-    m_pFit1Hist->SetBins(fitRange, low, high);
+    m_pFit1Hist->SetBins(fitRange, low, high+1);
   }
   m_pFit1Hist->Reset("ICESM");
   
-  for (unsigned i=low; i<high; i++) {
+  for (unsigned i=low; i<=high; i++) {
     m_pFit1Hist->Fill(i, fit[i-low]);
   }
   m_pFit1Hist->SetLineColor(kRed);
@@ -323,7 +323,7 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
 { 
   unsigned low = m_pFitManager->getLowFitLimit(hit);
   unsigned high = m_pFitManager->getHighFitLimit(hit);
-  unsigned fitRange = high - low;
+  unsigned fitRange = high - low + 1; // +1 since range is [low, high]
 
   // Get a vector of fit data with a size defined by the fitting range.
   // Note that index 0 of the fit vector corresponds to sample number low
@@ -332,13 +332,13 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
   std::vector<double> fit = m_pFitManager->getDoublePulseFit(ext, low, high);
   
   if (!m_pFit2Hist) {
-    m_pFit2Hist = new TH1D("fit2", "fit2", fitRange, low, high);
+    m_pFit2Hist = new TH1D("fit2", "fit2", fitRange, low, high+1);
   } else {
-    m_pFit2Hist->SetBins(fitRange, low, high);
+    m_pFit2Hist->SetBins(fitRange, low, high+1);
   }
   m_pFit2Hist->Reset("ICESM");
   
-  for (unsigned i=low; i<high; i++) {
+  for (unsigned i=low; i<=high; i++) {
     m_pFit2Hist->Fill(i, fit[i-low]);
   }
   m_pFit2Hist->SetLineColor(kBlue);

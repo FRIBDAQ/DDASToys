@@ -126,7 +126,7 @@ FitManager::readTemplateFile()
  * @param low  - low limit of the fit in samples
  * @param high - high limit of the fit in samples
  *
- * @return std::vector<double> - vector of fit values for range [low, high)
+ * @return std::vector<double> - vector of fit values for range [low, high]
  */
 std::vector<double>
 FitManager::getSinglePulseFit(const DDAS::HitExtension& ext,
@@ -152,7 +152,7 @@ FitManager::getSinglePulseFit(const DDAS::HitExtension& ext,
     issueWarning();
   }
   
-  for (unsigned i=low; i<high; i++) {
+  for (unsigned i=low; i<=high; i++) {
     fit.push_back(singlePulse(A1, k1, k2, x1, C, i));
   }
 
@@ -170,7 +170,7 @@ FitManager::getSinglePulseFit(const DDAS::HitExtension& ext,
  * @param low  - low limit of the fit in samples
  * @param high - high limit of the fit in samples
  *
- * @return std::vector<double> - vector of fit values for range [low, high)
+ * @return std::vector<double> - vector of fit values for range [low, high]
  */
 std::vector<double>
 FitManager::getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsigned high)
@@ -189,7 +189,7 @@ FitManager::getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsig
   
   double C = ext.twoPulseFit.offset;
  
-  for (unsigned i=low; i<high; i++) {
+  for (unsigned i=low; i<=high; i++) {
     fit.push_back(doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, i));
   }
 
@@ -221,7 +221,7 @@ FitManager::getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit)
 /**
  * getHighFitLimit
  *   Get the high limit of the fit range mapped in the Configuration class 
- *   for this hit crate/slot/channel. Note that this limit is exclusive.
+ *   for this hit crate/slot/channel. Note that this limit is inclusive.
  *
  * @param hit - references the hit we are currently processing
  *

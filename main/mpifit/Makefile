@@ -5,12 +5,13 @@
 #be modified to match the longest trace we're fitting if this is CUDA enabled.
 #
 # Required definitions:
-# Base of SpecTcl via the SPECTCLHOME environment variable. If SpecTcl 5.10 or
-# later is used, the ROOT for that version must also be setup (e.g.
-# /usr/opt/root/some-version/bin/thisroot.sh).
-# A version of NSCLDAQ has been set up.
-# A version of DDAS has been set up.
-# Define XIAAPIDIR to point to the XIAAPI version used by your NSCLDAQ setup.
+#  - Base of SpecTcl via the SPECTCLHOME environment variable. If SpecTcl 5.10
+#    or later is used, the ROOT for that version must also be setup (e.g.
+#    /usr/opt/root/some-version/bin/thisroot.sh).
+#  - A version of NSCLDAQ has been set up.
+#  - A version of DDAS has been set up.
+#  - Define XIAAPIDIR to point to the XIAAPI version used by your NSCLDAQ
+#    setup.
 
 MAXPOINTS = 200
 
@@ -44,15 +45,10 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-DOCS = DDASToys.html
-XSLTPROC = /usr/bin/xsltproc
-XSL = /usr/share/xml/docbook/stylesheet/nwalsh/xhtml/docbook.xsl
-
 LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
-all: $(LIBS) traceview $(DOCS)
+all: $(LIBS) traceview docs
 libs: $(LIBS)
-docs: $(DOCS)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
@@ -77,10 +73,8 @@ libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 # Build docbooks
 #
 
-%.html: DDASToys.xml $(XSL)
-	@$(XSLTPROC) -o $@ $(XSL) $<
-
-all: $(DOCS)
+docs:
+	(cd Docs; make)
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
@@ -97,10 +91,12 @@ install:
 	install -m 0755 *.so $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
 	install -m 0755 TraceView/traceview $(PREFIX)/bin/traceview
-	install -m 0644 AREADME.txt DDASToys.html $(PREFIX)/share
+	install -m 0644 AREADME.txt Docs/UserGuide.html $(PREFIX)/share
+	cp -r Docs/html $(PREFIX)/share/html
+	cp -r Docs/latex $(PREFIX)/share/latex
 
 clean:
 	rm -f *.so *.o
 	make -C TraceView clean
 	rm -f TraceView/traceview
-	rm -f *.html
+	make -C Docs clean

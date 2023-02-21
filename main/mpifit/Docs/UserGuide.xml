@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd">
+
+<book>
+  
+  <bookinfo>
+    <title>DDASToys User's Guide</title>
+    <author><firstname>Ron</firstname><surname>Fox</surname></author>
+    <author><firstname>Aaron</firstname><surname>Chester</surname></author>
+    <revhistory>
+      <revision>
+        <revnumber>1.0</revnumber>
+        <date>February 2023</date>
+        <authorinitials>RF</authorinitials>
+	<authorinitials>ASC</authorinitials>
+        <revremark>Original release</revremark>
+      </revision>
+    </revhistory>
+  </bookinfo>
+  
+  <chapter id="Intro">
+    <title> Introduction </title>    
+    <para>
+      The DDASToys software suite supports parallelized trace fitting at a rate
+      that allows the analysis of nearline data to at least keep up with and
+      hopefully out-pace data acquisition. Several tools are introduced as part
+      of this software package. These tools are, for the most part, intended to
+      be run on either the NERSC computing center at LBNL or on the local
+      computing cluster at FRIB. This document introduces and describes how to
+      use these tools. Detailed documentation of the source code is provided in
+      Doxygen reference manuals, installed in the share/html and share/latex
+      directories located under the top-level DDASToys installation directory.
+      To view the Doxygen documentation, open
+      <literal>share/html/index.html</literal> with a web browser such as
+      Firefox.
+    </para>
+
+    <para>
+      The tools provided by this package are:
+      
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    EventEditor with the FitEditor library plugins - parallel
+	    trace-fitting software which  appends fit parameters for single-
+	    and double-pulse fits to fragments (hits) in an event, modifying
+	    the event structure.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    libFitEditorAnalytic.so plugin library - A fitting library which
+	    models the pulse shape using a constant offset, a logistic
+	    risetime, and an exponential decay. The fitting routines use the
+	    Levenburg-Marquardt (LM) method implemented in the Gnu Scientific
+	    Library (GSL) to minimize the chi-square between the recorded trace
+	    and the model function.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    libFitEditorTemplate.so plugin library - GSL LM fitting library
+	    which models the detector response using an idealized pulse shape
+	    template. The trace template is provided by the user and is
+	    typically constructed from experimental data.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    libDDASFitHitUnpacker.so library - a library for unpacking DDAS hit
+	    data which may contain fit extensions added to the event by the
+	    EventEditor. Also capable of unpacking "normal" hits without hit
+	    extensions.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    traceview - a program to interactively display traces, fits, and,
+	    when implemented, machine learning pulse classification
+	    probabilities for events in edited and unedited event files.
+	  </para>
+	</listitem>
+      </itemizedlist>
+      
+    </para>
+
+    <para>
+      Finally, all of these tools depend on NSCLDAQ libraries and programs.
+      A singularity container has been created that reproduces enough of that
+      environment to have supported installation and use of the NSCLDAQ
+      software at NERSC. Most of the packages described above must, therefore,
+      be run under that container.
+    </para>
+    
+  </chapter>
+
+  <chapter id="Containers">
+    <title>
+      Singularity containers
+    </title>
+    <para>
+      Singularity containers make use of an overlay file system to provide the
+      userland libraries and utilities of specific Linux environments under
+      the run-time environment of another system. A Debian-like singularity
+      image allows NSCLDAQ to be built under a supported compilation and
+      library environment.      
+    </para>
+
+    <para>
+      A singularity image is a single (large) file that contains a file-system
+      image for the user utilities of a specific distribution of Linux.
+      The <command>singularity</command> command can be used to run commands,
+      or even activate shells in the environment of that file system image.
+      Finally, the <command>singularity</command> command allows chunks of the
+      host filesystem to be mounted at specific points in the image container.
+      This allows us to build minimal containers, use them to build the
+      software we need and the mount that software where we expect to see it
+      in NSCLDAQ systems.
+    </para>
+    
+    <para>
+      <emphasis>Additional information will appear here about the NSCLDAQ,
+      OpenMPI, SpecTcl, and ROOT versions available in the container which are
+      supported for analysis at NERSC. Ideally we run everything at FRIB using
+      the same container. Fill in once we have an image deployed that we are
+      happy with and decide how we want to analyze the data. Describe what is
+      mounted in the container /usr/opt and where.</emphasis>
+    </para>
+    
+  </chapter>
+
+  <chapter id="Plugins">
+    <title>Fit plugin libraries for DDASToys</title>
+    <para>
+      This chapter describes in broad terms the fitting plugins for the
+      EventEditor framework. The required components are listed below with
+      their implementation in using template fitting method given as examples.
+      Fit plugin libraries must contain the following:
+    </para>
+
+    <itemizedlist>
+      <listitem>
+	<para>
+	  An editor class - A method for extending hits with fit information
+	  called when the <command>EventEditor</command> command is executed.
+	  The editor method subclasses
+	  <literal>CBuiltRingItemEditor::BodyEditor</literal> to modify event
+	  fragment body data and implements its mandatory interface to edit
+	  the event body and free dynamic extension data. The editor is
+	  responsible for determining which channels should be fit, getting
+	  trace data from the event fragment, and performing the fit by calling
+	  the appropriate fitting subroutines. The data structures containing
+	  the fit information appended to each hit are defined in the
+	  <literal>fit_extensions.h</literal> header. See
+	  <literal>FitEditorTemplate.h/cpp</literal> and its Doxygen
+	  documentation for more details. The editor class must contain a
+	  factory method <literal>createEditor()</literal> to create itself
+	  when the <command>EventEditor</command> executable is run:
+
+	  <informalexample>
+	    <programlisting>
+	      extern "C" {
+	        FitEditorTemplate* createEditor() {
+	          return new FitEditorTemplate;
+	        }
+	      }
+	    </programlisting>
+	  </informalexample>
+
+	  Wrapping the factory method in <literal>extern "C"</literal> is
+	  necessary to prevent name mangling by the C++ compiler.	    
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A trace fitting method - Generally speaking, a fitting method
+	  consists of three parts. The first is a model which describes the
+	  trace data to be fit, the second is an objective function relating
+	  the model and data, and the third is an algorithm to optimize
+	  the objective function. For the template trace fitting, the model is
+	  a template trace parameterized by an amplitude, position, and
+	  constant offset. The model is implemented in
+	  <literal>functions_template.h/cpp</literal>. The objective function
+	  is the chi-square function (also implemented in
+	  <literal>functions_template.h/cpp</literal>) and the optimization
+	  algorithm, implemented in <literal>lmfit_template.h/cpp</literal>
+	  uses the LM method in GSL to minimize the chi-square value between
+	  the model and trace data. See the Doxygen documentation for more
+	  detail on the fitting subroutines.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A library plugin - A shared library containing the editor and
+	  fitting subroutines described above that is loaded at runtime when
+	  executing the <command>EventEditor</command> command. The plugin
+	  library <literal>libFitEditorTemplate.so</literal> is generated by
+	  linking the FitEditorTemplate, functions_template and lmfit_template
+	  object files.
+	</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      Additionally, it is helpful to supply the following:
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+	<para>
+	  An unpacker - An optional tool for unpacking event fragments with fit
+	  extensions into a useful data structure for downstream analysis by
+	  users. The <literal>libDDASFitHitUnpacker.so</literal> library
+	  provides an interface for unpack DDAS events with fit extensions into
+	  the data structure defined by the <literal>DDASFitHit</literal>
+	  class. The <literal>DDASFitHit</literal> class is subclassed from
+	  the <literal>DDASHit</literal> class defined in the header file of
+	  the same name found in the DDAS installation directory. This
+	  directory is mounted in the container <literal>/usr/opt</literal> and
+	  pointed to by the <literal>$DDAS_INC</literal> environment variable
+	  provided that the DDAS environment has been configured by sourcing
+	  its <literal>ddassetup.sh</literal> script. Again, refer to the
+	  Doxygen documentation for more information.
+	</para>
+      </listitem>
+
+    </itemizedlist>
+    
+  </chapter>
+  
+  <chapter id="Usage">
+    <title>
+      Using DDASToys to fit trace data
+    </title>
+    <para>
+      This chapter provides a how-to guide for fitting traces using the
+      DDASToys tools. These tools must be run under the singularity container
+      described in <xref linkend="Containers"/>.
+    </para>
+
+    <section>
+      <title>
+	Fitting traces using the EventEditor
+      </title>
+      <para>
+	The <literal> nscl-buster.img </literal> container supports NSCLDAQ
+	11.4 and later which include parallel event editors. The EventEditor
+	program provides a plugin architecture for fitting event fragments
+	containing traces. We use this program with a plugin library which
+	describes how to fit the traces and defines the data structure
+	containing the fit results which we append to each hit.
+      </para>
+      
+      <para>
+	The EventEditor program supports parallel fitting using both ZMQ
+	threading and OpenMPI. Running the command
+	<command>$DAQBIN/EventEditor --help</command> from the command line
+	describes the arguments which can be passed to the program. An example
+	script to configure the proper runtime environment and run the
+	EventEditor program for fitting traces using ZMQ threading and the
+	template fitter is described below:
+      </para>
+      
+      <informalexample>
+	<programlisting>
+	  #!/bin/bash
+
+	  . /usr/opt/daq/12.0-pre6/daqsetup.bash -f          <co id="daqsetup"/>
+
+	  export FIT_CONFIGFILE=~/fitconfig.txt              <co id="config"/>
+	  export TEMPLATE_CONFIGFILE=~/template.txt
+
+	  $DAQBIN/EventEditor \                              <co id="exec"/>
+	  -l /aaron/ddastoys/lib/libFitEditorTemplate.so \   <co id="lib"/>
+	  -s file:///scratch/chester/run-0287-00.evt \       <co id="source"/>
+	  -S file:///scratch/chester/run-0287-00-fit.evt \   <co id="sink"/>
+	  -n 16 \                                            <co id="wrks"/>
+	  -c 1000 \                                          <co id="clump"/>
+          -p "threaded"                                      <co id="strat"/>
+	</programlisting>
+      </informalexample>
+      
+      <calloutlist>
+	<callout arearefs="daqsetup">
+	  <para>
+	    Since the program we are running depends on NSCLDAQ, ensure that
+	    the NSCLDAQ environment variables are set up. The
+	    <literal>-f</literal> flag will overwrite any existing NSCLDAQ
+	    environment variables when the <literal>daqsetup.sh</literal>
+	    script is sourced.
+	  </para>
+	</callout>
+        <callout arearefs="config">
+	  <para>
+	    These environment variables are required by the fitting plugin
+	    library. They are described in more detail later in this chapter.
+	  </para>
+	</callout>
+	<callout arearefs="exec">
+	  <para>
+	    Path to run the EventEditor executable located in the NSCLDAQ
+	    installation directory. Because we previously setup the NSCLDAQ
+	    environment variables, <literal>$DAQBIN</literal> points to the
+	    correct directory for NSCLDAQ binaries.
+	  </para>
+	</callout>
+	<callout arearefs="lib">
+	  <para>
+	    The <literal>-l</literal> or <literal>--classifier</literal> option
+	    specifies the location of the plugin library that describes the
+	    single- and double-pulse fits performed for each trace as well as
+	    the structure of the data appended to each event fragment. In this
+	    case the traces are fit using a template pulse shape. The extension
+	    added to each trace is described in
+	    <literal>include/fit_extensions.h</literal> under the top level
+	    <literal>ddastoys</literal> installation directory; see the
+	    <literal>HitExtensions</literal> struct in the
+	    <literal>DDAS</literal> namespace. The sizes for the whole event
+	    and for the fragment are updated to be consistent with the updated
+	    fragment sizes. 
+	  </para>
+	</callout>
+	<callout arearefs="source">
+	  <para>
+	    The <literal>-s</literal> or <literal>--source</literal> option
+	    specifies the input URI. In this case we read data from a file.
+	  </para>
+	</callout>
+	<callout arearefs="sink">
+	  <para>
+	    The <literal>-S</literal> or <literal>--sink</literal> option
+	    specifies the output URI. In this case we write the output events
+	    to a file sink.
+	  </para>
+	</callout>
+	<callout arearefs="wrks">
+	  <para>
+	    The <literal>-n</literal> or <literal>--workers</literal> option
+	    specifies the number of worker threads used to fit traces.
+	  </para>
+	</callout>
+	<callout arearefs="clump">
+	  <para>
+	    The <literal>-c</literal> or <literal>--clump-size</literal> option
+	    determines how many events get passed as a work unit to each worker
+	    thread. Larger numbers can reduce the communication overhead.
+	  </para>
+	</callout>
+	<callout arearefs="strat">
+	  <para>
+	    The <literal>-p</literal> or <literal>--parallel-strategy</literal>
+	    option sets the parallel strategy enabling nearline fitting
+	    of trace data. Parallel fitting via ZMQ multithreading
+	    (<literal>threaded</literal>) and OpenMPI (<literal>mpi</literal>)
+	    are supported by this application.
+	  </para>
+	</callout>
+      </calloutlist>
+
+      <para>
+	Running the EventEditor program using the OpenMPI parallel
+	strategy requires the following modifications to the above script:
+      </para>
+
+      <informalexample>
+	<programlisting>
+	  export PATH=/usr/opt/mpi/openmpi-4.0.1/bin:$PATH       <co id="mpi"/>
+	  export LD_LIBRARY_PATH=/usr/opt/mpi/openmpi-4.0.1/lib
+
+	  procs=19                                               <co id="procs"/>
+	  workers=`expr $procs - 3`
+
+	  mpirun -np $procs $DAQBIN/EventEditor \                <co id="mpirun"/>
+	  -l /aaron/ddastoys/lib/libFitEditorTemplate.so \
+	  -s file:///scratch/chester/run-0287-00.evt \
+	  -S file:///scratch/chester/run-0287-00-fit.evt \
+	  -n $workers \                                          <co id="mpiwrks"/>
+	  -c 1000 \
+	  -p "mpi"                                               <co id="strat2"/>
+	</programlisting>
+      </informalexample>
+      
+      <calloutlist>
+	<callout arearefs="mpi">
+	  <para>
+	    These environment settings point to the OpenMPI software built in
+	    the container.
+	  </para>
+	</callout>
+	<callout arearefs="procs">
+	  <para>
+	    These variables define the number of MPI processes to use for
+	    parallel fitting. The number of worker processes is given by
+	    <literal>$procs - 3</literal> because in addition to the fit tasks,
+	    there are tasks that distribute data, sort the fitted data, and
+	    output the sorted data. Note that for MPI fitting, this means the
+	    number of processes must be at least 4.
+	  </para>
+	</callout>
+	<callout arearefs="mpirun">
+	  <para>
+	    Use <command>mpirun</command> in the specific version of OpenMPI
+	    we have configured in the container to run the EventEditor in
+	    parallel. The total number of processes, including the input/output
+	    and sort processes are passed to <command>mpirun</command> using
+	    <literal>-np</literal>.
+	  </para>
+	</callout>
+	<callout arearefs="mpiwrks">
+	  <para>
+	    The number of worker tasks for MPI fitting is passed to the
+	    EventEditor as before.
+	  </para>
+	</callout>
+	<callout arearefs="strat2">
+	  <para>
+	    Define the parallel strategy as MPI.
+	  </para>
+	</callout>	
+      </calloutlist>
+      
+    </section>
+
+    <section>
+      <title>
+	Configuration files for parallel fitting
+      </title>
+      <para>
+	The structure of the configuration files pointed to by the
+	<literal>FIT_CONFIGFILE</literal> and
+	<literal>TEMPLATE_CONFIGFILE</literal> environment variables are
+	described here. The fitting routines expect the configuration files to
+	have the formats defined in this section and will fail to run correctly
+	if an improperly formatted file is provided. 
+      </para>
+
+      <para>
+	The fit configuration file pointed to by the
+	<literal>FIT_CONFIGFILE</literal> environment variable is a multi-line,
+	whitespace-separated text file describing which channels should be fit.
+	The file can contain blank lines and both leading and trailing
+	whitespaces are ignored. If the first non-whitespace character is a '#'
+	the line is considered a comment and ignored. Non-comment lines contain
+	six whitespace-separated unsigned integers:
+      </para>
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    crate - the crate ID for the channel to be fit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    slot - the slot ID for the channel to be fit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    channel - the channel ID on the above crate/slot which will be fit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    first-point - sample number on the recorded trace defining the low
+	    limit of the fitting range. Inclusive.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    last-point - sample number on the trace defining the high limit of
+	    the fitting range. Inclusive.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    saturation - the saturation value for the ADC in this crate/slot.
+	    Points on the trace greater than or equal to the saturation value
+	    are not included in the fit. This allows for fitting traces which
+	    overflow the ADC. For a module with a bit depth of B bits, the
+	    maximum ADC value is given by 2^B - 1.
+	  </para>
+	</listitem>	
+      </itemizedlist>
+
+      <para>
+	Shown below is an example fit configuration file to fit a single
+	channel, showing the use of comments which can provide more detailed
+	identifying information for the channels to be fit, in this case the
+	dynode of an implantation detector used in a beta-decay experiment.
+      </para>
+      
+      <informalexample>
+	<programlisting>
+	  #
+	  #   Describes which channels should be fit.
+	  #   crate slot channel first-point last-point saturation
+	  #
+
+	  #  Dynode:
+
+	  1 2 0 5 125 65535
+	</programlisting>
+      </informalexample>
+
+      <para>
+	The template configuration file pointed to by the
+	<literal>TEMPLATE_CONFIGFILE</literal> environment variable is a
+	multi-line, whitespace-separated text file containing template metadata
+	and the template values. The rules regarding whitespace, blank lines,
+	and comments are the same as for the fit configuration file. The first
+	non-comment line contains two whitespace-separated unsigned integers
+	which define the template metadata:
+      </para>
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    align-point - time reference point for the template in sample
+	    number. The position of the fitted pulse reported by the template
+	    trace fit is given with respect to the align-point.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    npts - number of data points in the template trace. 
+	  </para>
+	</listitem>	
+      </itemizedlist>
+
+      <para>
+	The remaining lines contain the floating point template data values.
+	Shown below is an abbreviated example template configuration file.
+      </para>
+      
+      <informalexample>
+	<programlisting>
+	  #
+	  # Template metadata and values.
+	  #
+	  #   align-point npts
+	  #   template[0]
+	  #   template[1]
+	  #   ...
+	  #   template[npts-1]
+	  #
+	  54 125
+	  5.21734e-06
+	  1.89661e-06
+	  ...
+	  -0.0446554
+	</programlisting>
+      </informalexample>      
+    </section>
+    
+    <section>
+      <title>
+	traceview program for viewing fit results
+      </title>
+      <para>
+	The traceview program provides a graphical interface to view event data
+	containing traces as well as their associated fits and classification
+	as single- or double-pulse events if the machine learning pulse
+	classifier is used. The viewer is installed in the
+	<literal>bin</literal> directory under the top-level
+	<literal>ddastoys</literal> installation directory. Interfaces to
+	display subsets of hit data and select the fitting method are provided.
+	traceview reads fit and template configuration information from the
+	<literal>FIT_CONFIGFILE</literal> and
+	<literal>TEMPLATE_CONFIGFILE</literal> environment variables and will
+	exit with an error message if these environment variables are undefined
+	or point to improperly formatted files. The traceview display is a ROOT
+	TCanvas and can be interacted with as such.
+      </para>
+    </section>
+    
+  </chapter> 
+  
+  <chapter id="Jobs">
+    <title>
+      Job submission using SLURM at NERSC
+    </title>
+    <para>
+      A dummy job submission script for NERSC analysis will go here once we
+      have a working analysis pipeline.
+    </para>
+
+    <informalexample>
+      <programlisting>
+	#!/bin/bash
+
+	# This dummy script explains how to submit jobs at NERSC inside the
+	container.
+	#
+
+	module purge                     <co id="modules"/>
+	module load gcc
+      </programlisting>
+    </informalexample>
+
+    <para>
+      We assume that all SLURM control parameters (<literal>--ntasks</literal>,
+      <literal>--time</literal>, etc.) are provided on the sbatch command line
+      when submitting a job. Lets take a closer look at the components of the
+      job submission script:
+    </para>
+
+    <calloutlist>
+      <callout arearefs="modules">
+	<para>
+	  This set of lines unloads all modules and loads the prerequisites for
+	  running our code. 
+	</para>
+      </callout>
+    </calloutlist>
+
+  </chapter>
+  
+</book>
