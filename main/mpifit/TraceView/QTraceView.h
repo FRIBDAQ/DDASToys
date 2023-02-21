@@ -1,5 +1,6 @@
-/** @file: QTraceView.h
- *  @brief: Defines a Qt main applicaiton window class
+/** 
+ * @file  QTraceView.h
+ * @brief Defines a Qt main applicaiton window class.
  */
 
 #ifndef QTRACEVIEW_H
@@ -36,9 +37,9 @@ class QRootCanvas;
 /**
  * @class QTraceView
  *
- *   Main window class for traceview responsible for management and high-level
- *   control over the application. Uses Qt's signal and slot framework to
- *   communicate between objects. See Qt documentation for details.
+ * Main window class for traceview responsible for management and high-level
+ * control over the application. Uses Qt's signal and slot framework to
+ * communicate between objects. See Qt documentation for details.
  */
 
 class QTraceView : public QWidget
@@ -55,7 +56,7 @@ private:
 private:
   void createActions();
   void configureMenu();
-  QGroupBox* createTopGroupBox();
+  QWidget* createTopBoxes();
   QListView* createHitSelectList();
   QWidget* createPlotWidget();
   void createConnections();
@@ -70,6 +71,7 @@ private:
 private slots:
   void openFile();
   void getNextEvent();
+  void skipEvents();
   void filterHits();
   void updateSelectableHits();
   void processHit();
@@ -83,7 +85,6 @@ private:
   DDASDecoder* m_pDecoder;
   FitManager* m_pFitManager;
 
-  int m_count;
   bool m_config;
   bool m_templateConfig;
   std::string m_fileName;
@@ -98,8 +99,10 @@ private:
   QAction* m_pExitAction;
 
   QPushButton* m_pButtons[3];
+  QPushButton* m_pSkipEvents;
+  QLineEdit* m_pEventsToSkip;
   QLineEdit* m_pHitFilter[3];
-  QGroupBox* m_pTopGroupBox;
+  QWidget* m_pTopBoxes;
 
   QHitData* m_pHitData;
   

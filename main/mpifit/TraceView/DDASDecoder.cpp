@@ -31,16 +31,16 @@
 
 //____________________________________________________________________________
 /**
- * Constructor.
+ * @brief Constructor.
  */
 DDASDecoder::DDASDecoder() :
   m_pSourceURL(nullptr), m_pSource(nullptr),
-  m_pProcessor(new DDASRingItemProcessor)
+  m_pProcessor(new DDASRingItemProcessor), m_count(0)
 {}
 
 //____________________________________________________________________________
 /**
- * Destructor
+ * @brief Destructor.
  */
 DDASDecoder::~DDASDecoder()
 {
@@ -51,14 +51,14 @@ DDASDecoder::~DDASDecoder()
 
 //____________________________________________________________________________
 /**
- * createDataSource
- *   Create a data source from the input string.
+ * @brief Create a data source from the input string.
  *
- * @param src - name of the data source to create
+ * @param src  Name of the data source to create
  */
 void
 DDASDecoder::createDataSource(std::string src)
 {
+  m_count = 0; // Reset when creating a new source
   std::vector<std::uint16_t> sample;
   std::vector<std::uint16_t> exclude;
   m_pSourceURL = new URL(src);
@@ -77,28 +77,59 @@ DDASDecoder::createDataSource(std::string src)
 
 //____________________________________________________________________________
 /**
- * getEvent
- *   Return the next PHYSICS_EVENT type data. An event is a collection of 
- *   DDASFitHits stored in a container.
+ * @brief Get the next unpacked PHYSICS_EVENT.
+ * 
+ * An event is a collection of DDASFitHits stored in a vector.
  *
- * @return vector<DDASFitHit> - the event data
+ * @return vector<DDASFitHit>  The event data. The vector is empty if the end 
+ *                             of the data file is encountered.
  */
 std::vector<DAQ::DDAS::DDASFitHit>
 DDASDecoder::getEvent()
 {
-  // Iterate over ring items until we encounter a PHYSICS_EVENT
+  // Get the next PHYSICS_EVENT
   
-  while(true) {
-    CRingItem* pItem;
-    pItem = m_pSource->getItem();
-    std::unique_ptr<CRingItem> item(pItem);
-    processRingItem(*item);
-    if (pItem->type() == PHYSICS_EVENT) break;
-  }
+  CRingItem* pItem = getNextPhysicsEvent();
+  std::unique_ptr<CRingItem> item(pItem);
 
   // If we've found a PHYSICS_EVENT return the list of unpacked hits
-  
-  return m_pProcessor->getUnpackedHits();
+  // Else its the end of the file, return an empty vector.
+
+  if (item) {
+    processRingItem(*item);   
+    return m_pProcessor->getUnpackedHits();
+  } else {
+    std::vector<DAQ::DDAS::DDASFitHit> v;
+    return v;
+  }
+}
+
+//____________________________________________________________________________
+/**
+ * @brief Skip events in the currently loaded data file.
+ * 
+ * Skip forward by nevts PHYSICS_EVENTS where nevts is provided as an argument.
+ *
+ * @param nevts  Number of PHYSICS_EVENTS to skip.
+ *
+ * @return int
+ * @retval  0  END_RUN state change event is not encountered when skipping.
+ * @retval -1  END_RUN state change event is encountered when skipping.
+ */
+int
+DDASDecoder::skip(int nevts)
+{
+  CRingItem* pItem;
+  while(nevts > 0) {
+    pItem = getNextPhysicsEvent(); // nullptr on end
+    
+    if (!pItem) { return -1; }
+    
+    delete pItem;
+    nevts--;
+  }
+
+  return 0;
 }
 
 //
@@ -107,11 +138,37 @@ DDASDecoder::getEvent()
 
 //____________________________________________________________________________
 /**
- * processRingItem.
- *   Type-independent processing of ring items. The processor will handle 
- *   specifically what to do with each ring item.
+ * @brief Get the next PHYSICS_EVENT ring item.
  *
- *   @param item - references the ring item we got
+ * @return CRingItem*  Pointer to the ring item.
+ * @retval nullptr  If there are no more PHYSICS_EVENT ring items in the file
+ */
+CRingItem*
+DDASDecoder::getNextPhysicsEvent()
+{
+  CRingItem* pItem;
+  while(true) {    
+    pItem = m_pSource->getItem(); // nullptr on end
+
+    if (!pItem) break;
+    if (pItem->type() == PHYSICS_EVENT) {
+      m_count++;
+      break;
+    }
+    
+    delete pItem;
+  }
+
+  return pItem;
+}
+
+//____________________________________________________________________________
+/**
+ * @brief Perform type-independent processing of ring items. 
+ *
+ * The processor will handle specifically what to do with each ring item.
+ *
+ * @param item  References the ring item we got
  */
 void
 DDASDecoder::processRingItem(CRingItem& item)

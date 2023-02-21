@@ -38,7 +38,8 @@ private:
   URL* m_pSourceURL;
   CDataSource* m_pSource;
   DDASRingItemProcessor* m_pProcessor;
-
+  int m_count;
+  
   // Canonicals
 public:
   DDASDecoder();
@@ -48,9 +49,13 @@ public:
 public:
   void createDataSource(std::string src);
   std::vector<DAQ::DDAS::DDASFitHit> getEvent();
+  int skip(int nevts);
+
+  int getEventCount() {return m_count-1;}; // Zero-indexed PHYSICS_EVENT no.
 
   // Private methods
 private:
+  CRingItem* getNextPhysicsEvent();
   void processRingItem(CRingItem& item);
 };
 

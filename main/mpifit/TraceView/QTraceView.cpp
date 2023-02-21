@@ -1,5 +1,6 @@
-/** @file: QTraceView.cpp
- *  @breif: Implement Qt main application window class
+/** 
+ * @file  QTraceView.cpp
+ * @brief Implement Qt main application window class.
  */
 
 #include "QTraceView.h"
@@ -40,20 +41,22 @@
 
 //____________________________________________________________________________
 /**
- * Constructor
- *   Create and configure the widgets which define the main window layout. 
- *   Initialization list order and the order of the funciton calls in the 
- *   constructor matter as some member variables depend on others being 
- *   initialized to configure children or actions.
+ * @brief Constructor.
  *
- * @param parent - pointer to QWidget parent object, default = nullptr
+ * Create and configure the widgets which define the main window layout. 
+ * Initialization list order and the order of the funciton calls in the 
+ * constructor matter as some member variables depend on others being 
+ * initialized to configure children or actions.
+ *
+ * @param parent  Pointer to QWidget parent object. Can be nullptr.
  */
 QTraceView::QTraceView(QWidget* parent) :
   QWidget(parent), m_pDecoder(new DDASDecoder), m_pFitManager(new FitManager),
-  m_count(0), m_config(false), m_templateConfig(false), m_fileName(""),
+  m_config(false), m_templateConfig(false), m_fileName(""),
   m_pMenuBar(new QMenuBar), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
-  m_pExitAction(nullptr), m_pButtons{nullptr}, m_pHitFilter{nullptr},
-  m_pTopGroupBox(createTopGroupBox()), m_pHitData(new QHitData(m_pFitManager)),
+  m_pExitAction(nullptr), m_pButtons{nullptr}, m_pSkipEvents(nullptr),
+  m_pEventsToSkip(nullptr), m_pHitFilter{nullptr},
+  m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
   m_pHitSelectList(createHitSelectList()),
   m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
   m_pStatusBar(new QStatusBar)
@@ -68,7 +71,7 @@ QTraceView::QTraceView(QWidget* parent) :
   
   QVBoxLayout* mainLayout = new QVBoxLayout;
   mainLayout->setMenuBar(m_pMenuBar);
-  mainLayout->addWidget(m_pTopGroupBox);
+  mainLayout->addWidget(m_pTopBoxes);
   mainLayout->addWidget(m_pHitData);
   mainLayout->addWidget(plotWidget);
   mainLayout->addWidget(m_pStatusBar);
@@ -83,9 +86,10 @@ QTraceView::QTraceView(QWidget* parent) :
 
 //____________________________________________________________________________
 /**
- * Destructor
- *   Qt _should_ manage deletion of child objects when each parent is destroyed
- *   upon application exit. But we still should clean up our own stuff.
+ * @brief Destructor.
+ *
+ * Qt _should_ manage deletion of child objects when each parent is destroyed
+ * upon application exit. But we still should clean up our own stuff.
  */
 QTraceView::~QTraceView()
 {
@@ -99,11 +103,11 @@ QTraceView::~QTraceView()
 
 //____________________________________________________________________________
 /**
- * changeEvent
- *   Event handler for state changes. Primary purpose here is to propagate 
- *   the state changes to Root.
+ * @brief Event handler for state changes. 
  *
- * @param e - pointer to the handled QEvent
+ * Primary purpose here is to propagate the state changes to Root.
+ *
+ * @param e  Pointer to the handled QEvent.
  */
 void
 QTraceView::changeEvent(QEvent* e)
@@ -136,10 +140,11 @@ QTraceView::changeEvent(QEvent* e)
 
 //____________________________________________________________________________
 /**
- * createActions
- *   Create commands (user actions). See Qt documentation for more information.
- *   Actions for interactions with the top menu bar should be created here 
- *   before adding them to their associated QMenu objects.
+ * @brief Create commands (user actions). 
+ * 
+ * See Qt documentation for more information. Actions for interactions with 
+ * the top menu bar should be created here before adding them to their 
+ * associated QMenu objects.
  */
 void
 QTraceView::createActions()
@@ -155,9 +160,10 @@ QTraceView::createActions()
 
 //____________________________________________________________________________
 /**
- * configureMenu
- *   Create and configure the top menu bar. The menu bar is a collection of 
- *   QMenu objects. Menu actions should be created prior to their addition.
+ * @brief Create and configure the top menu bar. 
+ *
+ * The menu bar is a collection of QMenu objects. Menu actions should be 
+ * created prior to their addition.
  */
 void
 QTraceView::configureMenu()
@@ -172,18 +178,23 @@ QTraceView::configureMenu()
 
 //____________________________________________________________________________
 /**
- * createTopGroupBox
- *   Create the top group box widget containing the channel selection boxes 
- *   and event handling.
- *
- * @return QGroupBox* - pointer to the created QGroupBox object
- */
-QGroupBox*
-QTraceView::createTopGroupBox()
-{
-  QGroupBox* groupBox = new QGroupBox;
-  QHBoxLayout* layout = new QHBoxLayout;
+ * @breif Create the top group box widgets.
 
+ * These widgets contain the channel selection boxes and event handling.
+ *
+ * @return QWidget*  Pointer to the created QGroupBox object.
+ */
+QWidget*
+QTraceView::createTopBoxes()
+{
+  QWidget* w = new QWidget;
+  QHBoxLayout* mainLayout = new QHBoxLayout;
+
+  // Channel selection
+  
+  QGroupBox* gb = new QGroupBox;
+  gb->setTitle("Channel selection");
+  QHBoxLayout* layout = new QHBoxLayout;
   const char* letext[3] = {"Crate:" , "Slot:", "Channel:"};
   for (int i=0; i<3; i++) {
     QLabel* l = new QLabel(letext[i]);
@@ -191,24 +202,47 @@ QTraceView::createTopGroupBox()
     layout->addWidget(l);
     layout->addWidget(m_pHitFilter[i]);
   }
+  gb->setLayout(layout);
+
+  // Skip control
   
+  QGroupBox* gb2 = new QGroupBox;
+  gb2->setTitle("Skip control");
+  QHBoxLayout* layout2 = new QHBoxLayout;
+  m_pSkipEvents = new QPushButton(tr("Skip"));
+  m_pEventsToSkip = new QLineEdit("1");
+  m_pEventsToSkip->setValidator(new QIntValidator(0, 999999, this));
+  layout2->addWidget(m_pSkipEvents);
+  layout2->addWidget(m_pEventsToSkip);
+  gb2->setLayout(layout2);
+
+  // Main control (next event, update, exit)
+  
+  QGroupBox* gb3 = new QGroupBox;
+  gb3->setTitle("Main control");
+  QHBoxLayout* layout3 = new QHBoxLayout;
   const char* btext[3] = {"Next", "Update", "Exit"};
   for (int i=0; i<3; i++) {
     m_pButtons[i] = new QPushButton(tr(btext[i]));
-    layout->addWidget(m_pButtons[i]);
+    layout3->addWidget(m_pButtons[i]);
   }
+  gb3->setLayout(layout3);
+
+  // Setup the actual widget
   
-  groupBox->setLayout(layout);
+  mainLayout->addWidget(gb);
+  mainLayout->addWidget(gb2);
+  mainLayout->addWidget(gb3);
+  w->setLayout(mainLayout);
   
-  return groupBox;
+  return w;
 }
 
 //____________________________________________________________________________
 /**
- * createHitSelectList
- *  Create and configure the hit selection list widget.
+ * @brief Create and configure the hit selection list widget.
  *
- * @return QListView* - a pointer to the created QListView widget
+ * @return QListView*  Pointer to the created QListView widget.
  */
 QListView*
 QTraceView::createHitSelectList()
@@ -224,13 +258,16 @@ QTraceView::createHitSelectList()
 
 //____________________________________________________________________________
 /**
- * createConnections
- *   Create signal/slot connections for the main window. See Qt documentation 
- *   for more information.
+ * @brief Create signal/slot connections for the main window. 
+ *
+ * See Qt signal/slot documentation for more information.
  */
 void
 QTraceView::createConnections()
 {
+  // Skip button
+  connect(m_pSkipEvents, SIGNAL(clicked()), this, SLOT(skipEvents()));  
+  
   // Next button
   
   connect(m_pButtons[0], SIGNAL(clicked()), this, SLOT(getNextEvent()));
@@ -257,11 +294,12 @@ QTraceView::createConnections()
 
 //____________________________________________________________________________
 /**
- * createPlotWidget
- *   Combine the hit selection list and the Root canvas into a single widget 
- *   with its own layout which can be added to the main window layout.
+ * @brief Create the plotting widget.
  *
- * @return QWidget* - pointer to the created QWidget object
+ * Combine the hit selection list and the Root canvas into a single widget 
+ * with its own layout which can be added to the main window layout.
+ *
+ * @return QWidget*  Pointer to the created QWidget object.
  */
 QWidget*
 QTraceView::createPlotWidget()
@@ -289,10 +327,9 @@ QTraceView::createPlotWidget()
 
 //____________________________________________________________________________
 /**
- * setStatusBar
- *   Set the status bar message.
+ * @brief Set the status bar message.
  * 
- * @param msg - message to display
+ * @param msg  Message to display
  */
 void
 QTraceView::setStatusBar(std::string msg)
@@ -302,14 +339,14 @@ QTraceView::setStatusBar(std::string msg)
 
 //____________________________________________________________________________
 /**
- * isValidHit
- *   Check if the current hit passes the hit filter. Valid events match the 
- *   crate/slot/channel values set in the filter boxes. Wildcard '*' characters
- *   pass everything. Valid hits must contain traces.
+ * @brief Check if the current hit passes the hit filter. 
  *
- * @param hit - references the hit to validate
+ * Valid events match the crate/slot/channel values set in the filter boxes. 
+ * Wildcard '*' characters pass everything. Valid hits must contain traces.
  *
- * @return bool - true if the hit passes the filter, false otherwise
+ * @param hit  References the hit to validate.
+ *
+ * @return bool  True if the hit passes the filter, false otherwise.
  */
 bool
 QTraceView::isValidHit(const DAQ::DDAS::DDASFitHit& hit)
@@ -341,12 +378,12 @@ QTraceView::isValidHit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * updateSelectableHits
- *   Update the hit selection list based on the current list of filtered hits. 
- *   Each hit is a formatted QString crate:slot:channel where the idenfiying 
- *   information is read from the hit itself. The QStandardItemModel is used 
- *   to provide data to the QListView interface, see Qt documentation for 
- *   details.
+ * @brief Update the hit selection list.
+ * 
+ * The list is updated based on the current list of filtered hits. Each hit is 
+ * a formatted QString crate:slot:channel where the idenfiying information is 
+ * read from the hit itself. The QStandardItemModel is used to provide data to 
+ * the QListView interface, see Qt documentation for details.
  */
 void
 QTraceView::updateSelectableHits()
@@ -367,13 +404,11 @@ QTraceView::updateSelectableHits()
 
 //____________________________________________________________________________
 /**
- * resetGUI
- *   Reset and clear all GUI elements to default states.
+ * @brief Reset and clear all GUI elements to default states.
  */
 void
 QTraceView::resetGUI()
 {
-  m_count = 0;
   m_hits.clear();
   m_filteredHits.clear();
   updateSelectableHits();
@@ -383,8 +418,7 @@ QTraceView::resetGUI()
 
 //____________________________________________________________________________
 /**
- * enableAll
- *   Enable all UI buttons.
+ * @brief Enable all UI buttons.
  */
 void
 QTraceView::enableAll()
@@ -392,13 +426,16 @@ QTraceView::enableAll()
   for (int i=0; i<3; i++) {
     m_pButtons[i]->setEnabled(true);
   }
+  m_pSkipEvents->setEnabled(true);
+  m_pEventsToSkip->setEnabled(true);
 }
 
 //____________________________________________________________________________
 /** 
- * disableAll
- *   Disable all UI buttons except for the exit button, which we assume is the 
- *   last one in the button list.
+ * @brief Disable all UI buttons.
+ *
+ * Disable everything except exit, which we should always be able to do. Assume
+ *  the exit button is the last one in the button list.
  */
 void
 QTraceView::disableAll()
@@ -406,6 +443,8 @@ QTraceView::disableAll()
   for (int i=0; i<2; i++) {
     m_pButtons[i]->setEnabled(false);
   }
+  m_pSkipEvents->setEnabled(false);
+  m_pEventsToSkip->setEnabled(false);
 }
 
 //____________________________________________________________________________
@@ -413,10 +452,11 @@ QTraceView::disableAll()
 
 //____________________________________________________________________________
 /**
- * openFile
- *   Open a file using the QFileDialog and attempt to create a data source 
- *   from it. Update status bar to show the currently loaded file and enable 
- *   UI elements on the main window.
+ * @brief Open an NSCLDAQ event file.
+ * 
+ * Open a file using the QFileDialog and attempt to create a data source 
+ * from it. Update status bar to show the currently loaded file and enable 
+ * UI elements on the main window.
  */
 void
 QTraceView::openFile()
@@ -439,9 +479,10 @@ QTraceView::openFile()
 
 //____________________________________________________________________________
 /**
- * getNextEvent
- *   Get the next event from the data source using the DDASDecoder. Apply the 
- *   event filter and update the UI.
+ * @brief Get the next event containing trace data.
+ *
+ * Get the next PHYSICS_EVENT event containing trace data from the data source
+ * using the DDASDecoder. Apply the event filter and update the UI.
  */
 void
 QTraceView::getNextEvent()
@@ -451,20 +492,41 @@ QTraceView::getNextEvent()
   while (m_filteredHits.empty()) {
     m_hits = m_pDecoder->getEvent();
     filterHits();
-    m_count++;
   }
   
   updateSelectableHits();
   m_pRootCanvas->clear();
   
-  std::string msg = m_fileName + " -- Event " + std::to_string(m_count);
+  std::string msg = m_fileName + " -- Event " +
+    std::to_string(m_pDecoder->getEventCount());
   setStatusBar(msg);
 }
 
 //____________________________________________________________________________
+/** 
+ * @brief Skip events in the source.
+ *
+ * The number of events to skip is read from the QLineEdit box when the skip 
+ * button is clicked. If the end of the source file is encountered while 
+ * skipping ahead, pop up a notification to that effect.
+ */
+void
+QTraceView::skipEvents()
+{
+  std::string msg = "Skipping events, be patient...";
+  setStatusBar(msg);
+  int events = m_pEventsToSkip->text().toInt();
+  int retval = m_pDecoder->skip(events);
+  if (retval < 0) {
+  } else {
+    msg = "Successfully skipped " + std::to_string(events) + " PHYSICS_EVENTs. Hit 'Next' to display the next PHYSICS_EVENT containing trace data.";
+    setStatusBar(msg);
+  }
+}
+
+//____________________________________________________________________________
 /**
- * filterHits
- *   Apply the hit filter to the current list of hits for this event.
+ * @brief Apply the hit filter to the current list of hits for this event.
  */
 void
 QTraceView::filterHits()
@@ -481,11 +543,11 @@ QTraceView::filterHits()
 
 //____________________________________________________________________________
 /**
- * processHit
- *   Process a selected hit from the hit selection list. The row number in 
- *   the hit select list corresponds to the index of that hit in the list of 
- *   filtered hits. Draw the trace and hit information and update the hit data
- *   display.
+ * @brief Process a selected hit from the hit selection list. 
+ *
+ * The row number in the hit select list corresponds to the index of that hit 
+ * in the list of filtered hits. Draw the trace and hit information and update
+ * the hit data display.
  */
 void
 QTraceView::processHit()
@@ -498,8 +560,7 @@ QTraceView::processHit()
 
 //____________________________________________________________________________
 /**
- * handleRootEvents
- *   Process pending Root events.
+ * @brief Process pending Root events.
  */
 void
 QTraceView::handleRootEvents()
@@ -509,8 +570,7 @@ QTraceView::handleRootEvents()
 
 //____________________________________________________________________________
 /**
- * test
- *   Test slot function which prints the current time to stdout. 
+ * @brief Test slot function which prints the current time to stdout. 
  */
 void
 QTraceView::test()
