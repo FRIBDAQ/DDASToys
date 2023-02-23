@@ -1,6 +1,11 @@
-/** @file: FitManager.cpp
- *  @brief: Implement the fit manager class and handle calls to appropriate 
- *  fit functions.
+/** 
+ * @file  FitManager.cpp
+ * @brief Implement the fit manager class and handle calls to appropriate 
+ * fit functions.
+ */
+
+/** @addtogroup traceview
+ * @{
  */
 
 #include "FitManager.h"
@@ -10,8 +15,8 @@
 #include <cmath>
 
 #include <QWidget>
-#include <QLabel>
 #include <QVBoxLayout>
+#include <QLabel>
 
 #include <Configuration.h>
 #include <DDASFitHit.h>
@@ -21,31 +26,33 @@
 
 //____________________________________________________________________________
 /**
- * Constructor
+ * @brief Constructor.
  */
 FitManager::FitManager() :
-  m_pConfig(new Configuration), m_pWarning(new QLabel), m_method(ANALYTIC),
-  m_config(false), m_templateConfig(false), m_warned(false)
+  m_pConfig(new Configuration), m_pWarningMessage(nullptr),
+  m_method(ANALYTIC), m_config(false), m_templateConfig(false)
 {}
 
 //____________________________________________________________________________
 /**
- * Destructor
+ * @brief Destructor.
  */
 FitManager::~FitManager()
 {
   delete m_pConfig;
+  delete m_pWarningMessage;
 }
 
 //____________________________________________________________________________
 /**
- * configure
- *   Configure the fit settings based on a text string which should come 
- *   directly from the text of the fit method selection box. We *do* need 
- *   to know what those possible strings are. Will terminate the program 
- *   and issue an error message if the fit method is not identified.
+ * @brief Configure the fit method settings.
  *
- * @param methdod - string describing the fit method
+ * Configuration is performed based on a text string which comes directly
+ * from the text of the fit method selection box. We *do* need to know what 
+ * those possible strings are. Terminate the program and issue an error 
+ * message if the fit method is not known.
+ *
+ * @param method  String describing the fit method.
  */
 void
 FitManager::configure(std::string method)
@@ -76,10 +83,10 @@ FitManager::configure(std::string method)
 
 //____________________________________________________________________________
 /**
- * readConfigFile
- *   Read the configuration file using the Configuration class. Will terminate 
- *   the program and issue an error message if the configuration file cannot 
- *   be read.
+ * @brief Read the configuration file using the Configuration class. 
+ *
+ * Will terminate the program and issue an error message if the configuration 
+ * file cannot be read.
  */
 void
 FitManager::readConfigFile()
@@ -96,10 +103,10 @@ FitManager::readConfigFile()
 
 //____________________________________________________________________________
 /**
- * readConfigFile
- *   Read the template file using the Configuration class. Will terminate 
- *   the program and issue an error message if the configuration file cannot 
- *   be read.
+ * @brief Read the template file using the Configuration class. 
+ *
+ * Will terminate the program and issue an error message if the configuration
+ * file cannot be read.
  */
 void
 FitManager::readTemplateFile()
@@ -117,16 +124,15 @@ FitManager::readTemplateFile()
 
 //____________________________________________________________________________
 /**
- * getSinglePulseFit
- *   Create and return a vector of fit values for each trace sample in the 
- *   fit range.
+ * @brief Create and return a vector of fit values for each trace sample in the 
+ * fit range.
  *
- * @param ext  - references the HitExtension containing the fit parameters
- *               for this hit
- * @param low  - low limit of the fit in samples
- * @param high - high limit of the fit in samples
+ * @param ext   References the HitExtension containing the fit parameters
+ *              for this hit.
+ * @param low   Low limit of the fit in samples.
+ * @param high  High limit of the fit in samples.
  *
- * @return std::vector<double> - vector of fit values for range [low, high]
+ * @return std::vector<double>  Vector of fit values for range [low, high].
  */
 std::vector<double>
 FitManager::getSinglePulseFit(const DDAS::HitExtension& ext,
@@ -148,9 +154,7 @@ FitManager::getSinglePulseFit(const DDAS::HitExtension& ext,
   // fitting this may not be sufficient because events will only contain one
   // set of fit data corresponding to the idenfied pulse type.
   
-  if (!m_warned && !validParamValue(k1)) {
-    issueWarning();
-  }
+  checkParamValue(k1);
   
   for (unsigned i=low; i<=high; i++) {
     fit.push_back(singlePulse(A1, k1, k2, x1, C, i));
@@ -161,16 +165,15 @@ FitManager::getSinglePulseFit(const DDAS::HitExtension& ext,
 
 //____________________________________________________________________________
 /**
- * getDoublePulseFit
- *   Create and return a vector of fit values for each trace sample in the 
- *   fit range.
+ * @brief Create and return a vector of fit values for each trace sample in the 
+ * fit range.
  *
- * @param ext  - references the HitExtension containing the fit parameters 
- *               for this hit
- * @param low  - low limit of the fit in samples
- * @param high - high limit of the fit in samples
+ * @param ext   References the HitExtension containing the fit parameters 
+ *              for this hit.
+ * @param low   Low limit of the fit in samples.
+ * @param high  High limit of the fit in samples.
  *
- * @return std::vector<double> - vector of fit values for range [low, high]
+ * @return std::vector<double>  Vector of fit values for range [low, high].
  */
 std::vector<double>
 FitManager::getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsigned high)
@@ -198,13 +201,15 @@ FitManager::getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsig
 
 //____________________________________________________________________________
 /**
- * getLowFitLimit
- *   Get the lower limit of the fit range mapped in the Configuration class 
- *   for this hit crate/slot/channel. Note that this limit is inclusive.
+ * @brief Get the lower limit of the fit range.
  *
- * @param hit - references the hit we are currently processing
+ * The fitting range is mapped in the Configuration class for hits keyed by a
+ * unique identifier derived from their crate/slot/channel. Note that the low
+ * fitting limit is inclusive.
  *
- * @return unsigned - the lower limit  of the fitting range
+ * @param hit  References the hit we are currently processing.
+ *
+ * @return unsigned  The lower limit of the fitting range.
  */
 unsigned
 FitManager::getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit)
@@ -219,13 +224,15 @@ FitManager::getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * getHighFitLimit
- *   Get the high limit of the fit range mapped in the Configuration class 
- *   for this hit crate/slot/channel. Note that this limit is inclusive.
+ * @brief Get the upper limit of the fit range.
  *
- * @param hit - references the hit we are currently processing
+ * The fitting range is mapped in the Configuration class for hits keyed by a
+ * unique identifier derived from their crate/slot/channel. Note that the high
+ * fitting limit is inclusive.
  *
- * @return unsigned - the high limit  of the fitting range
+ * @param hit  References the hit we are currently processing.
+ *
+ * @return unsigned  The upper limit of the fitting range.
  */
 unsigned
 FitManager::getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit)
@@ -238,24 +245,43 @@ FitManager::getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit)
   return limits.first.second;
 }
 
+//____________________________________________________________________________
+/** 
+ * @brief Close the popup warning window.
+ * 
+ * FitManager does not inherit from QObject and therefore possesses no 
+ * closeEvent event handler of its own. This function can be called as part of 
+ * an overridden closeEvent function in widget classes which implement the 
+ * FitManager to ensure that its warning message windows close when application
+ * exits.
+ */
+void
+FitManager::closeWarnings()
+{
+  if (m_pWarningMessage && m_pWarningMessage->isVisible()) {
+    m_pWarningMessage->close();
+  }
+}
+
 //
 // Private methods
 //
 
 //____________________________________________________________________________
 /**
- * singlePusle
- *   Call the appropriate single pulse fit function to determine the fit value 
- *   for the input fit parameters and data point.
+ * @brief Calculate the value of a single pulse fit at a given data point.
  *
- * @param A1 - amplitude parameter
- * @param k1 - steepnesss parameter (0 for template fits)
- * @param k2 - decay parameter (0 for template fits)
- * @param x1 - position parameter locating the pulse along the trace
- * @param C  - constant offset (baseline)
- * @param x  - data point to determine the fit value
+ * Use the fit method combo box value to determine whether to calculate the 
+ * fit result using the analytic or template fitting functions.
  *
- * @return double - fit value at x
+ * @param A1  Amplitude parameter.
+ * @param k1  Steepnesss parameter (0 for template fits).
+ * @param k2  Decay parameter (0 for template fits).
+ * @param x1  Position parameter locating the pulse along the trace.
+ * @param C   Constant offset (baseline).
+ * @param x   Data point to determine the fit value.
+ *
+ * @return double  Fit value at x.
  */
 double
 FitManager::singlePulse(double A1, double k1, double k2, double x1,
@@ -271,7 +297,7 @@ FitManager::singlePulse(double A1, double k1, double k2, double x1,
     }
   default:
     
-    // This really is an error, but we'll stuff the fit with zeroes
+    // This really is an error, but we'll stuff the fit with zeroes.
     
     return 0;
   }
@@ -279,22 +305,23 @@ FitManager::singlePulse(double A1, double k1, double k2, double x1,
 
 //____________________________________________________________________________
 /**
- * doublePusle
- *   Call the appropriate double pulse fit function to determine the fit value 
- *   for the input fit parameters and data point.
+ * @brief Calculate the value of a double pulse fit at a given data point.
  *
- * @param A1 - pulse 1 amplitude parameter
- * @param k1 - pulse 1 steepnesss parameter (0 for template fits)
- * @param k2 - pulse 1 decay parameter (0 for template fits)
- * @param x1 - pulse 1 position parameter locating the pulse along the trace
- * @param A2 - pulse 2 amplitude parameter
- * @param k3 - pulse 2 steepnesss parameter (0 for template fits)
- * @param k4 - pulse 2 decay parameter (0 for template fits)
- * @param x2 - pulse 2 position parameter locating the pulse along the trace
- * @param C  - shared constant offset (baseline)
- * @param x  - data point to determine the fit value
+ * Use the fit method combo box value to determine whether to calculate the 
+ * fit result using the analytic or template fitting functions.
  *
- * @return double - fit value at x
+ * @param A1  Pulse 1 amplitude parameter.
+ * @param k1  Pulse 1 steepnesss parameter (0 for template fits).
+ * @param k2  Pulse 1 decay parameter (0 for template fits).
+ * @param x1  Pulse 1 position parameter locating the pulse along the trace.
+ * @param A2  Pulse 2 amplitude parameter.
+ * @param k3  Pulse 2 steepnesss parameter (0 for template fits).
+ * @param k4  Pulse 2 decay parameter (0 for template fits).
+ * @param x2  Pulse 2 position parameter locating the pulse along the trace.
+ * @param C   Shared constant offset (baseline).
+ * @param x   Data point to determine the fit value.
+ *
+ * @return double  Fit value at x.
  */
 double
 FitManager::doublePulse(double A1, double k1, double k2, double x1,
@@ -314,7 +341,7 @@ FitManager::doublePulse(double A1, double k1, double k2, double x1,
     }
   default:
     
-    // This really is an error, but we'll stuff the fit with zeroes
+    // This really is an error, but we'll stuff the fit with zeroes.
     
     return 0;
   }
@@ -322,25 +349,28 @@ FitManager::doublePulse(double A1, double k1, double k2, double x1,
 
 //____________________________________________________________________________
 /**
- * validParamValue
- *   Check if a parameter is valid or not. Useful to check steepness or decay 
- *   parameters which are non-zero in the analytic fit and zero in the template
- *   fit. If there is a mismatch between the selected method and the parameter 
- *   value, set a corresponding warning message.
+ * @brief Check if a parameter is valid and issue a warning if it is not a
+ * valid value.
  *
- * @param p - input parameter to check
+ * Useful to check steepness or decay parameters which are non-zero in the 
+ * analytic fit and zero in the template fit. If there is a mismatch between 
+ * the selected method and the parameter value, issue a warning message.
  *
- * @return bool - true if the parameter value matches the allowed values 
- *                from the fit method, false otherwise
+ * @param p  Input parameter (steepness or decay) to check.
+ *
+ * @return bool  True if the parameter value matches the allowed values 
+ *               from the fit method, false otherwise.
  */
 bool
-FitManager::validParamValue(double p)
+FitManager::checkParamValue(double p)
 {
   if (m_method == ANALYTIC && std::fpclassify(p) == FP_ZERO) {
-    m_warnMessage = "*****WARNING***** Bad parameter value encountered: expected non-zero and read zero! Are you sure this data was fit using the analytic fit functions?";
+    std::string msg = "Bad parameter value encountered: expected non-zero and read zero! Are you sure this data was fit using the analytic fit functions?";
+    issueWarning(msg);
     return false;
   } else if (m_method == TEMPLATE && std::fpclassify(p) != FP_ZERO) {
-    m_warnMessage = "*****WARNING***** Bad parameter value encountered: expected zero and read a non-zero value! Are you sure this data was fit using the template fit functions?";
+    std::string msg = "Bad parameter value encountered: expected zero and read a non-zero value! Are you sure this data was fit using the template fit functions?";
+    issueWarning(msg);
     return false;
   } else { 
     return true;
@@ -348,22 +378,40 @@ FitManager::validParamValue(double p)
 }
 
 //____________________________________________________________________________
-/**
- * issueWarning
- *   Create a pop-up window showing a warning message. Issue only once.
+/** 
+ * @brief Issue a warning message in a popup window.
+ *
+ * @param msg  The warning message displayed in the popup window.
  */
 void
-FitManager::issueWarning()
+FitManager::issueWarning(std::string msg)
 {
-  m_pWarning->setWordWrap(true);
-  m_pWarning->setMaximumSize(200, 200);
-  m_pWarning->setText(QString::fromStdString(m_warnMessage));
+  // Create the warning message the first time a warning is issued. Otherwise
+  // just reset the label text.
   
-  QWidget* w = new QWidget;
-  QVBoxLayout* l = new QVBoxLayout;
-  l->addWidget(m_pWarning);
-  w->setLayout(l);
-  w->show();
-  
-  m_warned = true;
+  if (!m_pWarningMessage) {
+    m_pWarningMessage = new QWidget;
+    m_pWarningMessage->setWindowTitle("WARNING");
+    m_pWarningMessage->setWindowFlags(Qt::WindowStaysOnTopHint);
+    QVBoxLayout* layout = new QVBoxLayout;
+    QLabel* label = new QLabel;
+    label->setWordWrap(true);
+    label->setMaximumSize(600, 200);
+
+    // Since the FitManager does not inherit from QObject, but QLabel does,
+    // we need to call the translator for the QLabel object.
+    
+    label->setText(QLabel::tr(msg.c_str()));
+    
+    layout->addWidget(label);
+    m_pWarningMessage->setLayout(layout);
+  } else {
+    QLabel* label = m_pWarningMessage->findChild<QLabel*>();
+    label->setText(QLabel::tr(msg.c_str()));
+  }
+
+  m_pWarningMessage->show();
 }
+
+/** @} */
+

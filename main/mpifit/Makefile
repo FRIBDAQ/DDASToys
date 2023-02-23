@@ -47,7 +47,7 @@ endif
 
 LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
-all: $(LIBS) traceview docs
+all: $(LIBS) docs traceview
 libs: $(LIBS)
 
 .cpp.o:

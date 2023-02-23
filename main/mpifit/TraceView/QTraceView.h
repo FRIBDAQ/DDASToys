@@ -3,6 +3,10 @@
  * @brief Defines a Qt main applicaiton window class.
  */
 
+/** @addtogroup traceview
+ * @{
+ */
+
 #ifndef QTRACEVIEW_H
 #define QTRACEVIEW_H
 
@@ -22,7 +26,9 @@ class QLineEdit;
 class QListView;
 class QStandardItemModel;
 class QTimer;
-class QLabel;
+class QCommandLineParser;
+class QString;
+class QCloseEvent;
 
 namespace DAQ {
   namespace DDAS {
@@ -37,6 +43,7 @@ class QRootCanvas;
 
 /**
  * @class QTraceView
+ * @brief Main traceview GUI window.
  *
  * Main window class for traceview responsible for management and high-level
  * control over the application. Uses Qt's signal and slot framework to
@@ -48,11 +55,14 @@ class QTraceView : public QWidget
   Q_OBJECT
 
 public:
-  QTraceView(QWidget* parent = nullptr);
+  QTraceView(QCommandLineParser& parser, QWidget* parent = nullptr);
   virtual ~QTraceView();
+
+  // QEvent handlers overridden from the base class.
   
-private:
-  virtual void changeEvent(QEvent* e);  // Overridden from base class
+protected:
+  virtual void changeEvent(QEvent* e);
+  virtual void closeEvent(QCloseEvent* e);
 
 private:
   void createActions();
@@ -68,10 +78,12 @@ private:
   void resetGUI();
   void enableAll();
   void disableAll();
-  void showEOF();
+  void parseCommandLineArgs(QCommandLineParser& parser);
+  void issueWarning(std::string msg);
 			   
 private slots:
   void openFile();
+  void configureSource(QString filename);
   void getNextEvent();
   void skipEvents();
   void filterHits();
@@ -89,9 +101,10 @@ private:
 
   bool m_config;
   bool m_templateConfig;
-  std::string m_fileName;
   std::vector<DAQ::DDAS::DDASFitHit> m_hits;
   std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
+
+  QWidget* m_pWarningMessage;
   
   // Added to this widget, Qt _should_ handle cleanup on destruction
   
@@ -113,8 +126,8 @@ private:
   QTimer* m_pTimer;
   
   QStatusBar* m_pStatusBar;
-
-  QLabel* m_pEOF;
 };
 
 #endif
+
+/** @} */

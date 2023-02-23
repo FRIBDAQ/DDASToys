@@ -1,6 +1,11 @@
-/** @file: DDASDecoder.cpp
- *  @brief: Implement class for processing events. Create and call a ring item 
- *  processor and let it decide what to do with the data.
+/** 
+ * @file  DDASDecoder.cpp
+ * @brief Implement class for processing events. Create and call a ring item 
+ * processor and let it decide what to do with the data.
+ */
+
+/** @addtogroup traceview
+ * @{
  */
 
 #include "DDASDecoder.h"
@@ -51,14 +56,15 @@ DDASDecoder::~DDASDecoder()
 
 //____________________________________________________________________________
 /**
- * @brief Create a data source from the input string.
+ * @brief Create a file data source from the input string.
  *
- * @param src  Name of the data source to create
+ * @param src  Name of the file we will create a data source from.
  */
 void
 DDASDecoder::createDataSource(std::string src)
 {
   m_count = 0; // Reset when creating a new source
+  src = "file://" + src; // File URI formatting.
   std::vector<std::uint16_t> sample;
   std::vector<std::uint16_t> exclude;
   m_pSourceURL = new URL(src);
@@ -81,8 +87,9 @@ DDASDecoder::createDataSource(std::string src)
  * 
  * An event is a collection of DDASFitHits stored in a vector.
  *
- * @return vector<DDASFitHit>  The event data. The vector is empty if the end 
- *                             of the data file is encountered.
+ * @return std::vector<DAQ::DDAS::DDASFitHit>  The event data. The vector is
+ *                                             empty if the end of the data 
+ *                                             file is encountered.
  */
 std::vector<DAQ::DDAS::DDASFitHit>
 DDASDecoder::getEvent()
@@ -132,6 +139,22 @@ DDASDecoder::skip(int nevts)
   return 0;
 }
 
+//____________________________________________________________________________
+/**
+ * @brief Return the path of the file data source.
+ *
+ * @return std::string  The file path. Returns an empty string if the data 
+ *                      source has not been created.
+ */
+std::string
+DDASDecoder::getFilePath()
+{
+  if (!m_pSourceURL)
+    return "";
+  else
+    return m_pSourceURL->getPath();
+}
+
 //
 // Private methods
 //
@@ -141,7 +164,7 @@ DDASDecoder::skip(int nevts)
  * @brief Get the next PHYSICS_EVENT ring item.
  *
  * @return CRingItem*  Pointer to the ring item.
- * @retval nullptr  If there are no more PHYSICS_EVENT ring items in the file
+ * @retval nullptr  If there are no more PHYSICS_EVENT ring items in the file.
  */
 CRingItem*
 DDASDecoder::getNextPhysicsEvent()
@@ -168,7 +191,7 @@ DDASDecoder::getNextPhysicsEvent()
  *
  * The processor will handle specifically what to do with each ring item.
  *
- * @param item  References the ring item we got
+ * @param item  References the ring item we got.
  */
 void
 DDASDecoder::processRingItem(CRingItem& item)
@@ -240,3 +263,7 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
   }
 }
+
+/** @} */
+
+

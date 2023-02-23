@@ -3,6 +3,10 @@
  * @brief Definition of the FitEditor class for template fitting.
  */
 
+/** @addtogroup TemplateFit
+ * @{
+ */
+
 #ifndef FITEDITORTEMPLATE_H
 #define FITEDITORTEMPLATE_H
 
@@ -49,3 +53,5 @@ private:
 };
 
 #endif
+
+/** @} */

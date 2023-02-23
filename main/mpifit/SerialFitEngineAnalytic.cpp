@@ -19,6 +19,10 @@
  *  @brief Implement the serial fit engines for single and double pulse fits.
  */
 
+/** @addtogroup AnalyticFit
+ * @{
+ */
+
 #include "jacobian_analytic.h"
 
 #include <cmath>
@@ -377,3 +381,5 @@ SerialFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* J)
   }
     
 }
+
+/** @} */

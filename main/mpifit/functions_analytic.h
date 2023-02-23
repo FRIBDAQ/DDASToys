@@ -20,7 +20,10 @@
  * @file  functions_analytic.h
  * @brief Provide code to evaluate various functions used to fit DDAS pulses.
  * @note  All functions are in the DDAS::AnalyticFit namespace.
+ */
 
+/** @addtogroup AnalyticFit
+ * @{
  */
 
 #ifndef FUNCTIONS_ANALYTIC_H
@@ -86,3 +89,5 @@ namespace DDAS {
 };
 
 #endif
+
+/** @} */

@@ -3,6 +3,10 @@
  * @brief Implement Qt main application window class.
  */
 
+/** @addtogroup traceview
+ * @{
+ */
+
 #include "QTraceView.h"
 
 #include <iostream>
@@ -28,6 +32,8 @@
 #include <QTimer>
 #include <QEvent>
 #include <QWindowStateChangeEvent>
+#include <QCommandLineParser>
+#include <QCloseEvent>
 
 #include <TSystem.h>
 #include <TCanvas.h>
@@ -43,23 +49,25 @@
 /**
  * @brief Constructor.
  *
- * Create and configure the widgets which define the main window layout. 
- * Initialization list order and the order of the funciton calls in the 
- * constructor matter as some member variables depend on others being 
- * initialized to configure children or actions.
+ * Constructs the widgets which define the main window layout. Initialization 
+ * list order and the order of the funciton calls in the constructor matter as 
+ * some member variables depend on others being initialized to configure 
+ * children or actions.
  *
+ * @param parser  References the QCommandLineParser. The parser is owned by 
+ *                the caller (in this case the application main() function).
  * @param parent  Pointer to QWidget parent object. Can be nullptr.
  */
-QTraceView::QTraceView(QWidget* parent) :
+QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
   QWidget(parent), m_pDecoder(new DDASDecoder), m_pFitManager(new FitManager),
-  m_config(false), m_templateConfig(false), m_fileName(""),
+  m_config(false), m_templateConfig(false), m_pWarningMessage(nullptr),
   m_pMenuBar(new QMenuBar), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
   m_pExitAction(nullptr), m_pButtons{nullptr}, m_pSkipEvents(nullptr),
   m_pEventsToSkip(nullptr), m_pHitFilter{nullptr},
   m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
   m_pHitSelectList(createHitSelectList()),
   m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
-  m_pStatusBar(new QStatusBar), m_pEOF(new QLabel)
+  m_pStatusBar(new QStatusBar)
 { 
   createActions();
   configureMenu();
@@ -78,8 +86,10 @@ QTraceView::QTraceView(QWidget* parent) :
   setLayout(mainLayout);
 
   createConnections();
-  resetGUI();
+  //resetGUI();  
   disableAll();
+
+  parseCommandLineArgs(parser);
   
   m_pTimer->start(20);
 }
@@ -95,7 +105,7 @@ QTraceView::~QTraceView()
 {
   delete m_pDecoder;
   delete m_pFitManager;
-  delete m_pEOF;
+  delete m_pWarningMessage;
 }
 
 //
@@ -127,6 +137,24 @@ QTraceView::changeEvent(QEvent* e)
   }
 }
 
+//____________________________________________________________________________
+/** 
+ * @brief Event handler for close events.
+ * 
+ * Override default QWidget closeEvent to close all children.
+ *
+ * @param e  Pointer to the close event sent to the main GUI window.
+ */
+void
+QTraceView::closeEvent(QCloseEvent* e)
+{
+  m_pFitManager->closeWarnings();
+  if (m_pWarningMessage && m_pWarningMessage->isVisible()) {
+    m_pWarningMessage->close();
+  }
+  e->accept();
+}
+
 //
 // Private member functions
 //
@@ -134,10 +162,12 @@ QTraceView::changeEvent(QEvent* e)
 //____________________________________________________________________________
 // Create and configure methods
 
-// \TODO (ASC 2/3/23): Creation methods should not fail without explanation -
-// there is an order in which (some of) these functions must be called but no
-// safeguards to prevent someone from doing it wrong e.g. attempting to
-// configure the menu bar before its created.
+/**
+ * @todo (ASC 2/3/23): Creation methods should not fail without explanation -
+ * there is an order in which (some of) these functions must be called but no
+ * safeguards to prevent someone from doing it wrong e.g. attempting to
+ * configure the menu bar before its created.
+ */
 
 //____________________________________________________________________________
 /**
@@ -179,7 +209,7 @@ QTraceView::configureMenu()
 
 //____________________________________________________________________________
 /**
- * @breif Create the top group box widgets.
+ * @brief Create the top group box widgets.
 
  * These widgets contain the channel selection boxes and event handling.
  *
@@ -193,47 +223,47 @@ QTraceView::createTopBoxes()
 
   // Channel selection
   
-  QGroupBox* gb = new QGroupBox;
-  gb->setTitle("Channel selection");
-  QHBoxLayout* layout = new QHBoxLayout;
+  QGroupBox* channelBox = new QGroupBox;
+  channelBox->setTitle("Channel selection");
+  QHBoxLayout* channelBoxLayout = new QHBoxLayout;
   const char* letext[3] = {"Crate:" , "Slot:", "Channel:"};
   for (int i=0; i<3; i++) {
-    QLabel* l = new QLabel(letext[i]);
+    QLabel* label = new QLabel(letext[i]);
     m_pHitFilter[i] = new QLineEdit("*");
-    layout->addWidget(l);
-    layout->addWidget(m_pHitFilter[i]);
+    channelBoxLayout->addWidget(label);
+    channelBoxLayout->addWidget(m_pHitFilter[i]);
   }
-  gb->setLayout(layout);
+  channelBox->setLayout(channelBoxLayout);
 
   // Skip control
   
-  QGroupBox* gb2 = new QGroupBox;
-  gb2->setTitle("Skip control");
-  QHBoxLayout* layout2 = new QHBoxLayout;
+  QGroupBox* skipBox = new QGroupBox;
+  skipBox->setTitle("Skip control");
+  QHBoxLayout* skipBoxLayout = new QHBoxLayout;
   m_pSkipEvents = new QPushButton(tr("Skip"));
   m_pEventsToSkip = new QLineEdit("1");
   m_pEventsToSkip->setValidator(new QIntValidator(0, 9999999, this));
-  layout2->addWidget(m_pSkipEvents);
-  layout2->addWidget(m_pEventsToSkip);
-  gb2->setLayout(layout2);
+  skipBoxLayout->addWidget(m_pSkipEvents);
+  skipBoxLayout->addWidget(m_pEventsToSkip);
+  skipBox->setLayout(skipBoxLayout);
 
   // Main control (next event, update, exit)
   
-  QGroupBox* gb3 = new QGroupBox;
-  gb3->setTitle("Main control");
-  QHBoxLayout* layout3 = new QHBoxLayout;
+  QGroupBox* mainBox = new QGroupBox;
+  mainBox->setTitle("Main control");
+  QHBoxLayout* mainBoxLayout = new QHBoxLayout;
   const char* btext[3] = {"Next", "Update", "Exit"};
   for (int i=0; i<3; i++) {
     m_pButtons[i] = new QPushButton(tr(btext[i]));
-    layout3->addWidget(m_pButtons[i]);
+    mainBoxLayout->addWidget(m_pButtons[i]);
   }
-  gb3->setLayout(layout3);
+  mainBox->setLayout(mainBoxLayout);
 
   // Setup the actual widget
   
-  mainLayout->addWidget(gb);
-  mainLayout->addWidget(gb2);
-  mainLayout->addWidget(gb3);
+  mainLayout->addWidget(channelBox);
+  mainLayout->addWidget(skipBox);
+  mainLayout->addWidget(mainBox);
   w->setLayout(mainLayout);
   
   return w;
@@ -306,6 +336,7 @@ QWidget*
 QTraceView::createPlotWidget()
 {
   // Set a label for the selection list
+  
   QWidget* labeledList = new QWidget;
   QVBoxLayout* layout = new QVBoxLayout;
   QLabel* label = new QLabel("Crate:slot:channel hits with traces");
@@ -313,7 +344,8 @@ QTraceView::createPlotWidget()
   layout->addWidget(m_pHitSelectList);
   labeledList->setLayout(layout);
   
-  // Combine channel list and plot into a widget  
+  // Combine channel list and plot into a widget
+  
   QWidget* plot = new QWidget;
   QHBoxLayout* mainLayout = new QHBoxLayout;
   mainLayout->addWidget(labeledList);
@@ -330,7 +362,7 @@ QTraceView::createPlotWidget()
 /**
  * @brief Set the status bar message.
  * 
- * @param msg  Message to display
+ * @param msg  Message displayed on the status bar.
  */
 void
 QTraceView::setStatusBar(std::string msg)
@@ -393,9 +425,12 @@ QTraceView::updateSelectableHits()
     reinterpret_cast<QStandardItemModel*>(m_pHitSelectList->model());
   model->clear();
 
-  for (unsigned i=0; i<m_filteredHits.size(); i++) {    
-    // Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
+  for (unsigned i=0; i<m_filteredHits.size(); i++) {
+    
+    // Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this
+    
     QString id = QString("%1:%2:%3").arg(m_filteredHits[i].GetCrateID()).arg(m_filteredHits[i].GetSlotID()).arg(m_filteredHits[i].GetChannelID());
+    
     QStandardItem* item = new QStandardItem(id);
     model->setItem(i, item);
   }
@@ -403,7 +438,7 @@ QTraceView::updateSelectableHits()
 
 //____________________________________________________________________________
 /**
- * @brief Reset and clear all GUI elements to default states.
+ * @brief Reset and clear all GUI elements and member data to default states.
  */
 void
 QTraceView::resetGUI()
@@ -447,23 +482,69 @@ QTraceView::disableAll()
 }
 
 //____________________________________________________________________________
-/** 
- * @brief Show a message for source data EOF.
+/**
+ * @brief Parse command line arguments supplied at runtime.
+ * 
+ * Use QCommandLineParser to read in and parse positional arguments supplied 
+ * on the command line when the program is run. All arguments are considered 
+ * optional. Handle the arguments which are provided and issue error messages 
+ * if necessary.
+ * 
+ * @param parser  References the QCommandLineParser of the main QApplication.
  */
 void
-QTraceView::showEOF()
+QTraceView::parseCommandLineArgs(QCommandLineParser& parser)
 {
-  m_pEOF->setWordWrap(true);
-  m_pEOF->setMaximumSize(400, 200);
-  std::string msg = "No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.";
-  m_pEOF->setText(tr(msg.c_str()));
+  const QStringList args = parser.positionalArguments();
+  const QStringList names = parser.optionNames();
+
+  bool sourceSet = parser.isSet("source");
+  if (sourceSet) {
+    QString filename = parser.value("source");
+    configureSource(filename);
+  }
+
+  bool methodSet = parser.isSet("method");
+  if (methodSet) {
+    QString method = parser.value("method");
+    try {
+      m_pHitData->setFitMethod(method);
+    } catch (std::invalid_argument& e) {
+      issueWarning(e.what());
+    }
+  }
   
-  QWidget* w = new QWidget;
-  w->setWindowTitle("End of file");
-  QVBoxLayout* l = new QVBoxLayout;
-  l->addWidget(m_pEOF);
-  w->setLayout(l);
-  w->show();
+}
+
+//____________________________________________________________________________
+/** 
+ * @brief Issue a warning message in a popup window.
+ *
+ * @param msg  The warning message displayed in the popup window.
+ */
+void
+QTraceView::issueWarning(std::string msg)
+{
+  // Create the warning message the first time a warning is issued. Otherwise
+  // just reset the label text.
+  
+  if (!m_pWarningMessage) {
+    m_pWarningMessage = new QWidget;
+    m_pWarningMessage->setWindowTitle("WARNING");
+    m_pWarningMessage->setWindowFlags(Qt::WindowStaysOnTopHint);
+    QVBoxLayout* layout = new QVBoxLayout;
+    QLabel* label = new QLabel;
+    label->setWordWrap(true);
+    label->setMaximumSize(600, 200);
+    label->setText(tr(msg.c_str()));
+    layout->addWidget(label);
+    m_pWarningMessage->setLayout(layout);
+  } else {
+    QLabel* label = m_pWarningMessage->findChild<QLabel*>();
+    label->setText(tr(msg.c_str()));
+  }
+
+  m_pWarningMessage->show();
 }
 
 //____________________________________________________________________________
@@ -481,20 +562,40 @@ QTraceView::showEOF()
 void
 QTraceView::openFile()
 {
-  QString fname = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("EVT files (*.evt);;All Files (*)"));
+  QString filename = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("EVT files (*.evt);;All Files (*)"));
+
+  // Get the current file path from the decoder. The path is an empty string
+  // if no data source has been configured.
   
-  m_fileName = fname.toStdString();
-  m_fileName = "file://" + m_fileName;  
+  std::string currentPath = m_pDecoder->getFilePath();
   
-  if (fname.isEmpty()){
-    std::cout << "WARNING: no file selected. Please open a file using File->Open file before continuing." << std::endl;
+  if (filename.isEmpty() && currentPath.empty()) {
+    std::cout << "WARNING: no file selected. Please open a file using File->Open file... before continuing." << std::endl;
     return;
+  } else if (filename.isEmpty() && !currentPath.empty()) {
+    std::cout << "WARNING: no file selected, but a data source already exists. Current file path is: " << currentPath << std::endl;
   } else {
-    m_pDecoder->createDataSource(m_fileName);
-    resetGUI();
-    setStatusBar(m_fileName);
-    enableAll();
+    configureSource(filename);
   }
+}
+
+//____________________________________________________________________________
+/**
+ * @brief Attempt to create the file data soruce. Update GUI if successful.
+ * 
+ * Create a data source from a filename string. Update status bar to show the
+ * currently loaded file and enable UI elements on the main window. Errors 
+ * which occur during data source creation are dealt with in the decoder.
+ *
+ * @param filename  Filename as a QString, without URI formatting.
+ */
+void
+QTraceView::configureSource(QString filename)
+{
+  m_pDecoder->createDataSource(filename.toStdString());
+  resetGUI();
+  setStatusBar(filename.toStdString());
+  enableAll();
 }
 
 //____________________________________________________________________________
@@ -514,8 +615,10 @@ QTraceView::getNextEvent()
 
     // If the hit list is empty there are no more PHYSICS_EVENTs to grab
     // so issue the EOF warning and return from the function.
+    
     if (m_hits.empty()) {
-      showEOF();
+      std::string msg = "No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.";
+      issueWarning(msg);
       return;
     }
     
@@ -525,7 +628,7 @@ QTraceView::getNextEvent()
   updateSelectableHits();
   m_pRootCanvas->clear();
   
-  std::string msg = m_fileName + " -- Event " + std::to_string(m_pDecoder->getEventCount());
+  std::string msg = m_pDecoder->getFilePath() + " -- Event " + std::to_string(m_pDecoder->getEventCount());
   setStatusBar(msg);
 }
 
@@ -547,7 +650,8 @@ QTraceView::skipEvents()
   int retval = m_pDecoder->skip(events);
   
   if (retval < 0) {
-    showEOF();
+    std::string msg = "No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.";
+    issueWarning(msg);
   } else {
     msg = "Successfully skipped " + std::to_string(events) + " physics events. Hit 'Next' to display the next physics event containing trace data.";
     setStatusBar(msg);
@@ -610,3 +714,5 @@ QTraceView::test()
 	    << std::asctime(std::localtime(&result))
 	    << std::endl;
 }
+
+/** @} */

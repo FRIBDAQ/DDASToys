@@ -5,6 +5,10 @@
  * @note Fit functions are in the DDAS::TemplateFit namespace
  */
 
+/** @addtogroup TemplateFit
+ * @{
+ */
+
 #include "lmfit_template.h"
 
 #include <algorithm>
@@ -547,3 +551,5 @@ DDAS::TemplateFit::lmfit2(
   gsl_multifit_nlinear_free(solver);    
   gsl_vector_free(initialGuess);
 }
+
+/** @} */

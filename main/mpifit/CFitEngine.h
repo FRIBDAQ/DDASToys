@@ -20,6 +20,10 @@
  * @brief Define the CFitEngine abstract base class.
  */
 
+/** @addtogroup AnalyticFit
+ * @{
+ */
+
 #ifndef CFITENGINE_H
 #define CFITENGINE_H
 
@@ -48,3 +52,5 @@ public:
 };
 
 #endif
+
+/** @} */

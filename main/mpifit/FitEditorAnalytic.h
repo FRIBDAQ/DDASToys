@@ -20,6 +20,11 @@
  * @brief Definition of the FitEditor class for analytic fitting.
  */
 
+/** @addtogroup AnalyticFit
+ * @brief Analytic FitEditor and fitting subroutines.
+ * @{
+ */
+
 #ifndef FITEDITORANALYTIC_H
 #define FITEDITORANALYTIC_H
 
@@ -65,3 +70,5 @@ private:
 };
 
 #endif
+
+/** @} */

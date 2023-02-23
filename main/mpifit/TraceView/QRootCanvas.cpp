@@ -1,5 +1,10 @@
-/** @file: QRootCanvas.cpp
- *  @breif: Implementation of Qt-embedded Root canvas class
+/** 
+ * @file  QRootCanvas.cpp
+ * @brief Implementation of Qt-embedded Root canvas class
+ */
+
+/** @addtogroup traceview
+ * @{
  */
 
 #include "QRootCanvas.h"
@@ -25,12 +30,13 @@
 
 //____________________________________________________________________________
 /**
- * Constructor
- *   Create QWidget and register it with the Root graphics backend.
+ * @brief Constructor.
  *
- * @param pFitMgr - pointer to a FitManager for plotting fit data. The 
- *                  FitManager object is handled by the caller.
- * @param parent  - pointer to QWidget parent object, default = nullptr
+ * Construct a QWidget and register it with the Root graphics backend.
+ *
+ * @param pFitMgr  Pointer to a FitManager for plotting fit data. The 
+ *                 FitManager object is handled by the caller.
+ * @param parent   Pointer to QWidget parent object.
  */
 QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
   QWidget(parent), m_pFitManager(pFitMgr), m_pCanvas(nullptr),
@@ -38,16 +44,19 @@ QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
   m_pFit2Hist(nullptr)
 {
   // Set options needed to properly update the canvas when resizing the widget
-  // and to properly handle context menus and mouse move events
+  // and to properly handle context menus and mouse move events.
+  
   setAttribute(Qt::WA_OpaquePaintEvent, true);
   setMinimumSize(800, 600);
   setUpdatesEnabled(kFALSE);
   setMouseTracking(kTRUE);
 
-  // Register the QWidget in TVirtualX, giving its native window id
+  // Register the QWidget in TVirtualX, giving its native window id.
+  
   int wid = gVirtualX->AddWindow((ULong_t)winId(), 800, 600);
 
-  // Create the Root TCanvas, giving as argument the QWidget registered id
+  // Create the Root TCanvas, giving as argument the QWidget registered id.
+  
   m_pCanvas = new TCanvas("RootCanvas", width(), height(), wid);
   
   m_pCanvas->SetLeftMargin(0.125);
@@ -61,7 +70,7 @@ QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
 
 //____________________________________________________________________________
 /**
- * Destructor
+ * @brief Destructor.
  */
 QRootCanvas::~QRootCanvas()
 {
@@ -78,10 +87,9 @@ QRootCanvas::~QRootCanvas()
 
 //____________________________________________________________________________
 /**
- * drawHit
- *   Draw hit data on the canvas.
+ * @brief Draw hit data on the canvas.
  * 
- * @param hit - references the hit we're plotting data from
+ * @param hit  References the hit we're plotting data from
  */
 void
 QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
@@ -91,6 +99,7 @@ QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
   // For single pulses the double fit and single fit frequently look almost
   // identical. Drawing the double fit first makes the single fit in these
   // instances appear more clear.
+  
   if (hit.hasExtension()) {
     drawDoubleFit(hit);
     drawSingleFit(hit);
@@ -104,8 +113,7 @@ QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * clear
- *   Clear and update the Root canvas.
+ * @brief Clear and update the Root canvas.
  */
 void
 QRootCanvas::clear()
@@ -123,10 +131,9 @@ QRootCanvas::clear()
 
 //____________________________________________________________________________
 /**
- * mouseMoveEvent
- *   Handle Qt mouse move events on the Root canvas.
+ * @brief Handle Qt mouse move events on the Root canvas.
  *
- * @param e - pointer to the QMouseEvent to handle
+ * @param e  Pointer to the QMouseEvent to handle
  */
 void
 QRootCanvas::mouseMoveEvent(QMouseEvent *e)
@@ -146,10 +153,9 @@ QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 
 //____________________________________________________________________________
 /**
- * mousePressEvent
- *   Handle Qt mouse press events on the Root canvas.
+ * @brief Handle Qt mouse press events on the Root canvas.
  *
- * @param e - pointer to the QMouseEvent to handle
+ * @param e  Pointer to the QMouseEvent to handle
  */
 void
 QRootCanvas::mousePressEvent(QMouseEvent *e)
@@ -173,10 +179,9 @@ QRootCanvas::mousePressEvent(QMouseEvent *e)
 
 //____________________________________________________________________________
 /**
- * mouseReleaseEvent
- *   Handle Qt mouse release events on the Root canvas.
+ * @brief Handle Qt mouse release events on the Root canvas.
  *
- * @param e - pointer to the QMouseEvent to handle
+ * @param e  Pointer to the QMouseEvent to handle
  */
 void
 QRootCanvas::mouseReleaseEvent(QMouseEvent *e)
@@ -200,10 +205,7 @@ QRootCanvas::mouseReleaseEvent(QMouseEvent *e)
 
 //____________________________________________________________________________
 /**
- * resizeEvent
- *   Handle resize events in Root. See Qt documentation for details.
- *
- * @param - pointer to resize event
+ * @brief Handle resize events in Root. See Qt documentation for details.
  */
 void
 QRootCanvas::resizeEvent(QResizeEvent*)
@@ -216,10 +218,7 @@ QRootCanvas::resizeEvent(QResizeEvent*)
 
 //____________________________________________________________________________
 /**
- * paintEvent
- *   Handle paint events in Root. See Qt documentaiton for details.
- *
- * @param - pointer to paint event
+ * @brief Handle paint events in Root. See Qt documentaiton for details.
  */
 void
 QRootCanvas::paintEvent(QPaintEvent*)
@@ -236,18 +235,19 @@ QRootCanvas::paintEvent(QPaintEvent*)
 
 //____________________________________________________________________________
 /**
- * drawTrace
- *   Draw a trace on the Root canvas. Expects a trace of uint16_t from a 
- *   DDAS hit.
+ * @brief Draw a trace on the Root canvas. 
  *
- * @param hit - references the hit we extract and plot the trace from
+ * Expects a trace of uint16_t from a DDAS hit.
+ *
+ * @param hit  References the hit we extract and plot the trace from
  */
 void
 QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
 {
   std::vector<std::uint16_t> trace = hit.GetTrace();
   
-  // Create histograms if they do not exist, otherwise ensure correct size
+  // Create histograms if they do not exist, otherwise ensure correct size.
+  
   if (!m_pTraceHist) {
     m_pTraceHist = new TH1D("trace", "trace", trace.size(), 0, trace.size());
   } else {
@@ -258,6 +258,7 @@ QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
   // Add to canvas and configure display options. Since we always draw a
   // trace, the axis labels are set here, and subsequent plots are drawn
   // on these axes.
+  
   for (unsigned i=0; i<trace.size(); i++) {
     m_pTraceHist->Fill(i, trace[i]);
   }
@@ -269,13 +270,13 @@ QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * drawSingleFit
- *   Draw fit data for a single pulse fit on the current axes. Note that this 
- *   function expects that the hit has a fit extension which must be checked
- *   by the caller using hit.hasExtension().
+ * @brief Draw fit data for a single pulse fit on the current axes. 
+ *
+ * Note that this function expects that the hit has a fit extension which must
+ * be checked by the caller using hit.hasExtension().
  * 
- * @param hit - references the hit containing with fit parameters stored in 
- *              a HitExtension appended to the end of the "normal" hit
+ * @param hit  References the hit containing with fit parameters stored in 
+ *             a HitExtension appended to the end of the "normal" hit
  */
 void
 QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
@@ -287,6 +288,7 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
   // Get a vector of fit data with a size defined by the fitting range.
   // Note that index 0 of the fit vector corresponds to sample number low
   // on the actual trace. We assume if we are here, we have an extension.
+  
   DDAS::HitExtension ext = hit.getExtension();
   std::vector<double> fit = m_pFitManager->getSinglePulseFit(ext, low, high);
   
@@ -310,13 +312,13 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * drawDoubleFit
- *   Draw fit data for a double pulse fit on the current axes. Note that this 
- *   function expects that the hit has a fit extension which must be checked
- *   by the caller using hit.hasExtension().
+ * @brief Draw fit data for a double pulse fit on the current axes. 
  *
- * @param hit - references the hit containing with fit parameters stored in 
- *              a HitExtension appended to the end of the "normal" hit
+ * Note that this function expects that the hit has a fit extension which must 
+ * be checked by the caller using hit.hasExtension().
+ *
+ * @param hit  References the hit containing with fit parameters stored in 
+ *             a HitExtension appended to the end of the "normal" hit
  */
 void
 QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
@@ -328,6 +330,7 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
   // Get a vector of fit data with a size defined by the fitting range.
   // Note that index 0 of the fit vector corresponds to sample number low
   // on the actual trace. We assume if we are here, we have an extension.
+  
   DDAS::HitExtension ext = hit.getExtension();
   std::vector<double> fit = m_pFitManager->getDoublePulseFit(ext, low, high);
   
@@ -351,8 +354,7 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * drawFitLegend
- *   Draw a legend for the trace fits on the canvas.
+ * @brief Draw a legend for the trace fits on the canvas.
  */
 void
 QRootCanvas::drawFitLegend()
@@ -366,3 +368,5 @@ QRootCanvas::drawFitLegend()
   
   m_pFitLegend->Draw();  
 }
+
+/** @} */

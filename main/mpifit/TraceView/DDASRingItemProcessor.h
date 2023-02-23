@@ -1,5 +1,10 @@
-/** @file: DDASRingItemProcessor.h
- *  @breif: Defines an event processor class for handing DDAS events.
+/** 
+ * @file  DDASRingItemProcessor.h
+ * @brief Defines an event processor class for handing DDAS events.
+ */
+
+/** @addtogroup traceview
+ * @{
  */
 
 #ifndef DDASRINGITEMPROCESSOR_H
@@ -24,10 +29,11 @@ namespace DAQ {
 
 /**
  * @class DDASRingItemProcessor
+ * @brief A basic ring item processor.
  *
- *   A ring item processor class for a small subset of relavent ring items. 
- *   See latest $DAQROOT/share/recipes/process/processor.h/cpp for a more 
- *   general example.
+ * A ring item processor class for a small subset of relavent ring items. See 
+ * latest $DAQROOT/share/recipes/process/processor.h/cpp for a more general
+ * example.
  */
 
 class DDASRingItemProcessor
@@ -37,18 +43,30 @@ public:
   ~DDASRingItemProcessor();
 
 public:
+  
   // Implemented
+  
   void processStateChangeItem(CRingStateChangeItem& item);
   void processEvent(CPhysicsEventItem& item);
   void processFormat(CDataFormatItem& item);
   void processUnknownItemType(CRingItem& item);
   
   // Ignored item types
-  void processScalerItem(CRingScalerItem&) {return;};
-  void processTextItem(CRingTextItem&) {return;};
-  void processEventCount(CRingPhysicsEventCountItem&) {return;};
-  void processGlomParams(CGlomParameters&) {return;};
   
+  /** @brief Scaler ring items are ignored. */
+  void processScalerItem(CRingScalerItem&) {return;};
+  /** @brief Text ring items are ignored. */
+  void processTextItem(CRingTextItem&) {return;};
+  /** @brief PhysicsEventCount ring items are ignored. */
+  void processEventCount(CRingPhysicsEventCountItem&) {return;};
+  /** @brief GlomParameters ring items are ignored. */
+  void processGlomParams(CGlomParameters&) {return;};
+
+  /**
+   * @brief Return the unpacked event data.
+   * @return std::vector<DAQ::DDAS::DDASFitHit>  Vector containing the 
+   *                                             event data.
+   */ 
   std::vector<DAQ::DDAS::DDASFitHit> getUnpackedHits() {return m_hits;};
 
 private:
@@ -57,3 +75,5 @@ private:
 };
 
 #endif
+
+/** @} */

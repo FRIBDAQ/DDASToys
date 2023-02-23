@@ -1,5 +1,10 @@
-/** @file: DDASRingItemProcessor.cpp
- *  @brief: Implemenation of event processor class for DDAS events.
+/** 
+ * @file  DDASRingItemProcessor.cpp
+ * @brief Implemenation of event processor class for DDAS events.
+ */
+
+/** @addtogroup traceview
+ * @{
  */
 
 #include "DDASRingItemProcessor.h"
@@ -18,7 +23,9 @@
 
 //____________________________________________________________________________
 /**
- * Constructor
+ * @brief Constructor.
+ *
+ * Also constructs a DDASFitHitUnpacker object.
  */
 DDASRingItemProcessor::DDASRingItemProcessor() :
   m_pUnpacker(new DAQ::DDAS::DDASFitHitUnpacker)
@@ -26,7 +33,7 @@ DDASRingItemProcessor::DDASRingItemProcessor() :
 
 //____________________________________________________________________________
 /**
- * Destructor
+ * @brief Destructor.
  */
 DDASRingItemProcessor::~DDASRingItemProcessor()
 {
@@ -35,14 +42,14 @@ DDASRingItemProcessor::~DDASRingItemProcessor()
 
 //____________________________________________________________________________
 /**
- * processStateChangeItem.
- *   Processes a run state change item. Again we're just going to do a partial 
- *   dump:
- *    - BEGIN/END run we'll give the timestamp, run number and title, and time
- *      offset into the run.
+ * @brief Processes a run state change item. 
+ *
+ * Do a partial dump of the event data:
+ *    - BEGIN/END run we'll give the timestamp, source id, run number, 
+ *      title and and time offset into the run.
  *    - PAUSE/RESUME we'll just give the time and time into the run.
  *
- * @param item - reference to the state change item
+ * @param item  Reference to the state change item.
  */
 void
 DDASRingItemProcessor::processStateChangeItem(CRingStateChangeItem& item)
@@ -58,23 +65,23 @@ DDASRingItemProcessor::processStateChangeItem(CRingStateChangeItem& item)
 
 //____________________________________________________________________________
 /**
- * processEvent
- *   Process physics events. Unpack the event into a vector of DDASFitHits.
+ * @brief Process physics events. Unpack the event into a vector of
+ * DDASFitHits.
  *
- *  @param item - references the physics event item that we are 'analyzing'
+ * @param item  Reference to the physics event item.
  */
 void
 DDASRingItemProcessor::processEvent(CPhysicsEventItem& item)
 { 
-  // Clear event vector before processing the hit
+  // Clear event vector before processing the hit.
   
   m_hits.clear();
 
-  // Bust the ring item up into event builder fragments
+  // Bust the ring item up into event builder fragments.
   
   FragmentIndex frags(reinterpret_cast<std::uint16_t*>(item.getBodyPointer()));
 
-  // Decode the DDAS hit in each fragment and add it to the event
+  // Decode the DDAS hit in each fragment and add it to the event.
   
   DAQ::DDAS::DDASFitHit hit;
   for (unsigned i=0; i<frags.getNumberFragments(); i++) {
@@ -86,11 +93,12 @@ DDASRingItemProcessor::processEvent(CPhysicsEventItem& item)
 
 //____________________________________________________________________________
 /**
- * processFormat
- *   11.x runs have, as their first record an event format record that
- *   indicates that the data format is for 11.0.
+ * @brief Process data format ring items. 
+ * 
+ * 11.x runs have, as their first record an event format record that
+ * indicates that the data format is for 11.0.
  *
- * @param item - references the format item
+ * @param item  Reference to the format item.
  */
 void
 DDASRingItemProcessor::processFormat(CDataFormatItem& item)
@@ -101,17 +109,19 @@ DDASRingItemProcessor::processFormat(CDataFormatItem& item)
 
 //____________________________________________________________________________
 /**
- * processUnknownItemType
- *   Process a ring item with an unknown item type. This can happen if we're 
- *   seeing a ring item that we've not specified a handler for (unlikely) or 
- *   the item types have expanded but the data format is the same (possible) 
- *   or the user has defined and is using their own ring item type. We'll just
- *    dump the item.
+ * @brief Process a ring item with an unknown item type. 
  *
- * @param item - references the generic ring item
+ * This can happen if we're seeing a ring item that we've not specified a 
+ * handler for (unlikely) or the item types have expanded but the data format
+ * is the same (possible) or the user has defined and is using their own ring 
+ * item type. We'll just dump the item.
+ *
+ * @param item  Reference to the generic item.
  */
 void
 DDASRingItemProcessor::processUnknownItemType(CRingItem& item)
 {
   std::cout << item.toString() << std::endl;
 }
+
+/** @} */

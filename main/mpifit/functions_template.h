@@ -4,6 +4,10 @@
  * @note All functions are in the DDAS::TemplateFit namespace
  */
 
+/** @addtogroup TemplateFit
+ * @{
+ */
+
 #ifndef FUNCTIONS_TEMPLATE_H
 #define FUNCTIONS_TEMPLATE_H
 
@@ -41,3 +45,5 @@ namespace DDAS {
 };
   
 #endif
+
+/** @} */

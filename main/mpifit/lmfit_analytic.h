@@ -21,6 +21,10 @@
  *         Levenburg-Marquardt fitter.
  */
 
+/** @addtogroup AnalyticFit
+ * @{
+ */
+
 #ifndef LMFIT_ANALYTIC_H
 #define LMFIT_ANALYTIC_H
 
@@ -65,3 +69,5 @@ namespace DDAS {
 };
 
 #endif
+
+/** @} */

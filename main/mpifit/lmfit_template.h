@@ -5,6 +5,10 @@
  * @note Fit functions are in the DDAS::TemplateFit namespace.
  */
 
+/** @addtogroup TemplateFit
+ * @{
+ */
+
 #ifndef LMFIT_TEMPLATE_H
 #define LMFIT_TEMPLATE_H
 
@@ -45,3 +49,5 @@ namespace DDAS {
 };
 
 #endif
+
+/** @} */

@@ -3,6 +3,11 @@
  * @brief Implementation of the FitEditor class for template fitting.
  */
 
+/** @addtogroup TemplateFit
+ * @brief Template FitEditor and fitting subroutines.
+ * @{
+ */
+
 #include "FitEditorTemplate.h"
 
 #include <iostream>
@@ -216,3 +221,5 @@ extern "C" {
     return new FitEditorTemplate;
   }
 }
+
+/** @} */

@@ -21,6 +21,10 @@
  * fitter.
  */
 
+/** @addtogroup AnalyticFit
+ * @{
+ */
+
 #include "lmfit_analytic.h"
 
 #include <algorithm>
@@ -1140,3 +1144,5 @@ DDAS::AnalyticFit::lmfit2fixedT(
   gsl_multifit_fdfsolver_free(solver);    
   gsl_vector_free(initialGuess);
 }
+
+/** @} */

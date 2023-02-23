@@ -38,7 +38,7 @@ DISTNAME      = traceview1.0.0
 DISTDIR = /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/.tmp/traceview1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lGui -lRGL ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
+LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame -Wl,-rpath,$(ROOTSYS)/lib -pthread -lm -ldl -rdynamic -m64 ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -614,7 +614,7 @@ DDASRingItemProcessor.o: DDASRingItemProcessor.cpp DDASRingItemProcessor.h \
 		$(DAQINC)/CRingStateChangeItem.h \
 		$(DAQINC)/DataFormat.h \
 		$(DAQINC)/RangeError.h \
-		/usr/opt/nscldaq/experimental/11.4-023/include/Exception.h \
+		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
 		$(DAQINC)/CPhysicsEventItem.h \
 		$(DAQINC)/CDataFormatItem.h \
 		../DDASFitHit.h \
@@ -630,7 +630,7 @@ DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \
 		$(DAQINC)/CDataSourceFactory.h \
 		$(DAQINC)/CRingItem.h \
 		$(DAQINC)/DataFormat.h \
-		/usr/opt/nscldaq/experimental/11.4-023/include/Exception.h \
+		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
 		$(DAQINC)/CRingItemFactory.h \
 		$(DAQINC)/CRingScalerItem.h \
 		$(DAQINC)/RangeError.h \

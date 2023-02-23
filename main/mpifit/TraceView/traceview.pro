@@ -9,16 +9,21 @@ CONFIG += qt warn_on thread console
 INCLUDEPATH += .. $(DAQINC) $(DDAS_INC) $(ROOTSYS)/include
 
 # NSCLDAQ and DDAS libraries
-LIBS += -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB)
+LIBS += -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl \
+     -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat \
+     -Wl,-rpath=$(DDAS_LIB)
 
 # ROOT libraries from $ROOTSYS/bin/root-config --libs --ldflags 
-LIBS += -L$(ROOTSYS)/lib -lCore -lRIO -lNet \
-        -lHist -lGraf -lGraf3d -lGpad -lTree \
-        -lRint -lPostscript -lMatrix -lPhysics \
-        -lGui -lRGL
+LIBS += -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d \
+     -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix \
+     -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame \
+     -Wl,-rpath,$(ROOTSYS)/lib -pthread -lm -ldl -rdynamic -m64
 
 # Object files to link from the top build directory
-LIBS += ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o
+LIBS += ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o \
+     ../functions_template.o
 
-HEADERS += QTraceView.h QHitData.h QRootCanvas.h DDASRingItemProcessor.h DDASDecoder.h FitManager.h
-SOURCES += main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp DDASRingItemProcessor.cpp DDASDecoder.cpp FitManager.cpp
+HEADERS += QTraceView.h QHitData.h QRootCanvas.h DDASRingItemProcessor.h \
+        DDASDecoder.h FitManager.h
+SOURCES += main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp \
+        DDASRingItemProcessor.cpp DDASDecoder.cpp FitManager.cpp

@@ -1,6 +1,11 @@
-/** @file: QHitData.h
- *  @breif: Definition of class to handle disaplying hit data on the main 
- *  window UI.
+/** 
+ * @file  QHitData.h
+ * @brief Definition of class to handle disaplying hit data on the main 
+ * window UI.
+ */
+
+/** @addtogroup traceview
+ * @{
  */
 
 #ifndef QHITDATA_H
@@ -14,6 +19,7 @@ class QLabel;
 class QComboBox;
 class QPushButton;
 class QGroupBox;
+class QString;
 
 namespace DAQ {
   namespace DDAS {
@@ -28,10 +34,11 @@ class FitManager;
 
 /**
  * @class QHitData
+ * @brief Widget for managing hit information when interating with the GUI.
  *
- *   Widget class for managing UI related to the hit data. Displays relavent 
- *   infomration for the currently displayed hit with optional UI elements to
- *   see more information e.g. a button to print the fit results to stdout.
+ * Widget class for managing UI related to the hit data. Displays relavent 
+ * infomration for the currently displayed hit with optional UI elements to
+ * see more information e.g. a button to print the fit results to stdout.
  */
 
 class QHitData : public QWidget
@@ -43,6 +50,7 @@ public:
   ~QHitData();
 
   void update(const DAQ::DDAS::DDASFitHit& hit);
+  void setFitMethod(QString method);
 
 private:
   QGroupBox* createHitBox();
@@ -67,6 +75,6 @@ private:
   QPushButton* m_pPrintFit;
 };
 
-
-
 #endif
+
+/** @} */

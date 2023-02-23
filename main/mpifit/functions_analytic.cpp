@@ -21,6 +21,10 @@
  * @note  All functions are in the DDAS::AnalyticFit namespace.
  */
 
+/** @addtogroup AnalyticFit
+ * @{
+ */
+
 #include "functions_analytic.h"
 
 #include <iostream>
@@ -453,3 +457,4 @@ DDAS::AnalyticFit::writeTrace2(
   }
 }
 
+/** @} */

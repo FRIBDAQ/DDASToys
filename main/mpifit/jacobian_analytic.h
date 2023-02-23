@@ -21,6 +21,10 @@
  *        analytic trace fitting using GSL.
  */
 
+/** @addtogroup AnalyticFit
+ * @{
+ */
+
 #ifndef JACOBIAN_ANALYTIC_H
 #define JACOBIAN_ANALYTIC_H
 
@@ -173,5 +177,6 @@ public:
 
 };
 
-
 #endif
+
+/** @} */
