@@ -134,18 +134,25 @@ estimateSinglePulse(
     }
   }
 
+  // If the threshold value is invalid, use the baseline guess and template
+  // alignment point as initial guesses for C and X1. Otherwise estimate X1
+  // using the threshold crossing and C using the baseline average 90% to the
+  // crossing point.
+  
   if(tcross < 0 || tcross > (int)trace.size()) {
     C0 = bguess; // Just in case something weird happens
+    X10 = 0;
   } else { 
     int ibaseline = static_cast<int>(0.9*tcross);
     for(int i=0; i<ibaseline; i++) {
       C0 += trace[i];
     }
     C0 /= ibaseline; // The guess for C0
+    X10 = tcross;
   }
 
   A10 = (max - C0)/tpmax;  
-  X10 = maxchan - alignPoint;
+  X10 -= alignPoint;
   
   return GSL_SUCCESS;
 }
