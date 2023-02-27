@@ -119,9 +119,9 @@ estimateSinglePulse(
   
   double stddev = 0.;
   for(int i=0; i<BASELINE; i++) {
-    stdev += (trace[i]-bguess)*(trace[i]-bguess);
+    stddev += (trace[i]-bguess)*(trace[i]-bguess);
   }
-  stddev = sqrt(stdev/(BASELINE-1)); // Stddev over the range
+  stddev = sqrt(stddev/(BASELINE-1)); // Stddev over the range
   double bthresh = bguess + 10*stddev; // Threshold for signal start
 
   int tcross = -1; // Threshold crossing
