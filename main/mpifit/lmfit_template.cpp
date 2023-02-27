@@ -117,12 +117,12 @@ estimateSinglePulse(
   }
   bguess /= BASELINE; // Average value
   
-  double stdev = 0.;
+  double stddev = 0.;
   for(int i=0; i<BASELINE; i++) {
     stdev += (trace[i]-bguess)*(trace[i]-bguess);
   }
-  stdev = sqrt(stdev/(BASELINE-1));  // Stdev over the range
-  double bthresh = bguess + 5*stdev; // Threshold for signal start
+  stddev = sqrt(stdev/(BASELINE-1)); // Stddev over the range
+  double bthresh = bguess + 10*stddev; // Threshold for signal start
 
   int tcross = -1; // Threshold crossing
   for(size_t i=0; i<trace.size(); i++) {
@@ -134,7 +134,7 @@ estimateSinglePulse(
 
   // If the threshold value is invalid, use the baseline guess and template
   // alignment point as initial guesses for C and X1. Otherwise estimate X1
-  // using the threshold crossing and C using the baseline average 90% to the
+  // using the threshold crossing and C using the baseline average ~90% to the
   // crossing point.
   
   if(tcross < 0 || tcross > (int)trace.size()) {
