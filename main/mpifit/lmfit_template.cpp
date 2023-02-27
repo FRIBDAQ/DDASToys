@@ -96,12 +96,10 @@ estimateSinglePulse(
   // for the trace and the max value for the template
   
   double max = -1.0e6;   // Trace max
-  int    maxchan = -1;   // Trace max sample
   double tpmax = -1.0e6; // Template max  
   for (unsigned i=low; i<=high; i++) {
     if (trace[i] > max) {
       max = trace[i];
-      maxchan = i;
     }
     if (traceTemplate[i] > tpmax) {
       tpmax = traceTemplate[i];
@@ -141,7 +139,7 @@ estimateSinglePulse(
   
   if(tcross < 0 || tcross > (int)trace.size()) {
     C0 = bguess; // Just in case something weird happens
-    X10 = 0;
+    X10 = alignPoint;
   } else { 
     int ibaseline = static_cast<int>(0.9*tcross);
     for(int i=0; i<ibaseline; i++) {
