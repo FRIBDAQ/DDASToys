@@ -47,14 +47,15 @@ endif
 
 LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
-all: $(LIBS) docs traceview
+all: $(LIBS) traceview
 libs: $(LIBS)
+docs: docs
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 traceview:
-	(cd TraceView; qmake -qt=5 traceview.pro; make)
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro; make)
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
