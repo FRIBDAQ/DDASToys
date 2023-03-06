@@ -35,7 +35,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = traceview1.0.0
-DISTDIR = /scratch/chester/ParallelAnalysis/main/mpifit/TraceView/.tmp/traceview1.0.0
+DISTDIR = /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/.tmp/traceview1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
 LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat -Wl,-rpath=$(DDAS_LIB) -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame -Wl,-rpath,$(ROOTSYS)/lib -pthread -lm -ldl -rdynamic -m64 ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
@@ -380,17 +380,17 @@ compiler_moc_header_clean:
 moc_QTraceView.cpp: QTraceView.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /scratch/chester/ParallelAnalysis/main/mpifit/TraceView/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/scratch/chester/ParallelAnalysis/main/mpifit/TraceView -I/scratch/chester/ParallelAnalysis/main/mpifit -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(DAQINC)' -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(DDAS_INC)' -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(ROOTSYS)/include' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include QTraceView.h -o moc_QTraceView.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView -I/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(DAQINC)' -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(DDAS_INC)' -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(ROOTSYS)/include' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include QTraceView.h -o moc_QTraceView.cpp
 
 moc_QHitData.cpp: QHitData.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /scratch/chester/ParallelAnalysis/main/mpifit/TraceView/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/scratch/chester/ParallelAnalysis/main/mpifit/TraceView -I/scratch/chester/ParallelAnalysis/main/mpifit -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(DAQINC)' -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(DDAS_INC)' -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(ROOTSYS)/include' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include QHitData.h -o moc_QHitData.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView -I/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(DAQINC)' -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(DDAS_INC)' -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(ROOTSYS)/include' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include QHitData.h -o moc_QHitData.cpp
 
 moc_QRootCanvas.cpp: QRootCanvas.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /scratch/chester/ParallelAnalysis/main/mpifit/TraceView/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/scratch/chester/ParallelAnalysis/main/mpifit/TraceView -I/scratch/chester/ParallelAnalysis/main/mpifit -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(DAQINC)' -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(DDAS_INC)' -I'/scratch/chester/ParallelAnalysis/main/mpifit/TraceView/$(ROOTSYS)/include' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include QRootCanvas.h -o moc_QRootCanvas.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView -I/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(DAQINC)' -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(DDAS_INC)' -I'/aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/$(ROOTSYS)/include' -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/8 -I/usr/include/x86_64-linux-gnu/c++/8 -I/usr/include/c++/8/backward -I/usr/lib/gcc/x86_64-linux-gnu/8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include QRootCanvas.h -o moc_QRootCanvas.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -614,7 +614,7 @@ DDASRingItemProcessor.o: DDASRingItemProcessor.cpp DDASRingItemProcessor.h \
 		$(DAQINC)/CRingStateChangeItem.h \
 		$(DAQINC)/DataFormat.h \
 		$(DAQINC)/RangeError.h \
-		/usr/opt/daq/12.0-pre6/include/Exception.h \
+		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
 		$(DAQINC)/CPhysicsEventItem.h \
 		$(DAQINC)/CDataFormatItem.h \
 		../DDASFitHit.h \
@@ -630,7 +630,7 @@ DDASDecoder.o: DDASDecoder.cpp DDASDecoder.h \
 		$(DAQINC)/CDataSourceFactory.h \
 		$(DAQINC)/CRingItem.h \
 		$(DAQINC)/DataFormat.h \
-		/usr/opt/daq/12.0-pre6/include/Exception.h \
+		/usr/opt/daq/12.0-pre6-dev/include/Exception.h \
 		$(DAQINC)/CRingItemFactory.h \
 		$(DAQINC)/CRingScalerItem.h \
 		$(DAQINC)/RangeError.h \

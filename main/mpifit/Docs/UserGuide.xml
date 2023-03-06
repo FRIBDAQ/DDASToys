@@ -384,8 +384,9 @@
       <calloutlist>
 	<callout arearefs="mpi">
 	  <para>
-	    These environment settings point to the OpenMPI software built in
-	    the container.
+	    These environment settings point to the OpenMPI software built in the
+	    container. Configuring a specific version of OpenMPI may be necessary to
+	    ensure that the host and container MPI major versions are consistent.
 	  </para>
 	</callout>
 	<callout arearefs="procs">

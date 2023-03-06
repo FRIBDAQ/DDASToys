@@ -51,7 +51,7 @@ all: $(LIBS) traceview
 libs: $(LIBS)
 docs: docs
 
-.cpp.o:
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 traceview:
