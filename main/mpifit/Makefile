@@ -1,8 +1,8 @@
 # SPECTCLHOME must be defined externally to point to a SpecTcl that has the
 # fragment index stuff built in. Furthermore, an NSCLDAQ 11.4 or higher must
-# have been set up (daqsetup.bash sourced in) XIAAPIDIR must be defined to
+# have been set up (daqsetup.bash sourced in). XIAAPIDIR must be defined to
 # point to the XIA API directory used by that NSCLDAQ distro. MAXPOINTS should
-#be modified to match the longest trace we're fitting if this is CUDA enabled.
+# be modified to match the longest trace we're fitting if this is CUDA enabled.
 #
 # Required definitions:
 #  - Base of SpecTcl via the SPECTCLHOME environment variable. If SpecTcl 5.10
@@ -12,6 +12,8 @@
 #  - A version of DDAS has been set up.
 #  - Define XIAAPIDIR to point to the XIAAPI version used by your NSCLDAQ
 #    setup.
+
+CXX = g++
 
 MAXPOINTS = 200
 
@@ -49,7 +51,7 @@ LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
 all: $(LIBS) traceview
 libs: $(LIBS)
-docs: docs
+docs: thedocs
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
@@ -71,10 +73,10 @@ libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
-# Build docbooks
+# Build docbooks and doxygen documentation
 #
 
-docs:
+thedocs:
 	(cd Docs; make)
 
 #
