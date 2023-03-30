@@ -101,14 +101,16 @@ estimateSinglePulse(
     if (trace[i] > max) {
       max = trace[i];
     }
+  }
+  for (unsigned i=0; i<traceTemplate.size(); i++) {
     if (traceTemplate[i] > tpmax) {
       tpmax = traceTemplate[i];
     }
   }
-
+  
   // Construct initial guess for C0. Take the avg of BASELINE
   // (default = 8) samples and their standard deviation find
-  // the point i when trace[i] > avg + 5*stdev, and then calculate
+  // the point i when trace[i] > avg + 10*stdev, and then calculate
   // the baseline from 0 to 90% of the crossing point.
   
   double bguess = 0.;
@@ -137,7 +139,7 @@ estimateSinglePulse(
   // using the threshold crossing and C using the baseline average ~90% to the
   // crossing point.
   
-  if(tcross < 0 || tcross > (int)trace.size()) {
+  if(tcross < low || tcross >= high) {
     C0 = bguess; // Just in case something weird happens
     X10 = alignPoint;
   } else { 
