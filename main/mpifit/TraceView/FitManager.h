@@ -91,7 +91,6 @@ private:
   
 private:
   Configuration* m_pConfig;
-  QWidget* m_pWarningMessage;
   fitMethod m_method;
   bool m_config;
   bool m_templateConfig;

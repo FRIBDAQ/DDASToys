@@ -74,88 +74,6 @@ reduceTrace(
 }
 
 /**
- * Estimates the single pulse parameters from the trace to be fit
- *
- * @param[in]  trace          The trace to be fit
- * @param[in]  traceTemplate  The trace template
- * @param[out] A10  Guess for the amplitude parameter A1
- * @param[out] X10  Guess for the location parameter X1
- * @param[out] C0   Guess for the baseline parameter C
- * 
- * @return int  Status of the computation (GSL_SUCCESS)
- */
-static double
-estimateSinglePulse(
-		    std::vector<std::uint16_t>& trace,
-		    std::vector<double>& traceTemplate, unsigned alignPoint,
-		    unsigned low, unsigned high,
-		    double &A10, double &X10, double &C0
-		    )
-{
-  // Find the maximum value and sample number where the max occurs
-  // for the trace and the max value for the template
-  
-  double max = -1.0e6;   // Trace max
-  double tpmax = -1.0e6; // Template max  
-  for (unsigned i=low; i<=high; i++) {
-    if (trace[i] > max) {
-      max = trace[i];
-    }
-    if (traceTemplate[i] > tpmax) {
-      tpmax = traceTemplate[i];
-    }
-  }
-
-  // Construct initial guess for C0. Take the avg of BASELINE
-  // (default = 8) samples and their standard deviation find
-  // the point i when trace[i] > avg + 5*stdev, and then calculate
-  // the baseline from 0 to 90% of the crossing point.
-  
-  double bguess = 0.;
-  for(int i=0; i<BASELINE; i++) {
-    bguess += trace[i];
-  }
-  bguess /= BASELINE; // Average value
-  
-  double stddev = 0.;
-  for(int i=0; i<BASELINE; i++) {
-    stddev += (trace[i]-bguess)*(trace[i]-bguess);
-  }
-  stddev = sqrt(stddev/(BASELINE-1)); // Stddev over the range
-  double bthresh = bguess + 10*stddev; // Threshold for signal start
-
-  int tcross = -1; // Threshold crossing
-  for(size_t i=0; i<trace.size(); i++) {
-    if(trace[i] > bthresh) {
-      tcross = (int)i;
-      break;
-    }
-  }
-
-  // If the threshold value is invalid, use the baseline guess and template
-  // alignment point as initial guesses for C and X1. Otherwise estimate X1
-  // using the threshold crossing and C using the baseline average ~90% to the
-  // crossing point.
-  
-  if(tcross < 0 || tcross > (int)trace.size()) {
-    C0 = bguess; // Just in case something weird happens
-    X10 = alignPoint;
-  } else { 
-    int ibaseline = static_cast<int>(0.9*tcross);
-    for(int i=0; i<ibaseline; i++) {
-      C0 += trace[i];
-    }
-    C0 /= ibaseline; // The guess for C0
-    X10 = tcross;
-  }
-
-  A10 = (max - C0)/tpmax;  
-  X10 -= alignPoint;
-  
-  return GSL_SUCCESS;
-}
-
-/**
  * Compute the vector of residuals applied to the data points for the 
  * specified parameters.
  *
@@ -202,7 +120,9 @@ gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  *
  * @param pResult        Struct that will get the results of the fit.
  * @param trace          References the trace to fit.
- * @param traceTemplate  References the template trace for the fit.
+ * @param traceTemplate  References the template trace for the fit. The 
+ *                       template is assumed to have a baseline of 0 and a 
+ *                       maximum value of 1.
  * @param alignPoint     The internal alignment point of the template trace.
  * @param limits         Limits of the trace over which to conduct the fit.
  * @param saturation     Value at which the ADC is saturated (points at or 
@@ -267,11 +187,20 @@ DDAS::TemplateFit::lmfit1(
   
   initialGuess = gsl_vector_alloc(P1_PARAM_COUNT);
 
-  // Set up initial guesses based off the current trace and fit template
-  
-  double A10, X10, C0;
-  estimateSinglePulse(trace, traceTemplate, alignPoint,
-		      low, high, A10, X10, C0);
+  // Set up initial guesses based off the current trace:
+
+  double max = 0;
+  double maxSample = 0;
+  for (unsigned i = low; i <= high; i++) {
+    if (trace[i] > max) {
+      max = trace[i];
+      maxSample = i;
+    }
+  }
+
+  double C0 = std::min(trace[low], trace[high]);
+  double A10 = max - C0;
+  double X10 = maxSample - alignPoint;
   
   gsl_vector_set(initialGuess, P1A1_INDEX, A10);
   gsl_vector_set(initialGuess, P1X1_INDEX, X10);
@@ -370,7 +299,7 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
   // Now loop over all the data points, filling in r with the weighted
   // residuals (weights by default are equal to 1)
   
-  for (size_t i=0; i<points.size(); i++) {
+  for (size_t i = 0; i < points.size(); i++) {
     double x = points[i].first;  
     double y = points[i].second; 
     double p = DDAS::TemplateFit::doublePulse(A1, x1, A2, x2, C, x, trtmp);
@@ -385,7 +314,9 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  *
  * @param pResult        Struct that will get the results of the fit.
  * @param trace          References the trace to fit.
- * @param traceTemplate  References the template trace for the fit.
+ * @param traceTemplate  References the template trace for the fit. The 
+ *                       template is assumed to have a baseline of 0 and a 
+ *                       maximum value of 1.
  * @param alignPoint     The internal alignment point of the template trace.
  * @param limits         The limits of the trace that can be fit.
  * @param pSinglePulseFit  Pointer to the fit for a single pulse, used to seed 
@@ -427,13 +358,15 @@ DDAS::TemplateFit::lmfit2(
   function_params.trs = gsl_multifit_nlinear_trs_lm; // Set the algorithm
   gsl_vector*                      initialGuess;
     
-  // Make the solver workspace:    
+  // Make the solver workspace:
+  
   solver = gsl_multifit_nlinear_alloc(method, &function_params, npts, P2_PARAM_COUNT);
   if (solver == nullptr) {
     throw std::runtime_error("lmfit2 Unable to allocate fit solver workspace");
   }
     
   // Fill in function/data pointers:
+  
   function.f   = gsl_p2Residuals;
   function.df  = nullptr; // Finite difference method from gsl2.5
   function.n   = npts;
@@ -454,41 +387,46 @@ DDAS::TemplateFit::lmfit2(
   } else {
     fit1 = *pSinglePulseFit; // Use what's passed in if possbible.
   } 
-
-  // Note: these are passed by reference to estimateSinglePulse
   
   double C0 = fit1.offset;
   double A10 = fit1.pulse.amplitude;
   double X10 = fit1.pulse.position;
 
-  // If bad values for constants or amplitudes, re-initialize single pulse
-
-  double X1corr = X10 + alignPoint; // Position on the actual trace
-  if ((A10 < 0) || (X1corr < 0) || (X1corr > trace.size())) {       
-    estimateSinglePulse(trace, traceTemplate, alignPoint,
-			low, high, A10, X10, C0);
+  // If the single pulse fit gives bad values, fall back on the estimation.
+  
+  double Xtrace = X10 + alignPoint; // Position on the actual trace
+  if ((A10 < 0) || (Xtrace < 0) || (Xtrace > trace.size())) {
+    double max = 0;
+    double maxSample = 0;
+    for (unsigned i = low; i <= high; i++) {
+      if (trace[i] > max) {
+	max = trace[i];
+	maxSample = i;
+      }
+    }
+    C0 = std::min(trace[low], trace[high]);
+    A10 = max - C0;
+    X10 = maxSample - alignPoint;    
   }
   
   // Try and estimate the second pulse parameters by subtracting the single
-  // pulse. The subtracted trace is truncated to integer values for estimation.
-  
-  std::vector<std::uint16_t> tracesub; 
-  for(unsigned i=low; i<=high; i++)  {
-    double single = DDAS::TemplateFit::singlePulse(A10, X10, C0,
-				static_cast<double>(i), traceTemplate);
-    std::uint16_t diff = 0;
-    if((trace[i]-single) > 0) // Unsigned, only reset if > 0
-      diff = static_cast<std::uint16_t>(trace[i]-single);
-    tracesub.push_back(diff);
+  // pulse. Here we fall back to estimating the amplitude and position from
+  // the maximum value on the subtracted trace within the fitting limits and
+  // hope that the fit can iron out the rest.
+
+  double max = std::numeric_limits<double>::lowest();
+  double maxSample = 0;
+  for (unsigned i = low; i <= high; i++) {
+    double single = DDAS::TemplateFit::singlePulse(A10, X10, C0, static_cast<double>(i), traceTemplate);
+    double diff = trace[i] - single;
+    if(diff > max) {
+      max = diff;
+      maxSample = i;
+    }
   }
- 
-  // Note: these are passed by reference to estimateSinglePulse
-  // C0sub is estimator for subtracted trace (not used for fitting)
+  double A20 = max;
+  double X20 = maxSample - alignPoint;
   
-  double A20, X20, C0sub;
-  estimateSinglePulse(tracesub, traceTemplate, alignPoint,
-		      low, high, A20, X20, C0sub);
- 
   gsl_vector_set(initialGuess, P2A1_INDEX, A10);
   gsl_vector_set(initialGuess, P2X1_INDEX, X10);
   gsl_vector_set(initialGuess, P2A2_INDEX, A20);
@@ -531,7 +469,7 @@ DDAS::TemplateFit::lmfit2(
 				       nullptr, nullptr, &info, solver);
 
   // Fish our results and compute the chi square
-  
+
   double A1  = gsl_vector_get(solver->x, P2A1_INDEX);
   double X1  = gsl_vector_get(solver->x, P2X1_INDEX);
   double A2  = gsl_vector_get(solver->x, P2A2_INDEX);

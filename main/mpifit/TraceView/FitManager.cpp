@@ -14,9 +14,7 @@
 #include <utility>
 #include <cmath>
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QLabel>
+#include <QMessageBox>
 
 #include <Configuration.h>
 #include <DDASFitHit.h>
@@ -29,8 +27,8 @@
  * @brief Constructor.
  */
 FitManager::FitManager() :
-  m_pConfig(new Configuration), m_pWarningMessage(nullptr),
-  m_method(ANALYTIC), m_config(false), m_templateConfig(false)
+  m_pConfig(new Configuration), m_method(ANALYTIC),
+  m_config(false), m_templateConfig(false)
 {}
 
 //____________________________________________________________________________
@@ -40,7 +38,6 @@ FitManager::FitManager() :
 FitManager::~FitManager()
 {
   delete m_pConfig;
-  delete m_pWarningMessage;
 }
 
 //____________________________________________________________________________
@@ -245,24 +242,6 @@ FitManager::getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit)
   return limits.first.second;
 }
 
-//____________________________________________________________________________
-/** 
- * @brief Close the popup warning window.
- * 
- * FitManager does not inherit from QObject and therefore possesses no 
- * closeEvent event handler of its own. This function can be called as part of 
- * an overridden closeEvent function in widget classes which implement the 
- * FitManager to ensure that its warning message windows close when application
- * exits.
- */
-void
-FitManager::closeWarnings()
-{
-  if (m_pWarningMessage && m_pWarningMessage->isVisible()) {
-    m_pWarningMessage->close();
-  }
-}
-
 //
 // Private methods
 //
@@ -380,37 +359,18 @@ FitManager::checkParamValue(double p)
 //____________________________________________________________________________
 /** 
  * @brief Issue a warning message in a popup window.
+ * 
+ * The warning is issued as a modal dialog, blocking until the user closes it.
  *
  * @param msg  The warning message displayed in the popup window.
  */
 void
 FitManager::issueWarning(std::string msg)
 {
-  // Create the warning message the first time a warning is issued. Otherwise
-  // just reset the label text.
-  
-  if (!m_pWarningMessage) {
-    m_pWarningMessage = new QWidget;
-    m_pWarningMessage->setWindowTitle("WARNING");
-    m_pWarningMessage->setWindowFlags(Qt::WindowStaysOnTopHint);
-    QVBoxLayout* layout = new QVBoxLayout;
-    QLabel* label = new QLabel;
-    label->setWordWrap(true);
-    label->setMaximumSize(600, 200);
-
-    // Since the FitManager does not inherit from QObject, but QLabel does,
-    // we need to call the translator for the QLabel object.
-    
-    label->setText(QLabel::tr(msg.c_str()));
-    
-    layout->addWidget(label);
-    m_pWarningMessage->setLayout(layout);
-  } else {
-    QLabel* label = m_pWarningMessage->findChild<QLabel*>();
-    label->setText(QLabel::tr(msg.c_str()));
-  }
-
-  m_pWarningMessage->show();
+  QMessageBox msgBox;
+  msgBox.setText(QString::fromStdString(msg));
+  msgBox.setIcon(QMessageBox::Warning);
+  msgBox.exec();
 }
 
 /** @} */

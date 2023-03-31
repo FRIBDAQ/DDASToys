@@ -44,11 +44,12 @@ namespace DDAS {
    * @brief Full fitting information for the single pulse.
    */
   struct fit1Info { // Info from single pulse fit:
+    PulseDescription pulse; //!< Description of the pulse parameters.
+    double chiSquare;       //!< Chi-square value of the fit.
+    double  offset;         //!< Constant offset.
     unsigned iterations;    //!< Iterations for fit to converge.
     unsigned fitStatus;     //!< Fit status from GSL.
-    double chiSquare;       //!< Chi-square value of the fit.
-    PulseDescription pulse; //!< Description of the pulse parameters.
-    double  offset;         //!< Constant offset.
+
   };
     
   /**
@@ -56,11 +57,11 @@ namespace DDAS {
    * @brief Full fitting information for the double pulse.
    */
   struct fit2Info { // Info from double pulse fit:
-    unsigned iterations;        //!< Iterations needed to converge.
-    unsigned fitStatus;         //!< Fit status from GSL
+    PulseDescription pulses[2]; //!< The two pulses.
     double chiSquare;           //!< Chi-square value of the fit.
-    PulseDescription pulses[2]; //!< The two pulses
-    double offset;              //!< Shared constant offset
+    double offset;              //!< Shared constant offset.
+    unsigned iterations;        //!< Iterations needed to converge.
+    unsigned fitStatus;         //!< Fit status from GSL.
   };
 
   /**
@@ -88,8 +89,8 @@ struct nullExtension {
  * @brief A fit extension that knows its size.
  */ 
 struct FitInfo {
-  std::uint32_t  s_size; //!< sizeof(DDAS::HitExtension)
   DDAS::HitExtension s_extension; //!< The hit extension data.
+  std::uint32_t  s_size; //!< sizeof(DDAS::HitExtension)
   /** @brief Creates FitInfo, set its size, and zeroes fit parameters. */
   FitInfo() : s_size(sizeof(FitInfo)) {
     memset(&s_extension, 0, sizeof(DDAS::HitExtension));

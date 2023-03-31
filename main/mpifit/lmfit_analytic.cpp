@@ -680,6 +680,7 @@ DDAS::AnalyticFit::lmfit2(
   double K30;
   double K40;
   double X20;
+  
   if ((A0 < 0) || (K10 < 0) || (K20 < 0) || (X10 < 0)) {
        
     std::vector<std::uint16_t> reversed = trace;
@@ -706,7 +707,7 @@ DDAS::AnalyticFit::lmfit2(
   // Note, we only consider the region of interest of the trace.
   // of the trace fitted.
     
-  // Note aw well that we don't correct for flattops on these estamtors
+  // Note as well that we don't correct for flattops on these estamtors
   // The fit _should_ converge things to the right answers.
     
   int maxchannel = 0;
@@ -715,7 +716,7 @@ DDAS::AnalyticFit::lmfit2(
       
     double single = singlePulse(A0, K10, K20, X10, C0, (double)i);
     double diff = trace[i] - single;
-    if (maxvalue < diff) {
+    if (diff > maxvalue) {
       maxvalue = diff;
       maxchannel = i;
     }

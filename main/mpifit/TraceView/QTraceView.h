@@ -28,7 +28,7 @@ class QStandardItemModel;
 class QTimer;
 class QCommandLineParser;
 class QString;
-class QCloseEvent;
+// class QCloseEvent;
 
 namespace DAQ {
   namespace DDAS {
@@ -62,7 +62,7 @@ public:
   
 protected:
   virtual void changeEvent(QEvent* e);
-  virtual void closeEvent(QCloseEvent* e);
+  // virtual void closeEvent(QCloseEvent* e);
 
 private:
   void createActions();
@@ -78,8 +78,7 @@ private:
   void resetGUI();
   void enableAll();
   void disableAll();
-  void parseCommandLineArgs(QCommandLineParser& parser);
-  void issueWarning(std::string msg);
+  void parseArgs(QCommandLineParser& parser);
 			   
 private slots:
   void openFile();
@@ -90,6 +89,7 @@ private slots:
   void updateSelectableHits();
   void processHit();
   void handleRootEvents();
+  void issueWarning(std::string msg);
   void test();
   
 private:
@@ -103,8 +103,6 @@ private:
   bool m_templateConfig;
   std::vector<DAQ::DDAS::DDASFitHit> m_hits;
   std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
-
-  QWidget* m_pWarningMessage;
   
   // Added to this widget, Qt _should_ handle cleanup on destruction
   

@@ -33,7 +33,7 @@
 #include <QEvent>
 #include <QWindowStateChangeEvent>
 #include <QCommandLineParser>
-#include <QCloseEvent>
+#include <QMessageBox>
 
 #include <TSystem.h>
 #include <TCanvas.h>
@@ -60,11 +60,11 @@
  */
 QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
   QWidget(parent), m_pDecoder(new DDASDecoder), m_pFitManager(new FitManager),
-  m_config(false), m_templateConfig(false), m_pWarningMessage(nullptr),
-  m_pMenuBar(new QMenuBar), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
-  m_pExitAction(nullptr), m_pButtons{nullptr}, m_pSkipEvents(nullptr),
-  m_pEventsToSkip(nullptr), m_pHitFilter{nullptr},
-  m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
+  m_config(false), m_templateConfig(false),  m_pMenuBar(new QMenuBar),
+  m_pFileMenu(nullptr), m_pOpenAction(nullptr), m_pExitAction(nullptr),
+  m_pButtons{nullptr}, m_pSkipEvents(nullptr), m_pEventsToSkip(nullptr),
+  m_pHitFilter{nullptr}, m_pTopBoxes(createTopBoxes()),
+  m_pHitData(new QHitData(m_pFitManager)),
   m_pHitSelectList(createHitSelectList()),
   m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
   m_pStatusBar(new QStatusBar)
@@ -86,10 +86,9 @@ QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
   setLayout(mainLayout);
 
   createConnections();
-  //resetGUI();  
   disableAll();
 
-  parseCommandLineArgs(parser);
+  parseArgs(parser);
   
   m_pTimer->start(20);
 }
@@ -105,7 +104,6 @@ QTraceView::~QTraceView()
 {
   delete m_pDecoder;
   delete m_pFitManager;
-  delete m_pWarningMessage;
 }
 
 //
@@ -137,23 +135,19 @@ QTraceView::changeEvent(QEvent* e)
   }
 }
 
-//____________________________________________________________________________
-/** 
- * @brief Event handler for close events.
- * 
- * Override default QWidget closeEvent to close all children.
- *
- * @param e  Pointer to the close event sent to the main GUI window.
- */
-void
-QTraceView::closeEvent(QCloseEvent* e)
-{
-  m_pFitManager->closeWarnings();
-  if (m_pWarningMessage && m_pWarningMessage->isVisible()) {
-    m_pWarningMessage->close();
-  }
-  e->accept();
-}
+// //____________________________________________________________________________
+// /** 
+//  * @brief Event handler for close events.
+//  * 
+//  * Override default QWidget closeEvent to close all children.
+//  *
+//  * @param e  Pointer to the close event sent to the main GUI window.
+//  */
+// void
+// QTraceView::closeEvent(QCloseEvent* e)
+// {
+//   e->accept();
+// }
 
 //
 // Private member functions
@@ -425,7 +419,7 @@ QTraceView::updateSelectableHits()
     reinterpret_cast<QStandardItemModel*>(m_pHitSelectList->model());
   model->clear();
 
-  for (unsigned i=0; i<m_filteredHits.size(); i++) {
+  for (unsigned i = 0; i < m_filteredHits.size(); i++) {
     
     // Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this
     
@@ -493,7 +487,7 @@ QTraceView::disableAll()
  * @param parser  References the QCommandLineParser of the main QApplication.
  */
 void
-QTraceView::parseCommandLineArgs(QCommandLineParser& parser)
+QTraceView::parseArgs(QCommandLineParser& parser)
 {
   const QStringList args = parser.positionalArguments();
   const QStringList names = parser.optionNames();
@@ -510,41 +504,11 @@ QTraceView::parseCommandLineArgs(QCommandLineParser& parser)
     try {
       m_pHitData->setFitMethod(method);
     } catch (std::invalid_argument& e) {
-      issueWarning(e.what());
+      std::cerr << "QTraceView::parseArgs(): Unknown fitting method " << method.toStdString() << " read from command line. Setting fit method to 'Template'." << std::endl;
+      m_pHitData->setFitMethod("Template");
     }
   }
   
-}
-
-//____________________________________________________________________________
-/** 
- * @brief Issue a warning message in a popup window.
- *
- * @param msg  The warning message displayed in the popup window.
- */
-void
-QTraceView::issueWarning(std::string msg)
-{
-  // Create the warning message the first time a warning is issued. Otherwise
-  // just reset the label text.
-  
-  if (!m_pWarningMessage) {
-    m_pWarningMessage = new QWidget;
-    m_pWarningMessage->setWindowTitle("WARNING");
-    m_pWarningMessage->setWindowFlags(Qt::WindowStaysOnTopHint);
-    QVBoxLayout* layout = new QVBoxLayout;
-    QLabel* label = new QLabel;
-    label->setWordWrap(true);
-    label->setMaximumSize(600, 200);
-    label->setText(tr(msg.c_str()));
-    layout->addWidget(label);
-    m_pWarningMessage->setLayout(layout);
-  } else {
-    QLabel* label = m_pWarningMessage->findChild<QLabel*>();
-    label->setText(tr(msg.c_str()));
-  }
-
-  m_pWarningMessage->show();
 }
 
 //____________________________________________________________________________
@@ -616,15 +580,18 @@ QTraceView::getNextEvent()
     // If the hit list is empty there are no more PHYSICS_EVENTs to grab
     // so issue the EOF warning and return from the function.
     
+    filterHits();
+  
     if (m_hits.empty()) {
+      updateSelectableHits();
+      m_pRootCanvas->clear();
+
       std::string msg = "No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.";
       issueWarning(msg);
       return;
     }
-    
-    filterHits();
   }
-  
+
   updateSelectableHits();
   m_pRootCanvas->clear();
   
@@ -643,18 +610,19 @@ QTraceView::getNextEvent()
 void
 QTraceView::skipEvents()
 {
-  std::string msg = "Skipping events, be patient...";
-  setStatusBar(msg);
+  setStatusBar("Skipping events, be patient...");
   
   int events = m_pEventsToSkip->text().toInt();
   int retval = m_pDecoder->skip(events);
-  
-  if (retval < 0) {
-    std::string msg = "No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.";
-    issueWarning(msg);
+
+  if (retval < 0) {   
+    m_hits = m_pDecoder->getEvent();
+    filterHits();   
+    updateSelectableHits();
+    m_pRootCanvas->clear();
+    issueWarning("No more physics events in this file. The file contains " + std::to_string(m_pDecoder->getEventCount()+1) + " physics events.");
   } else {
-    msg = "Successfully skipped " + std::to_string(events) + " physics events. Hit 'Next' to display the next physics event containing trace data.";
-    setStatusBar(msg);
+    setStatusBar("Successfully skipped " + std::to_string(events) + " physics events. Hit 'Next' to display the next physics event containing trace data.");
   }
 }
 
@@ -700,6 +668,23 @@ void
 QTraceView::handleRootEvents()
 {
    gSystem->ProcessEvents();
+}
+
+//____________________________________________________________________________
+/** 
+ * @brief Issue a warning message in a popup window.
+ * 
+ * The warning is issued as a modal dialog, blocking until the user closes it.
+ *
+ * @param msg  The warning message displayed in the popup window.
+ */
+void
+QTraceView::issueWarning(std::string msg)
+{
+  QMessageBox msgBox;
+  msgBox.setText(QString::fromStdString(msg));
+  msgBox.setIcon(QMessageBox::Warning);
+  msgBox.exec();
 }
 
 //____________________________________________________________________________

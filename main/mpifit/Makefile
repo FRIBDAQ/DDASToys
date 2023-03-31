@@ -26,11 +26,10 @@ CXXLDFLAGS = -L$(SPECLIB) -lDDASUnpacker
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
 	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
-GNUCXXFLAGS = -fPIC
-
 CUDALDFLAGS = -L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
-	--linker-options -rpath=$(SPECLIB) 
+	--linker-options -rpath=$(SPECLIB)
 
+GNUCXXFLAGS = -fPIC
 GNULDFLAGS = -Wl,-rpath=$(SPECLIB)
 
 ifdef CUDA
@@ -47,10 +46,8 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-LIBS = libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
-
-all: $(LIBS) traceview
-libs: $(LIBS)
+all: libs traceview docs
+libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 docs: thedocs
 
 %.o: %.cpp
