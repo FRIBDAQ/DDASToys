@@ -21,7 +21,7 @@ SPECINC = $(SPECTCLHOME)/include
 SPECLIB = $(SPECTCLHOME)/lib
 
 CXXFLAGS = -std=c++11 -g -O2 -Wall \
-	-I. -I$(DAQINC) -I$(DDAS_INC) -I$(XIAAPIDIR)/include
+	-I. -I$(DAQINC) -I$(XIAAPIDIR)/include
 CXXLDFLAGS = -L$(SPECLIB) -lDDASUnpacker
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \

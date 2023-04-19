@@ -6,12 +6,11 @@ QT += widgets
 QMAKE_CXXFLAGS += -pthread -std=c++14 -m64
 CONFIG += qt warn_on thread console
 
-INCLUDEPATH += .. $(DAQINC) $(DDAS_INC) $(ROOTSYS)/include
+INCLUDEPATH += .. $(DAQINC) $(ROOTSYS)/include
 
 # NSCLDAQ and DDAS libraries
-LIBS += -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl \
-     -Wl,-rpath=$(DAQLIB) -L$(DDAS_LIB) -lddasformat -lddasfitformat \
-     -Wl,-rpath=$(DDAS_LIB)
+LIBS += -L$(DAQLIB) -lFragmentIndex -lddasformat -ldataformat -ldaqio \
+     -lException -lurl -Wl,-rpath=$(DAQLIB)
 
 # ROOT libraries from $ROOTSYS/bin/root-config --libs --ldflags 
 LIBS += -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d \
