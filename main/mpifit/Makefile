@@ -1,36 +1,32 @@
-# SPECTCLHOME must be defined externally to point to a SpecTcl that has the
-# fragment index stuff built in. Furthermore, an NSCLDAQ 11.4 or higher must
-# have been set up (daqsetup.bash sourced in). XIAAPIDIR must be defined to
-# point to the XIA API directory used by that NSCLDAQ distro. MAXPOINTS should
-# be modified to match the longest trace we're fitting if this is CUDA enabled.
+# A refactored NSCLDAQ version containing the DDAS software must be defined
+# externally. This NSCLDAQ version must have the fragement index stuff built
+# in, major version 12.x and higher. MAXPOINTS should be modified to match the
+# longest trace we're fitting if this is CUDA enabled.
 #
 # Required definitions:
-#  - Base of SpecTcl via the SPECTCLHOME environment variable. If SpecTcl 5.10
-#    or later is used, the ROOT for that version must also be setup (e.g.
-#    /usr/opt/root/some-version/bin/thisroot.sh).
-#  - A version of NSCLDAQ has been set up.
-#  - A version of DDAS has been set up.
-#  - Define XIAAPIDIR to point to the XIAAPI version used by your NSCLDAQ
-#    setup.
+#  - A version of the refactored NSCLDAQ containing the old DDAS headers
+#    and libraries has been set up.
+#  - The same ROOT version used to compile the NSCLDAQ version used. These can
+#    be found under /usr/opt/root, (probably) not a module file. Source the
+#    approprite thisroot.sh script in /usr/opt/root/root-x.yy-zz/bin.
+#  - A version of Gnu Scientific Library (gsl) is installed, we expect to
+#    find it in /usr/lib/x86_64-linux-gnu otherwise you may have to edit
+#    the Makefile to point at your GSL headers/libraries.
 
 CXX = g++
 
 MAXPOINTS = 200
 
-SPECINC = $(SPECTCLHOME)/include
-SPECLIB = $(SPECTCLHOME)/lib
-
-CXXFLAGS = -std=c++11 -g -O2 -Wall \
-	-I. -I$(DAQINC) -I$(XIAAPIDIR)/include
-CXXLDFLAGS = -L$(SPECLIB) -lDDASUnpacker
+CXXFLAGS = -std=c++11 -g -O2 -Wall -I. -I$(DAQINC) 
+CXXLDFLAGS = -lgsl -lgslcblas -L$(DAQLIB) -lddasformat
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
 	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
 CUDALDFLAGS = -L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
-	--linker-options -rpath=$(SPECLIB)
+	--linker-options -rpath=$(DAQLIB)
 
 GNUCXXFLAGS = -fPIC
-GNULDFLAGS = -Wl,-rpath=$(SPECLIB)
+GNULDFLAGS = -Wl,-rpath=$(DAQLIB) 
 
 ifdef CUDA
 CXX = nvcc
@@ -58,7 +54,7 @@ traceview:
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
-	CFitEngine.o SerialFitEngineAnalytic.o 
+	CFitEngine.o SerialFitEngineAnalytic.o \
 	$(CUDAOBJ)
 	$(CXX) -o libFitEditorAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
 
