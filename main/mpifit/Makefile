@@ -87,9 +87,8 @@ install:
 	install -m 0755 *.so $(PREFIX)/lib
 	install -m 0644 *.h $(PREFIX)/include
 	install -m 0755 TraceView/traceview $(PREFIX)/bin/traceview
-	install -m 0644 AREADME.txt Docs/UserGuide.html $(PREFIX)/share
-	cp -r Docs/html $(PREFIX)/share/html
-	cp -r Docs/latex $(PREFIX)/share/latex
+	cp -r Docs/manual $(PREFIX)/share/manual
+	cp -r Docs/sourcedocs $(PREFIX)/share/manual
 
 clean:
 	rm -f *.so *.o

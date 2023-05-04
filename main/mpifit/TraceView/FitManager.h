@@ -67,8 +67,7 @@ public:
 					unsigned low, unsigned high);
   unsigned getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit);
   unsigned getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit);
-  void closeWarnings();
-
+ 
   /**
    * @brief Set the fitting method.
    * @param m  fitMethod enum type.

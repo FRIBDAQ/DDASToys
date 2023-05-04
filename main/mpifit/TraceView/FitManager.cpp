@@ -11,7 +11,6 @@
 #include "FitManager.h"
 
 #include <iostream>
-#include <utility>
 #include <cmath>
 
 #include <QMessageBox>
@@ -20,7 +19,6 @@
 #include <DDASFitHit.h>
 #include <functions_analytic.h>
 #include <functions_template.h>
-#include <fit_extensions.h>
 
 //____________________________________________________________________________
 /**

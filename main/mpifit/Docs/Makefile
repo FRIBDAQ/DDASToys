@@ -1,16 +1,13 @@
 # Build DDASToys documentation.
 
-XSLTPROC = /usr/bin/xsltproc
-XSL = /usr/share/xml/docbook/stylesheet/nwalsh/xhtml/docbook.xsl
+all: doxygen docbook
 
-all: UserGuide.html doxygen
-
-UserGuide.html: UserGuide.xml $(XSL)
-	@$(XSLTPROC) -o $@ $(XSL) $<
+docbook:
+	docbook2html -o ./manual manual.xml
+	docbook2pdf -o ./manual manual.xml
 
 doxygen:
 	doxygen Doxyfile
 
 clean:
-	rm -f UserGuide.html
-	rm -rf html latex
+	rm -rf sourcedocs manual

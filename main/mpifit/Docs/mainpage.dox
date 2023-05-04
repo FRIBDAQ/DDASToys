@@ -2,88 +2,38 @@
 @mainpage
 
 @section intro_sec Introduction
-This directory contains the code for a shared libraries that can be used to
-append fits to DDAS data using the Transformer and EventEditor programs
-present in NSCLDAQ installations 11.4 and later. This page provides detailed
-documentation of the implemented classes and functions for parallel trace
-fitting of DDAS data recorded by NSCLDAQ and serves as a guide for
-incorporating the fitting subroutines into your own code. The traceview program
-can be used to view channel traces and their associated fit data. traceview
-provides a Qt-based GUI with an embedded Root canvas used to view data. See
-the links at the top of the page for more detail.
+This directory contains the code for a shared libraries that can be used to append fits to DDAS data using the and `EventEditor` program present in NSCLDAQ installations 11.4 and later. This page provides detailed documentation of the implemented classes and functions for parallel trace fitting of DDAS data recorded by NSCLDAQ and serves as a guide for incorporating the fitting subroutines into your own code. The traceview program can be used to view channel traces and their associated fit data. The `traceview` program provides a Qt-based GUI with an embedded ROOT canvas used to view data. See the links at the top of the page for more detail.
 
 @section build_sec Building DDASToys
+Clone the repository from https://gitlab.msu.edu/foxr/ParallelAnalysis and checkout the template-fit-refactor branch.
+
+@note This repository is not part of the NSCL GitLab repo because it is shared with non FRIB/NSCL folks but https://your-netid@gitlab.msu.edu/foxr/ParallelAnalysis.git is a public repository.
+@todo (ASC 5/4/23): The repository should be moved to the new FRIBDAQ public GitHub page.
+
 To build this code you must:
 
-1. Source the daqsetup.bash script from NSCLDAQ-11.4-002 or later.
-2. Define the environment variable SPECTCLHOME to point to the installation
-   directory of SpecTcl 5.2 or greater.
-3. Source the ddassetup.bash script from DDAS 3.2-001 or later. Note this
-   should be done last so that it does not override the NSCLDAQ definition.
-4. If the version of DDAS/NSCLDAQ use the broken out XIAAPI, define XIAAPIDIR
-   to point to the top of the API version installed tree.
-5. The traceview GUI requires Qt 5.11.3 or later.
+-# Setup the NSCLDAQ environment: source the `daqsetup.bash` script from NSCLDAQ 12.0-000 or later.
+-# Define the environment variable SPECTCLHOME to point to the installation directory of SpecTcl 5.13-003 or greater.
+-# If this version of DDAS/NSCLDAQ uses the broken out XIA API, define XIAAPIDIR to point to the top of the API version installed tree.
+-# Ensure Qt 5.11.3 or later is installed (required by the `traceview` GUI).
+-# Configure the same CERN ROOT environment as used to compile the DDAS/NSCLDAQ version you are compiling the DDASToys code against. For NSCLDAQ 12.0-000 this is ROOT 6.24.06.
 
-@note This repository is not the NSCL GitLab repo because this is shared with
-non FRIB/NSCL folks but
-https://your-netid@gitlab.msu.edu/foxr/ParallelAnalysis.git
-is a public repository.
-
-The `Makefile` produces the `libFitEditorAnalytic.so` and
-`libFitEditorTemplate.so` shared objects as well as a User's Guide for running
-DDASToys code on the LBNL NERSC computing cluster. The libraries can be used
-as the extension libraries for `$DAQBIN/Transformer` or `$DAQBIN/EventEditor`
-allowing fits to be parallelized using either ZMQ threading or MPI.
-`$DAQBIN/Transformer --help` or `$DAQBIN/EventEditor --help` provide some
-simple documentation describing how to run these codes. Once built, the
-headers, libraries, and documentation can be installed in a central location
-using the command `make install PREFIX=/path/to/install/dir`. For more
-infomation see the User's Guide.
-
-@todo (ASC 2/17/23): Possibly worth scrapping the docbooks user guide entirely
-and including the user guide here once its translated to some markdown langauge
-that doxygen is happy with.
+Once the environment is set up correctly, build DDASToys using `make`. This will create the `libFitEditorAnalytic.so`, `libFitEditorTemplate.so` and libDDASFitHitUnpacker.so` libraries, a manual for running DDASToys code at the NERSC computing cluster, and the `traceview` program. The `libFitEditorXYZ.so` libraries can be used as the extension libraries for the `EventEditor` program allowing fits to be parallelized using either ZMQ threading or MPI. `$DAQBIN/EventEditor --help` will provide some simple documentation describing how to run this code. Once built, the headers, libraries, and documentation can be installed in a central location using the command `make install PREFIX=/path/to/install/dir`. For more infomation refer to the DDASToys Manual now installed in `PREFIX/share/manual/manual.pdf` or point a web browser at `PREFIX/share/manual/manual.html`.
 
 @section run_sec Running DDASToys code
 @subsection fitting_sec Fitting traces using the plugin libraries
-Refer to the DDASToys User's Guide at `/share/UserGuide.html` under your
-top-level DDASToys installation directory for detailed information on how to
-run the fitting software and configure an analysis pipeline for trace fitting.
+Refer to the DDASToys Manual detailed information on how to run the fitting software at NERSC and configure an analysis pipeline for trace fitting.
 
-@subsection traceview
-traceview reads the fit and template configuration information from the files
-pointed to by the environment variables `FIT_CONFIGFILE` and
-`TEMPLATE_CONFIGFILE`. Refer to the DDASToys User's Guide for more information
-about the format of these configuration files.
+@subsection traceview_sec Viewing traces and fits using traceview
+The `traceview` program is used to display trace data and their respective fits (if present). Currently, `traceview` reads the fit and template configuration information from the files pointed to by the environment variables `FIT_CONFIGFILE` and `TEMPLATE_CONFIGFILE`. Refer to the DDASToys Manual for more information about the format of these configuration files.
 
-The traceview top menu is used to load a data file and can be used to exit the
-program. Successfully loading a file enables the GUI elements which allow you
-to parse the file and view its contents.
+The `traceview` top menu is used to load a data file and can be used to exit the program. Successfully loading a file enables the GUI elements which allow you to parse the file and view its contents.
 
-Crate/slot/channel idenfiying information for traces you want to view is
-configured through the Channel selection box. A "*" character is interpreted
-as a wildcard i.e. crate/slot/channel = 1/2/* will show traces for all channels
-located in crate 1, slot 2 for a given event. The skip control box allows you
-to skip ahead in the data file by the number of events shown in the text box.
-The Main control box buttons are used to view the next event, update the list
-of viewable events based on the Channel selection box values, and exit the
-program, respectively. Once a file has been loaded, you must hit the `Next`
-button to view the first physics event.
+Crate/slot/channel idenfiying information for traces you wish to inspect is configured through the "Channel selection" box. A "*" character is interpreted as a wildcard i.e. crate/slot/channel = 1/2/* will show traces for all channels located in crate 1, slot 2 for a given event. The "Skip control" box allows you to skip ahead in the data file by the number of events shown in the text box. The "Main control" box buttons are used to view the next event, update the list of viewable events based on the "Channel selection" box values and exit the program, respectively. Once a file has been loaded, you must hit the "Next" button to view the first physics event.
 
-The Hit data and Classifier data boxes display basic event information and
-classifier output provided a classifier is used. The Fit data box allows you
-to configure the fitting method and print fit results for traces with fit data.
-A warning is issued if the program believes the wrong fitting method has been
-selected.
+The "Hit data" and "Classifier data" boxes display basic event information and classifier output provided a classifier is used. The "Fit data" box allows you to configure the fitting method and print fit results for traces with fit data. A warning is issued if the program believes the wrong fitting method has been selected.
 
-Once a physics event containing trace data has been found, a list of channels
-with traces matching the current Channel selection box data is populated.
-Clicking on one of the list members will draw the trace and its fits (if
-present) on the embedded Root canvas. The Root canvas can be interacted with
-in the "normal" Root fashion (i.e. clicking and dragging along an axis will
-zoom). 
+Once a physics event containing trace data has been found, a list of channels with traces matching the current "Channel selection" box data is populated. Clicking on one of the list members will draw the trace and its fits (if present) on the embedded ROOT canvas. The ROOT canvas can be interacted with in the normal ROOT fashion (i.e. clicking and dragging along an axis will zoom). 
 
-Some traceview options -- the loaded data file and the fitting method -- can
-be configured from the command line as well as from the GUI. To see a list of
-commands, run `traceview --help` or `traceview -h`.
+Some `traceview` options -- the loaded data file and the fitting method -- can be configured from the command line as well as from the GUI. To see a list of commands, run `traceview --help` or `traceview -h`.
 */

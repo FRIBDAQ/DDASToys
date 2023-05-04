@@ -9,7 +9,6 @@
 
 #include "QRootCanvas.h"
 
-#include <utility>
 #include <iostream>
 
 #include <TCanvas.h>

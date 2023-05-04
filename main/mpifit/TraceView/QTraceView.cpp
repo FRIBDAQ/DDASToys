@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <ctime>
-#include <cstdint>
 
 #include <QVBoxLayout>
 #include <QStatusBar>
@@ -43,7 +42,6 @@
 #include "DDASDecoder.h"
 #include "QHitData.h"
 #include "QRootCanvas.h"
-#include <fit_extensions.h>
 
 //____________________________________________________________________________
 /**

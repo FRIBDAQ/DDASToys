@@ -32,7 +32,6 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
-#include <gsl/gsl_vector.h>
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_multifit_nlin.h>
