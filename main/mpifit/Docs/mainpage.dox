@@ -2,7 +2,7 @@
 @mainpage
 
 @section intro_sec Introduction
-This page contains source code documentation for the DDASToys. This code is used to build shared libraries that append fits to DDAS data using the `EventEditor` program present in NSCLDAQ installations 11.4 and later. The implemented classes and functions for parallel trace fitting of DDAS data recorded by NSCLDAQ are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code. Additionally, the `traceview` program provided as part of the DDASToys package can be used to view channel traces and their associated fit data with a Qt-based GUI running an embedded `ROOT` canvas.
+This page contains source code documentation for DDASToys. This code is used to build shared libraries that append fits to DDAS data using the `EventEditor` program present in NSCLDAQ installations 11.4 and later. The implemented classes and functions for parallel trace fitting of DDAS data recorded by NSCLDAQ are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code. Additionally, the `traceview` program provided as part of the DDASToys package can be used to view channel traces and their associated fit data with a Qt-based GUI running an embedded `ROOT` canvas.
 
 @section build_sec Building DDASToys
 Clone the repository from https://gitlab.msu.edu/foxr/ParallelAnalysis and checkout the template-fit-refactor branch. The DDASToys code to build and install is located under main/mpifit.
