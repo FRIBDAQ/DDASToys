@@ -11,11 +11,11 @@ Clone the repository from https://gitlab.msu.edu/foxr/ParallelAnalysis and check
 
 To build this code, assuming NSCLDAQ 12.0+ containing the refactored DDAS codes, you must:
 
--# Setup the NSCLDAQ environment by sourcing the `daqsetup.bash` script from NSCLDAQ 12.0-000 or later.
+-# Setup the NSCLDAQ environment by sourcing the `daqsetup.bash` script from NSCLDAQ 12.0 or later.
 -# Define the environment variable `SPECTCLHOME` to point to the installation directory of SpecTcl 5.13-003 or greater.
 -# Define `XIAAPIDIR` to point to the top of the XIA API version install tree generally found in under `/usr/opt/xiaapi/<version_number>`.
 -# Ensure Qt 5.11.3 or later is installed (required by the `traceview` GUI).
--# Configure the same CERN `ROOT` environment as used to compile the NSCLDAQ version you are compiling the DDASToys code against. For NSCLDAQ 12.0-000 this is `ROOT` 6.24.06.
+-# Configure the same CERN `ROOT` environment as used to compile the NSCLDAQ version you are compiling the DDASToys code against. For NSCLDAQ 12.0-001 this is `ROOT` 6.24.06.
 
 Once the environment is set up correctly, navigate to the `main/mpifit` directory and build DDASToys using `make`. This will create the `libFitEditorAnalytic.so`, `libFitEditorTemplate.so` and `libDDASFitHitUnpacker.so` libraries, a manual for running DDASToys code at the NERSC computing cluster, and the `traceview` program. The `libFitEditorXXX.so`  libraries can be used as the extension libraries for the `EventEditor` program allowing fits to be parallelized using either ZMQ threading or MPI. `$DAQBIN/EventEditor --help` will provide some simple guidance on how to run this code. Once built, the headers, libraries, and documentation can be installed in a central location using the command `make install PREFIX=/path/to/install/dir`. For more information refer to the DDASToys Manual now installed in `$PREFIX/share/manual/manual.pdf` or point a web browser at `$PREFIX/share/manual/manual.html`.
 

@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd">
+
+<book>
+  
+  <bookinfo>
+    <title>DDASToys Manual</title>
+    <authorgroup>
+      <author>
+	<firstname>Ron</firstname><surname>Fox</surname>
+	<affiliation>
+	  <orgname>
+	    Facility for Rare Isotope Beams, Michigan State University, East Lansing, MI 48824
+	  </orgname>
+	</affiliation>
+      </author>
+      <author>
+	<firstname>Aaron</firstname><surname>Chester</surname>
+	<affiliation>
+	  <orgname>
+	    Facility for Rare Isotope Beams, Michigan State University, East Lansing, MI 48824
+	  </orgname>
+	</affiliation>
+      </author>
+    </authorgroup>
+    <revhistory>
+      <revision>
+        <revnumber>2.0</revnumber>
+        <date>5/2/2023</date>
+        <authorinitials>RF, ASC</authorinitials>
+        <revremark>Original release</revremark>
+      </revision>
+    </revhistory>
+  </bookinfo>
+  
+  <chapter id="ch_intro">
+    <title> Introduction </title>    
+    <para>
+      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with--and hopefully outpace--data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing center at LBNL or on the local computing cluster at FRIB. This document introduces and describes what tools are provided, how to access and configure your user environment at NERSC to use these tools, and how to submit jobs at NERSC using the Slurm Workload Manager. Detailed documentation of the DDASToys source code is provided in Doxygen reference manuals, installed in the <literal>share/sourcedocs/html</literal> and <literal>share/sourcedocs/latex</literal> directories located under the top-level DDASToys installation directory. To view the Doxygen documentation, open <literal>share/sourcedocs/html/index.html</literal> with a web browser such as Firefox.
+    </para>
+    <para>
+      This document is not intended as a comprehensive guide to NERSC systems or as troublshooting document to address issues you may encounter running at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
+    </para>
+    <para>
+      The tools provided by this package are:      
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <literal>EventEditor</literal> with the <literal>FitEditorXYZ</literal> library plugins - parallel trace-fitting software which appends fit parameters for single- and double-pulse fits to fragments (hits) in an event, modifying the event structure.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>libFitEditorAnalytic.so</literal> plugin library - A fitting library which models the pulse shape using a constant baseline offset, a logistic risetime, and an exponential decay. The fitting routines use the Levenburg-Marquardt (LM) algorithm implemented in the Gnu Scientific Library (GSL). The fit parameters are determined by chi-square minimization between a recorded trace and the model function.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>libFitEditorTemplate.so</literal> plugin library - GSL LM fitting library which  models the detector response using an idealized template pulse shape. The trace template is provided by the user and is typically constructed from experimental data.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>libDDASFitHitUnpacker.so</literal> library - a library for unpacking DDAS hit data which may contain fit extensions added to the event by the <literal>EventEditor</literal>. Also capable of unpacking hits without fit extensions.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>traceview</literal> - a program to interactively display traces, their associated fits (if present), and, when implemented, machine learning pulse classification probabilities for events in edited and unedited event files.
+	  </para>
+	</listitem>
+      </itemizedlist>      
+    </para>
+    <para>
+      Finally, all of these tools depend on NSCLDAQ libraries and programs. A Shifter image has been created that reproduces enough of that environment to support installation and use of the NSCLDAQ software at NERSC. Most of the packages described above must, therefore, be run under a container running that image.
+    </para>    
+  </chapter>
+
+  <chapter id="ch_shifter">
+    <title>
+      Shifter images and containers at NERSC
+    </title>
+    <para>
+      Shifter is a tool for adapting concepts from Linux containers to High Performance computing (HPC) resources, allowing users to create their own software environment with e.g. Docker and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows NSCLDAQ to be built under a supported compilation and library environment.
+    </para>    
+    <para>
+      A Shifter image is a single (large) file that contains a file-system image for the user utilities of a specific distribution of Linux. The <command>shifter</command> command can be used to run other commands, set environment variables, or even activate shells in the environment of a container running an instance of a file-system image. Finally, the <command>shifter</command> command allows chunks of the host file system to be mounted at specific points in the container. This allows us to build minimal containers, use them to build the software we need and the mount that software where we expect to see it in NSCLDAQ systems.
+    </para>    
+    <para>
+      The Shifter image available on NERSC, fribdaq/frib-buster:v3.8-nersc, is a Debian-10-based Buster image with several chunks of software added, notably:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    Software required for building OpenMPI from source.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Software required to building NSCLDAQ, SpecTcl and CERN ROOT version 6.24.06 including XIA API version 3.7 and Broadcom PLX driver version 8.23.
+	  </para>
+	</listitem>
+      </itemizedlist>
+      We then used the image to build the following software in a directory tree to be mounted in the image at /usr/opt:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    ROOT version 6.24.06 (in /usr/opt/root/root-6.24.06).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    OpenMPI 4.0.1 (in /usr/opt/mpi/openmpi-4.0.1). This version of OpenMPI works reasonably well in singularity containers based on our experience at the MSU HPCC and works "out of the box" at NERSC. More on how to run MPI jobs in containers in a bit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    NSCLDAQ version 12.0-001, a production version of NSCLDAQ with refactored DDAS code (in /usr/opt/daq/12.0-001).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    SpecTcl version 5.13-003 (in /usr/opt/spectcl/5.13-003).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    The DDASToys directory tree (in /usr/opt/ddastoys).
+	  </para>
+	</listitem>	
+      </itemizedlist>
+    </para>
+    <para>
+      To illustrate the use of Shifter to run containerized applications, consider the following command to spawn a bash shell inside our container:
+      <informalexample>
+	<programlisting>
+	  shifter \                                                          <co id="shifter"/>
+	  --image=fribdaq/frib-buster:v3.8-nersc \                           <co id="simage"/>
+	  --module=none \                                                    <co id="smodules"/>
+	  --volume=${PSCRATCH}/opt-buster8:/usr/opt;${PSCRATCH}:/scratch \   <co id="svolumes"/>
+	  --env-file=${HOME}/shifter.env \                                   <co id="senvfile"/>
+	  /bin/bash                                                          <co id="scmd"/>
+	</programlisting>
+      </informalexample>
+      <calloutlist>
+	<callout arearefs="shifter">
+	  <para>
+	    Run Shifter with the supplied arguments.
+	  </para>
+	</callout>
+	<callout arearefs="simage">
+	  <para>
+	    A mandatory argument to select the Shifter image. In this case, our fribdaq/frib-buster:v3.8-nersc image.
+	  </para>
+	</callout>
+	<callout arearefs="smodules">
+	  <para>
+	    An optional argument to specify which modules to load. To avoid conflicts with our OpenMPI installation and the Cray MPICH no modules are loaded.
+	  </para>
+	</callout>	
+	<callout arearefs="svolumes">
+	  <para>
+	    An optional argument to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_ccontainer</literal>, with multiple arguments separated by semicolons. In this case the software directory is mounted to /usr/opt and the user Perlmutter scratch space to /scratch. For users familiar with <literal>singularity</literal>, this is similar to the <literal>--bind</literal> argument.
+	  </para>
+	</callout>
+	<callout arearefs="senvfile">
+	  <para>
+	    An optional argument to configure environment variables inside the shifter image. All environment variables defined in the calling process' environment are transferred into the image, and additional environment variables are specified in the file <literal>shifter.env</literal>. The specific contents of this file will be discussed later in <xref linkend="sec_configfiles"/> when we discuss how to run the DDASToys applications at NERSC.
+	  </para>
+	</callout>
+	<callout arearefs="scmd">
+	  <para>
+	    The command run inside the Shifter container. In this case, we spawn a bash shell.
+	  </para>
+	</callout>
+      </calloutlist>
+      For a more detailed discussion of Shifter arguments run the command <command>shifter -h</command> on Perlmutter or refer to the NERSC Shifter documentation available here: <ulink url="https://docs.nersc.gov/development/shifter/shifter-tutorial"/> and here: <ulink url="https://docs.nersc.gov/development/shifter/how-to-use"/>.
+    </para>
+  </chapter>
+
+  <chapter id="ch_gettingstarted">
+    <title>Getting started at NERSC</title>    
+    <section id="sec_access">
+      <title>Accessing NERSC systems</title>
+      <para>
+	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to NERSC resources requires multifactor identification (MFA). Instructions to set up MFA for your account at NERSC are documented here: <ulink url="https://docs.nersc.gov/connect/mfa"/>.  You can optionally setup an ssh proxy to avoid entering your "one time password" (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/> but note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your user name at NERSC. 
+      </para>
+    </section>
+    
+    <section id="sec_config">
+      <title>Configuring your home directory</title>
+      <para>
+	Opening an SSH connection to a NERSC system places you in your user home directory on a login node. The first time you log in the home directory will be empty. This section will briefly describe some basic configuration steps you can follow the first time you log in.
+      </para>
+      <para>
+	NERSC documentation is ambiguous with respect to the order in which shell initialization files ("dotfiles" such as <literal>~/.bashrc</literal>) are sourced and under what conditions, but the user's <literal>~/.bashrc</literal> appears to be sourced on both login and interactive non-login shells. NERSC provides a template <literal>.bashrc</literal> file available in the GitLab repository <ulink url="https://software.nersc.gov/NERSC/dotfiles"/>. Accessing the repository requires a NERSC account with MFA. To clone the repository, you will need to create a personal access token, save it somewhere secure, and use it in lieu of your account password when prompted. For further instructions, see <ulink url="https://software.nersc.gov/help/user/profile/personal_access_tokens.md"/>. The template <literal>.bashrc</literal> file should be placed in your home directory. Alternatively you can create your own dotfiles.
+      </para>
+      <para>
+	Your desired environment configuration may differ depending on whether or not you are inside a Shifter container. The following if-else block (or similar) can be included in your <literal>~/.bashrc</literal> file to conditionally setup your environment: 
+	<informalexample>
+	  <programlisting>
+	    if [ -z "$SHIFTER_RUNTIME" ]; then
+	        : # Settings for when *not* in shifter
+	    else
+	        : # Settings for when *in* shifter
+	    fi
+	  </programlisting>
+	</informalexample>
+	because the environment variable <literal>SHIFTER_RUNTIME</literal> is equal to 1 if you are inside a Shifter container and a null string otherwise. An example <literal>.bashrc</literal> file is given in <xref linkend="app_bashrc"/>
+      </para>
+    </section>
+
+    <section id="sec_filesystems">
+      <title>NERSC file systems and transferring data</title>
+      <para>
+	NERSC has a variety of file systems with different levels of performance, data persistence and capacity configured for different purposes. See the NERSC file systems documentation for details: <ulink url="https://docs.nersc.gov/filesystems"/>. Data is shared within a project using the Community File System (CFS) which is set with group read/write permissions by default. The CFS for this project is located at <literal>path/to/our/cfs</literal>. Perlmutter also has a Lustre-based scratch file system intended for storage of application input and output during jobs. The Perlmutter scratch system should be referenced using the environment variable <literal>PSCRATCH</literal> which expands to <literal>/pscratch/sd/FirstLetterOfUserName/UserName</literal>. Intensive I/O for jobs on Perlmutter may benefit from temporarily staging data in the scratch filesystem. The Perlmutter scratch directory is not backed up and is subject to intermittent purges, so remember to back up important files stored there.
+      </para>
+      <para>
+	Transfer of small files into and out of NERSC i.e. for testing, can be done using SCP and a NERSC data transfer node (DTN); larger file transfers i.e. for experimental data should be done with Globus. Data can be sent to NERSC via a DTN using the command <command>scp /local/path/to/file &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file</command> and sent from NERSC to another location also via a DTN using the command <command>scp &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file /local/path/to/file</command> where &lt;username&gt; is replaced by your account name at NERSC; see <ulink url="https://docs.nersc.gov/services/scp"/>. For example, to transfer a file from a fishtank machine at FRIB to my NERSC home directory, I ran the command <command>scp helloworld_mpi.tar.gz chester@dtn01.nersc.gov:/global/homes/c/chester</command>. There are four DTNs at NERSC you can use to transfer files: <literal>dtn0[1234].nersc.gov</literal>. Note that SCP will require you to provide a password and OTP.
+      </para>
+    </section>
+  </chapter>
+  
+  <chapter id="ch_plugins">
+    <title>Fit plugin libraries for DDASToys</title>    
+    <para>
+      This chapter describes in broad terms the fitting plugins for the <literal>EventEditor</literal> framework. The required components are listed below, with the template fitting method implemented as an example. Fit plugin libraries for use with the <literal>EventEditor</literal> must contain the following:
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  An editor class - A method for extending hits with fit information called when the <command>EventEditor</command> command is executed. The editor method subclasses <literal>CBuiltRingItemEditor::BodyEditor</literal> to modify event fragment body data and implements its mandatory interface to edit the event body and free dynamic extension data. The editor is responsible for determining which channels should be fit, getting trace data from the event fragment and performing the fit by calling the appropriate fitting subroutines. The data structures containing the fit information appended to each hit are defined in the <literal>fit_extensions.h</literal> header. See <literal>FitEditorTemplate.h/cpp</literal> and its Doxygen documentation for more details. The editor class must contain a factory method called <literal>createEditor()</literal> to create itself when the <literal>EventEditor</literal> executable is run:	  
+	  <informalexample>
+	    <programlisting>
+	      extern "C" {
+	          FitEditorTemplate* createEditor() {
+	              return new FitEditorTemplate;
+	          }
+	      }
+	    </programlisting>
+	  </informalexample>
+	  Wrapping the factory method in <literal>extern "C"</literal> is necessary to prevent name mangling by the C++ compiler.	    
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A fitting method - Generally speaking, a fitting method consists of three parts:
+	  <orderedlist>
+	    <listitem>
+	      <para>
+		A model which describes the data to be fit,
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		An objective function relating the model and data,
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		An algorithm to optimize the objective function.
+	      </para>
+	    </listitem>
+	  </orderedlist>
+	  For template trace fitting, the model is a template trace parameterized by an amplitude, position, and constant baseline offset, the objective function is the chi-square function (both implemented in <literal>functions_template.h/cpp</literal>) and the optimization algorithm, implemented in <literal>lmfit_template.h/cpp</literal> uses the LM method in GSL to minimize the chi-square value between the model and trace data. See the Doxygen documentation for more detail on the fitting subroutines.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A library plugin - A shared library containing the editor and fitting subroutines described above that is loaded at runtime when executing the <command>EventEditor</command> command. The plugin library <literal>libFitEditorTemplate.so</literal> provides the interface to the template fitting method listed above.
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      Additionally, it is helpful to supply the following:
+    </para>    
+    <itemizedlist>
+      <listitem>
+	<para>
+	  An unpacker library - An optional implementing methods for unpacking event fragments with fit extensions into a useful data structure for downstream analysis. The <literal>libDDASFitHitUnpacker.so</literal> library provides an interface to unpack DDAS events with fit extensions into the data structure defined by the <literal>DDASFitHit</literal> class. The <literal>DDASFitHit</literal> class is subclassed from the <literal>DDASHit</literal> class defined in the header file of the same name found in the NSCLDAQ include directory. This directory is mounted in the container <literal>/usr/opt</literal> and pointed to by the <literal>$DAQINC</literal> environment variable provided that the NSCLDAQ environment has been configured by sourcing its <literal>daqsetup.sh</literal> script. Again, refer to the Doxygen documentation for more information.
+	</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+  
+  <chapter id="ch_usingddastoys">
+    <title>Using DDASToys to fit trace data</title>
+    <para>
+      This chapter provides a how-to guide for fitting traces using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under the Slurm Workload Manager at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command>. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
+    </para>
+    
+    <section id="sec_fitting">
+      <title>Fitting traces using the <literal>EventEditor</literal></title>
+      <para>
+	The fribdaq/frib-buster:v3.8-nersc container supports NSCLDAQ 12.0 and later which include parallel event editors. The NSCLDAQ <literal>EventEditor</literal> program provides the plugin architecture for fitting event fragments containing traces. We use this program with a plugin libraries which define the fitting algorithms and the data structure containing the fit results which are appended to each hit.
+      </para>      
+      <para>
+	The <literal>EventEditor</literal> program supports parallel fitting using both ZMQ threading and OpenMPI. Running the command <command>$DAQBIN/EventEditor --help</command> from the command line describes the arguments which can be passed to the program (assuming the NSCLDAQ environment has been configured). An example Slurm job submission script to configure the proper runtime environment and run the <literal>EventEditor</literal> program for fitting traces using OpenMPI and the template fitter is described below:
+      </para>      
+      <informalexample>
+	<programlisting>
+	  #!/bin/bash
+
+	  #SBATCH --account=m4386                          <co id="sbatchargs"/>
+	  #SBATCH --constraint=cpu
+	  #SBATCH --qos=regular
+	  #SBATCH --ntasks=19
+	  #SBATCH --time=00:30:00
+	  #SBATCH --output=slurm-fitoutput-%j.out
+
+	  #SBATCH --image=fribdaq/frib-buster:v3.8-nersc   <co id="shifterargs"/>
+	  #SBATCH --volume="/pscratch/sd/c/chester/opt-buster8:/usr/opt;/pscratch/sd/c/chester/rawdata:/input;/pscratch/sd/c/chester/fitted:/output"
+	  #SBATCH --module=none
+	  ENV="--env-file=$HOME/shifter.env"
+
+	  shifter $ENV $HOME/runee.bash                    <co id="sbmpicmd"/>
+	</programlisting>
+      </informalexample>
+      <calloutlist>
+	<callout arearefs="sbatchargs">
+	  <para>
+	    Arguments specifying job information such as the account to charge, number of tasks, and maximum wall time provided when the <command>sbatch</command> command is invoked to submit a job to Slurm. These arguments can alternatively be provided on the command line. The <literal>--constraint=cpu</literal> argument specifies that this job will be run on Perlmutter CPU nodes rather than GPU nodes. Output from this job will be written to the file specified in the <literal>--output</literal> argument, in this case <literal>slurm-fitoutput-%j.out</literal> where <literal>%j</literal> is the Slurm jobID.
+	  </para>
+	</callout>
+	<callout arearefs="shifterargs">
+	  <para>
+	    Arguments for running the job in our container. The image, volume mounting points and modules can be provided as arguments to the <command>sbatch</command> command but the environment file must be specified when invoking <literal>shifter</literal>.
+	  </para>
+	</callout>
+	<callout arearefs="sbmpicmd">
+	  <para>
+	    Use the <command>shifter</command> command to run the script <literal>$HOME/runee.bash</literal> inside our container.
+	  </para>
+	</callout>
+      </calloutlist>
+      <para>
+	The script <literal>runee.bash</literal> calls the <literal>EventEditor</literal> to fit trace data in an NSCLDAQ event file: 
+	<informalexample>
+	  <programlisting>
+	    #!/bin/bash
+
+	    cd $HOME
+
+	    . /usr/opt/daq/12.0-001/daqsetup.bash -f             <co id="rte"/>
+
+	    export PATH=/usr/opt/mpi/openmpi-4.0.1/bin:$PATH
+	    export LD_LIBRARY_PATH=/usr/opt/mpi/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+
+	    echo "Job $SLURM_JOB_ID starting with $SLURM_NTASKS tasks"
+
+	    nworkers=`expr $SLURM_NTASKS - 3`                     <co id="setworkers"/>
+
+	    time mpirun -np $SLURM_NTASKS $DAQBIN/EventEditor \   <co id="exec"/>
+	    -s file:///input/run-0283-00.evt \                    <co id="source"/>
+	    -S file:///output/run-0283-00-fitted.evt \            <co id="sink"/>
+	    -l /usr/opt/ddastoys/lib/libFitEditorTemplate.so \    <co id="lib"/>
+	    -n $nworkers \                                        <co id="mpiworkers"/>
+	    -c 500 \                                              <co id="clump"/>
+	    -p mpi &                                              <co id="strat"/>
+	    wait
+	  </programlisting>
+	</informalexample>      
+	<calloutlist>
+	  <callout arearefs="rte">
+	    <para>
+	      Configure the runtime environment inside the container. Since the program we are running depends on NSCLDAQ, ensure that the NSCLDAQ environment variables are set up. The <literal>-f</literal> flag will overwrite any existing NSCLDAQ environment variables when the <literal>daqsetup.sh</literal> script is sourced. Additionally, we must add OpenMPI executables and libraries to the <literal>PATH</literal> and <literal>LD_LIBRARY_PATH</literal> inside the container, respectively.
+	    </para>
+	  </callout>
+	  <callout arearefs="setworkers">
+	    <para>
+	      Deterimine the number of MPI processes to use for parallel fitting. The number of worker processes is given by <literal>$SLURM_NTASKS - 3</literal> because in addition to the fit tasks, there are tasks that distribute data, sort the fitted data, and output the sorted data. Note that for MPI fitting, this means the number of Slurm tasks must be at least 4.
+	    </para>
+	  </callout>	
+	  <callout arearefs="exec">
+	    <para>
+	      Use <literal>mpirun</literal> to run the <literal>EventEditor</literal> with the number of processes <literal>-np</literal> specified by the number of Slurm tasks. Because we previously setup the NSCLDAQ environment variables, <literal>$DAQBIN</literal> points to the correct directory for NSCLDAQ binaries.
+	    </para>
+	  </callout>
+	  <callout arearefs="source">
+	    <para>
+	      The <literal>-s</literal> or <literal>--source</literal> option specifies the input URI. In this case we read data from a file located in the volume mounted to <literal>input</literal>. 
+	    </para>
+	  </callout>
+	  <callout arearefs="sink">
+	    <para>
+	      The <literal>-S</literal> or <literal>--sink</literal> option specifies the output URI. In this case we write the output data file to the volume mounted to <literal>output</literal>.
+	    </para>
+	  </callout>
+	  <callout arearefs="lib">
+	    <para>
+	      The <literal>-l</literal> or <literal>--classifier</literal> option specifies the location of the plugin library that describes the single- and double-pulse fits performed for each trace as well as the structure of the data appended to each event fragment. In this case the traces are fit using a template pulse shape. The extension added to each trace is described in <literal>include/fit_extensions.h</literal> under the top level DDASToys installation directory; see the <literal>HitExtensions</literal> struct in the <literal>DDAS</literal> namespace. The sizes for the whole event and for the fragment are updated to be consistent with the updated fragment sizes. 
+	    </para>
+	  </callout>
+	  <callout arearefs="mpiworkers">
+	    <para>
+	      The <literal>-n</literal> or <literal>--workers</literal> option specifies the number of worker processes used to fit traces, defined as the number of Slurm tasks minus the three processes reserved for I/O and sorting.
+	    </para>
+	  </callout>
+	  <callout arearefs="clump">
+	    <para>
+	      The <literal>-c</literal> or <literal>--clump-size</literal> option determines how many events get passed as a work unit to each worker thread. Larger numbers may reduce the communication overhead.
+	    </para>
+	  </callout>
+	  <callout arearefs="strat">
+	    <para>
+	      The <literal>-p</literal> or <literal>--parallel-strategy</literal> option sets the parallel strategy enabling nearline fitting of trace data. In this case we are fitting using MPI.
+	    </para>
+	  </callout>
+	</calloutlist>
+	The <literal>EventEditor</literal> program also requires at minimum the environment variable <literal>FIT_CONFIGFILE</literal> to be defined and point to a configuration file which describes the channels to be fit. Additionally, if the template fitting library plugin requires the environment variable <literal>TEMPLATE_CONFIGFILE</literal> to be defined and point to a file containing template metadata and the template trace used for fitting. These environment variables and how to configure them in the Shifter container are discussed in the next section.
+      </para>
+    </section>
+
+    <section id="sec_configfiles">
+      <title>Configuration files required by <literal>EventEditor</literal></title>
+      <para>
+	It is here we return to our discussion from <xref linkend="ch_shifter"/> of the environment variable file provided as an argument to the <command>shifter</command> command. It is assumed in this section that the environment variable file is called <literal>shifter.env</literal> and is located in your home directory. This file contains a list of environment variables to set inside the container when passed as an argument to the <command>shifter</command> command via <literal>--env-file=$HOME/shifter.env</literal>:
+	<informalexample>
+	  <programlisting>
+	    OPAL_PREFIX=/usr/opt/mpi/openmpi-4.0.1                     <co id="opal"/>
+	    FIT_CONFIGFILE=/global/homes/c/chester/fitconfig.txt       <co id="fitconfig"/>
+	    TEMPLATE_CONFIGFILE=/global/homes/c/chester/template.txt   <co id="templateconfig"/>
+	  </programlisting>
+	</informalexample>
+	<calloutlist>
+	  <callout arearefs="opal">
+	    <para>
+	      Path to the Open Portable Access Layer (OPAL) top level installation directory. OPAL is one of the core modules of OpenMPI; the directory is the OpenMPI source directory inside the container described in <xref linkend="ch_shifter"/>.
+	    </para>
+	  </callout>
+	  <callout arearefs="fitconfig">
+	    <para>
+	      Defines the <literal>FIT_CONFIGFILE</literal> environment variable and location of the fit configuration file needed by the <literal>EventEditor</literal> program.
+	    </para>
+	  </callout>
+	  <callout arearefs="templateconfig">
+	    <para>
+	      Defines the <literal>TEMPLATE_CONFIGFILE</literal> environment variable and location of the template configuration file needed by the <literal>EventEditor</literal> program.
+	    </para>
+	  </callout>
+	</calloutlist>
+	The structure of the configuration files pointed to by the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables are described below. The fitting routines expect the configuration files to have the formats defined in this section and will fail to run correctly if an improperly formatted file is provided. 
+      </para>
+      <para>
+	The fit configuration file pointed to by the <literal>FIT_CONFIGFILE</literal> environment variable is a multi-line, whitespace-separated text file describing which channels should be fit. The file can contain blank lines and both leading and trailing whitespaces are ignored. If the first non-whitespace character on a line is '#', the line is considered a comment and ignored. Non-commented lines contain six whitespace-separated unsigned integers:
+        <itemizedlist>
+	  <listitem>
+	    <para>
+	      crate - the crate ID for the channel to be fit.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      slot - the slot ID for the channel to be fit.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      channel - the channel ID on the above crate/slot which will be fit.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      first-point - sample number on the recorded trace defining the low (inclusive) limit of the fitting range.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      last-point - sample number on the trace defining the high (inclusive) limit of the fitting range.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      saturation - the saturation value for the ADC in this crate/slot. Points on the trace greater than or equal to the saturation value are not included in the fit. This allows for fitting traces which overflow the ADC. For a module with a bit depth of B bits, the maximum ADC value is given by 2^B - 1.
+	    </para>
+	  </listitem>	
+	</itemizedlist>
+      </para>
+      <para>
+	Shown below is an example fit configuration file to fit a single channel, showing the use of comments which can provide more detailed identifying information for the channels to be fit, in this case the dynode of an implantation detector used in a beta-decay experiment.
+	<informalexample>
+	  <programlisting>
+	    #
+	    #   Describes which channels should be fit.
+	    #   crate slot channel first-point last-point saturation
+	    #
+
+	    #  Dynode:
+
+	    1 2 0 5 125 65535
+	  </programlisting>
+	</informalexample>
+      </para>      
+      <para>
+	The template configuration file pointed to by the <literal>TEMPLATE_CONFIGFILE</literal> environment variable is also a multi-line, whitespace-separated text file, this time containing template metadata and the template trace values. The rules regarding whitespace, blank lines, and comments are the same as for the fit configuration file. The first non-comment line contains two whitespace-separated unsigned integers which define the template metadata:
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      align-point - time reference point for the template in samples. The position of the fitted pulse reported by the template trace fit is given with respect to the align-point.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      npts - number of data points in the template trace. 
+	    </para>
+	  </listitem>	
+	</itemizedlist>      
+	The remaining lines contain the floating point template data values. Shown below is an abbreviated example template configuration file.
+	<informalexample>
+	  <programlisting>
+	    #
+	    # Template metadata and values.
+	    #
+	    #   align-point npts
+	    #   template[0]
+	    #   template[1]
+	    #   ...
+	    #   template[npts-1]
+	    #
+	    54 125
+	    5.21734e-06
+	    1.89661e-06
+	    ...
+	    -0.0446554
+	  </programlisting>
+	</informalexample>
+      </para>
+    </section>
+    
+    <section id="sec_traceview">
+      <title>Viewing fit results with <literal>traceview</literal></title>
+      <para>
+	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification as single- or double-pulse events if the machine learning pulse classifier is used (TODO). The viewer is installed in the <literal>/bin</literal> directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if these environment variables are undefined or point to improperly formatted files. The <literal>traceview</literal> display is a ROOT TCanvas and can be interacted with as such.
+      </para>
+    </section>    
+  </chapter>
+
+  <appendix id="app_bashrc">
+    <title>
+      Example <literal>.bashrc</literal> file for NERSC
+    </title>
+    <informalexample>
+      <programlisting>
+	# NERSC Defined Environment Variables
+
+	# CFS - /global/cfs/cdirs
+	# SCRATCH - /global/cscratch1/sd/$USER (Cori) and /pscratch/sd/&lt;letter&gt;/$USER (Perlmutter)
+
+	# System Environment Variables 
+
+	# EDITOR set your preferred editor (vim, vi, emacs, nano)
+	# EDITOR=/usr/bin/vim
+
+	# configure user prompt see https://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
+	# The prompt will be - username@hostname>
+	# export PS1="\u@\h> "
+
+	# useful alias
+	alias perlmutter='ssh perlmutter.nersc.gov'
+	alias squ="squeue -O 'UserName,State,Name,Partition,NumTasks,NumNodes,BatchHost,TimeUsed,TimeLimit,SubmitTime,StartTime' -u $USER"
+	alias sq="squeue -O 'UserName,State,Name,Partition,NumTasks,NumNodes,BatchHost,TimeUsed,TimeLimit,SubmitTime,StartTime'"
+
+	# history setting https://www.gnu.org/software/bash/manual/html_node/Bash-History-Builtins.html
+	export HISTFILESIZE=1000
+	export HISTSIZE=1000
+	export HISTTIMEFORMAT="%h %d %H:%M:%S "
+
+	# user bin directory
+	export PATH=$HOME/.local/bin:$PATH
+
+	# terminal colors and safer file management
+	alias ls='ls --color'
+	alias l='ls --color'
+	alias ll='ls --color -lh'
+	alias lll='ls --color -alh'
+	alias sl='ls --color | more'
+
+	alias cp='cp -i'
+	alias mv='mv -i'
+	alias rm='rm -i'
+
+	# NERSC_HOST is defined per system, for configuration specific to system please define it here
+
+	if [[ $NERSC_HOST = "perlmutter" ]]; then
+	# Perlmutter specific changes go here
+	    if [ -z "$SHIFTER_RUNTIME" ]; then
+	    # easybuild generated modules 
+	        module use $HOME/.local/easybuild/modules/all/
+	
+	        IMAGE="--image=fribdaq/frib-buster:v3.8-nersc"
+	        MODULES="--module=none"
+	        VOLUMES="--volume=${PSCRATCH}/opt-buster8:/usr/opt;${PSCRATCH}:/scratch"
+	        ENV="--env-file=${HOME}/shifter.env"
+	        alias ishell='shifter $IMAGE $MODULES $VOLUMES $ENV /bin/bash'
+	    else
+	        . /usr/opt/daq/12.0-001/daqsetup.bash -f
+	        . /usr/opt/root/root-6.24.06/bin/thisroot.sh
+	        export PATH=/usr/opt/mpi/openmpi-4.0.1/bin:$PATH
+	        export LD_LIBRARY_PATH=/usr/opt/mpi/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+	    fi
+	fi
+      </programlisting>
+    </informalexample>
+  </appendix>
+  
+</book>
