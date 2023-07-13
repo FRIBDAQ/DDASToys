@@ -40,14 +40,14 @@
       The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with--and hopefully outpace--data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing center at LBNL or on the local computing cluster at FRIB. This document introduces and describes what tools are provided, how to access and configure your user environment at NERSC to use these tools, and how to submit jobs at NERSC using the Slurm Workload Manager. Detailed documentation of the DDASToys source code is provided in Doxygen reference manuals, installed in the <literal>share/sourcedocs/html</literal> and <literal>share/sourcedocs/latex</literal> directories located under the top-level DDASToys installation directory. To view the Doxygen documentation, open <literal>share/sourcedocs/html/index.html</literal> with a web browser such as Firefox.
     </para>
     <para>
-      This document is not intended as a comprehensive guide to NERSC systems or as troublshooting document to address issues you may encounter running at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
+      This document is not intended as a comprehensive guide to NERSC systems or as a troublshooting document to address issues you may encounter while running at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
     </para>
     <para>
       The tools provided by this package are:      
       <itemizedlist>
 	<listitem>
 	  <para>
-	    <literal>EventEditor</literal> with the <literal>FitEditorXYZ</literal> library plugins - parallel trace-fitting software which appends fit parameters for single- and double-pulse fits to fragments (hits) in an event, modifying the event structure.
+	    <literal>EventEditor</literal> with the <literal>FitEditor</literal> library plugins - parallel trace-fitting software which appends fit parameters for single- and double-pulse fits to fragments (hits) in an event, modifying the event structure.
 	  </para>
 	</listitem>
 	<listitem>
@@ -82,7 +82,7 @@
       Shifter images and containers at NERSC
     </title>
     <para>
-      Shifter is a tool for adapting concepts from Linux containers to High Performance computing (HPC) resources, allowing users to create their own software environment with e.g. Docker and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows NSCLDAQ to be built under a supported compilation and library environment.
+      Shifter is a tool for adapting concepts from Linux containers to High Performance computing (HPC) resources, allowing users to create their own software environment and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows NSCLDAQ to be built under a supported compilation and library environment.
     </para>    
     <para>
       A Shifter image is a single (large) file that contains a file-system image for the user utilities of a specific distribution of Linux. The <command>shifter</command> command can be used to run other commands, set environment variables, or even activate shells in the environment of a container running an instance of a file-system image. Finally, the <command>shifter</command> command allows chunks of the host file system to be mounted at specific points in the container. This allows us to build minimal containers, use them to build the software we need and the mount that software where we expect to see it in NSCLDAQ systems.
@@ -97,7 +97,7 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    Software required to building NSCLDAQ, SpecTcl and CERN ROOT version 6.24.06 including XIA API version 3.7 and Broadcom PLX driver version 8.23.
+	    Software required to build NSCLDAQ, SpecTcl and CERN ROOT version 6.24.06 including XIA API version 3.7 and Broadcom PLX driver version 8.23.
 	  </para>
 	</listitem>
       </itemizedlist>
@@ -134,12 +134,12 @@
       To illustrate the use of Shifter to run containerized applications, consider the following command to spawn a bash shell inside our container:
       <informalexample>
 	<programlisting>
-	  shifter \                                                          <co id="shifter"/>
-	  --image=fribdaq/frib-buster:v3.8-nersc \                           <co id="simage"/>
-	  --module=none \                                                    <co id="smodules"/>
-	  --volume=${PSCRATCH}/opt-buster8:/usr/opt;${PSCRATCH}:/scratch \   <co id="svolumes"/>
-	  --env-file=${HOME}/shifter.env \                                   <co id="senvfile"/>
-	  /bin/bash                                                          <co id="scmd"/>
+	  shifter \                                                  <co id="shifter"/>
+	  --image=fribdaq/frib-buster:v3.8-nersc \                   <co id="simage"/>
+	  --module=none \                                            <co id="smodules"/>
+	  --volume=$SCRATCH/opt-buster8:/usr/opt;$SCRATCH:/scratch \ <co id="svolumes"/>
+	  --env-file=$HOME/shifter.env \                             <co id="senvfile"/>
+	  /bin/bash                                                  <co id="scmd"/>
 	</programlisting>
       </informalexample>
       <calloutlist>
@@ -160,7 +160,7 @@
 	</callout>	
 	<callout arearefs="svolumes">
 	  <para>
-	    An optional argument to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_ccontainer</literal>, with multiple arguments separated by semicolons. In this case the software directory is mounted to /usr/opt and the user Perlmutter scratch space to /scratch. For users familiar with <literal>singularity</literal>, this is similar to the <literal>--bind</literal> argument.
+	    An optional argument to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_ccontainer</literal>, with multiple arguments separated by semicolons. In this case the software directory is mounted to /usr/opt and the user's Perlmutter scratch space to /scratch. For users familiar with <literal>singularity</literal>, this is similar to the <literal>--bind</literal> argument.
 	  </para>
 	</callout>
 	<callout arearefs="senvfile">
@@ -170,7 +170,7 @@
 	</callout>
 	<callout arearefs="scmd">
 	  <para>
-	    The command run inside the Shifter container. In this case, we spawn a bash shell.
+	    The command run inside the Shifter container. In this case, we spawn an interactive bash shell.
 	  </para>
 	</callout>
       </calloutlist>
@@ -183,17 +183,17 @@
     <section id="sec_access">
       <title>Accessing NERSC systems</title>
       <para>
-	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to NERSC resources requires multifactor identification (MFA). Instructions to set up MFA for your account at NERSC are documented here: <ulink url="https://docs.nersc.gov/connect/mfa"/>.  You can optionally setup an ssh proxy to avoid entering your "one time password" (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/> but note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your user name at NERSC. 
+	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to NERSC resources requires multifactor identification (MFA). Instructions to set up MFA for your account at NERSC are documented here: <ulink url="https://docs.nersc.gov/connect/mfa"/>.  You can optionally setup an ssh proxy to avoid entering your "one time password" (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/> but note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your NERSC user account name. 
       </para>
     </section>
     
     <section id="sec_config">
       <title>Configuring your home directory</title>
       <para>
-	Opening an SSH connection to a NERSC system places you in your user home directory on a login node. The first time you log in the home directory will be empty. This section will briefly describe some basic configuration steps you can follow the first time you log in.
+	Connecting to NERSC systems using SSH places you in your user home directory on a login node. The first time you log in the home directory will be empty. This section describes some basic account configuration options which you may find useful.
       </para>
       <para>
-	NERSC documentation is ambiguous with respect to the order in which shell initialization files ("dotfiles" such as <literal>~/.bashrc</literal>) are sourced and under what conditions, but the user's <literal>~/.bashrc</literal> appears to be sourced on both login and interactive non-login shells. NERSC provides a template <literal>.bashrc</literal> file available in the GitLab repository <ulink url="https://software.nersc.gov/NERSC/dotfiles"/>. Accessing the repository requires a NERSC account with MFA. To clone the repository, you will need to create a personal access token, save it somewhere secure, and use it in lieu of your account password when prompted. For further instructions, see <ulink url="https://software.nersc.gov/help/user/profile/personal_access_tokens.md"/>. The template <literal>.bashrc</literal> file should be placed in your home directory. Alternatively you can create your own dotfiles.
+	NERSC documentation is ambiguous with respect to the order in which shell initialization files ("dotfiles" such as <literal>~/.bashrc</literal>) are sourced and under what conditions, but the user's <literal>~/.bashrc</literal> appears to be sourced on both login and interactive non-login shells. NERSC provides a template <literal>.bashrc</literal> file available in the GitLab repository <ulink url="https://software.nersc.gov/NERSC/dotfiles"/>. Accessing the repository requires a NERSC account with MFA enabled. To clone the repository, you will need to create a personal access token, save it somewhere secure, and use it in lieu of your account password when prompted. For further instructions, see <ulink url="https://software.nersc.gov/help/user/profile/personal_access_tokens"/>. This page can only be accessed once you have logged in to software.nersc.gov for example by following the first link. The template <literal>.bashrc</literal> file from this repository can be copied into your home directory. Alternatively you can create your own dotfiles.
       </para>
       <para>
 	Your desired environment configuration may differ depending on whether or not you are inside a Shifter container. The following if-else block (or similar) can be included in your <literal>~/.bashrc</literal> file to conditionally setup your environment: 
@@ -530,7 +530,7 @@
     <section id="sec_traceview">
       <title>Viewing fit results with <literal>traceview</literal></title>
       <para>
-	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification as single- or double-pulse events if the machine learning pulse classifier is used (TODO). The viewer is installed in the <literal>/bin</literal> directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if these environment variables are undefined or point to improperly formatted files. The <literal>traceview</literal> display is a ROOT TCanvas and can be interacted with as such.
+	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification as single- or double-pulse events if the machine learning pulse classifier is used. The viewer is installed in the <literal>/bin</literal> directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if these environment variables are undefined or point to improperly formatted files. The <literal>traceview</literal> display is a ROOT TCanvas and can be interacted with as such.
       </para>
     </section>    
   </chapter>
@@ -586,17 +586,6 @@
 	    if [ -z "$SHIFTER_RUNTIME" ]; then
 	    # easybuild generated modules 
 	        module use $HOME/.local/easybuild/modules/all/
-	
-	        IMAGE="--image=fribdaq/frib-buster:v3.8-nersc"
-	        MODULES="--module=none"
-	        VOLUMES="--volume=${PSCRATCH}/opt-buster8:/usr/opt;${PSCRATCH}:/scratch"
-	        ENV="--env-file=${HOME}/shifter.env"
-	        alias ishell='shifter $IMAGE $MODULES $VOLUMES $ENV /bin/bash'
-	    else
-	        . /usr/opt/daq/12.0-001/daqsetup.bash -f
-	        . /usr/opt/root/root-6.24.06/bin/thisroot.sh
-	        export PATH=/usr/opt/mpi/openmpi-4.0.1/bin:$PATH
-	        export LD_LIBRARY_PATH=/usr/opt/mpi/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 	    fi
 	fi
       </programlisting>
