@@ -37,18 +37,21 @@
  * @brief Abstract base class for marshalling data to the fitting subsystems
  * to calculate Jacobian elements and residuals.
  */
-
 class CFitEngine {
 protected:
-  std::vector<std::uint16_t> x; //!< Trace x coords
-  std::vector<std::uint16_t> y; //!< Trace y coords
+    std::vector<std::uint16_t> x; //!< Trace x coords
+    std::vector<std::uint16_t> y; //!< Trace y coords
 public:
-  CFitEngine(std::vector<std::pair<std::uint16_t, std::uint16_t>>& data); //!< Constructor.
-  virtual ~CFitEngine() {} //!< Destructor.
-  /** Pure virtual method for calculating the Jacobian matrix elements. */
-  virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
-  /** Pure virtual method to calculating the residual vector. */
-  virtual void residuals(const gsl_vector* p, gsl_vector* r)  = 0;
+    /** @brief Constructor. */
+    CFitEngine(std::vector<std::pair<std::uint16_t, std::uint16_t>>& data);
+    /** @brief Destructor. */
+    virtual ~CFitEngine() {}
+    /** 
+     * @brief Pure virtual method for calculating the Jacobian matrix elements.
+     */
+    virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
+    /** @brief Pure virtual method to calculating the residual vector. */
+    virtual void residuals(const gsl_vector* p, gsl_vector* r)  = 0;
 };
 
 #endif

@@ -31,9 +31,9 @@ class QString;
 // class QCloseEvent;
 
 namespace DAQ {
-  namespace DDAS {
-    class DDASFitHit;
-  }
+    namespace DDAS {
+	class DDASFitHit;
+    }
 }
 
 class DDASDecoder;
@@ -45,6 +45,7 @@ class QRootCanvas;
  * @class QTraceView
  * @brief Main traceview GUI window.
  *
+ * @details
  * Main window class for traceview responsible for management and high-level
  * control over the application. Uses Qt's signal and slot framework to
  * communicate between objects. See Qt documentation for details.
@@ -52,78 +53,84 @@ class QRootCanvas;
 
 class QTraceView : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  QTraceView(QCommandLineParser& parser, QWidget* parent = nullptr);
-  virtual ~QTraceView();
+    /**
+     * @brief Constructor.
+     * @param parser  References the QCommandLineParser. The parser is owned by 
+     *   the caller (in this case the application main() function).
+     * @param parent  Pointer to QWidget parent object. Can be nullptr.
+     */
+    QTraceView(QCommandLineParser& parser, QWidget* parent = nullptr);
+    virtual ~QTraceView(); //!< Destructor.
 
-  // QEvent handlers overridden from the base class.
-  
+    // QEvent handlers overridden from the base class.  
 protected:
-  virtual void changeEvent(QEvent* e);
-  // virtual void closeEvent(QCloseEvent* e);
+    /**
+     * @brief Event handler for state changes. 
+     * @param e  Pointer to the handled QEvent.
+     */
+    virtual void changeEvent(QEvent* e);
 
 private:
-  void createActions();
-  void configureMenu();
-  QWidget* createTopBoxes();
-  QListView* createHitSelectList();
-  QWidget* createPlotWidget();
-  void createConnections();
+    void createActions();
+    void configureMenu();
+    QWidget* createTopBoxes();
+    QListView* createHitSelectList();
+    QWidget* createPlotWidget();
+    void createConnections();
 
-  void setStatusBar(std::string msg);
-  bool isValidHit(const DAQ::DDAS::DDASFitHit& hit);
-  void displayHitData(const DAQ::DDAS::DDASFitHit& hit);
-  void resetGUI();
-  void enableAll();
-  void disableAll();
-  void parseArgs(QCommandLineParser& parser);
+    void setStatusBar(std::string msg);
+    bool isValidHit(const DAQ::DDAS::DDASFitHit& hit);
+    void displayHitData(const DAQ::DDAS::DDASFitHit& hit);
+    void resetGUI();
+    void enableAll();
+    void disableAll();
+    void parseArgs(QCommandLineParser& parser);
 			   
 private slots:
-  void openFile();
-  void configureSource(QString filename);
-  void getNextEvent();
-  void skipEvents();
-  void filterHits();
-  void updateSelectableHits();
-  void processHit();
-  void handleRootEvents();
-  void issueWarning(std::string msg);
-  void test();
+    void openFile();
+    void configureSource(QString filename);
+    void getNextEvent();
+    void skipEvents();
+    void filterHits();
+    void updateSelectableHits();
+    void processHit();
+    void handleRootEvents();
+    void issueWarning(std::string msg);
+    void test();
   
-private:
-  
-  // Our member data
-  
-  DDASDecoder* m_pDecoder;
-  FitManager* m_pFitManager;
+private:  
+    // Our member data  
+    DDASDecoder* m_pDecoder;
+    FitManager* m_pFitManager;
 
-  bool m_config;
-  bool m_templateConfig;
-  std::vector<DAQ::DDAS::DDASFitHit> m_hits;
-  std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
+    bool m_config;
+    bool m_templateConfig;
+    std::vector<DAQ::DDAS::DDASFitHit> m_hits;
+    std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits;
   
-  // Added to this widget, Qt _should_ handle cleanup on destruction
+    // Added to this widget, Qt _should_ handle cleanup on destruction
   
-  QMenuBar* m_pMenuBar;
-  QMenu* m_pFileMenu;
-  QAction* m_pOpenAction;
-  QAction* m_pExitAction;
+    QMenuBar* m_pMenuBar;
+    QMenu* m_pFileMenu;
+    QAction* m_pOpenAction;
+    QAction* m_pExitAction;
 
-  QPushButton* m_pButtons[3];
-  QPushButton* m_pSkipEvents;
-  QLineEdit* m_pEventsToSkip;
-  QLineEdit* m_pHitFilter[3];
-  QWidget* m_pTopBoxes;
+    QPushButton* m_pButtons[3];
+    QPushButton* m_pSkipEvents;
+    QLineEdit* m_pEventsToSkip;
+    QLineEdit* m_pHitFilter[3];
+    QWidget* m_pTopBoxes;
 
-  QHitData* m_pHitData;
+    QHitData* m_pHitData;
   
-  QListView* m_pHitSelectList;
-  QRootCanvas* m_pRootCanvas;
-  QTimer* m_pTimer;
+    QListView* m_pHitSelectList;
+    QRootCanvas* m_pRootCanvas;
+    QTimer* m_pTimer;
   
-  QStatusBar* m_pStatusBar;
+    QStatusBar* m_pStatusBar;
 };
 
 #endif

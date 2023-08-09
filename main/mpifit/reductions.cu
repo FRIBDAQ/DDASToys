@@ -55,336 +55,566 @@
 //*******************************
 //  Parallel Reduction Operations
 //*******************************
-/// @brief inline kernel code for fast parallel reduction operations (max, min, sum).
+/// @brief inline kernel code for fast parallel reduction operations (max,
+/// min, sum).
 
-//! @brief Reduces an array of unsigned int elements to its minimum value
-//! @param vet pointer to shared memory data to be reduced
-//! @param tid thread index
+//! @brief Reduces an array of unsigned int elements to its minimum value.
+//! @param vet Pointer to shared memory data to be reduced.
+//! @param tid Thread index.
 template <uint32_t  blockSize>
 __device__ void reduceToMin(unsigned int* sdata, uint32_t  tid){
 
-	//Synchronize threads to share shared memory data
-	__syncthreads();
+    //Synchronize threads to share shared memory data
+    __syncthreads();
 
-	unsigned int mySum = sdata[tid];
+    unsigned int mySum = sdata[tid];
 
-	// do reduction in shared mem
-	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] = mySum = min(mySum, sdata[tid + 512]); } __syncthreads(); }
-	if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = min(mySum, sdata[tid + 256]); } __syncthreads(); }
-	if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = min(mySum, sdata[tid + 128]); } __syncthreads(); }
-	if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = min(mySum, sdata[tid +  64]); } __syncthreads(); }
+    // do reduction in shared mem
+    if (blockSize >= 1024) {
+	if (tid < 512) {
+	    sdata[tid] = mySum = min(mySum, sdata[tid + 512]);
+	} __syncthreads();
+    }
+    if (blockSize >= 512) {
+	if (tid < 256) {
+	    sdata[tid] = mySum = min(mySum, sdata[tid + 256]);
+	} __syncthreads();
+    }
+    if (blockSize >= 256) {
+	if (tid < 128) {
+	    sdata[tid] = mySum = min(mySum, sdata[tid + 128]);
+	} __syncthreads();
+    }
+    if (blockSize >= 128) {
+	if (tid <  64) {
+	    sdata[tid] = mySum = min(mySum, sdata[tid +  64]);
+	} __syncthreads();
+    }
 
-	if (blockSize == 32){
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 16)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile unsigned int* smem = sdata;
-				if (blockSize >=  32) { smem[tid] = mySum = min(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = min(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = min(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = min(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = min(mySum, smem[tid +  1]); EMUSYNC; }
-			}
-	}
-	else
+    if (blockSize == 32){
+#ifndef __DEVICE_EMULATION__
+	if (tid < 16)
+#endif
 	{
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 32)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile unsigned int* smem = sdata;
-				if (blockSize >=  64) { smem[tid] = mySum = min(mySum, smem[tid + 32]); EMUSYNC; }
-				if (blockSize >=  32) { smem[tid] = mySum = min(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = min(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = min(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = min(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = min(mySum, smem[tid +  1]); EMUSYNC; }
-			}
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile unsigned int* smem = sdata;
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = min(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = min(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = min(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = min(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = min(mySum, smem[tid +  1]); EMUSYNC;
+	    }
 	}
+    }
+    else
+    {
+#ifndef __DEVICE_EMULATION__
+	if (tid < 32)
+#endif
+	{
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile unsigned int* smem = sdata;
+	    if (blockSize >=  64) {
+		smem[tid] = mySum = min(mySum, smem[tid + 32]); EMUSYNC;
+	    }
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = min(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = min(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = min(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = min(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = min(mySum, smem[tid +  1]); EMUSYNC;
+	    }
+	}
+    }
 }
 
-
-
-//! @brief Reduces an array of float elements to its minimum value
-//! @param vet pointer to shared memory data to be reduced
-//! @param tid thread index
+//! @brief Reduces an array of float elements to its minimum value.
+//! @param vet Pointer to shared memory data to be reduced.
+//! @param tid Thread index.
 template <uint32_t  blockSize>
 __device__ void reduceToMin(float* sdata, uint32_t  tid){
 
-	//Synchronize threads to share shared memory data
-	__syncthreads();
+    //Synchronize threads to share shared memory data
+    __syncthreads();
 
-	float mySum = sdata[tid];
+    float mySum = sdata[tid];
 
-	// do reduction in shared mem
-	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] = mySum = fminf(mySum, sdata[tid + 512]); } __syncthreads(); }
-	if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = fminf(mySum, sdata[tid + 256]); } __syncthreads(); }
-	if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = fminf(mySum, sdata[tid + 128]); } __syncthreads(); }
-	if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = fminf(mySum, sdata[tid +  64]); } __syncthreads(); }
+    // do reduction in shared mem
+    if (blockSize >= 1024) {
+	if (tid < 512) {
+	    sdata[tid] = mySum = fminf(mySum, sdata[tid + 512]);
+	} __syncthreads();
+    }
+    if (blockSize >= 512) {
+	if (tid < 256) {
+	    sdata[tid] = mySum = fminf(mySum, sdata[tid + 256]);
+	} __syncthreads();
+    }
+    if (blockSize >= 256) {
+	if (tid < 128) {
+	    sdata[tid] = mySum = fminf(mySum, sdata[tid + 128]);
+	} __syncthreads();
+    }
+    if (blockSize >= 128) {
+	if (tid <  64) {
+	    sdata[tid] = mySum = fminf(mySum, sdata[tid +  64]);
+	} __syncthreads();
+    }
 
-	if (blockSize == 32){
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 16)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile float* smem = sdata;
-				if (blockSize >=  32) { smem[tid] = mySum = fminf(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = fminf(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = fminf(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = fminf(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = fminf(mySum, smem[tid +  1]); EMUSYNC; }
-			}
-	}
-	else
+    if (blockSize == 32){
+#ifndef __DEVICE_EMULATION__
+	if (tid < 16)
+#endif
 	{
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 32)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile float* smem = sdata;
-				if (blockSize >=  64) { smem[tid] = mySum = fminf(mySum, smem[tid + 32]); EMUSYNC; }
-				if (blockSize >=  32) { smem[tid] = mySum = fminf(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = fminf(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = fminf(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = fminf(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = fminf(mySum, smem[tid +  1]); EMUSYNC; }
-			}
+	    // now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    //behavior.
+	    volatile float* smem = sdata;
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = fminf(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  1]); EMUSYNC;
+	    }
 	}
+    }
+    else
+    {
+#ifndef __DEVICE_EMULATION__
+	if (tid < 32)
+#endif
+	{
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile float* smem = sdata;
+	    if (blockSize >=  64) {
+		smem[tid] = mySum = fminf(mySum, smem[tid + 32]); EMUSYNC;
+	    }
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = fminf(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = fminf(mySum, smem[tid +  1]); EMUSYNC;
+	    }
+	}
+    }
 }
 
-
-
-//! @brief Reduces an array of unsigned int elements to its maximum value
-//! @param vet pointer to shared memory data to be reduced
-//! @param tid thread index
+//! @brief Reduces an array of unsigned int elements to its maximum value.
+//! @param vet Pointer to shared memory data to be reduced.
+//! @param tid Thread index.
 template <uint32_t  blockSize>
 __device__ void reduceToMax(unsigned int* sdata, uint32_t  tid){
 
-	//Synchronize threads to share shared memory data
-	__syncthreads();
+    //Synchronize threads to share shared memory data
+    __syncthreads();
 
-	unsigned int mySum = sdata[tid];
+    unsigned int mySum = sdata[tid];
 
-	// do reduction in shared mem
-	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] = mySum = max(mySum, sdata[tid + 512]); } __syncthreads(); }
-	if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = max(mySum, sdata[tid + 256]); } __syncthreads(); }
-	if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = max(mySum, sdata[tid + 128]); } __syncthreads(); }
-	if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = max(mySum, sdata[tid +  64]); } __syncthreads(); }
+    // do reduction in shared mem
+    if (blockSize >= 1024) {
+	if (tid < 512) {
+	    sdata[tid] = mySum = max(mySum, sdata[tid + 512]);
+	} __syncthreads();
+    }
+    if (blockSize >= 512) {
+	if (tid < 256) {
+	    sdata[tid] = mySum = max(mySum, sdata[tid + 256]);
+	} __syncthreads();
+    }
+    if (blockSize >= 256) {
+	if (tid < 128) {
+	    sdata[tid] = mySum = max(mySum, sdata[tid + 128]);
+	} __syncthreads();
+    }
+    if (blockSize >= 128) {
+	if (tid <  64) {
+	    sdata[tid] = mySum = max(mySum, sdata[tid +  64]);
+	} __syncthreads();
+    }
 
-	if (blockSize == 32){
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 16)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile unsigned int* smem = sdata;
-				if (blockSize >=  32) { smem[tid] = mySum = max(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = max(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = max(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = max(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = max(mySum, smem[tid +  1]); EMUSYNC; }
-			}
-	}
-	else
+    if (blockSize == 32){
+#ifndef __DEVICE_EMULATION__
+	if (tid < 16)
+#endif
 	{
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 32)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile unsigned int* smem = sdata;
-				if (blockSize >=  64) { smem[tid] = mySum = max(mySum, smem[tid + 32]); EMUSYNC; }
-				if (blockSize >=  32) { smem[tid] = mySum = max(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = max(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = max(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = max(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = max(mySum, smem[tid +  1]); EMUSYNC; }
-			}
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    //behavior.
+	    volatile unsigned int* smem = sdata;
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = max(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = max(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = max(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = max(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = max(mySum, smem[tid +  1]); EMUSYNC;
+	    }
 	}
+    }
+    else
+    {
+#ifndef __DEVICE_EMULATION__
+	if (tid < 32)
+#endif
+	{
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile unsigned int* smem = sdata;
+	    if (blockSize >=  64) {
+		smem[tid] = mySum = max(mySum, smem[tid + 32]); EMUSYNC;
+	    }
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = max(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = max(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = max(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = max(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = max(mySum, smem[tid +  1]); EMUSYNC;
+	    }
+	}
+    }
 }
 
-//! @brief Reduces the elements of an array to their maximum value
-//! @param sdata pointer to shared memory data to be reduced
-//! @param tid thread index
+//! @brief Reduces the elements of an array to their maximum value.
+//! @param sdata Pointer to shared memory data to be reduced.
+//! @param tid Thread index.
 template <uint32_t  blockSize>
 __device__ void reduceToMax(float* sdata, uint32_t  tid){
 
-	//Synchronize threads to share shared memory data
-	__syncthreads();
+    //Synchronize threads to share shared memory data
+    __syncthreads();
 
-	float mySum = sdata[tid];
+    float mySum = sdata[tid];
 
-	// do reduction in shared mem
-	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] = mySum = fmaxf(mySum, sdata[tid + 512]); } __syncthreads(); }
-	if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = fmaxf(mySum, sdata[tid + 256]); } __syncthreads(); }
-	if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = fmaxf(mySum, sdata[tid + 128]); } __syncthreads(); }
-	if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = fmaxf(mySum, sdata[tid +  64]); } __syncthreads(); }
+    // do reduction in shared mem
+    if (blockSize >= 1024) {
+	if (tid < 512) {
+	    sdata[tid] = mySum = fmaxf(mySum, sdata[tid + 512]);
+	} __syncthreads();
+    }
+    if (blockSize >= 512) {
+	if (tid < 256) {
+	    sdata[tid] = mySum = fmaxf(mySum, sdata[tid + 256]);
+	} __syncthreads();
+    }
+    if (blockSize >= 256) {
+	if (tid < 128) {
+	    sdata[tid] = mySum = fmaxf(mySum, sdata[tid + 128]);
+	} __syncthreads();
+    }
+    if (blockSize >= 128) {
+	if (tid <  64) {
+	    sdata[tid] = mySum = fmaxf(mySum, sdata[tid +  64]);
+	} __syncthreads();
+    }
 
-	if (blockSize == 32){
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 16)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile float* smem = sdata;
-				if (blockSize >=  32) { smem[tid] = mySum = fmaxf(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  1]); EMUSYNC; }
-			}
-	}
-	else
+    if (blockSize == 32){
+#ifndef __DEVICE_EMULATION__
+	if (tid < 16)
+#endif
 	{
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 32)
-			#endif
-			{
-				// now that we are using warp-synchronous programming (below)
-				// we need to declare our shared memory volatile so that the compiler
-				// doesn't reorder stores to it and induce incorrect behavior.
-				volatile float* smem = sdata;
-				if (blockSize >=  64) { smem[tid] = mySum = fmaxf(mySum, smem[tid + 32]); EMUSYNC; }
-				if (blockSize >=  32) { smem[tid] = mySum = fmaxf(mySum, smem[tid + 16]); EMUSYNC; }
-				if (blockSize >=  16) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  8]); EMUSYNC; }
-				if (blockSize >=   8) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  4]); EMUSYNC; }
-				if (blockSize >=   4) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  2]); EMUSYNC; }
-				if (blockSize >=   2) { smem[tid] = mySum = fmaxf(mySum, smem[tid +  1]); EMUSYNC; }
-			}
+	    // now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile float* smem = sdata;
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  1]); EMUSYNC;
+	    }
 	}
+    }
+    else
+    {
+#ifndef __DEVICE_EMULATION__
+	if (tid < 32)
+#endif
+	{
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile float* smem = sdata;
+	    if (blockSize >=  64) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid + 32]); EMUSYNC;
+	    }
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid + 16]); EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  8]); EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  4]); EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  2]); EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = fmaxf(mySum, smem[tid +  1]); EMUSYNC;
+	    }
+	}
+    }
 }
 
-
-
-
-//! @brief Reduces the elements of an array to their sum
-//! @param sdata pointer to shared memory data to be reduced
-//! @param tid thread index
+//! @brief Reduces the elements of an array to their sum.
+//! @param sdata Pointer to shared memory data to be reduced.
+//! @param tid Thread index.
 template <class T, uint32_t  blockSize>
 __device__ void reduceToSum(T* sdata, uint32_t  tid){
 
-	//Synchronize threads to share shared memory data
-	__syncthreads();
+    //Synchronize threads to share shared memory data
+    __syncthreads();
 
-	T mySum = sdata[tid];
+    T mySum = sdata[tid];
 
-	// do reduction in shared mem
-	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] = mySum = mySum + sdata[tid + 512]; } __syncthreads(); }
-	if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = mySum + sdata[tid + 256]; } __syncthreads(); }
-	if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = mySum + sdata[tid + 128]; } __syncthreads(); }
-	if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = mySum + sdata[tid +  64]; } __syncthreads(); }
+    // do reduction in shared mem
+    if (blockSize >= 1024) {
+	if (tid < 512) {
+	    sdata[tid] = mySum = mySum + sdata[tid + 512];
+	} __syncthreads();
+    }
+    if (blockSize >= 512) {
+	if (tid < 256) {
+	    sdata[tid] = mySum = mySum + sdata[tid + 256];
+	} __syncthreads();
+    }
+    if (blockSize >= 256) {
+	if (tid < 128) {
+	    sdata[tid] = mySum = mySum + sdata[tid + 128];
+	} __syncthreads();
+    }
+    if (blockSize >= 128) {
+	if (tid <  64) {
+	    sdata[tid] = mySum = mySum + sdata[tid +  64];
+	} __syncthreads();
+    }
 
-	if (blockSize == 32){
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 16)
-		#endif
-		{
-			// now that we are using warp-synchronous programming (below)
-			// we need to declare our shared memory volatile so that the compiler
-			// doesn't reorder stores to it and induce incorrect behavior.
-			volatile T* smem = sdata;
-			if (blockSize >=  32) { smem[tid] = mySum = mySum + smem[tid + 16]; EMUSYNC; }
-			if (blockSize >=  16) { smem[tid] = mySum = mySum + smem[tid +  8]; EMUSYNC; }
-			if (blockSize >=   8) { smem[tid] = mySum = mySum + smem[tid +  4]; EMUSYNC; }
-			if (blockSize >=   4) { smem[tid] = mySum = mySum + smem[tid +  2]; EMUSYNC; }
-			if (blockSize >=   2) { smem[tid] = mySum = mySum + smem[tid +  1]; EMUSYNC; }
-		}
-	}
-	else
+    if (blockSize == 32){
+#ifndef __DEVICE_EMULATION__
+	if (tid < 16)
+#endif
 	{
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 32)
-			#endif
-		{
-			// now that we are using warp-synchronous programming (below)
-			// we need to declare our shared memory volatile so that the compiler
-			// doesn't reorder stores to it and induce incorrect behavior.
-			volatile T* smem = sdata;
-			if (blockSize >=  64) { smem[tid] = mySum = mySum + smem[tid + 32]; EMUSYNC; }
-			if (blockSize >=  32) { smem[tid] = mySum = mySum + smem[tid + 16]; EMUSYNC; }
-			if (blockSize >=  16) { smem[tid] = mySum = mySum + smem[tid +  8]; EMUSYNC; }
-			if (blockSize >=   8) { smem[tid] = mySum = mySum + smem[tid +  4]; EMUSYNC; }
-			if (blockSize >=   4) { smem[tid] = mySum = mySum + smem[tid +  2]; EMUSYNC; }
-			if (blockSize >=   2) { smem[tid] = mySum = mySum + smem[tid +  1]; EMUSYNC; }
-		}
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile T* smem = sdata;
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = mySum + smem[tid + 16]; EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = mySum + smem[tid +  8]; EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = mySum + smem[tid +  4]; EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = mySum + smem[tid +  2]; EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = mySum + smem[tid +  1]; EMUSYNC;
+	    }
 	}
+    }
+    else
+    {
+#ifndef __DEVICE_EMULATION__
+	if (tid < 32)
+#endif
+	{
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile T* smem = sdata;
+	    if (blockSize >=  64) {
+		smem[tid] = mySum = mySum + smem[tid + 32]; EMUSYNC;
+	    }
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = mySum + smem[tid + 16]; EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = mySum + smem[tid +  8]; EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = mySum + smem[tid +  4]; EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = mySum + smem[tid +  2]; EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = mySum + smem[tid +  1]; EMUSYNC;
+	    }
+	}
+    }
 }
 
-//! @brief Reduces the elements of an array to their product
-//! @param sdata pointer to shared memory data to be reduced
-//! @param tid thread index
+//! @brief Reduces the elements of an array to their product.
+//! @param sdata Pointer to shared memory data to be reduced.
+//! @param tid Thread index.
 template <class T, uint32_t  blockSize>
 __device__ void reduceToProduct(T* sdata, uint32_t  tid){
 
-	//Synchronize threads to share shared memory data
-	__syncthreads();
+    //Synchronize threads to share shared memory data
+    __syncthreads();
 
-	T mySum = sdata[tid];
+    T mySum = sdata[tid];
 
-	// do reduction in shared mem
-	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] = mySum = mySum * sdata[tid + 512]; } __syncthreads(); }
-	if (blockSize >= 512) { if (tid < 256) { sdata[tid] = mySum = mySum * sdata[tid + 256]; } __syncthreads(); }
-	if (blockSize >= 256) { if (tid < 128) { sdata[tid] = mySum = mySum * sdata[tid + 128]; } __syncthreads(); }
-	if (blockSize >= 128) { if (tid <  64) { sdata[tid] = mySum = mySum * sdata[tid +  64]; } __syncthreads(); }
+    // do reduction in shared mem
+    if (blockSize >= 1024) {
+	if (tid < 512) {
+	    sdata[tid] = mySum = mySum * sdata[tid + 512];
+	} __syncthreads();
+    }
+    if (blockSize >= 512) {
+	if (tid < 256) {
+	    sdata[tid] = mySum = mySum * sdata[tid + 256];
+	} __syncthreads();
+    }
+    if (blockSize >= 256) {
+	if (tid < 128) {
+	    sdata[tid] = mySum = mySum * sdata[tid + 128];
+	} __syncthreads();
+    }
+    if (blockSize >= 128) {
+	if (tid <  64) {
+	    sdata[tid] = mySum = mySum * sdata[tid +  64];
+	} __syncthreads();
+    }
 
-	if (blockSize == 32){
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 16)
-		#endif
-		{
-			// now that we are using warp-synchronous programming (below)
-			// we need to declare our shared memory volatile so that the compiler
-			// doesn't reorder stores to it and induce incorrect behavior.
-			volatile T* smem = sdata;
-			if (blockSize >=  32) { smem[tid] = mySum = mySum * smem[tid + 16]; EMUSYNC; }
-			if (blockSize >=  16) { smem[tid] = mySum = mySum * smem[tid +  8]; EMUSYNC; }
-			if (blockSize >=   8) { smem[tid] = mySum = mySum * smem[tid +  4]; EMUSYNC; }
-			if (blockSize >=   4) { smem[tid] = mySum = mySum * smem[tid +  2]; EMUSYNC; }
-			if (blockSize >=   2) { smem[tid] = mySum = mySum * smem[tid +  1]; EMUSYNC; }
-		}
-	}
-	else
+    if (blockSize == 32){
+#ifndef __DEVICE_EMULATION__
+	if (tid < 16)
+#endif
 	{
-		#ifndef __DEVICE_EMULATION__
-		if (tid < 32)
-			#endif
-		{
-			// now that we are using warp-synchronous programming (below)
-			// we need to declare our shared memory volatile so that the compiler
-			// doesn't reorder stores to it and induce incorrect behavior.
-			volatile T* smem = sdata;
-			if (blockSize >=  64) { smem[tid] = mySum = mySum * smem[tid + 32]; EMUSYNC; }
-			if (blockSize >=  32) { smem[tid] = mySum = mySum * smem[tid + 16]; EMUSYNC; }
-			if (blockSize >=  16) { smem[tid] = mySum = mySum * smem[tid +  8]; EMUSYNC; }
-			if (blockSize >=   8) { smem[tid] = mySum = mySum * smem[tid +  4]; EMUSYNC; }
-			if (blockSize >=   4) { smem[tid] = mySum = mySum * smem[tid +  2]; EMUSYNC; }
-			if (blockSize >=   2) { smem[tid] = mySum = mySum * smem[tid +  1]; EMUSYNC; }
-		}
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile T* smem = sdata;
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = mySum * smem[tid + 16]; EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = mySum * smem[tid +  8]; EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = mySum * smem[tid +  4]; EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = mySum * smem[tid +  2]; EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = mySum * smem[tid +  1]; EMUSYNC;
+	    }
 	}
+    }
+    else
+    {
+#ifndef __DEVICE_EMULATION__
+	if (tid < 32)
+#endif
+	{
+	    // Now that we are using warp-synchronous programming (below)
+	    // we need to declare our shared memory volatile so that the
+	    // compiler doesn't reorder stores to it and induce incorrect
+	    // behavior.
+	    volatile T* smem = sdata;
+	    if (blockSize >=  64) {
+		smem[tid] = mySum = mySum * smem[tid + 32]; EMUSYNC;
+	    }
+	    if (blockSize >=  32) {
+		smem[tid] = mySum = mySum * smem[tid + 16]; EMUSYNC;
+	    }
+	    if (blockSize >=  16) {
+		smem[tid] = mySum = mySum * smem[tid +  8]; EMUSYNC;
+	    }
+	    if (blockSize >=   8) {
+		smem[tid] = mySum = mySum * smem[tid +  4]; EMUSYNC;
+	    }
+	    if (blockSize >=   4) {
+		smem[tid] = mySum = mySum * smem[tid +  2]; EMUSYNC;
+	    }
+	    if (blockSize >=   2) {
+		smem[tid] = mySum = mySum * smem[tid +  1]; EMUSYNC;
+	    }
+	}
+    }
 }
-
-
-
-
 
 #endif
 

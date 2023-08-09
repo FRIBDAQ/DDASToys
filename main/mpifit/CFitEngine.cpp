@@ -27,6 +27,7 @@
 #include "CFitEngine.h"
 
 /**
+ * @details
  * Marshall the x/y points into the coordinate vectors.
  */
 CFitEngine::CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)

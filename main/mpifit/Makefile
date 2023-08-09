@@ -42,35 +42,39 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-all: libs traceview docs
+all: docs exec
+exec: libs traceview
 libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
-docs: thedocs
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro; make)
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro)
+	$(MAKE) -C TraceView
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
 	CFitEngine.o SerialFitEngineAnalytic.o \
 	$(CUDAOBJ)
-	$(CXX) -o libFitEditorAnalytic.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libFitEditorAnalytic.so -shared $^ \
+	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o \
 	functions_template.o lmfit_template.o 
-	$(CXX) -o libFitEditorTemplate.so -shared $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libFitEditorTemplate.so -shared $^ \
+	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
-	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ $(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ \
+	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 #
 # Build docbooks and doxygen documentation
 #
 
-thedocs:
-	(cd Docs; make)
+docs:
+	$(MAKE) -C Docs
 
 #
 #  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
@@ -92,6 +96,6 @@ install:
 
 clean:
 	rm -f *.so *.o
-	make -C TraceView clean
-	rm -f TraceView/traceview
-	make -C Docs clean
+	$(MAKE) -C TraceView clean
+	rm -f TraceView/TraceView
+	$(MAKE) -C Docs clean
