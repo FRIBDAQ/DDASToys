@@ -2,21 +2,17 @@ TEMPLATE = app
   
 QT += widgets
 
-# CXXFLAGS from $ROOTSYS/bin/root-config --cflags
-QMAKE_CXXFLAGS += -pthread -std=c++14 -m64
+QMAKE_CXXFLAGS += $(shell $(ROOTSYS)/bin/root-config --cflags)
 CONFIG += qt warn_on thread console
 
 INCLUDEPATH += .. $(DAQINC) $(ROOTSYS)/include
 
-# NSCLDAQ and DDAS libraries
+# FRIBDAQ libraries
 LIBS += -L$(DAQLIB) -lFragmentIndex -lddasformat -ldataformat -ldaqio \
      -lException -lurl -Wl,-rpath=$(DAQLIB)
 
-# ROOT libraries from $ROOTSYS/bin/root-config --libs --ldflags 
-LIBS += -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d \
-     -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix \
-     -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame \
-     -Wl,-rpath,$(ROOTSYS)/lib -pthread -lm -ldl -rdynamic -m64
+# ROOT libraries
+LIBS += $(shell $(ROOTSYS)/bin/root-config --libs --ldflags)
 
 # Object files to link from the top build directory
 LIBS += ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o \

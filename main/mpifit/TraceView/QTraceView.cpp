@@ -53,11 +53,10 @@
  */
 QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
     QWidget(parent), m_pDecoder(new DDASDecoder), m_pFitManager(new FitManager),
-    m_config(false), m_templateConfig(false),  m_pMenuBar(new QMenuBar),
-    m_pFileMenu(nullptr), m_pOpenAction(nullptr), m_pExitAction(nullptr),
-    m_pButtons{nullptr}, m_pSkipEvents(nullptr), m_pEventsToSkip(nullptr),
-    m_pHitFilter{nullptr}, m_pTopBoxes(createTopBoxes()),
-    m_pHitData(new QHitData(m_pFitManager)),
+    m_pMenuBar(new QMenuBar), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
+    m_pExitAction(nullptr), m_pButtons{nullptr}, m_pSkipEvents(nullptr),
+    m_pEventsToSkip(nullptr), m_pHitFilter{nullptr},
+    m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
     m_pHitSelectList(createHitSelectList()),
     m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
     m_pStatusBar(new QStatusBar)
@@ -105,13 +104,14 @@ QTraceView::~QTraceView()
 //____________________________________________________________________________
 /**
  * @details
- * Primary purpose here is to propagate the state changes to Root.
+ * Primary purpose here is to propagate the state changes to ROOT.
  */
 void
 QTraceView::changeEvent(QEvent* e)
 {
     if (e->type() == QEvent ::WindowStateChange) {
-	QWindowStateChangeEvent* event = static_cast<QWindowStateChangeEvent*>(e);
+	QWindowStateChangeEvent* event
+	    = static_cast<QWindowStateChangeEvent*>(e);
 	if ((event->oldState() & Qt::WindowMaximized) ||
 	    (event->oldState() & Qt::WindowMinimized) ||
 	    (event->oldState() == Qt::WindowNoState && 
@@ -139,9 +139,7 @@ QTraceView::changeEvent(QEvent* e)
  */
 
 //____________________________________________________________________________
-/**
- * @brief Create commands (user actions). 
- * 
+/** 
  * @details
  * See Qt documentation for more information. Actions for interactions with 
  * the top menu bar should be created here before adding them to their 
@@ -161,8 +159,6 @@ QTraceView::createActions()
 
 //____________________________________________________________________________
 /**
- * @brief Create and configure the top menu bar. 
- *
  * @detials
  * The menu bar is a collection of QMenu objects. Menu actions should be 
  * created prior to their addition.
@@ -180,12 +176,8 @@ QTraceView::configureMenu()
 
 //____________________________________________________________________________
 /**
- * @brief Create the top group box widgets.
- *
  * @details
  * These widgets contain the channel selection boxes and event handling.
- *
- * @return Pointer to the created QGroupBox object.
  */
 QWidget*
 QTraceView::createTopBoxes()
@@ -199,7 +191,7 @@ QTraceView::createTopBoxes()
     channelBox->setTitle("Channel selection");
     QHBoxLayout* channelBoxLayout = new QHBoxLayout;
     const char* letext[3] = {"Crate:" , "Slot:", "Channel:"};
-    for (int i=0; i<3; i++) {
+    for (int i = 0; i < 3; i++) {
 	QLabel* label = new QLabel(letext[i]);
 	m_pHitFilter[i] = new QLineEdit("*");
 	channelBoxLayout->addWidget(label);
@@ -225,7 +217,7 @@ QTraceView::createTopBoxes()
     mainBox->setTitle("Main control");
     QHBoxLayout* mainBoxLayout = new QHBoxLayout;
     const char* btext[3] = {"Next", "Update", "Exit"};
-    for (int i=0; i<3; i++) {
+    for (int i = 0; i < 3; i++) {
 	m_pButtons[i] = new QPushButton(tr(btext[i]));
 	mainBoxLayout->addWidget(m_pButtons[i]);
     }
@@ -242,11 +234,6 @@ QTraceView::createTopBoxes()
 }
 
 //____________________________________________________________________________
-/**
- * @brief Create and configure the hit selection list widget.
- *
- * @return Pointer to the created QListView widget.
- */
 QListView*
 QTraceView::createHitSelectList()
 {    
@@ -291,19 +278,15 @@ QTraceView::createConnections()
 	this, SLOT(processHit())
 	);
 
-    // Timer to call inner loop of Root  
+    // Timer to call inner loop of ROOT  
     connect(m_pTimer, SIGNAL(timeout()), this, SLOT(handleRootEvents()));  
 }
 
 //____________________________________________________________________________
 /**
- * @brief Create the plotting widget.
- *
  * @details 
- * Combine the hit selection list and the Root canvas into a single widget 
+ * Combine the hit selection list and the ROOT canvas into a single widget 
  * with its own layout which can be added to the main window layout.
- *
- * @return  Pointer to the created QWidget object.
  */
 QWidget*
 QTraceView::createPlotWidget()
@@ -330,11 +313,6 @@ QTraceView::createPlotWidget()
 // Utilities
 
 //____________________________________________________________________________
-/**
- * @brief Set the status bar message.
- * 
- * @param msg  Message displayed on the status bar.
- */
 void
 QTraceView::setStatusBar(std::string msg)
 {
@@ -343,15 +321,9 @@ QTraceView::setStatusBar(std::string msg)
 
 //____________________________________________________________________________
 /**
- * @brief Check if the current hit passes the hit filter. 
- *
  * @details
  * Valid events match the crate/slot/channel values set in the filter boxes. 
  * Wildcard '*' characters pass everything. Valid hits must contain traces.
- *
- * @param hit References the hit to validate.
- *
- * @return True if the hit passes the filter, false otherwise.
  */
 bool
 QTraceView::isValidHit(const DAQ::DDAS::DDASFitHit& hit)
@@ -383,8 +355,6 @@ QTraceView::isValidHit(const DAQ::DDAS::DDASFitHit& hit)
 
 //____________________________________________________________________________
 /**
- * @brief Update the hit selection list.
- * 
  * @details
  * The list is updated based on the current list of filtered hits. Each hit is 
  * a formatted QString crate:slot:channel where the idenfiying information is 
@@ -398,22 +368,17 @@ QTraceView::updateSelectableHits()
 	= reinterpret_cast<QStandardItemModel*>(m_pHitSelectList->model());
     model->clear();
 
-    for (unsigned i = 0; i < m_filteredHits.size(); i++) {
-    
+    for (unsigned i = 0; i < m_filteredHits.size(); i++) {    
 	// Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
-	QString id = QString("%1:%2:%3").arg(
-	    m_filteredHits[i].GetCrateID()).arg(m_filteredHits[i].GetSlotID())
-	    .arg(m_filteredHits[i].GetChannelID());
-    
+	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].GetCrateID()
+	    ).arg(m_filteredHits[i].GetSlotID()
+		).arg(m_filteredHits[i].GetChannelID());    
 	QStandardItem* item = new QStandardItem(id);
 	model->setItem(i, item);
     }
 }
 
 //____________________________________________________________________________
-/**
- * @brief Reset and clear all GUI elements and member data to default states.
- */
 void
 QTraceView::resetGUI()
 {
@@ -425,9 +390,6 @@ QTraceView::resetGUI()
 }
 
 //____________________________________________________________________________
-/**
- * @brief Enable all UI buttons.
- */
 void
 QTraceView::enableAll()
 {
@@ -440,8 +402,6 @@ QTraceView::enableAll()
 
 //____________________________________________________________________________
 /** 
- * @brief Disable all UI buttons.
- *
  * @details
  * Disable everything except exit, which we should always be able to do. Assume
  * the exit button is the last one in the button list.
@@ -458,15 +418,11 @@ QTraceView::disableAll()
 
 //____________________________________________________________________________
 /**
- * @brief Parse command line arguments supplied at runtime.
- * 
  * @details
  * Use QCommandLineParser to read in and parse positional arguments supplied 
  * on the command line when the program is run. All arguments are considered 
  * optional. Handle the arguments which are provided and issue error messages 
  * if necessary.
- * 
- * @param parser References the QCommandLineParser of the main QApplication.
  */
 void
 QTraceView::parseArgs(QCommandLineParser& parser)
@@ -487,23 +443,19 @@ QTraceView::parseArgs(QCommandLineParser& parser)
 	    m_pHitData->setFitMethod(method);
 	} catch (std::invalid_argument& e) {
 	    std::cerr << "QTraceView::parseArgs(): Unknown fitting method "
-		      << method.toStdString()
-		      << " read from command line."
-		      << " Setting fit method to 'Template'."
-		      << std::endl;
+		      << method.toStdString() << " read from command line."
+		      << " Setting fit method to 'Template'." << std::endl;
 	    m_pHitData->setFitMethod("Template");
 	}
     }  
 }
 
-//____________________________________________________________________________
+///
 // Private slots
 //
 
 //____________________________________________________________________________
 /**
- * @brief Open an NSCLDAQ event file.
- * 
  * @details
  * Open a file using the QFileDialog and attempt to create a data source 
  * from it. Update status bar to show the currently loaded file and enable 
@@ -523,14 +475,12 @@ QTraceView::openFile()
     if (filename.isEmpty() && currentPath.empty()) {
 	std::cout << "WARNING: no file selected."
 		  << " Please open a file using File->Open file..."
-		  << " before continuing."
-		  << std::endl;
+		  << " before continuing." << std::endl;
 	return;
     } else if (filename.isEmpty() && !currentPath.empty()) {
 	std::cout << "WARNING: no file selected,"
 		  << " but a data source already exists."
-		  << " Current file path is: " << currentPath
-		  << std::endl;
+		  << " Current file path is: " << currentPath << std::endl;
     } else {
 	configureSource(filename);
     }
@@ -538,14 +488,10 @@ QTraceView::openFile()
 
 //____________________________________________________________________________
 /**
- * @brief Attempt to create the file data soruce. Update GUI if successful.
- * 
  * @details
  * Create a data source from a filename string. Update status bar to show the
  * currently loaded file and enable UI elements on the main window. Errors 
  * which occur during data source creation are dealt with in the decoder.
- *
- * @param filename Filename as a QString, without URI formatting.
  */
 void
 QTraceView::configureSource(QString filename)
@@ -558,8 +504,6 @@ QTraceView::configureSource(QString filename)
 
 //____________________________________________________________________________
 /**
- * @brief Get the next event containing trace data.
- *
  * @details
  * Get the next PHYSICS_EVENT event containing trace data from the data source
  * using the DDASDecoder. Apply the event filter and update the UI.
@@ -582,7 +526,7 @@ QTraceView::getNextEvent()
 
 	    std::string msg = "No more physics events in this file.";
 	    msg += "The file contains ";
-	    msg += std::to_string(m_pDecoder->getEventCount()+1);
+	    msg += std::to_string(m_pDecoder->getEventCount());
 	    msg += " physics events.";
 	    issueWarning(msg);
 	    
@@ -594,14 +538,12 @@ QTraceView::getNextEvent()
     m_pRootCanvas->clear();
   
     std::string msg = m_pDecoder->getFilePath()
-	+ " -- Event " + std::to_string(m_pDecoder->getEventCount());
+	+ " -- Event " + std::to_string(m_pDecoder->getEventIndex());
     setStatusBar(msg);
 }
 
 //____________________________________________________________________________
 /** 
- * @brief Skip events in the source.
- *
  * @details
  * The number of events to skip is read from the QLineEdit box when the skip 
  * button is clicked. If the end of the source file is encountered while 
@@ -622,7 +564,7 @@ QTraceView::skipEvents()
 	m_pRootCanvas->clear();
 	issueWarning(
 	    "No more physics events in this file. The file contains "
-	    + std::to_string(m_pDecoder->getEventCount()+1)
+	    + std::to_string(m_pDecoder->getEventCount())
 	    + " physics events."
 	    );
     } else {
@@ -653,8 +595,6 @@ QTraceView::filterHits()
 
 //____________________________________________________________________________
 /**
- * @brief Process a selected hit from the hit selection list. 
- *
  * @details
  * The row number in the hit select list corresponds to the index of that hit 
  * in the list of filtered hits. Draw the trace and hit information and update
@@ -670,9 +610,6 @@ QTraceView::processHit()
 }
 
 //____________________________________________________________________________
-/**
- * @brief Process pending Root events.
- */
 void
 QTraceView::handleRootEvents()
 {
@@ -681,12 +618,8 @@ QTraceView::handleRootEvents()
 
 //____________________________________________________________________________
 /** 
- * @brief Issue a warning message in a popup window.
- * 
  * @details
  * The warning is issued as a modal dialog, blocking until the user closes it.
- *
- * @param msg  The warning message displayed in the popup window.
  */
 void
 QTraceView::issueWarning(std::string msg)

@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -D_REENTRANT -Wall -W -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -pthread -std=c++14 -m64 -O2 -D_REENTRANT -Wall -W -fPIC $(DEFINES)
+CXXFLAGS      = -pipe $(shell $(ROOTSYS)/bin/root-config --cflags) -O2 -D_REENTRANT -Wall -W -fPIC $(DEFINES)
 INCPATH       = -I. -I.. -I$(DAQINC) -I$(ROOTSYS)/include -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -isystem /usr/include/libdrm -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
@@ -38,7 +38,7 @@ DISTNAME      = traceview1.0.0
 DISTDIR = /aaron/devel/fdsi-analysis/ParallelAnalysis/main/mpifit/TraceView/.tmp/traceview1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -lddasformat -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame -Wl,-rpath,$(ROOTSYS)/lib -pthread -lm -ldl -rdynamic -m64 ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
+LIBS          = $(SUBLIBS) -L$(DAQLIB) -lFragmentIndex -lddasformat -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) $(shell $(ROOTSYS)/bin/root-config --libs --ldflags) ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o ../functions_template.o -lQt5Widgets -lQt5Gui -lQt5Core -lpthread -lGL 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -372,7 +372,7 @@ compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) moc_predefs.h
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
-	g++ -pipe -pthread -std=c++14 -m64 -O2 -D_REENTRANT -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
+	g++ -pipe $(shell $(ROOTSYS)/bin/root-config --cflags) -O2 -D_REENTRANT -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
 compiler_moc_header_make_all: moc_QTraceView.cpp moc_QHitData.cpp moc_QRootCanvas.cpp
 compiler_moc_header_clean:

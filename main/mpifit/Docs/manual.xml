@@ -304,6 +304,9 @@
     <para>
       This chapter provides a how-to guide for fitting traces using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under the Slurm Workload Manager at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command>. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
     </para>
+    <para>
+      Running jobs on NERSC systems will charge hours to the allocation assigned to the account specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the account allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "regular" queue which may not be the best choice for production analysis.
+    </para>
     
     <section id="sec_basics">
       <title>Running a single <literal>EventEditor</literal> job</title>
@@ -312,7 +315,7 @@
       </para>
       <para>
 	Shown below is an example Slurm job submission script which will configure the proper runtime environment and run the <literal>EventEditor</literal> program to fit traces using the template fitter. More information on how to run jobs at NERSC and how to use the Slurm batch system can be found at <ulink url="https://docs.nersc.gov/jobs/"/>. To submit a job using the following submission script, run the command <command>sbatch submit.sl</command>.
-      </para>      
+      </para>
       <informalexample>
 	<programlisting>
 	  #!/bin/bash

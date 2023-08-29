@@ -21,17 +21,18 @@
 /**
  * @brief traceview main.
  *
+ * @param argc Argument count.
+ * @param argv Argument vector.
+ *
+ * @return int
+ * @retval 0   Application exits successfully.
+ * @retval !=0 Error.
+ *
+ * @details
  * Create the main application. The application has a command line parser to 
  * allow the user to pass commands at runtime to configure the initial viewer 
  * settings. A TApplication necessary for the embedded Root canvas is also 
  * created.
- *
- * @param argc  Argument count.
- * @param argv  Argument vector.
- *
- * @return int
- * @retval 0    Application exits successfully.
- * @retval !=0  Error. 
  */
 int main(int argc, char* argv[])
 {
@@ -57,8 +58,7 @@ int main(int argc, char* argv[])
    parser.process(app);
 
    // After the QCommandLineParser so ROOT TApplication parser doesn't consume
-   // shared default args such as --help and --version.
-   
+   // shared default args such as --help and --version.   
    TApplication rootapp("Simple Qt ROOT Application", &argc, argv);
 
    // Display the GUI
