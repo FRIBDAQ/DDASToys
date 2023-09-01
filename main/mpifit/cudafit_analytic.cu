@@ -371,9 +371,6 @@ static float h_fit1(float* params)
  * @param pYcoords   Trace y-coordinates array.
  * @param pWeights   y weights to apply.
  * @param nPoints    Number of points in the trace.
- *
- * @todo (ASC 9/1/23): sqdiff is weighted sum of squares divided by npts, 
- * not a chisq or reduced chisq value.
  */
 __global__
 void d_fitness1(
