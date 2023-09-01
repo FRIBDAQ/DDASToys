@@ -37,7 +37,7 @@
   <chapter id="ch_intro">
     <title>Introduction </title>    
     <para>
-      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB.
+      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB. DDASToys software is supported for FRIBDAQ versions 12.0 and beyond.
     </para>
     <para>
       This document introduces and describes what tools are provided, how to access and configure your user environment at NERSC to use these tools and how to submit jobs at NERSC using the Slurm Workload Manager. Detailed documentation of the DDASToys source code are provided in Doxygen reference manuals, installed in the share/sourcedocs/html and share/sourcedocs/latex directories located under the top-level DDASToys installation directory, which is generally /usr/opt/ddastoys. To view the Doxygen documentation, open share/sourcedocs/html/index.html with a web browser such as Firefox.
