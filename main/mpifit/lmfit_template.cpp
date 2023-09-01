@@ -24,8 +24,8 @@
 
 #include "functions_template.h"
 
-const int SINGLE_MAXITERATIONS = 50; //!< Max iterations for single pulse fit
-const int DOUBLE_MAXITERATIONS = 50; //!< Max iterations for double pulse fit
+const int SINGLE_MAXITERATIONS = 50;  //!< Max iterations for single pulse fit
+const int DOUBLE_MAXITERATIONS = 200; //!< Max iterations for double pulse fit
 
 // Single pulse fit parameter indices
 

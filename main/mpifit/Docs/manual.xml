@@ -189,8 +189,15 @@
   </chapter>
 
   <chapter id="ch_gettingstarted">
-    <title>Getting started at NERSC</title>    
-    <section id="sec_access">
+    <title>Getting started at NERSC</title>
+    <section id="sec_createacct">
+      <title>Creating a NERSC account</title>
+      <para>
+	This guide assumes that the reader wishes to join an existing project. In order to join a project, you must create an account at NERSC. To do so, follow the "I need a new NERSC account" steps here: <ulink url="https://iris.nersc.gov/add-user"/>. Note that NERSC requires that you have an exciting ORCID id. You can register for an ORCID account here: <ulink url="https://orcid.org/signin"/>. Once you have created an account, you will receive two emails: the first informing you that the account request is being processed, and another when the account is approved and added to the project. This requires approval from both NERSC and the project PI, so the approval process may take a couple of days. For any account-related issues, contact accounts@nersc.gov.
+      </para>
+    </section>
+    
+    <section id="sec_login">
       <title>Logging in to NERSC systems</title>
       <para>
 	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to Perlmutter requires multifactor identification (MFA). Instructions on how to set up MFA for your account at NERSC are found at <ulink url="https://docs.nersc.gov/connect/mfa"/>. You can optionally setup an SSH proxy to avoid entering your one time password (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/>. Note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your NERSC user account name. 

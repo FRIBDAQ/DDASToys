@@ -45,11 +45,11 @@ static const double ln2(log(2));
 static const double ln3over4(log(3) - log(4));
 static const double ln9(log(9));
 
-const double DDAS_FALLBACK_K1 = 0.1; /*!< Fallback value for pulse risetime */
-const double DDAS_FALLBACK_K2 = 0.1; /*!< Fallback value for pulse decay */
+const double DDAS_FALLBACK_K1 = 0.1; //!< Fallback for pulse risetime.
+const double DDAS_FALLBACK_K2 = 0.1; //!< Fallback for pulse decay.
 
-const int SINGLE_MAXITERATIONS = 50; /*!< Max iterations for single pulse fit */
-const int DOUBLE_MAXITERATIONS = 50; /*!< Max iterations for double pulse fit */
+const int SINGLE_MAXITERATIONS = 50;  //!< Max iterations for single pulse fit
+const int DOUBLE_MAXITERATIONS = 200; //!< Max iterations for double pulse fit
 
 // Single pulse fit parameter indices:
 
@@ -121,13 +121,13 @@ static void reduceTrace(
 
 /**
  * @brief Returns the partial derivative of a single pulse with respect to the
- * amplitude evaluated at a point
+ * amplitude evaluated at a point.
  *
  * @param k1 Current guess at rise steepness param (log(81)/risetime90).
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
- * @param w  weight for the point 
+ * @param w  Weight for the point.
  *
  * @return Value of (dP1/dA)(x)/w
  */
@@ -137,6 +137,7 @@ dp1dA(double k1, double k2, double x1, double x, double w,
 {
     double d = efall;             // decay(1.0, k2, x1, x);
     double l = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x);
+    
     return d*l / w;
 }
 
@@ -234,7 +235,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
 }
 
 /*
- *   GSL's LM  fitter requires that we provide:
+ * GSL's LM  fitter requires that we provide:
  *   -  A function that can produce the residuals (gsl_p1Residuals).
  *   -  A function that can compute the Jacobians (gsl_p1Jacobian).
  *   -  A function that can do both (gsl_p1Compute)
@@ -314,8 +315,8 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
  * where the maximum is.
  *
  * @details
- * We use that k = ln2/(x0-x) when x is the point at half max and that 
- * k = ln(3/4)/(x-x0) when x is the point at 3/4 max.
+ * We use that k = ln2/(x-x0) when x is the point at half max and that 
+ * k = ln(3/4)/(x0-x) when x is the point at 3/4 max.
  *
  * We search from the max channel and if we're lucky we find both the 3/4
  * and the 1/2 values for x-x0 -- then we take the average as our estimate.
@@ -342,14 +343,13 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
 	// If we've not computed k34 and we crossed the 3/4 threshold
 	// compute k34:        
 	double v = trace[i] - C0;
-	if ((k34 < 0.0) && (v < 3.0*maxval/4)) {
+	if ((k34 < 0.0) && (v < 0.75*maxval)) {
 	    k34 = ln3over4/(x0 - i);
 	}
 
 	// Similarly for khalf:        
-	if ((khalf < 0.0) && (v < maxval/2.0)) {
-	    khalf = ln2/(i - x0);
-            
+	if ((khalf < 0.0) && (v < 0.5*maxval)) {
+	    khalf = ln2/(i - x0);            
 	    // Note that we've got both so we can quit:            
 	    break;
 	}
@@ -357,7 +357,7 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
   
     //  Deal with the three potential cases:
     
-    if ((k34 > 0) && (khalf > 0)) return (k34 + khalf)/2.0; // Average of both.
+    if ((k34 > 0) && (khalf > 0)) return 0.5*(k34 + khalf); // Average of both.
     if (k34 > 0) return k34; // Only have k34.
     return DDAS_FALLBACK_K2; // Desparation measures.
 }
@@ -367,8 +367,8 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
  * of the pulse. 
  *
  * @details
- * We approximate xmax as 0.9 of maximum and use that ln(9)/(xmax - x0.5) 
- * gives k where x0.5 is the position of 1/2 height. If we can't find x0.5 
+ * We approximate xmax as 0.9 of maximum and use that ln(9)/(xmax - xhalf) 
+ * gives k where xhalf is the position of 1/2 height. If we can't find xhalf 
  * then we fall back on a guess of 0.1.
  *
  * @todo Should allow this fallback value to be an input parameter.
@@ -390,7 +390,7 @@ estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
     // Hunt for 1/2 max position:    
     for (int i = xmax; i >= 0; i--) {
 	double v = trace[i] - C0;
-	if (v < max/2.0) {
+	if (v < 0.5*max) {
 	    return ln9/(xmax - i);
 	}
     }
