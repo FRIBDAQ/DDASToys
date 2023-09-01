@@ -27,10 +27,10 @@ DDAS::TemplateFit::singlePulse(
     const std::vector<double>& trace_template
     )
 {
-    double value = 0; // Template trace fit value
+    double value = 0;                      // Template trace fit value
     int ishift = static_cast<int>(x - x1); // Phase-shifted sample number
     double intershift = x - x1 - ishift;   // Shift for interpolation
-    double inter = 0.; // Interpolation term
+    double inter = 0.;                     // Interpolation term
     int last = static_cast<int>(trace_template.size()-1);
 
     if (ishift < 0) {
@@ -54,9 +54,7 @@ DDAS::TemplateFit::singlePulse(
  */
 double
 DDAS::TemplateFit::doublePulse(
-    double A1, double x1,
-    double A2, double x2,
-    double C, double x,
+    double A1, double x1, double A2, double x2, double C, double x,
     const std::vector<double>& trace_template
     )
 {
@@ -78,11 +76,11 @@ DDAS::TemplateFit::chiSquare1(
     )
 {    
     double result = 0.0;
-    for(size_t i=0; i<points.size(); i++) {
+    for(size_t i = 0; i < points.size(); i++) {
 	double x = points[i].first;
 	double y = points[i].second;
 	double pulse = singlePulse(A1, x1, C, x, trace_template);
-	double diff = y-pulse;
+	double diff = y - pulse;
 	if (y != 0.0) {
 	    result += (diff/y)*diff;  // This order may control overflows
 	    if (std::fpclassify(result) == FP_ZERO) result =  0.0;
@@ -104,11 +102,11 @@ DDAS::TemplateFit::chiSquare2(
     )
 {    
     double result = 0.0;
-    for(size_t i=0; i<points.size(); i++) {
+    for(size_t i = 0; i < points.size(); i++) {
 	double x = points[i].first;
 	double y = points[i].second;
 	double pulse = doublePulse(A1, x1, A2, x2, C, x, trace_template);
-	double diff = y-pulse;
+	double diff = y - pulse;
 	if (y != 0.0) {
 	    result += (diff/y)*diff;  // This order may control overflows
 	    if (std::fpclassify(result) == FP_ZERO) result =  0.0;

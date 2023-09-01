@@ -221,8 +221,7 @@ singlePulse(
     float A1, float  k1, float  k2, float x1, float  C, float  x
     )
 {
-    return (logistic(A1, k1, x1, x)  * decay(1.0, k2, x1, x)) // decay term
-        + C;                                        // constant.
+    return (logistic(A1, k1, x1, x) * decay(1.0, k2, x1, x)) + C;
 }
 
 /**
@@ -263,15 +262,17 @@ doublePulse(
  * given that d_fitness has pulled out what we need. This fitness is for a 
  * single-pulse fit.
  * 
+ * @details
+ * The choice of weight determines whether the returned value is Neyman's 
+ * (weight by variance estimated from data wt = 1/y) or Pearson's (weight by 
+ * variance estimated from fit wt = 1/fit).
+ *
  * @param pParams Pointer to this solutions parameters.
  * @param x       x-coordinate.
  * @param y       y-coordinate.
- * @param wt      Weight for this coordinate (for now unused).
+ * @param wt      Weight for this coordinate. 
  *
  * @return Chi-square between fit function and trace data.
- *
- * @todo (ASC 8/9/23): This really should be Neyman's chi-square similar to 
- * the non-CUDA aware fitters.
  */
 __host__ __device__
 float chiFitness1(const float* pParams, float x, float y, float wt)
@@ -285,7 +286,7 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
 
     float fit = singlePulse(a, k1, k2, x1, c, x);
     float d   = (y - fit);
-  
+    
     return (d*d*wt); 
 }
 
@@ -293,15 +294,17 @@ float chiFitness1(const float* pParams, float x, float y, float wt)
  * @brief Computes chi-square fitness contribution for one point in
  * one solution given that our caller has pulled out what we need.
  *
+ * @details
+ * The choice of weight determines whether the returned value is Neyman's 
+ * (weight by variance estimated from data wt = 1/y) or Pearson's (weight by 
+ * variance estimated from fit wt = 1/fit).
+ *
  * @param pParams Pointer to this solutions parameters.
  * @param x       x-coordinate.
  * @param y       y-coordinate.
- * @param wt      Weight for this coordinate (for now unused).
+ * @param wt      Weight for this coordinate.
  *
  * @return Chi-square between fit function and trace data.
- *
- * @todo (ASC 8/9/23): This really should be Neyman's chi-square similar to 
- * the non-CUDA aware fitters.
  */
 __host__ __device__
 float chiFitness2(const float* pParams, float x, float y, float wt)
@@ -320,7 +323,7 @@ float chiFitness2(const float* pParams, float x, float y, float wt)
     float fit = doublePulse(a1, k1, k2, x1, a2, k3, k4, x2, c, x);
     float d   = y - fit;
   
-    return abs(d*wt);
+    return (d*d*wt);
 }
 
 /**
@@ -330,7 +333,7 @@ float chiFitness2(const float* pParams, float x, float y, float wt)
  *
  * @return The chi-square evaluated over the fit range.
  *
- * @note Returns FLT_MAX if the  chi-square value is not finite.
+ * @note Returns FLT_MAX if the chi-square value is not finite.
  */
 static float h_fit1(float* params)
 {
@@ -340,11 +343,15 @@ static float h_fit1(float* params)
     for (int i = 0; i < npts; i++) {
 	float x = xcoords[i];
 	float y = ycoords[i];
-    
-	result += chiFitness1(params, x, y, 1.0)/npts;
+
+	// Ensure point has a valid weight for Neyman chisq
+	if (y != 0.0) {
+	    result += chiFitness1(params, x, y, 1.0/y); // Unweighted
+	}
     }
   
     if (!isfinite(result)) result = FLT_MAX;
+    
     return result;
 }
 
@@ -354,7 +361,7 @@ static float h_fit1(float* params)
  *    solution in the swarm for a single pulse with an offset.
  *  * Uses reduceToSum to sum the chisquare contributions over the entire trace.
  * The result is put into the fitness value for our solution.
- *
+
  * @param pSolutions Pointer to solutions array in the GPU.
  * @param pFitnesses Pointer to the array of fitnesse for all solutions in 
  *   the swarm.
@@ -364,6 +371,9 @@ static float h_fit1(float* params)
  * @param pYcoords   Trace y-coordinates array.
  * @param pWeights   y weights to apply.
  * @param nPoints    Number of points in the trace.
+ *
+ * @todo (ASC 9/1/23): sqdiff is weighted sum of squares divided by npts, 
+ * not a chisq or reduced chisq value.
  */
 __global__
 void d_fitness1(
@@ -373,7 +383,6 @@ void d_fitness1(
     )
 {
     extern __shared__ float sqdiff[];  // Locate the chisqr contribs in shmem.
-
 
     // Figure out which solution and point we're working on. This is based 
     // on our place in the computation's geometry:
@@ -386,22 +395,28 @@ void d_fitness1(
 	    int ipt = ptno + swarm*nPoints;
 	    float x = pXcoords[ipt];
 	    float y = pYcoords[ipt];
-     
-	    sqdiff[ptno]  = chiFitness1(
-		pSolutions + (solno*nParams), x, y, 1.0
-		)/nPoints; // do the division point-wise
 
-	    // Serial sum - if we are ptno 0 the we sum all npoints of sqdiff
-	    // into the solution
-
+	    // Ensure that the Neyman chisq weight is valid
+	    if (y != 0.0) {
+		sqdiff[ptno]  = chiFitness1(
+		    pSolutions + (solno*nParams), x, y, 1.0/y
+		    ); // Unreduced
+	    } else { // No contribution total chisq if no data.
+		sqdiff[ptno] = 0.0;
+	    }
 	} else {
-	    //sqdiff[ptno] = 0;
+	    sqdiff[ptno] = 0.0; // So it won't contribute to the chisquare sum.
 	}
+	
 	// Reduce threads won't work for us evidently.    
 	__syncthreads();
+	
+	// Serial sum - if we are ptno 0 the we sum all npoints of sqdiff
+	// into the solution
+
 	if (ptno == 0)  {
 	    pFitnesses[solno] = 0;
-	    for (int i =0; i < nPoints; i++) {
+	    for (int i = 0; i < nPoints; i++) {
 		pFitnesses[solno] += sqdiff[i];
 	    }
 	    if (!isfinite(pFitnesses[solno])) pFitnesses[solno] = FLT_MAX;
@@ -410,14 +425,11 @@ void d_fitness1(
 }
 
 /**
- * @brief Compute the chisquare fitness for one point of one solution in the 
- * swarm. 
- *
- * @details
- * Once we have a pointwise solution in all threads, we fire off our part of 
- * a fan-in parallel sum over our solution. Much of what we do is figure out
- * our place in the world so that we can pass the right stuff to chiFitness2 
- * which does the actual computation.
+ * @brief This function lives in the GPU and:
+ *  * Computes the chi-square contribution for a single point for a single 
+ *    solution in the swarm for a single pulse with an offset.
+ *  * Uses reduceToSum to sum the chisquare contributions over the entire trace.
+ * The result is put into the fitness value for our solution.
  *
  * @param pSolutions Pointer to solutions array in the GPU.
  * @param pFitnesses Pointer to the array of fitnesse for all solutions 
@@ -449,13 +461,22 @@ void d_fitness2(
 	    int ipt = ptno + swarm*nPoints;
 	    float x = pXcoords[ipt];
 	    float y = pYcoords[ipt];
+
+	    // Validate weight for Neyman chisq
+	    if (y != 0.0) {
 	    sqdiff[ptno]  = chiFitness2(
-		pSolutions + (solno*nParams), x, y, 1.0
-		)/nPoints;
+		pSolutions + (solno*nParams), x, y, 1.0/y
+		); // Unreduced
+	    } else {
+		sqdiff[ptno] = 0.0;
+	    }
 	}  else {
 	    sqdiff[ptno] = 0.0; // So it won't contribute to the chisquare sum.
 	}
-	__syncthreads(); // ensure all elements of sqdiff are in.
+	
+	__syncthreads(); //Ensure all elements of sqdiff are in.
+
+	// Serial computation of total chisq
 	if (ptno == 0) {
 	    pFitnesses[solno] = 0;
 	    for (int i =0; i < nPoints; i++) {

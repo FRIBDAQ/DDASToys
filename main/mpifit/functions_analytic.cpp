@@ -137,10 +137,13 @@ double pulseAmplitude(double A, double k1, double k2, double x0)
      */
     static bool warned(false);
     if(!warned) {
-	std::cerr << "WARNING the pulseAmplitude function is in the DDAS::AnalyticFit namespace\n";
-	std::cerr << "It should be called as DDAS::AnalyticFit::pulseAmplitude(...);\n";
+	std::cerr << "WARNING the pulseAmplitude function is in the ";
+	std::cerr << "DDAS::AnalyticFit namespace\n";
+	std::cerr << "It should be called as ";
+	std::cerr << "DDAS::AnalyticFit::pulseAmplitude(...);\n";
 	warned = true;
     }
+    
     return  DDAS::AnalyticFit::pulseAmplitude(A, k1, k2, x0);
 }
 
@@ -151,10 +154,8 @@ double pulseAmplitude(double A, double k1, double k2, double x0)
  */
 double
 DDAS::AnalyticFit::chiSquare1(
-    double A1, double k1, double k2,double x1,
-    double C,
-    const std::vector<std::uint16_t>& trace,
-    int low, int high
+    double A1, double k1, double k2,double x1, double C,
+    const std::vector<std::uint16_t>& trace, int low, int high
     )
 {
     if (high == -1) high = trace.size() - 1;
@@ -181,8 +182,7 @@ DDAS::AnalyticFit::chiSquare1(
  */
 double
 DDAS::AnalyticFit::chiSquare1(
-    double A1, double k1, double k2, double x1,
-    double C,
+    double A1, double k1, double k2, double x1, double C,
     const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
     )
 {    
@@ -203,15 +203,14 @@ DDAS::AnalyticFit::chiSquare1(
 
 /**
  * @details
- * Using Neyman's chi-square. The chi-square values is calculated based 
+ * Neyman's chi-square. The chi-square values is calculated based 
  * on the passed limits low, high.
  */
 double
 DDAS::AnalyticFit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
-    double C,    
-    const std::vector<std::uint16_t>& trace,
+    double C, const std::vector<std::uint16_t>& trace,
     int low, int high
     )
 {
@@ -223,7 +222,6 @@ DDAS::AnalyticFit::chiSquare2(
 	double y = trace[i];
 	double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
 	double diff = y - pulse;
-	if (std::fpclassify(diff) == FP_ZERO) diff = 0.0;
 	if (y != 0.0) {
 	    result += (diff/y)*diff;  // This order may control overflows
 	    if (std::fpclassify(result) == FP_ZERO) result =  0.0;
@@ -237,7 +235,7 @@ DDAS::AnalyticFit::chiSquare2(
 
 /**
  * @details
- * Using Neyman's chi-square. The chi-square value is calculated from a 
+ * Neyman's chi-square. The chi-square value is calculated from a 
  * passed set of (x, y) points.
  */
 double
@@ -255,7 +253,6 @@ DDAS::AnalyticFit::chiSquare2(
 	double y = points[i].second;
 	double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
 	double diff = y - pulse;
-	if (std::fpclassify(diff) == FP_ZERO) diff = 0.0;
 	if (y != 0.0) {
 	    result += (diff/y)*diff;  // This order may control overflows
 	    if (std::fpclassify(result) == FP_ZERO) result =  0.0;
