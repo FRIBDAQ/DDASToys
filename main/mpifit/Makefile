@@ -42,7 +42,7 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-all: docs exec
+all: exec docs
 exec: libs traceview
 libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 
