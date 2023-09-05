@@ -15,12 +15,12 @@ To build this code you must:
 Once the environment setup is correct, navigate to the main/mpifit directory and build DDASToys using `make`. This will create the `libFitEditorAnalytic.so`, `libFitEditorTemplate.so` and `libDDASFitHitUnpacker.so` libraries, `traceview` program and the full DDASToys documentation. The `libFitEditorXXX.so` libraries are plugin extensions for the `EventEditor` program allowing fits to be parallelized using either ZMQ threading or MPI. `$DAQBIN/EventEditor --help` will provide some guidance on how to run this code. Once built, the headers, libraries, and documentation can be installed in a central location using the command `make install PREFIX=/path/to/install/dir`. For more information refer to the DDASToys Manual installed in $PREFIX/share/manual/manual.pdf or point a web browser at $PREFIX/share/manual/manual.html.
 
 # Running DDASToys code
-An overview of the `traceview` program and its graphical interface is presented [here]{#traceview}. For more information about how to run the `EventEditor` codes refer to the DDASToys manual.
+An overview of the `traceview` program and its graphical interface is presented [here]{#viewing-traces-and-fits-using-traceview}. For more information about how to run the `EventEditor` codes refer to the DDASToys manual.
 
 ## Fitting traces using the plugin libraries
 For an explanation of how to run the `EventEditor` trace fitting framework, please refer to the DDASToys Manual or the output of the command `$DAQBIN/EventEditor --help` run from a terminal. The `DAQBIN` variable must point to an FRIBDAQ version 12.0 or later where the `EventEditor` software is installed. The manual also describes how to run the fitting software at NERSC and configure an analysis pipeline for trace fitting. Implementation of the fitting routines and their source code documentation is provided here. Notably, the structure of the fit extensions appended to each event is defined in the fit_extensions.h header.
 
-## Viewing traces and fits using traceview <a id="traceview"></a>
+## Viewing traces and fits using traceview
 The `traceview` program can be used to display trace data and their respective fits (if present). Currently, `traceview` reads the fit and template configuration information from the files pointed to by the environment variables `FIT_CONFIGFILE` and `TEMPLATE_CONFIGFILE`. Refer to the DDASToys Manual for more information about the format of these configuration files.
 
 The `traceview` top menu is used to load data files and to exit the program. Successfully loading a file enables the GUI elements which allow you to parse the file and view its contents.
