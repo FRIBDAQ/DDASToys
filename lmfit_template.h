@@ -5,10 +5,6 @@
  * @note Fit functions are in the DDAS::TemplateFit namespace.
  */
 
-/** @addtogroup TemplateFit
- * @{
- */
-
 #ifndef LMFIT_TEMPLATE_H
 #define LMFIT_TEMPLATE_H
 
@@ -21,6 +17,11 @@ namespace DDAS {
     /** @namespace DDAS::TemplateFit */
     namespace TemplateFit {
 
+	/**
+	 * @ingroup template
+	 * @{
+	 */
+	
 	/** 
 	 * @struct GslFitParameters
 	 * @brief Data passed around the fitting subsystem to Jacobian and 
@@ -33,6 +34,13 @@ namespace DDAS {
 	    const std::vector<double>* s_pTraceTemplate; //!< Template data.
 	};
 
+	/** @} */
+
+	/**
+	 * @ingroup template
+	 * @{
+	 */
+	
 	/**
 	 * @brief Driver for the GSL LM fitter for single pulses.
 	 *
@@ -76,9 +84,9 @@ namespace DDAS {
 	    fit1Info* pSinglePulseFit = nullptr,
 	    std::uint16_t saturation = 0xffff
 	    );
+
+	/** @} */
     }
 };
 
 #endif
-
-/** @} */

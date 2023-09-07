@@ -3,10 +3,6 @@
  * @brief Implementation of Qt-embedded ROOT canvas class
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #include "QRootCanvas.h"
 
 #include <iostream>

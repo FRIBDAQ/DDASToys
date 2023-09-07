@@ -18,7 +18,7 @@
 /** 
  * @file  DDASFitHit.h
  * @brief Extends DDASHit to include fit data that's been tacked on to the
- *        end of a hit with traces.
+ * end of a hit with traces.
  */
 
 #ifndef DDASFITHIT_H
@@ -39,13 +39,13 @@ namespace DAQ {
 	 *
 	 * @details
 	 * This is produced by FitHitUnpacker::decode. This is basically just 
-	 * a DDASHit with extra fields.     */
+	 * a DDASHit with extra fields.     
+	 */
 
 	class DDASFitHit : public DAQ::DDAS::DDASHit
 	{
 	private:
-	    /** True if the fit has an extension, false otherwise */
-	    bool m_haveExtension; 
+	    bool m_haveExtension; //!< True iff has extension data.
 	    ::DDAS::HitExtension m_extension; //!< The extension data.
       
 	public:

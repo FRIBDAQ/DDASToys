@@ -16,9 +16,9 @@ LIBS += $(shell $(ROOTSYS)/bin/root-config --libs --ldflags)
 
 # Object files to link from the top build directory
 LIBS += ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o \
-     ../functions_template.o
+     ../functions_template.o ../CRingItemProcessor.o
 
-HEADERS += QTraceView.h QHitData.h QRootCanvas.h DDASRingItemProcessor.h \
+HEADERS += QTraceView.h QHitData.h QRootCanvas.h TraceViewProcessor.h \
         DDASDecoder.h FitManager.h
 SOURCES += main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp \
-        DDASRingItemProcessor.cpp DDASDecoder.cpp FitManager.cpp
+        TraceViewProcessor.cpp DDASDecoder.cpp FitManager.cpp

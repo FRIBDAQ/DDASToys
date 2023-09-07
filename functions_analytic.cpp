@@ -18,11 +18,7 @@
 /**
  * @file  functions_analytic.cpp
  * @brief Implement analytic functions used to fit DDAS pulses.
- * @note  All functions are in the DDAS::AnalyticFit namespace.
- */
-
-/** @addtogroup AnalyticFit
- * @{
+ * @note All functions are in the DDAS::AnalyticFit namespace.
  */
 
 #include "functions_analytic.h"
@@ -293,5 +289,3 @@ DDAS::AnalyticFit::writeTrace2(
 	  << " " << diff*diff/t1[i] << std::endl;
     }
 }
-
-/** @} */

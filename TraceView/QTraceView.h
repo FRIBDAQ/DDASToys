@@ -3,10 +3,6 @@
  * @brief Define a Qt main applicaiton window class.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #ifndef QTRACEVIEW_H
 #define QTRACEVIEW_H
 
@@ -183,5 +179,3 @@ private:
 };
 
 #endif
-
-/** @} */

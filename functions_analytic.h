@@ -22,10 +22,6 @@
  * @note  All functions are in the DDAS::AnalyticFit namespace.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #ifndef FUNCTIONS_ANALYTIC_H
 #define FUNCTIONS_ANALYTIC_H
 
@@ -36,6 +32,11 @@
 namespace DDAS {
     /** @namespace DDAS::AnalyticFit */
     namespace AnalyticFit {
+	/**
+	 * @ingroup analytic
+	 * @{
+	 */
+	
 	/**
 	 * @brief Evaluate a logistic function for the specified parameters 
 	 * and point.
@@ -222,9 +223,10 @@ namespace DDAS {
 	    const std::vector<std::uint16_t>& trace1,
 	    const std::vector<std::uint16_t>& trace2
 	    );
+
+	/** @} */
+	
     }
 };
 
 #endif
-
-/** @} */

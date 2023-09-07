@@ -42,9 +42,15 @@ EXTRACXXFLAGS = $(GNUCXXFLAGS)
 EXTRALDFLAGS = $(GNULDFLAGS)
 endif
 
-all: exec docs
-exec: libs traceview
+##
+# Build order matters: eeconverter and traceview require that
+# DDASFitHitUnpacker.o and CRingItemProcessor.o exist for linking.
+#
+
+all: libs objs subdirs docs
 libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
+objs: CRingItemProcessor.o
+subdirs: eeconverter traceview
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
@@ -52,6 +58,9 @@ libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 traceview:
 	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro)
 	$(MAKE) -C TraceView
+
+eeconverter:
+	$(MAKE) -C EEConverter
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
@@ -69,15 +78,15 @@ libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ \
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
-#
+##
 # Build docbooks and doxygen documentation
 #
 
 docs:
 	$(MAKE) -C Docs
 
-#
-#  Requires PREFIX be defined and pointing to installtion top level dir e.g.:
+##
+# Requires PREFIX be defined and pointing to installtion top level dir e.g.:
 #
 # make install PREFIX=/usr/opt/ddastoys
 #
@@ -88,14 +97,24 @@ install:
 	install -d $(PREFIX)/lib
 	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
-	install -m 0755 *.so $(PREFIX)/lib
-	install -m 0644 *.h $(PREFIX)/include
+
+	for f in $(shell find . -type f -name "*.so"); do install -m 0755 $$f $(PREFIX)/lib ; done
+	for f in $(shell find . -type f -name "*.pcm"); do install -m 0755 $$f $(PREFIX)/lib ; done
+	for f in $(shell find . -type f -name "*.rootmap"); do install -m 0755 $$f $(PREFIX)/lib ; done
+	ln -s $(PREFIX)/lib/DDASRootFit_rdict.pcm $(PREFIX)/bin/DDASRootFit_rdict.pcm
+
+	for f in $(shell find . -maxdepth 1 -type f -name "*.h" ! -name "CRingItemProcessor.h"); do install -m 0644 $$f $(PREFIX)/include; done
+	for f in $(shell find ./EEConverter -type f -name "*Root*.h" ! -name "ProcessToRootSink.h"); do install -m 0644 $$f $(PREFIX)/include; done
+
+	install -m 0755 EEConverter/eeconverter $(PREFIX)/bin/eeconverter
 	install -m 0755 TraceView/traceview $(PREFIX)/bin/traceview
+
 	cp -r Docs/manual $(PREFIX)/share/
 	cp -r Docs/sourcedocs $(PREFIX)/share/
 
 clean:
 	rm -f *.so *.o
 	$(MAKE) -C TraceView clean
-	rm -f TraceView/TraceView
+	rm -f TraceView/traceview
+	$(MAKE) -C EEConverter clean
 	$(MAKE) -C Docs clean

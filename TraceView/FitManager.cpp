@@ -4,10 +4,6 @@
  * fit functions.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #include "FitManager.h"
 
 #include <iostream>
@@ -308,6 +304,4 @@ FitManager::issueWarning(std::string msg)
     msgBox.setIcon(QMessageBox::Warning);
     msgBox.exec();
 }
-
-/** @} */
 

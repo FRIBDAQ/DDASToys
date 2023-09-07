@@ -20,11 +20,6 @@
  * @brief Definition of the FitEditor class for analytic fitting.
  */
 
-/** @addtogroup AnalyticFit
- * @brief Analytic FitEditor and fitting subroutines.
- * @{
- */
-
 #ifndef FITEDITORANALYTIC_H
 #define FITEDITORANALYTIC_H
 
@@ -47,7 +42,8 @@ class Configuration;
  * @details
  * Extending the hit with this editor overwrites any existing extension. This 
  * class is intended for use with the EventEditor framework providing a 
- * complete description of the new event body.
+ * complete description of the new event body. Resides in the DAQ::DDAS
+ * namespace.
  */
 
 class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
@@ -94,5 +90,3 @@ private:
 };
 
 #endif
-
-/** @} */

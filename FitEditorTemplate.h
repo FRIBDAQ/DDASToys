@@ -3,10 +3,6 @@
  * @brief Definition of the FitEditor class for template fitting.
  */
 
-/** @addtogroup TemplateFit
- * @{
- */
-
 #ifndef FITEDITORTEMPLATE_H
 #define FITEDITORTEMPLATE_H
 
@@ -21,6 +17,11 @@ namespace DAQ {
 }
 
 class Configuration;
+
+/**
+ * @ingroup template
+ * @{
+ */
 
 /**
  * @class FitEditorTemplate
@@ -76,6 +77,6 @@ private:
     Configuration* m_pConfig; //! Configuration file parser.
 };
 
-#endif
-
 /** @} */
+
+#endif

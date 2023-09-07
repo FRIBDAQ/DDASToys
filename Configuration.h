@@ -12,6 +12,21 @@
 #include <utility>
 
 /**
+ * @defgroup analytic libFitEditorAnalytic.so
+ * @brief Plugin library for analytic fitting.
+ */
+
+/**
+ * @defgroup template libFitEditorTemplate.so
+ * @brief Plugin library for template fitting.
+ */
+
+/**
+ * @ingroup analytic template
+ * @{
+ */
+
+/**
  * @class Configuration
  * @brief Manage fit configuration information.
  *
@@ -120,5 +135,7 @@ private:
     std::vector<double> m_template; //!< Template trace data.
     unsigned m_alignPoint; //!< Sample no. align point for the template trace.
 };
+
+/** @} */
 
 #endif

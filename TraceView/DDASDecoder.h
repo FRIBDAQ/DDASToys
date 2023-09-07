@@ -1,12 +1,8 @@
 /** 
- * @file  DDASDecoder.h
+ * @file DDASDecoder.h
  * @brief Define an event proessor for reading ring items from a source, in 
  * this case a file. Very similar to the CEventProcessor class but really 
  * designed to work interactively with the GUI.
- */
-
-/** @addtogroup traceview
- * @{
  */
 
 #ifndef DDASDECODER_H
@@ -24,7 +20,7 @@ namespace DAQ {
     }
 }
 
-class DDASRingItemProcessor;
+class TraceViewProcessor;
 
 /**
  * @class DDASDecoder
@@ -58,8 +54,8 @@ public:
      */
     std::vector<DAQ::DDAS::DDASFitHit> getEvent();
     /**
-     * @brief Skip events in the currently loaded data file. * 
-     * @param nevts Number of PHYSICS_EVENTS to skip. *
+     * @brief Skip events in the currently loaded data file.
+     * @param nevts Number of PHYSICS_EVENTS to skip.
      * @return int
      * @retval  0 END_RUN state change event is not encountered when skipping.
      * @retval -1 END_RUN state change event is encountered when skipping.
@@ -85,7 +81,7 @@ public:
 private:
     URL* m_pSourceURL;      //!< URL-formatted data source name.
     CDataSource* m_pSource; //!< Data source to read from.
-    DDASRingItemProcessor* m_pProcessor; //!< Processor for DDAS events.
+    TraceViewProcessor* m_pProcessor; //!< TraceView processor for DDAS events.
     int m_count; //!< How many PHYSICS_EVENTs have been processed.
     
     /**
@@ -104,5 +100,3 @@ private:
 };
 
 #endif
-
-/** @} */

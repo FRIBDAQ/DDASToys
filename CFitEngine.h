@@ -20,10 +20,6 @@
  * @brief Define the CFitEngine abstract base class.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #ifndef CFITENGINE_H
 #define CFITENGINE_H
 
@@ -31,6 +27,11 @@
 #include <vector>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+
+/**
+ * @ingroup analytic
+ * @{
+ */
 
 /**
  * @class CFitEngine
@@ -54,6 +55,6 @@ public:
     virtual void residuals(const gsl_vector* p, gsl_vector* r)  = 0;
 };
 
-#endif
-
 /** @} */
+
+#endif

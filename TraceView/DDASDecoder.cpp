@@ -1,11 +1,7 @@
 /** 
- * @file  DDASDecoder.cpp
+ * @file DDASDecoder.cpp
  * @brief Implement class for processing events. Create and call a ring item 
  * processor and let it decide what to do with the data.
- */
-
-/** @addtogroup traceview
- * @{
  */
 
 #include "DDASDecoder.h"
@@ -32,12 +28,12 @@
 #include <CDataFormatItem.h>            //          ----+----
 
 #include <DDASFitHit.h>
-#include "DDASRingItemProcessor.h"
+#include "TraceViewProcessor.h"
 
 //____________________________________________________________________________
 DDASDecoder::DDASDecoder() :
     m_pSourceURL(nullptr), m_pSource(nullptr),
-    m_pProcessor(new DDASRingItemProcessor), m_count(0)
+    m_pProcessor(new TraceViewProcessor), m_count(0)
 {}
 
 //____________________________________________________________________________
@@ -231,7 +227,5 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
     }
 }
-
-/** @} */
 
 

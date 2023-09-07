@@ -3,10 +3,6 @@
  * @brief Implementation of hit data management class.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #include "QHitData.h"
 
 #include <iostream>
@@ -278,5 +274,3 @@ QHitData::printFitResults()
 	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].position
 	      << std::endl;
 }
-
-/** @} */

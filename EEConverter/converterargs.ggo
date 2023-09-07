@@ -1,0 +1,10 @@
+package "eeconverter"
+version "1.0"
+purpose "Process NSCLDAQ data items from an event file and convert PHYSICS_EVENT item types into another file format for further analysis."
+
+option "source" s "Data source file URI (file://path)" string
+option "fileout" f "Path of output file" string
+option "exclude" e "Optional list of item types to exclude from the dump" string optional
+option "skip" m "Optional number of items to skip before dumping" int optional
+option "count" c "Optional number of items to dump before exiting, if no argument is provided all items in the source will be dumped to the output file" int optional
+option "format" F "Format of input data" values="v12","v11","v10" enum default="v12" optional

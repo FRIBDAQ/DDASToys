@@ -3,10 +3,6 @@
  * @brief Implement Qt main application window class.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #include "QTraceView.h"
 
 #include <iostream>
@@ -642,5 +638,3 @@ QTraceView::test()
 	      << std::asctime(std::localtime(&result))
 	      << std::endl;
 }
-
-/** @} */

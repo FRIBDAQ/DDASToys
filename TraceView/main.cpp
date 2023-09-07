@@ -3,11 +3,6 @@
  * @brief traceview main. Run the Qt application.
  */
 
-/** @addtogroup traceview
- * @brief A GUI for viewing traces and fits.
- * @{
- */
-
 #include <cstdlib>
 
 #include <QApplication>
@@ -72,5 +67,3 @@ int main(int argc, char* argv[])
    
    return app.exec();
 }
-
-/** @} */

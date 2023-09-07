@@ -3,10 +3,6 @@
  * @brief Defines a class for embedding a ROOT canvas in a Qt application.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #ifndef QROOTCANVAS_H
 #define QROOTCANVAS_H
 
@@ -129,5 +125,3 @@ private:
 };
 
 #endif
-
-/** @} */

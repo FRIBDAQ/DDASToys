@@ -1,14 +1,12 @@
 /** 
- * @file  DDASRingItemProcessor.h
+ * @file TraceViewProcessor.h
  * @brief Defines an event processor class for handing DDAS events.
  */
 
-/** @addtogroup traceview
- * @{
- */
+#ifndef TRACEVIEWPROCESSOR_H
+#define TRACEVIEWPROCESSOR_H
 
-#ifndef DDASRINGITEMPROCESSOR_H
-#define DDASRINGITEMPROCESSOR_H
+#include <CRingItemProcessor.h>
 
 #include <vector>
 
@@ -28,57 +26,44 @@ namespace DAQ {
 }
 
 /**
- * @class DDASRingItemProcessor
+ * @class TraceViewProcessor
  * @brief A basic ring item processor.
  *
  * @details
  * A ring item processor class for a small subset of relavent ring items. See 
  * latest $DAQROOT/share/recipes/process/processor.h/cpp for a more general
- * example.
+ * example. This processer:
+ * - implements mandatory interface to process events,
+ * - ignores scalers, text items, event counts and glom params,
+ * - inherits the rest of its behavior from the base class.
  */
 
-class DDASRingItemProcessor
+class TraceViewProcessor : public CRingItemProcessor
 {
 public:
     /** @brief Constructor. */
-    DDASRingItemProcessor();
+    TraceViewProcessor();
     /** @brief Destructor. */
-    ~DDASRingItemProcessor();
+    virtual ~TraceViewProcessor();
 
-    // Implemented item types
+    // Implemented item types:
     
-    /**
-     * @brief Processes a run state change item. 
-     * @param item Reference to the state change item.
-     */
-    void processStateChangeItem(CRingStateChangeItem& item);
-    /**
-     * @brief Process physics events. Unpack the event into a vector of
-     * DDASFitHits.
+     /**
+     * @brief Process physics events.
      * @param item Reference to the physics event item.
      */
-    void processEvent(CPhysicsEventItem& item);
-    /**
-     * @brief Process data format ring items. 
-     * @param item Reference to the format item.
-     */
-    void processFormat(CDataFormatItem& item);
-    /**
-     * @brief Process a ring item with an unknown item type. 
-     * @param item Reference to the generic item.
-     */
-    void processUnknownItemType(CRingItem& item);
-  
-    // Ignored item types
-  
+    virtual void processEvent(CPhysicsEventItem& item);
+
+    // Ignored item types:
+    
     /** @brief Scaler ring items are ignored. */
-    void processScalerItem(CRingScalerItem&) {return;};
+    virtual void processScalerItem(CRingScalerItem&) { return; };
     /** @brief Text ring items are ignored. */
-    void processTextItem(CRingTextItem&) {return;};
+    virtual void processTextItem(CRingTextItem&) { return; };
     /** @brief PhysicsEventCount ring items are ignored. */
-    void processEventCount(CRingPhysicsEventCountItem&) {return;};
+    virtual void processEventCount(CRingPhysicsEventCountItem&) { return; };
     /** @brief GlomParameters ring items are ignored. */
-    void processGlomParams(CGlomParameters&) {return;};
+    virtual void processGlomParams(CGlomParameters&) { return; };
 
     /**
      * @brief Return the unpacked event data.
@@ -92,5 +77,3 @@ private:
 };
 
 #endif
-
-/** @} */

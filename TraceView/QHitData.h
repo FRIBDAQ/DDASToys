@@ -4,10 +4,6 @@
  * window UI.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #ifndef QHITDATA_H
 #define QHITDATA_H
 
@@ -129,5 +125,3 @@ private:
 };
 
 #endif
-
-/** @} */

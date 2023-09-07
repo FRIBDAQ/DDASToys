@@ -21,10 +21,6 @@
  * Levenburg-Marquardt fitter.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #ifndef LMFIT_ANALYTIC_H
 #define LMFIT_ANALYTIC_H
 
@@ -38,6 +34,11 @@ namespace DDAS {
     namespace AnalyticFit {
 
 	/** 
+	 *@ingroup analytic
+	 * @{
+	 */
+	
+	/** 
 	 * @struct GslFitParameters
 	 * @brief Data passed around the fitting subsystem to Jacobian and 
 	 * function evaluators 
@@ -47,6 +48,13 @@ namespace DDAS {
 		std::pair<std::uint16_t, std::uint16_t>
 		>* s_pPoints; /*!< Data points. Pair is x, y. */
 	};
+
+	/** @} */
+
+	/** 
+	 *@ingroup analytic
+	 * @{
+	 */
 	
 	/**
 	 * @brief Driver for the GSL LM fitter for single pulses.
@@ -99,9 +107,10 @@ namespace DDAS {
 	    fit1Info* pSinglePulseFit = nullptr,
 	    std::uint16_t saturation = 0xffff
 	    );
+
+	/** @} */
+
     }
 };
 
 #endif
-
-/** @} */

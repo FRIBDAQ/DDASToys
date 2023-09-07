@@ -20,10 +20,6 @@
  * @brief Implementation of the FitEditor class for analytic fitting.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #include "FitEditorAnalytic.h"
 
 #include <iostream>
@@ -202,5 +198,3 @@ extern "C" {
 	return new FitEditorAnalytic;
     }
 }
-
-/** @} */

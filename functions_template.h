@@ -4,10 +4,6 @@
  * @note All functions are in the DDAS::TemplateFit namespace
  */
 
-/** @addtogroup TemplateFit
- * @{
- */
-
 #ifndef FUNCTIONS_TEMPLATE_H
 #define FUNCTIONS_TEMPLATE_H
 
@@ -18,6 +14,11 @@
 namespace DDAS {
     /** @namespace DDAS::TemplateFit */
     namespace TemplateFit {
+	/**
+	 * @ingroup template
+	 * @{
+	 */
+	
 	/**
 	 * @brief Evaluate the single pulse fit function at a given point.
 	 * @param A1 Scaling factor for the template fit.
@@ -83,9 +84,9 @@ namespace DDAS {
 	    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
 	    const std::vector<double>& trace_template
 	    );
+
+	/** @} */
     }
 };
   
 #endif
-
-/** @} */

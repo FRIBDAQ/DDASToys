@@ -16,7 +16,7 @@
 */
 
 /** 
- * @file  DDASFitHitUnpacker.cpp
+ * @file DDASFitHitUnpacker.cpp
  * @brief Implements DDASFitHitUnpacker class to unpack hits with fit 
  * extension data.
  */

@@ -20,15 +20,16 @@
  * @brief Implement the serial fit engines for single and double pulse fits.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #include "jacobian_analytic.h"
 
 #include <cmath>
 
 #include "functions_analytic.h"
+
+/**
+ * @ingroup template
+ * @{
+ */
 
 // Single pulse fit parameter indices:
 

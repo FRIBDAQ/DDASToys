@@ -21,10 +21,6 @@
  * fitter.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #include "lmfit_analytic.h"
 
 #include <algorithm>

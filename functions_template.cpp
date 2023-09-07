@@ -4,10 +4,6 @@
  * @note All functions are in the DDAS::TemplateFit namespace
  */
 
-/** @addtogroup TemplateFit
- * @{
- */
-
 #include "functions_template.h"
 
 #include <iostream>
@@ -115,5 +111,3 @@ DDAS::TemplateFit::chiSquare2(
   
     return result;
 }
-
-/** @} */

@@ -20,10 +20,6 @@
  * @brief Implement constructor for CFitEngine base class.
  */
 
-/** @addtogroup AnalyticFit
- * @{
- */
-
 #include "CFitEngine.h"
 
 /**
@@ -37,5 +33,3 @@ CFitEngine::CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)
     y.push_back(data[i].second);
   }
 }
-
-/** @} */

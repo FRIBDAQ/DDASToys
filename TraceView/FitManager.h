@@ -5,10 +5,6 @@
  * Configuraton class.
  */
 
-/** @addtogroup traceview
- * @{
- */
-
 #ifndef FITMANAGER_H
 #define FITMANAGER_H
 
@@ -173,5 +169,3 @@ private:
 };
 
 #endif
-
-/** @} */
