@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd">
+
+<book>
+  
+  <bookinfo>
+    <title>DDASToys Manual</title>
+    <authorgroup>
+      <author>
+	<firstname>Ron</firstname><surname>Fox</surname>
+	<affiliation>
+	  <orgname>
+	    Facility for Rare Isotope Beams, Michigan State University, East Lansing, MI 48824
+	  </orgname>
+	</affiliation>
+      </author>
+      <author>
+	<firstname>Aaron</firstname><surname>Chester</surname>
+	<affiliation>
+	  <orgname>
+	    Facility for Rare Isotope Beams, Michigan State University, East Lansing, MI 48824
+	  </orgname>
+	</affiliation>
+      </author>
+    </authorgroup>
+    <revhistory>
+      <revision>
+        <revnumber>2.0</revnumber>
+        <date>8/3/2023</date>
+        <authorinitials>RF, ASC</authorinitials>
+        <revremark>Original release</revremark>
+      </revision>
+    </revhistory>
+  </bookinfo>
+  
+  <chapter id="ch_intro">
+    <title>Introduction </title>    
+    <para>
+      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB. DDASToys software is supported for FRIBDAQ versions 12.0 and beyond.
+    </para>
+    <para>
+      This document introduces and describes what tools are provided, how to access and configure your user environment at NERSC to use these tools and how to submit jobs at NERSC using the Slurm Workload Manager. Detailed documentation of the DDASToys source code are provided in Doxygen reference manuals, installed in the share/sourcedocs/html and share/sourcedocs/latex directories located under the top-level DDASToys installation directory, which is generally /usr/opt/ddastoys. To view the Doxygen documentation, open share/sourcedocs/html/index.html with a web browser such as Firefox.
+    </para>
+    <para>
+      The DDASToys Manual is <emphasis>not</emphasis> intended as a comprehensive guide to NERSC systems or as a troubleshooting document to address issues you may encounter while running at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
+    </para>
+    <para>
+      The tools provided by this package are:
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  <literal>EventEditor</literal> with the <literal>FitEditor</literal> library plugins - parallel trace-fitting software which appends fit parameters for single- and double-pulse fits to fragments (hits) in an event, modifying the event structure.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <literal>libFitEditorAnalytic.so</literal> plugin library - A fitting library which models the pulse shape using a constant baseline offset, a logistic risetime and an exponential decay. The fitting routines use the Levenburg-Marquardt (LM) algorithm implemented in the Gnu Scientific Library (GSL). The fit parameters are determined by chi-square minimization.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <literal>libFitEditorTemplate.so</literal> plugin library - GSL LM fitting library which  models the detector response using an idealized template pulse shape. The trace template is provided by the user and is typically constructed from experimental data.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <literal>libDDASFitHitUnpacker.so</literal> library - A library for unpacking DDAS hit data which may contain fit extensions added to the event by the <literal>EventEditor</literal>. Also capable of unpacking hits without fit extensions.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <literal>traceview</literal> - A program to interactively display traces, their associated fits (if present), and, when implemented, machine learning pulse classification probabilities for events in edited and unedited event files.
+	</para>
+      </listitem>
+    </itemizedlist>      
+    <para>
+      Finally, all of these tools depend on FRIBDAQ libraries and programs. A Shifter image has been created that reproduces enough of that environment to support installation and use of the FRIBDAQ software at NERSC. Most of the packages described above must, therefore, be run under a container running the image.
+    </para>    
+  </chapter>
+
+  <chapter id="ch_shifter">
+    <title>
+      Shifter images and containers
+    </title>
+    <para>
+      Shifter is a tool for adapting concepts from Linux containers to High Performance computing (HPC) resources, allowing users to create their own software environment and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows FRIBDAQ to be built under a supported compilation and library environment.
+    </para>    
+    <para>
+      A Shifter image is a single (large) file that contains a file-system image for the user utilities of a specific distribution of Linux. The <command>shifter</command> command can be used to run other commands, set environment variables, or even activate shells in the environment of a container running an instance of a file-system image. Finally, the <command>shifter</command> command allows pieces of the host file system to be mounted at specific points in the container. This allows us to build minimal containers, use them to build the software we need and the mount that software where we expect to see it in FRIBDAQ systems, for example, the /usr/opt directory tree familiar to FRIB users.
+    </para>    
+    <para>
+      The Shifter image available on NERSC, fribdaq/frib-buster:v3.8-nersc, is a Debian-10-based Buster image with several chunks of software added, notably:
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  Software required for building OpenMPI from source.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Software required to build FRIBDAQ, including CERN ROOT version 6.24.06 including XIA API version 3.8 and Broadcom PLX driver version 8.23.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Software required to build SpecTcl.
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      We then used the image to build the following software in a directory tree to be mounted in the image at /usr/opt:
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  OpenMPI 4.0.1 (in /usr/opt/mpi/openmpi-4.0.1). This version of OpenMPI works reasonably well in singularity containers based on our experience with ICER at MSU and works "out of the box" at NERSC. More on how to run MPI jobs in containers in a bit.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  ROOT version 6.24.06 (in /usr/opt/root/root-6.24.06).
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  FRIBDAQ version 12.0-001, a production version of FRIBDAQ with refactored DDAS code included (in /usr/opt/daq/12.0-001).
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  SpecTcl version 5.13-003 (in /usr/opt/spectcl/5.13-003).
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  The DDASToys directory tree (in /usr/opt/ddastoys).
+	</para>
+      </listitem>	
+    </itemizedlist>
+    <para>
+      To illustrate the use of Shifter to run containerized applications, consider the following command to spawn a bash shell inside our container:
+      <informalexample>
+	<programlisting>
+	  shifter                                \ <co id="shifter"/> 
+	  --image=fribdaq/frib-buster:v3.8-nersc \ <co id="simage"/>
+	  --module=none                          \ <co id="smodules"/>
+	  --volume=$SCRATCH:/scratch             \ <co id="svolumes"/>
+	  --env-file=$HOME/shifter.env           \ <co id="senvfile"/>
+	  /bin/bash                                <co id="scmd"/>
+	</programlisting>
+      </informalexample>
+      <calloutlist>
+	<callout arearefs="shifter">
+	  <para>
+	    Run Shifter with the supplied flags.
+	  </para>
+	</callout>
+	<callout arearefs="simage">
+	  <para>
+	    A mandatory flag to select the Shifter image. In this case, our fribdaq/frib-buster:v3.8-nersc image.
+	  </para>
+	</callout>
+	<callout arearefs="smodules">
+	  <para>
+	    An optional flag to specify which modules to load. No modules are loaded in order to avoid conflicts with our OpenMPI installation and the Cray MPICH module at NERSC.
+	  </para>
+	</callout>	
+	<callout arearefs="svolumes">
+	  <para>
+	    An optional flag to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_container</literal>, with multiple directories separated by semicolons. The user scratch space is mounted inside the container at /scratch. For users familiar with <literal>singularity</literal>, or <literal>apptainer</literal>, this is similar to the <literal>--bind</literal> flag.
+	  </para>
+	</callout>
+	<callout arearefs="senvfile">
+	  <para>
+	    An optional flag to configure environment variables inside the shifter image. All environment variables defined in the calling process' environment are transferred into the image. Additional environment variables are defined in the shifter.env file provided to this flag. The contents of this file will be discussed in <xref linkend="sec_configfiles"/> when we discuss how to run the DDASToys applications at NERSC.
+	  </para>
+	</callout>
+	<callout arearefs="scmd">
+	  <para>
+	    The command to run inside the Shifter container. In this case, we spawn an interactive bash shell using <literal>/bin/bash</literal>.
+	  </para>
+	</callout>
+      </calloutlist>
+      For a more detailed discussion of Shifter flags run the command <command>shifter -h</command> on Perlmutter or refer to the NERSC Shifter documentation available here: <ulink url="https://docs.nersc.gov/development/shifter/shifter-tutorial"/> and here: <ulink url="https://docs.nersc.gov/development/shifter/how-to-use"/>.
+    </para>
+  </chapter>
+
+  <chapter id="ch_gettingstarted">
+    <title>Getting started at NERSC</title>
+    <section id="sec_createacct">
+      <title>Creating a NERSC account</title>
+      <para>
+	This guide assumes that the reader wishes to join an existing project. In order to join a project, you must create an account at NERSC. To do so, follow the "I need a new NERSC account" steps here: <ulink url="https://iris.nersc.gov/add-user"/>. Note that NERSC requires that you have an exciting ORCID id. You can register for an ORCID account here: <ulink url="https://orcid.org/signin"/>. Once you have created an account, you will receive two emails: the first informing you that the account request is being processed, and another when the account is approved and added to the project. This requires approval from both NERSC and the project PI, so the approval process may take a couple of days. For any account-related issues, contact accounts@nersc.gov.
+      </para>
+    </section>
+    
+    <section id="sec_login">
+      <title>Logging in to NERSC systems</title>
+      <para>
+	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to Perlmutter requires multifactor identification (MFA). Instructions on how to set up MFA for your account at NERSC are found at <ulink url="https://docs.nersc.gov/connect/mfa"/>. You can optionally setup an SSH proxy to avoid entering your one time password (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/>. Note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your NERSC user account name. 
+      </para>
+    </section>
+    
+    <section id="sec_config">
+      <title>Configuring your home directory</title>
+      <para>
+	Connecting to NERSC systems using SSH will place you in your home directory on a login node. The first time you log in the home directory will be empty. This section describes some basic account configuration options which you may find useful.
+      </para>
+      <para>
+	NERSC documentation is ambiguous with respect to the order in which shell initialization files ("dotfiles" such as ~/.bashrc) are sourced and under what conditions, but the user's ~/.bashrc appears to be sourced on both login and interactive non-login shells if it exists. NERSC provides a template .bashrc file available in the GitLab repository <ulink url="https://software.nersc.gov/NERSC/dotfiles"/>. Accessing the repository requires a NERSC account with MFA enabled.
+      </para>
+      <para>
+	To clone the repository, you will need to create a personal access token, save it somewhere secure, and use it in lieu of your account password when prompted. For further instructions, see <ulink url="https://software.nersc.gov/help/user/profile/personal_access_tokens"/>. This page can only be accessed once you have logged in to software.nersc.gov for example by following the first link. The template .bashrc file from this repository can be copied into your home directory. Alternatively you can create your own dotfiles.
+      </para>
+      <para>
+	Your desired environment configuration may differ depending on whether or not you are inside a Shifter container. The following if-else block (or similar) can be included in your .bashrc file to conditionally setup your environment
+	<informalexample>
+	  <programlisting>
+	    if [ -z "$SHIFTER_RUNTIME" ]; then
+	        : # Settings for when *not* in shifter
+	    else
+	        : # Settings for when *in* shifter
+	    fi
+	  </programlisting>
+	</informalexample>
+	as the environment variable <literal>SHIFTER_RUNTIME</literal> is equal to 1 if you are inside a Shifter container and a null string otherwise. An example .bashrc file derived from the NERSC dotfiles GitLab repository is provided in <xref linkend="app_bashrc"/>. 
+      </para>
+    </section>
+
+    <section id="sec_filesystems">
+      <title>NERSC file systems and transferring data</title>
+      <para>
+	NERSC has a variety of file systems with different levels of performance, data persistence and capacity configured for different purposes. See the NERSC file system documentation for details: <ulink url="https://docs.nersc.gov/filesystems"/>. Data is shared within a project using the Community File System (CFS) which is set with group read/write permissions by default. The CFS for this project is located at /global/cfs/cdirs/m4386. The environment variable <literal>CFS</literal> is automatically set by NERSC and expands to /global/cfs/cdirs. Account CFS space is intended for data storage, not for intensive I/O jobs.
+      </para>
+      <para>
+	User accounts also have space on the Perlmutter scratch file system, which can be referenced using the environment variable <literal>PSCRATCH</literal> or <literal>SCRATCH</literal> which expands to /pscratch/sd/&lt;first_letter_of_username&gt;/&lt;username&gt;. Shifter can create and access local, temporary xfs files on the Lustre file system for I/O intensive jobs. Job output can be staged on the xfs space but must be moved to permanent storage (e.g. to the account CFS space) at the end of a job. Temporary file space can be requested by adding the following line to a batch script: <literal>#SBATCH --volume="/global/cscratch1/sd/&lt;username&gt;/tmpfiles:/tmp:perNodeCache=size=200G"</literal> which will create a 200 GB xfs file mounted at /tmp in the image. You must replace <literal>&lt;username&gt;</literal> with your own user name. 
+      </para>
+      <para>
+	Transferring small files into and out of NERSC i.e. for testing, can be done using SCP and a NERSC data transfer node (DTN); larger file transfers i.e. for experimental data sets should be done with Globus. Data can be sent to NERSC via a DTN using the command <command>scp /local/path/to/file &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file</command> and sent from NERSC to another location also via a DTN using the command <command>scp &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file /local/path/to/file</command> where again &lt;username&gt; must be replaced with your user account name; see <ulink url="https://docs.nersc.gov/services/scp"/>. For example, to transfer a file from a fishtank machine at FRIB to my NERSC home directory, I ran the command <command>scp helloworld_mpi.tar.gz chester@dtn01.nersc.gov:/global/homes/c/chester</command>. There are four DTNs at NERSC you can use to transfer files: dtn0[1234].nersc.gov. Transferring files will require you to provide a password and OTP.
+      </para>
+    </section>
+  </chapter>
+  
+  <chapter id="ch_plugins">
+    <title>Fit plugin libraries for DDASToys</title>    
+    <para>
+      This chapter describes in broad terms the fitting plugins for the <literal>EventEditor</literal> framework. The required components are listed below, with the template fitting method given as an example. Fit plugin libraries used with the <literal>EventEditor</literal> must contain the following:
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  An editor class - A method for extending hits with fit information called when the <command>EventEditor</command> command is executed. The editor method subclasses <literal>CBuiltRingItemEditor::BodyEditor</literal> to modify event fragment body data and implements its mandatory interface to edit the event body and free dynamic extension data. The editor is responsible for determining which channels should be fit, getting trace data from the event fragment and performing the fit by calling the appropriate fitting subroutines. The data structures containing the fit information appended to each hit are defined in the fit_extensions.h header file. See FitEditorTemplate.h/cpp and its Doxygen documentation for more details. The editor class must contain a factory method called <literal>createEditor()</literal> to create itself when the <literal>EventEditor</literal> executable is run:	  
+	  <informalexample>
+	    <programlisting>
+	      extern "C" {
+	          FitEditorTemplate* createEditor() {
+	              return new FitEditorTemplate;
+	          }
+	      }
+	    </programlisting>
+	  </informalexample>
+	  Wrapping the factory method in <literal>extern "C"</literal> is necessary to prevent name mangling by the C++ compiler.	    
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A fitting method - Generally speaking, a fitting method is composed of three parts:
+	  <orderedlist>
+	    <listitem>
+	      <para>
+		A model which describes the data to be fit,
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		An objective function relating the model and data and
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		An algorithm to optimize the objective function.
+	      </para>
+	    </listitem>
+	  </orderedlist>
+	  For template trace fitting, the model is a template trace parameterized by an amplitude, position and constant baseline offset, the objective function is Neyman's chi-square (both implemented in functions_template.h/cpp) and the optimization algorithm, implemented in lmfit_template.h/cpp, uses the LM method in GSL to minimize the chi-square value between the model and trace data. See the Doxygen documentation for more detail on the fitting subroutines.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  A library plugin - A shared library containing the editor and fitting subroutines described above which are loaded at runtime when executing the <command>EventEditor</command> command. The plugin library <literal>libFitEditorTemplate.so</literal> provides the interface to the template fitting method listed above.
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      Additionally, it is helpful to supply the following:
+    </para>    
+    <itemizedlist>
+      <listitem>
+	<para>
+	  An unpacker library - An optional library implementing methods for unpacking event fragments with fit extensions into a useful data structure for downstream analysis. The <literal>libDDASFitHitUnpacker.so</literal> library provides an interface to unpack DDAS events with fit extensions into the data structure defined by the <literal>DDASFitHit</literal> class. <literal>DDASFitHit</literal> is derived from the <literal>DDASHit</literal> class, which is defined in the header file of the same name found in the FRIBDAQ include directory. This directory is pointed to by the <literal>DAQINC</literal> environment variable provided that the FRIBDAQ environment has been configured by sourcing its <literal>daqsetup.sh</literal> script. Again, refer to the Doxygen documentation for more information.
+	</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+  
+  <chapter id="ch_usingddastoys">
+    <title>Using DDASToys to fit trace data</title>
+    <para>
+      This chapter provides a how-to guide for fitting traces using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under the Slurm Workload Manager at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command>. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
+    </para>
+    <para>
+      Running jobs on NERSC systems will charge hours to the allocation assigned to the account specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the account allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "regular" queue which may not be the best choice for production analysis.
+    </para>
+    
+    <section id="sec_basics">
+      <title>Running a single <literal>EventEditor</literal> job</title>
+      <para>
+	The fribdaq/frib-buster:v3.8-nersc container supports FRIBDAQ 12.0 and later which include parallel event editors. The FRIBDAQ <literal>EventEditor</literal> program provides the architecture for fitting event fragments containing traces. Plugin libraries which define the fitting algorithms and the data structure containing the fit results appended to each hit are provided by the user and loaded at the <literal>EventEditor</literal> program runtime. The <literal>EventEditor</literal> program supports parallel fitting using both ZMQ threading and OpenMPI. Running the command <command>$DAQBIN/EventEditor --help</command> from the command line describes the flags which can be passed to the program assuming the FRIBDAQ environment has been configured by sourcing its associated daqsetup.bash script.
+      </para>
+      <para>
+	Shown below is an example Slurm job submission script which will configure the proper runtime environment and run the <literal>EventEditor</literal> program to fit traces using the template fitter. More information on how to run jobs at NERSC and how to use the Slurm batch system can be found at <ulink url="https://docs.nersc.gov/jobs/"/>. To submit a job using the following submission script, run the command <command>sbatch submit.sl</command>.
+      </para>
+      <informalexample>
+	<programlisting>
+	  #!/bin/bash
+
+	  ##
+	  # submit.sl
+	  #
+	  # Usage:
+	  # sbatch submit.sl
+	  #
+	  # This file submits the fitter run inside the container
+	  # --ntasks are MPI workers + 3
+	  # 30 mins run time is long enough for single segments I think
+
+	  #SBATCH --account=m4386                               <co id="sbatchflags"/>
+	  #SBATCH --licenses=scratch,cfs
+	  #SBATCH --constraint=cpu
+	  #SBATCH --qos=regular
+	  #SBATCH --ntasks=35
+	  #SBATCH --nodes=1
+	  #SBATCH --time=00:30:00
+	  #SBATCH --output=slurm_output/slurm-fitoutput-%j.out
+
+	  #SBATCH --image=fribdaq/frib-buster:v3.8-nersc        <co id="shifterflags"/>
+	  #SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster8:/usr/opt; \
+	  /global/cfs/cdirs/m4386/chester/rawdata:/input;                 \
+	  /global/cfs/cdirs/m4386/chester/fitted:/output;                 \
+	  /global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
+	  #SBATCH --module=none
+
+	  shifter --env-file=$HOME/shifter.env $HOME/runee.sh <co id="shifterrun"/>
+	</programlisting>
+      </informalexample>
+      <calloutlist>
+	<callout arearefs="sbatchflags">
+	  <para>
+	    Flags specifying job information such as the account to charge, number of tasks, and maximum allowed wall time. These flags are passed to <literal>sbatch</literal> when it is invoked to submit a job to Slurm. The <literal>--constraint=cpu</literal> flag specifies that this job will be run on Perlmutter CPU nodes rather than GPU nodes. Output from this job will be written to the file specified by the <literal>--output</literal> flag, in this case slurm_output/slurm-fitoutput-%j.out where %j is the Slurm job ID.
+	  </para>
+	</callout>
+	<callout arearefs="shifterflags">
+	  <para>
+	    Flags for running the job in our container. The image, volume mounting points and modules can be provided via the <literal>SBATCH</literal> directive but the environment file must be specified when invoking <literal>shifter</literal>. The volume mount points are shown here on multiple lines for clarity but must be provided on a single, semicolon-delimited line in a real submission script.
+	  </para>
+	</callout>
+	<callout arearefs="shifterrun">
+	  <para>
+	    Use the <command>shifter</command> command to run the script <literal>$HOME/runee.bash</literal> inside our container. Environment variables defined in the file <literal>$HOME</literal>/shifter.env will be set inside the container.
+	  </para>
+	</callout>
+      </calloutlist>
+      <para>
+	The script runee.bash calls the <literal>EventEditor</literal> to fit trace data in an FRIBDAQ event file:
+      </para>
+      <informalexample>
+	<programlisting>
+	  #!/bin/bash
+
+	  ##
+	  # runee.sh
+	  #
+	  # Run the EventEditor to fit traces in an .evt file
+	  # Stage I/O in /tmp space, move tmp output to CFS on completion
+	  # Time fitting call and write to Slurm output file
+	  
+	  cd $HOME
+
+	  . /usr/opt/daq/12.0-001/daqsetup.bash -f            <co id="rte"/>
+
+	  export PATH=$OPAL_PREFIX/bin:$PATH
+	  export LD_LIBRARY_PATH=$OPAL_PREFIX/lib:$LD_LIBRARY_PATH
+
+	  input=/input/run-0283-00.evt                        <co id="stagefiles"/>
+	  output=/output/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1)-fitted.evt
+	  tmpin=/tmp/tmp-$SLURM_JOB_ID.evt
+	  tmpout=/tmp/tmp-fit-$SLURM_JOB_ID.evt
+	  cp $input $tmpin
+	  
+	  nworkers=`expr $SLURM_NTASKS - 3`                   <co id="setworkers"/>
+
+	  echo "JobID   $SLURM_JOB_ID"                        <co id="write_to_outfile"/>
+	  echo "Time    $SLURM_JOB_START_TIME"
+	  echo "Node    $SLURMD_NODENAME"
+	  echo "Tasks   $SLURM_NTASKS"
+	  echo "Workers $nworkers"
+	  echo "FileIn  $input"
+	  echo "FileOut $output"
+	  
+	  time mpirun -np $SLURM_NTASKS $DAQBIN/EventEditor \ <co id="exec"/>
+	  -s file://$tmpin                                  \ <co id="source"/>
+	  -S file://$tmpout                                 \ <co id="sink"/>
+	  -l /usr/opt/ddastoys/lib/libFitEditorTemplate.so  \ <co id="lib"/>
+	  -n $nworkers                                      \ <co id="mpiworkers"/>
+	  -c 2000                                           \ <co id="clump"/>
+	  -p mpi                                              <co id="strat"/>
+
+	  rm $tmpin                                           <co id="cleanup"/>
+	  mv $tmpout $output
+	</programlisting>
+      </informalexample>      
+      <calloutlist>
+	<callout arearefs="rte">
+	  <para>
+	    Configure the runtime environment inside the container. Since the program we are running depends on FRIBDAQ, ensure that the FRIBDAQ environment is set up. The <literal>-f</literal> flag will overwrite any existing FRIBDAQ environment variables when the <literal>daqsetup.sh</literal> script is sourced. Additionally, we must add OpenMPI executables and libraries to the <literal>PATH</literal> and <literal>LD_LIBRARY_PATH</literal> inside the container, respectively. The environment variable <literal>OPAL_PREFIX</literal> is assumed to point to the top-level installation directory of OpenMPI inside our container image.
+	  </para>
+	</callout>
+	<callout arearefs="stagefiles">
+	  <para>
+	    The following five lines define the input and output files in the account CFS space (<literal>input</literal> and <literal>output</literal>), temporary (staged) input and output files for the job (<literal>tmpin</literal> and <literal>tmpout</literal>), and copy the file pointed to by <literal>input</literal> to the locally staged input file <literal>tmpin</literal>. Temporary output for the job is staged in using the xfs file mounted at /tmp in the image. The final output file, named /output/run-0283-00-fitted.evt, is generated from the input file name.
+	  </para>
+	</callout>
+	<callout arearefs="setworkers">
+	  <para>
+	    Determine the number of MPI processes to use for parallel fitting. The number of worker processes is given by <literal>$SLURM_NTASKS - 3</literal> because in addition to the fit tasks, the MPI fitter reserves 3 tasks for distributing data, sorting the fitted data and outputting the sorted data to disk. For MPI fitting, this means the number of Slurm tasks must be at least 4.
+	  </para>
+	</callout>
+	<callout arearefs="write_to_outfile">
+	  <para>
+	    Use <literal>sbatch</literal> environment variables to write some job details to the job's output file. A full list of variables can be found at <ulink url="https://slurm.schedmd.com/sbatch.html"/> 
+	  </para>
+	</callout>
+	<callout arearefs="exec">
+	  <para>
+	    Use <literal>mpirun</literal> to run the <literal>EventEditor</literal> with the number of processes <literal>-np</literal> specified by the number of Slurm tasks. Because we previously setup the FRIBDAQ environment, <literal>$DAQBIN</literal> points to the correct directory for FRIBDAQ binaries.
+	  </para>
+	</callout>
+	<callout arearefs="source">
+	  <para>
+	    The <literal>-s</literal> or <literal>--source</literal> option specifies the input URI. In this case we read data from the file pointed to by <literal>tmpin</literal>, which is located in the temporary xfs space on the node where the job is running.
+	  </para>
+	</callout>
+	<callout arearefs="sink">
+	  <para>
+	    The <literal>-S</literal> or <literal>--sink</literal> option specifies the output URI. In this case we write temporary output data to the xfs file created on this node.
+	  </para>
+	</callout>
+	<callout arearefs="lib">
+	  <para>
+	    The <literal>-l</literal> or <literal>--classifier</literal> option specifies the location of the plugin library that describes the single- and double-pulse fits performed for each trace as well as the structure of the data appended to each event fragment. The extension added to each trace is described in include/fit_extensions.h under the top level DDASToys installation directory; refer to the documentation for the <literal>HitExtensions</literal> struct in the <literal>DDAS</literal> namespace for details. The sizes for the whole event and for the fragment containing fit data are updated to be consistent with the updated fragment size(s). 
+	  </para>
+	</callout>
+	<callout arearefs="mpiworkers">
+	  <para>
+	    The <literal>-n</literal> or <literal>--workers</literal> option specifies the number of worker processes used to fit traces. For MPI fitting this is given by the number of Slurm tasks minus the three processes reserved for I/O and sorting.
+	  </para>
+	</callout>
+	<callout arearefs="clump">
+	  <para>
+	    The <literal>-c</literal> or <literal>--clump-size</literal> option determines how many events get passed as a work unit to each worker thread. A work unit of 2000 events was found to consistently achieve the best data processing rate over a large range of MPI workers.
+	  </para>
+	</callout>
+	<callout arearefs="strat">
+	  <para>
+	    The <literal>-p</literal> or <literal>--parallel-strategy</literal> option sets the parallel strategy enabling nearline fitting of trace data. Here the fitting is parallelized using MPI.
+	  </para>
+	</callout>
+	<callout arearefs="cleanup">
+	  <para>
+	    Delete temporary input file(s) and move the temporary output to the CFS storage space. This step is critical for jobs utilizing temporary xfs space for I/O. Data stored in the temporary file space will not persist beyond the end of the job.
+	  </para>
+	</callout>
+      </calloutlist>
+      <para>
+	The <literal>EventEditor</literal> program also requires (at minimum) the environment variable <literal>FIT_CONFIGFILE</literal> to be defined and point to a configuration file which describes the channels to be fit. Additionally, the template fitting library plugin requires the environment variable <literal>TEMPLATE_CONFIGFILE</literal> to be defined and point to a file containing template metadata and the template trace used for fitting. The configuration files and their expected formats are discussed further in <xref linkend="sec_configfiles"/>.
+      </para>
+    </section>
+
+    <section id="sec_jobarrays">
+      <title>Job arrays</title>
+      <para>
+	Job arrays allow collections of similar jobs to be submitted and managed together in Slurm. All individual jobs must have the same initial options: the values set using the <literal>--time</literal>, <literal>--ntasks</literal>, etc. flags must be identical. The <literal>--array</literal> flag sets a range of index values which can be accessed by an individual job via the <literal>SLURM_ARRAY_TASK_ID</literal> environment variable; for further information about submitting batch job arrays see <ulink url="https://slurm.schedmd.com/job_array.html"/>. Individual array tasks are interpreted by Slurm as single jobs which may impact their scheduling priority. An annotated example submission script to fit traces in multiple subruns indexed using a job array is given in <xref linkend="app_jobarray"/>.
+      </para>
+    </section>
+    
+    <section id="sec_configfiles">
+      <title>Configuration files required by <literal>EventEditor</literal></title>
+      <para>
+	Here we return to our discussion from <xref linkend="ch_shifter"/> of the environment variable file provided as an argument to <literal>shifter</literal>. It is assumed in this section that the environment variable file is called shifter.env and is located in the account's home directory. The shifter.env file contains a list of environment variables to set inside the container when it is passed as an argument to the <command>shifter</command> command using <literal>--env-file=$HOME/shifter.env</literal>:
+      </para>
+      <informalexample>
+	<programlisting>
+	  OPAL_PREFIX=/usr/opt/mpi/openmpi-4.0.1                   <co id="ompi"/>
+	  FIT_CONFIGFILE=/global/homes/c/chester/fitconfig.txt     <co id="fitconfig"/>
+	  TEMPLATE_CONFIGFILE=/global/homes/c/chester/template.txt <co id="templateconfig"/>
+	</programlisting>
+      </informalexample>
+      <calloutlist>
+	<callout arearefs="ompi">
+	  <para>
+	    Path to the top-level installation directory of OpenMPI inside the container as described in <xref linkend="ch_shifter"/>. The Open Portable Access Layer (OPAL) is one of the core modules of OpenMPI.
+	  </para>
+	</callout>
+	<callout arearefs="fitconfig">
+	  <para>
+	    Defines the <literal>FIT_CONFIGFILE</literal> environment variable and location of the fit configuration file needed by the <literal>EventEditor</literal> program.
+	  </para>
+	</callout>
+	<callout arearefs="templateconfig">
+	  <para>
+	    Defines the <literal>TEMPLATE_CONFIGFILE</literal> environment variable and location of the template configuration file needed by the <literal>EventEditor</literal> program.
+	  </para>
+	</callout>
+      </calloutlist>
+      <para>
+	The structure of the configuration files pointed to by the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables are described below. The fitting routines expect the configuration files to have the formats defined in this section and will fail to run correctly if an improperly formatted file is provided. 
+      </para>
+      <para>
+	The fit configuration file pointed to by the <literal>FIT_CONFIGFILE</literal> environment variable is a multi-line, whitespace-separated text file describing which channels should be fit. The file can contain blank lines. Both leading and trailing whitespaces are ignored. If the first non-whitespace character on a line is '#', the line is considered a comment and ignored. Non-commented lines contain six whitespace-separated unsigned integers:
+      </para>
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    crate - The crate ID for the channel to be fit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    slot - The slot ID for the channel to be fit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    channel - The channel ID on the above crate/slot which will be fit.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    first-point - Sample number on the recorded trace defining the inclusive low limit of the fitting range.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    last-point - Sample number on the trace defining the inclusive high limit of the fitting range.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    saturation - The saturation value for the ADC in this crate/slot. Points on the trace greater than or equal to the saturation value are not included in the fit. This allows for fitting traces which overflow the ADC. For a module with a bit depth of B bits, the maximum ADC value is given by 2<superscript>B</superscript>-1.
+	  </para>
+	</listitem>	
+      </itemizedlist>
+      <para>
+	Shown below is an example fit configuration file to fit a single channel, showing the use of comments which can provide more detailed identifying information for the channels to be fit, in this case the dynode of an implantation detector used in a beta-decay experiment.
+      </para>
+      <informalexample>
+	<programlisting>
+	  #
+	  #   Describes which channels should be fit.
+	  #   crate slot channel first-point last-point saturation
+	  #
+
+	  #  Gamma crate high-gain YSO dynode:
+
+	  1 2 0 1 128 65535
+	</programlisting>
+      </informalexample>
+      <para>
+	The template configuration file pointed to by the <literal>TEMPLATE_CONFIGFILE</literal> environment variable is also a multi-line, whitespace-separated text file, this time containing template metadata and the template trace values. The rules regarding whitespace, blank lines, and comments are the same as for the fit configuration file. The first non-comment line contains two whitespace-separated unsigned integers which define the template metadata:
+      </para>
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    align-point - Time reference point for the template in samples. The position of the fitted pulse reported by the template trace fit is given with respect to the align-point.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    npts - Number of data points in the template trace. 
+	  </para>
+	</listitem>	
+      </itemizedlist>
+      <para>
+	The remaining lines contain the floating point template data values. Shown below is an abbreviated example template configuration file.
+      </para>
+      <informalexample>
+	<programlisting>
+	  #
+	  # Template metadata and values.
+	  #
+	  #   align-point npts
+	  #   template[0]
+	  #   template[1]
+	  #	template[2]
+	  #   ...
+	  #   template[npts-1]
+	  #
+	  54 130
+	  -2.8664e-06
+	  -3.03525e-06
+	  1.13924e-06
+	  ...
+	  -0.0457651
+	</programlisting>
+      </informalexample>
+    </section>
+    
+    <section id="sec_traceview">
+      <title>Viewing fit results with <literal>traceview</literal></title>
+      <para>
+	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification as single- or double-pulse events if the machine learning pulse classifier is used. The viewer is installed in the /bin directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if these environment variables are undefined or point to improperly formatted files. The <literal>traceview</literal> display is a ROOT TCanvas and can be interacted with as such.
+      </para>
+    </section>    
+  </chapter>
+
+  <appendix id="app_bashrc">
+    <title>Example .bashrc file</title>
+    <para>
+      Lines ending in "\" belong on a single line in the .bashrc file used to create this appendix.
+    </para>
+    <informalexample>
+      <programlisting>
+	# NERSC Defined Environment Variables
+	# CFS - /global/cfs/cdirs
+	# SCRATCH - /pscratch/sd/&lt;letter&gt;/$USER (Perlmutter)
+
+	# System Environment Variables 
+
+	# EDITOR set your preferred editor (vim, vi, emacs, nano)
+	export EDITOR=/global/common/software/nersc/bin/emacs
+
+	# configure user prompt see https://www.gnu.org/software/bash/manual   \
+	/html_node/Controlling-the-Prompt.html
+	# The prompt will be - username@hostname>
+	# export PS1="\u@\h> "
+
+	# useful alias
+	alias perlmutter='ssh perlmutter.nersc.gov'
+	alias squ="squeue -O 'UserName,State,Name,Partition,NumTasks,NumNodes, \
+	BatchHost,TimeUsed,TimeLimit,SubmitTime,StartTime' -u $USER"
+	alias sq="squeue -O 'UserName,State,Name,Partition,NumTasks,NumNodes,  \
+	BatchHost,TimeUsed,TimeLimit,SubmitTime,StartTime'"
+
+	# history setting https://www.gnu.org/software/bash/manual/html_node/  \
+	Bash-History-Builtins.html
+	export HISTFILESIZE=1000
+	export HISTSIZE=1000
+	export HISTTIMEFORMAT="%h %d %H:%M:%S "
+
+	# user bin directory
+	export PATH=$HOME/.local/bin:$PATH
+
+	# terminal colors and safer file management
+	alias ls='ls --color'
+	alias l='ls --color'
+	alias ll='ls --color -lh'
+	alias lll='ls --color -alh'
+	alias sl='ls --color | more'
+
+	alias cp='cp -i'
+	alias mv='mv -i'
+	alias rm='rm -i'
+
+      </programlisting>
+    </informalexample>
+  </appendix>
+
+  <appendix id="app_jobarray">
+    <title>Example job array submission script</title>
+    <para>
+      Shown below is a slightly more advanced job submission script which illustrates two concepts. First, the example demonstrates how to group similar jobs into a job array and submit the array as a batch job to Slurm. Second, this example shows how to prepare your user environment on a login node and submit a batch job in a single step as described in <ulink url="https://docs.nersc.gov/jobs/best-practices/"/>. This script should be run from the command line as <command>./submit_array.bash</command>.
+    </para>
+    <informalexample>
+      <programlisting>
+	#!/bin/bash -l                                           <co id="onlogin"/>
+
+	##
+	# submit_array.bash
+	#
+	# This file submits fitting jobs in the container as a job array
+	# --ntasks are MPI workers + 3
+	# 30 mins run time is long enough for single segments I think
+
+	cat &lt;&lt;EOF &gt; prepare_env.sl                               <co id="catenv"/>
+	#!/bin/bash
+
+	#SBATCH --account=m4386
+	#SBATCH --licenses=scratch,cfs
+	#SBATCH --constraint=cpu
+	#SBATCH --qos=regular
+	#SBATCH --time=00:30:00
+	#SBATCH --array=0-4                                      <co id="arrayflag"/>
+	#SBATCH --ntasks=35                                      <co id="arraytasks"/>
+	#SBATCH --nodes=1
+	#SBATCH --output=slurm_output/slurm-fitoutput-%A_%a.out  <co id="outputflag"/>
+
+	#SBATCH --image=fribdaq/frib-buster:v3.8-nersc
+	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster8:/usr/opt;    \
+	/global/cfs/cdirs/m4386/chester/rawdata:/input;                    \
+	/global/cfs/cdirs/m4386/chester/fitted:/output;                    \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
+	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --module=none
+
+	shifter --env-file=$HOME/shifter.env $HOME/runee_array.sh
+	EOF
+
+	sbatch prepare_env.sl                                    <co id="sbatcharray"/>
+      </programlisting>
+    </informalexample>
+    <calloutlist>
+      <callout arearefs="onlogin">
+	<para>
+	  Run the script on a login node using <literal>-l</literal>.
+	</para>
+      </callout>
+      <callout arearefs="catenv">
+	<para>
+	  Set up the environment for the batch job on the login node. Everything between this line and the next <literal>EOF</literal> will go into a batch script called prepare-env.sl.
+	</para>
+      </callout>
+      <callout arearefs="arrayflag">
+	<para>
+	  The <literal>SBATCH</literal> directive to submit a job array. This job array consists of 5 jobs with indices 0, 1, ..., 4.
+	</para>
+      </callout>
+      <callout arearefs="arraytasks">
+	<para>
+	  Each task in the job array is considered a standalone job by the Slurm scheduler. Each will be allocated <literal>--ntasks</literal> tasks on <literal>--nodes</literal> nodes. <emphasis>(ASC note) Apologies for the use of "task" here to describe both a job corresponding to a particular array value and the resource request for that job. I am attempting to remain consistent with the nomenclature Slurm has adopted for itself.</emphasis>
+	</para>
+      </callout>
+      <callout arearefs="outputflag">
+	<para>
+	  The patterns %A and %a are replaced in the output file by the job ID and array index ID, respectively. Analogous to the %j pattern used for non-array jobs.
+	</para>
+      </callout>
+    </calloutlist>
+    <para>
+      The script calling the fitter for the job array is shown below, with the array index used to parameterize the run segment to fit.
+    </para>
+    <informalexample>
+      <programlisting>
+	#!/bin/bash
+
+	##
+	# runee_array.sh
+	# 
+	# Set up the runtime environment, stage I/O and run the EventEditor
+	# Use the array index to parameterize the subruns.
+	# After fitting cleanup temporary input and move output to CFS
+	
+	cd $HOME
+
+	. /usr/opt/daq/12.0-001/daqsetup.bash
+
+	export PATH=$OPAL_PREFIX/bin:$PATH
+	export LD_LIBRARY_PATH=$OPAL_PREFIX/lib:$LD_LIBRARY_PATH
+
+	if [ "$SLURM_ARRAY_TASK_ID" -lt 10 ]; then              <co id="getsegments"/>
+	seg=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
+	else
+	seg=$SLURM_ARRAY_TASK_ID
+	fi
+
+	input=/input/run-0283-$seg.evt                          <co id="stagearray"/>
+	output=/output/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1)-fitted.evt
+	tmpin=/tmp/tmp-$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID.evt
+	tmpout=/tmp/tmp-fit-$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID.evt
+	cp $input $tmpin
+
+	nworkers=`expr $SLURM_NTASKS - 3`
+
+	echo "JobID   $SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID" <co id="arrayoutput"/>
+	echo "Time    $SLURM_JOB_START_TIME"
+	echo "Node    $SLURMD_NODENAME"
+	echo "Tasks   $SLURM_NTASKS"
+	echo "Workers $nworkers"
+	echo "FileIn  $input"
+	echo "FileOut $output"
+	
+	time mpirun -np $SLURM_NTASKS $DAQBIN/EventEditor \
+	-s file://$tmpin                                  \
+	-S file://$tmpout                                 \
+	-l /usr/opt/ddastoys/lib/libFitEditorTemplate.so  \
+	-n $nworkers                                      \
+	-c 2000                                           \
+	-p mpi
+
+	rm $tmpin
+	mv $tmpout $output
+      </programlisting>
+    </informalexample>
+    <calloutlist>
+      <callout arearefs="getsegments">
+	<para>
+	  FRIBDAQ event file segment numbers contain at least two digits (i.e. run-1234-00.evt rather than run-1234-0.evt for the first segment in a run). This <literal>if-else</literal> block handles these cases. For array indices less than 10, the variable <literal>seg</literal> contains its two-digit representation i.e. for <literal>SLURM_ARRAY_TASK_ID</literal> = 4, <literal>seg</literal> = 04.
+	</para>
+      </callout>
+      <callout arearefs="stagearray">
+	<para>
+	  Stage temporary input and output data in the xfs file allocated for this job. The input name uses the <literal>seg</literal> variable to correctly specify a run segment file name in the CFS storage space. Note that the temporary filenames are uniqueified using the Slurm environment variables <literal>SLURM_ARRAY_JOB_ID</literal> and <literal>SLURM_ARRAY_TASK_ID</literal>.
+	</para>
+      </callout>
+            <callout arearefs="arrayoutput">
+	<para>
+	  Use job array variables <literal>SLURM_ARRAY_JOB_ID</literal> and <literal>SLURM_ARRAY_TASK_ID</literal> to write the job information to the output file.
+	</para>
+      </callout>
+    </calloutlist>
+  </appendix>
+  
+</book>

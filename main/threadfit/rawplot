@@ -1,4 +1,0 @@
-#!/bin/bash
-f="`realpath $1`"
-(cd plotting; tclsh rawplot.tcl $f)
-

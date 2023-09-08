@@ -1,1 +1,0 @@
-set DisplayMegabytes 128

@@ -1,6 +1,0 @@
-#/bin/bash
-
-f="`realpath $1`"
-
-(cd plotting; tclsh diffplot.tcl $f)
-
