@@ -28,6 +28,11 @@
 #include <vector>
 
 /**
+ * @ingroup ddasrootfit
+ * @{
+ */
+
+/**
  * @class DDASRootFitEvent
  * @brief Defines the object that's put in a ROOT TTree for each event. 
  *
@@ -113,5 +118,7 @@ public:
     
     ClassDef(DDASRootFitEvent, 1)
 };
+
+/** @} */
 
 #endif

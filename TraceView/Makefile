@@ -50,7 +50,7 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = main.cpp \
+SOURCES       = traceview.cpp \
 		QTraceView.cpp \
 		QHitData.cpp \
 		QRootCanvas.cpp \
@@ -59,7 +59,7 @@ SOURCES       = main.cpp \
 		FitManager.cpp moc_QTraceView.cpp \
 		moc_QHitData.cpp \
 		moc_QRootCanvas.cpp
-OBJECTS       = main.o \
+OBJECTS       = traceview.o \
 		QTraceView.o \
 		QHitData.o \
 		QRootCanvas.o \
@@ -149,7 +149,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		QRootCanvas.h \
 		TraceViewProcessor.h \
 		DDASDecoder.h \
-		FitManager.h main.cpp \
+		FitManager.h traceview.cpp \
 		QTraceView.cpp \
 		QHitData.cpp \
 		QRootCanvas.cpp \
@@ -342,7 +342,7 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents QTraceView.h QHitData.h QRootCanvas.h TraceViewProcessor.h DDASDecoder.h FitManager.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp TraceViewProcessor.cpp DDASDecoder.cpp FitManager.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents traceview.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp TraceViewProcessor.cpp DDASDecoder.cpp FitManager.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -408,7 +408,7 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ####### Compile
 
-main.o: main.cpp $(ROOTSYS)/include/TApplication.h \
+traceview.o: traceview.cpp $(ROOTSYS)/include/TApplication.h \
 		/usr/opt/root/root-6.24.06/include/TObject.h \
 		/usr/opt/root/root-6.24.06/include/Rtypes.h \
 		/usr/opt/root/root-6.24.06/include/RtypesCore.h \
@@ -455,7 +455,7 @@ main.o: main.cpp $(ROOTSYS)/include/TApplication.h \
 		/usr/opt/root/root-6.24.06/include/TSysEvtHandler.h \
 		/usr/opt/root/root-6.24.06/include/TTime.h \
 		QTraceView.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o traceview.o traceview.cpp
 
 QTraceView.o: QTraceView.cpp QTraceView.h \
 		$(ROOTSYS)/include/TSystem.h \

@@ -32,7 +32,14 @@ namespace DAQ {
 }
 
 /**
- * @todo (ASC 3/10/23): Does repacking the data actually save any disk space?
+ * @defgroup ddasrootfit libDDASRootFit.so
+ * @brief ROOT data format and classes. Basically a ROOT-ized DDASFitHit 
+ * and fit_extensions.h.
+ */
+
+/**
+ * @ingroup ddasrootfit
+ * @{
  */
 
 /**
@@ -51,11 +58,17 @@ class DDASRootFitHit : public TObject
 {
 public:
 
+    /**
+     * @todo ASC (9/8/23): Cleanup deprecated class members.
+     */
+    
     // These are stolen from ddaschannel -- along with this violated comment:
   
-    // Ordering is important with regards to access and file size. Should always
-    // try to maintain order from largest to smallest data type Double_t, Int_t,
-    // Short_t, Bool_t, pointers
+    // Ordering is important with regards to access and file size. Should
+    // always try to maintain order from largest to smallest data type
+    // Double_t, Int_t, Short_t, Bool_t, pointers
+
+    // ASC 9/8/23: The above has pretty minor effect on output file size.
   
     std::vector<UInt_t> energySums; //!< Energy sum data.
     std::vector<UInt_t> qdcSums;    //!< QDC sum data.  
@@ -259,5 +272,7 @@ public:
   
     ClassDef(DDASRootFitHit, 1)
 };
+
+/** @} */
 
 #endif

@@ -20,13 +20,12 @@
  * @brief  Defines the linkages to supply to root.
  */
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 // Turn off everything by default.
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#pragma link C++ nestedclasses;
+#pragma link C++ nestedtypedefs;
 
 #pragma link C++ class DDASRootFitEvent+;
 #pragma link C++ class DDASRootFitHit+;

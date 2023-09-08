@@ -96,7 +96,9 @@ RootFileDataSink::putItem(const CRingItem& item)
     
     // Bust the ring item up into event builder fragments:
     
-    FragmentIndex frags(reinterpret_cast<std::uint16_t*>(item.getBodyPointer()));
+    FragmentIndex frags(
+	reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
+	);
     
     // Decode the DDAS hit in each fragment and add it to the event. Note that
     // AddHit does a copy construction of the hit into new storage.

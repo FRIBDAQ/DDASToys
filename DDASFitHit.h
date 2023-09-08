@@ -24,7 +24,7 @@
 #ifndef DDASFITHIT_H
 #define DDASFITHIT_H
 
-#include "DDASHit.h" // Base class
+#include <DDASHit.h> // Base class
 
 #include <stdexcept>
 
@@ -42,7 +42,7 @@ namespace DAQ {
 	 * a DDASHit with extra fields.     
 	 */
 
-	class DDASFitHit : public DAQ::DDAS::DDASHit
+	class DDASFitHit : public DDASHit
 	{
 	private:
 	    bool m_haveExtension; //!< True iff has extension data.
@@ -55,7 +55,7 @@ namespace DAQ {
 	    /** @brief Reset the hit information. */
 	    void Reset() {
 		m_haveExtension = false;
-		DAQ::DDAS::DDASHit::Reset(); // Reset base class membrers.
+		DDASHit::Reset(); // Reset base class membrers.
 	    }
 	    /** 
 	     * @brief Set the hit extension information for this hit. 

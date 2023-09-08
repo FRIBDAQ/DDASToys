@@ -39,6 +39,11 @@ namespace DDAS {
 }
 
 /**
+ * @ingroup ddasrootfit
+ * @{
+ */
+
+/**
  * @struct RootPulseDescription
  * @brief Describes a single pulse without an offset.
  */
@@ -67,6 +72,14 @@ struct RootPulseDescription : public TObject
     /** @brief Required for inheritence from TObject. */  
     ClassDef(RootPulseDescription, 1);
 };
+
+/** @} */
+
+
+/**
+ * @ingroup ddasrootfit
+ * @{
+ */
 
 /**
  * @struct RootFit1Info
@@ -97,6 +110,13 @@ struct RootFit1Info : public TObject
     ClassDef(RootFit1Info, 1);
 };
 
+/** @} */
+
+/**
+ * @ingroup ddasrootfit
+ * @{
+ */
+
 /**
  * @struct RootFit2Info
  * @brief Full fitting information for the double pulse.
@@ -126,6 +146,13 @@ struct RootFit2Info : public TObject
     ClassDef(RootFit2Info, 1);
 };
 
+/** @} */
+
+/**
+ * @ingroup ddasrootfit
+ * @{
+ */
+
 /**
  * @struct RootHitExtension
  * @brief The data structure containing the full information about the fits.
@@ -148,5 +175,7 @@ struct RootHitExtension : public TObject
     /** @brief Required for inheritence from TObject. */
     ClassDef(RootHitExtension, 1);
 };
+
+/** @} */
 
 #endif

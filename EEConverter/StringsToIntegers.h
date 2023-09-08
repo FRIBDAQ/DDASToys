@@ -15,7 +15,7 @@
 */
 
 /** 
- * @file  StringsToInteger.h
+ * @file  StringsToIntegers.h
  * @brief Definition of functions to convert strings of comma-delimited 
  * integers to a vector of ints.
  */

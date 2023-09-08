@@ -44,7 +44,7 @@ endif
 
 ##
 # Build order matters: eeconverter and traceview require that
-# DDASFitHitUnpacker.o and CRingItemProcessor.o exist for linking.
+# DDASFitHitUnpacker.o and CRingItemProcessor.o exist.
 #
 
 all: libs objs subdirs docs

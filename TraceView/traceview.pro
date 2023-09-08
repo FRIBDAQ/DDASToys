@@ -20,5 +20,5 @@ LIBS += ../DDASFitHitUnpacker.o ../Configuration.o ../functions_analytic.o \
 
 HEADERS += QTraceView.h QHitData.h QRootCanvas.h TraceViewProcessor.h \
         DDASDecoder.h FitManager.h
-SOURCES += main.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp \
+SOURCES += traceview.cpp QTraceView.cpp QHitData.cpp QRootCanvas.cpp \
         TraceViewProcessor.cpp DDASDecoder.cpp FitManager.cpp

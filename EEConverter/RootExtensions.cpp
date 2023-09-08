@@ -51,8 +51,6 @@ RootPulseDescription::operator=(const DDAS::PulseDescription& rhs)
 // RootFit1Info
 //
 
-ClassImp(RootFit1Info); //!< Signal the implementation for RootFit1Info.
-
 /**
  * @details
  * Just initialize everything to zero again.
@@ -76,8 +74,6 @@ RootFit1Info::operator=(const DDAS::fit1Info& rhs)
 ///
 // RootFit2Info
 //
-
-ClassImp(RootFit2Info); //!< Signal the implementation for RootFit2Info.
 
 RootFit2Info::RootFit2Info() :
     chiSquare(0.0), offset(0.0), iterations(0), fitStatus(0)
@@ -103,8 +99,6 @@ RootFit2Info::operator=(const DDAS::fit2Info& rhs)
 ///
 // RootExtension
 //
-
-ClassImp(RootHitExtension); //!< Signal the implementation for RootHitExtension.
 
 RootHitExtension::RootHitExtension() :
     haveExtension(false)  // default member constructors do the rest.

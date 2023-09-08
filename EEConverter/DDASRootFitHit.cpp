@@ -22,8 +22,8 @@
 
 #include "DDASRootFitHit.h"
 
-#include "RootExtensions.h"
 #include "DDASFitHit.h"
+#include "RootExtensions.h"
 
 /**
  * @details

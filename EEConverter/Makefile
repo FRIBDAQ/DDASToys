@@ -7,7 +7,7 @@ CXX = g++
 
 CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DAQINC)
 LDFLAGS = -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
-LDLIBS = -ldataformat -lddasformat -lException -lurl -lFragmentIndex
+LDLIBS = -ldataformat -lddasformat -lException -lurl -lFragmentIndex -ldaqio
 
 # Flags related to CERN ROOT:
 
@@ -21,19 +21,17 @@ eeconverter: eeconverter.o converterargs.o RootFileDataSink.o \
 	DDASRootFitHit.o DDASRootFitEvent.o DDASRootFit.o \
 	RootExtensions.o ../DDASFitHitUnpacker.o ../CRingItemProcessor.o
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o $@ $^ \
-	$(LDFLAGS) $(LDLIBS) -ldaqio $(ROOTLDFLAGS)
+	$(LDFLAGS) $(LDLIBS) $(ROOTLDFLAGS)
 
 libDDASRootFit.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o \
-	RootExtensions.o ../functions_analytic.o ../functions_template.o \
-	../DDASFitHitUnpacker.o
-	$(CXX) -shared -fPIC -o $@ -I$(ROOTSYS)/include $^
+	RootExtensions.o
+	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ $(LDFLAGS) -lddasformat
 
-DDASRootFit.cpp: DDASRootFitEvent.h DDASRootFitHit.h \
+DDASRootFit.cpp: DDASRootFitEvent.h DDASRootFitHit.h ../DDASFitHit.h \
 	RootExtensions.h LinkDef.h
 	$(ROOTSYS)/bin/rootcling -f $@ \
-	-rml libDDASRootFit.so \
-	-rmf libDDASRootFit.rootmap \
-	$^
+	-rml libDDASRootFit.so -rmf libDDASRootFit.rootmap \
+	-I$(DAQINC) $^
 
 %.o : %.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
