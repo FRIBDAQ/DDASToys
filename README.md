@@ -6,12 +6,11 @@ This page contains source code documentation for DDASToys. This code is used to 
 Two companion programs for analyzing DDAS data with fits are provided as part of the DDASToys package. Trace data and their associated fits can be examined using the `traceview` program. Similar to the `ddasdumper`, the DDASToys `eeconverter` program converts FRIBDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided.
 
 # Building DDASToys
-Clone the DDASToys repository from https://github.com/FRIBDAQ/DDASToys.git and checkout the main branch. In order to build this code you must:
+Clone the DDASToys repository using `git clone https://github.com/FRIBDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In order to build this code you must:
 
 - Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
-- Define `XIAAPIDIR` to point to the top of the XIA API version install tree generally found in under /usr/opt/xiaapi/<version_number>.
 - Ensure Qt 5.11.3 or later is installed (required by the `traceview` GUI).
-- Configure the same CERN ROOT environment as used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddaschannel.so | grep root` provided that the FRIBDAQ environment is set.
+- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddaschannel.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. For FRIBDAQ 12.x this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh.
 
 Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `make`. This will create the following:
 * The `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
