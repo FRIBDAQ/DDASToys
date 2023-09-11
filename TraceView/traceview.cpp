@@ -1,5 +1,5 @@
 /** 
- * @file  main.cpp
+ * @file  traceview.cpp
  * @brief traceview main. Run the Qt application.
  */
 
