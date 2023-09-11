@@ -15,7 +15,7 @@
 */
 
 /** 
- * @file StringsToInteger.cpp
+ * @file StringsToIntegers.cpp
  * @brief Functions to convert lists of comma-delimited integers to a vector 
  * of ints.
  */
