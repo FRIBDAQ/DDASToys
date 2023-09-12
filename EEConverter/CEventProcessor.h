@@ -25,9 +25,12 @@
 #ifndef CEVENTPROCESSOR_H
 #define CEVENTPROCESSOR_H
 
-class URL;
+#include <string>
+#include <vector>
+
 class CRingItem;
 class CRingItemProcessor;
+class RingItemFactoryBase;
 
 /**
  * @class CEventProcessor
@@ -40,34 +43,29 @@ class CRingItemProcessor;
  */
 
 class CEventProcessor
-{
-    // Private data:
-  
-private:
-    URL* m_pDataSource; //!< Full data source URL
-    CRingItemProcessor* m_pProcessor; //!< Processor to handle ring item types.
-    unsigned m_itemCount; //!< Number of events to convert.
-    unsigned m_skipCount; //!< Number of events to skip off the front.
-
+{     
     // Canonicals:
   
 public:
-    /** @brief Constructor. */    
-    CEventProcessor();
+    /** 
+     * @brief Constructor. 
+     * @details
+     * Nothing really happens here until operator() is called.
+     */
+    CEventProcessor() {};
     /** @brief Destructor. */
-    ~CEventProcessor();
-  
-    // Entry point:
-  
-public:
+    ~CEventProcessor() {};
+
     /**
      * @brief Entry point for the processor.
      * @param argc Number of command line arguments.
      * @param argv Command line arguments.
      * @return When done processing items.
-     * @retval EXIT_SUCCESS Always.
-     * @throw std::invalid_argument If gengetopts parameters are invalid.
-     * @throw CException If the data source cannot be created.
+     * @retval EXIT_SUCCESS If data is processed successfully.
+     * @retval EXIT_FAILURE Some part of the data processing pipeline cannot
+     *   be created successfully.
+     * @retval EXIT_FAILURE If the data format provided via the --format flag
+     *   is incorrect.
      */
     int operator()(int argc, char* argv[]);
 
@@ -77,9 +75,12 @@ private:
     /**
      * @brief Type-independent processing of ring items. The processor will
      * handle specifically what to do with each ring item.
-     * @param item  References the ring item we got.
+     * @param pItem Pointer to the ring item we got.
+     * @param factory Reference to the factory appropriate to the format.
+     * @throw std::logic_error Expected data format differs from what's read.
      */    
-    void processRingItem(CRingItem& item);
+    //void processItem(CRingItem* pItem, RingItemFactoryBase& factory);
+    void processItem(const CRingItem& pItem, RingItemFactoryBase& factory);
 };
 
 #endif

@@ -7,8 +7,6 @@
 #include <string>
 #include <iostream>
 
-#include <Exception.h>
-
 #include "CEventProcessor.h"
 
 //____________________________________________________________________________
@@ -28,29 +26,14 @@
  */
 int main(int argc, char** argv)
 {  
-  CEventProcessor ep;
-  try {
-    ep(argc, argv);
-  }
-  catch(CException& e) {
-    std::cerr << "eeconverter main caught an exception: "
-	      << e.ReasonText() << std::endl;
-    return EXIT_FAILURE;
-  }
-  catch(std::invalid_argument& e) {
-    std::cerr << "eeconverter main caught an exception: "
-	      << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
-  catch (std::string msg) {
-    std::cerr << "eeconverter main caught an exception: "
-	      << msg << std::endl;
-    return EXIT_FAILURE;
-  }
-  catch (...) {
-    std::cerr << "eeconverter main caught an unexpected exception type\n";
-    return EXIT_FAILURE;
-  }
+    CEventProcessor ep;
+    try {
+	ep(argc, argv);
+    }
+    catch (...) {
+	std::cerr << "ERROR: eeconverter main caught an unexpected exception\n";
+	return EXIT_FAILURE;
+    }
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

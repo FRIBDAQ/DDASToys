@@ -1,39 +1,38 @@
 /** 
- * @file  ProcessToRootSink.h
+ * @file  RootSinkProcessor.h
  * @brief Define a ring item processes which processes data into a ROOT 
  * data file sink
  */
 
-#ifndef PROCESSTOROOTSINK_H
-#define PROCESSTOROOTSINK_H
+#ifndef ROOTSINKPROCESSOR_H
+#define ROOTSINKPROCESSOR_H
 
 #include <CRingItemProcessor.h>
 
 #include <string>
 
 class RootFileDataSink;
-class CPhysicsEventItem;
 
 /**
- * @class ProcessToRootSink
- * @brief A ring item processeor concrete class that overrides the 
- * CRingItemProcessor base class method to put PHYSICS_EVENTs into a 
- * ROOT file data sink.
+ * @class RootSinkProcessor
+ * @brief Process data to a ROOT file sink.
+ * @details
+ * Overrides CRingItemProcessor processEvent() method to handle physics events.
  */
 
-class ProcessToRootSink : public CRingItemProcessor
+class RootSinkProcessor : public CRingItemProcessor
 {
 public:
     /** @brief Constructor. */
-    ProcessToRootSink(std::string sink);
+    RootSinkProcessor(std::string sink);
     /** @brief Destructor. */
-    virtual ~ProcessToRootSink();
+    virtual ~RootSinkProcessor();
 
     // Mandatory interface from CRingItemProcessor:
   
 public:
     /**
-     * @brief Process physics events. 
+     * @brief Process physics events to the ROOT sink. 
      * @param item  References the physics event item that we are 'analyzing'.
      */
     virtual void processEvent(CPhysicsEventItem& item);

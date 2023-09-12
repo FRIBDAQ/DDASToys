@@ -1,15 +1,14 @@
 /** 
- * @file  ProcessToRootSink.cpp
+ * @file  RootSinkProcessor.cpp
  * @brief Implement mandatory interface from CRingItemProcessor to process 
  * data to a ROOT file sink.
  */
 
-#include "ProcessToRootSink.h"
+#include "RootSinkProcessor.h"
 
 #include <memory>
 #include <iostream>
 
-#include <CRingItemFactory.h>
 #include <CPhysicsEventItem.h>
 
 #include "RootFileDataSink.h"
@@ -17,14 +16,14 @@
 /**
  * @brief Constructor.
  */
-ProcessToRootSink::ProcessToRootSink(std::string sink) :
+RootSinkProcessor::RootSinkProcessor(std::string sink) :
     m_pSink(new RootFileDataSink(sink.c_str()))
 {}
 
 /**
  * @brief Destructor.
  */
-ProcessToRootSink::~ProcessToRootSink()
+RootSinkProcessor::~RootSinkProcessor()
 {
     delete m_pSink;
 }
@@ -39,7 +38,8 @@ ProcessToRootSink::~ProcessToRootSink()
  * case, we just pass the data to the ROOT file sink and let it handle the rest.
  */
 void
-ProcessToRootSink::processEvent(CPhysicsEventItem& item)
+RootSinkProcessor::processEvent(CPhysicsEventItem& item)
 {
-    m_pSink->putItem(item);
+    std::cout << item.toString() << std::endl;
+    // m_pSink->putItem(item);
 }

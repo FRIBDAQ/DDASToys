@@ -91,40 +91,40 @@ RootFileDataSink::~RootFileDataSink()
 void
 RootFileDataSink::putItem(const CRingItem& item)
 {
-    m_pTreeEvent->Reset(); // Free dynamic hist from last event
-    m_extensions.clear();
+    // m_pTreeEvent->Reset(); // Free dynamic hist from last event
+    // m_extensions.clear();
     
-    // Bust the ring item up into event builder fragments:
+    // // Bust the ring item up into event builder fragments:
     
-    FragmentIndex frags(
-	reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
-	);
+    // FragmentIndex frags(
+    // 	reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
+    // 	);
     
-    // Decode the DDAS hit in each fragment and add it to the event. Note that
-    // AddHit does a copy construction of the hit into new storage.
+    // // Decode the DDAS hit in each fragment and add it to the event. Note that
+    // // AddHit does a copy construction of the hit into new storage.
 
-    DAQ::DDAS::DDASFitHit fitHit;
-    DDASRootFitHit rootFitHit;
-    for (unsigned i = 0; i < frags.getNumberFragments(); i++) {
-	fitHit.Reset();
-	rootFitHit.Reset();
-	m_pUnpacker->decode(frags.getFragment(i).s_itemhdr, fitHit);
-	rootFitHit = fitHit; // The base part
-	m_pTreeEvent->AddHit(rootFitHit);
+    // DAQ::DDAS::DDASFitHit fitHit;
+    // DDASRootFitHit rootFitHit;
+    // for (unsigned i = 0; i < frags.getNumberFragments(); i++) {
+    // 	fitHit.Reset();
+    // 	rootFitHit.Reset();
+    // 	m_pUnpacker->decode(frags.getFragment(i).s_itemhdr, fitHit);
+    // 	rootFitHit = fitHit; // The base part
+    // 	m_pTreeEvent->AddHit(rootFitHit);
 
-	// Check if the hit has an extension (initialized to false). If so,
-	// fill it from the fit and set has extension to true.
+    // 	// Check if the hit has an extension (initialized to false). If so,
+    // 	// fill it from the fit and set has extension to true.
 	
-	RootHitExtension ext;
-	if (fitHit.hasExtension()) {
-	    ext = fitHit.getExtension(); 
-	}
-	m_extensions.push_back(ext); // Add to fit branch
-    }
+    // 	RootHitExtension ext;
+    // 	if (fitHit.hasExtension()) {
+    // 	    ext = fitHit.getExtension(); 
+    // 	}
+    // 	m_extensions.push_back(ext); // Add to fit branch
+    // }
     
-    // Fill the tree now that we have all the hits marshalled:
+    // // Fill the tree now that we have all the hits marshalled:
     
-    m_pTree->Fill();    
+    // m_pTree->Fill();
 }
 
 /**

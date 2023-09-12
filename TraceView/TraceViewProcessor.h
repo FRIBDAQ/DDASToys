@@ -10,14 +10,6 @@
 
 #include <vector>
 
-class CRingScalerItem;
-class CRingStateChangeItem;
-class CRingTextItem;
-class CPhysicsEventItem;
-class CRingPhysicsEventCountItem;
-class CDataFormatItem;
-class CGlomParameters;
-class CRingItem;
 namespace DAQ {
     namespace DDAS {
 	class DDASFitHit;
@@ -33,9 +25,8 @@ namespace DAQ {
  * A ring item processor class for a small subset of relavent ring items. See 
  * latest $DAQROOT/share/recipes/process/processor.h/cpp for a more general
  * example. This processer:
- * - implements mandatory interface to process events,
- * - ignores scalers, text items, event counts and glom params,
- * - inherits the rest of its behavior from the base class.
+ * - overrides base class functions to process events, and
+ * - ignores scalers, text items, event counts and glom params.
  */
 
 class TraceViewProcessor : public CRingItemProcessor

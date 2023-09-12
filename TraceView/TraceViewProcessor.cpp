@@ -9,10 +9,7 @@
 #include <ctime>
 
 #include <FragmentIndex.h>
-#include <CRingItem.h>
-#include <CRingStateChangeItem.h>
 #include <CPhysicsEventItem.h>
-#include <CDataFormatItem.h>
 
 #include <DDASFitHit.h>
 #include <DDASFitHitUnpacker.h>

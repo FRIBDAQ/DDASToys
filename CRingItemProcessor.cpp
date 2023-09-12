@@ -17,8 +17,7 @@
 
 /** 
  * @file  CRingItemProcessor.cpp
- * @brief Default implementation of the the CRingItemProcessor class 
- * non-mandatory virtual methods.
+ * @brief Default implementation of the the CRingItemProcessor base class.
  */
 
 #include "CRingItemProcessor.h"
@@ -33,6 +32,7 @@
 #include <CRingScalerItem.h>
 #include <CRingTextItem.h>
 #include <CRingStateChangeItem.h>
+#include <CPhysicsEventItem.h>
 #include <CRingPhysicsEventCountItem.h>
 #include <CDataFormatItem.h>
 #include <CGlomParameters.h>
@@ -54,19 +54,13 @@ CRingItemProcessor::~CRingItemProcessor()
 /**
  * @details
  * Your own processing should create a new class and override this if you 
- * want to process scalers. Note that this and all ring item types have a
- * toString() method that returns the string the NSCL DAQ Dumper outputs for
- * each item type.
+ * want to process scalers. The default implementation uses the ring item's 
+ * toString() method.
  */
 void
 CRingItemProcessor::processScalerItem(CRingScalerItem& item)
 {
-    time_t ts = item.getTimestamp();
-    std::cout << "Scaler item recorded " << ctime(&ts) << std::endl;
-    for (size_t i=0; i<item.getScalerCount(); i++) {
-        std::cout << "Channel " << i << " had "
-		  << item.getScaler(i) << " counts\n";
-    }
+    std::cout << item.toString() << std::endl;
 }
 
 /**
@@ -75,17 +69,12 @@ CRingItemProcessor::processScalerItem(CRingScalerItem& item)
  *   - BEGIN/END run we'll give the timestamp, run number and title, and time
  *     offset into the run.
  *   - PAUSE_RESUME we'll just give the time and time into the run.
+ * Default implementation uses the ring item's toString() method.
  */
 void
 CRingItemProcessor::processStateChangeItem(CRingStateChangeItem& item)
 {
-    time_t tm = item.getTimestamp();
-    std::cout << item.typeName() << " item recorded for run "
-	      << item.getRunNumber() << " source ID "
-	      << item.getSourceId() << std::endl;
-    std::cout << "Title: " << item.getTitle() << std::endl;
-    std::cout << "Occured at: " << std::ctime(&tm)
-	      << " " << item.getElapsedTime() << " sec. into the run\n";
+    std::cout << item.toString() << std::endl;
 }
 
 /**
@@ -97,21 +86,23 @@ CRingItemProcessor::processStateChangeItem(CRingStateChangeItem& item)
  *   - MONITORED_VARIABLES - used by all frameworks to give the values of 
  *     tcl variables that are being injected during the run or are constant 
  *     throughout the run.
- * Again we format a dump of the item.
+ * Default implementation uses the ring item's toString() method.
  */
 void
 CRingItemProcessor::processTextItem(CRingTextItem& item)
 {
-    time_t tm = item.getTimestamp();
-    std::cout << item.typeName() << " item recorded at "
-        << std::ctime(&tm) << " " << int(item.getTimeOffset()/1000)
-        << " seconds into the run\n";
-    std::cout << "Here are the recorded strings: \n";
-    
-    std::vector<std::string> strings = item.getStrings();
-    for (size_t i=0; i<strings.size(); i++) {
-        std::cout << i << ": '" << strings[i] << "'\n";
-    }
+    std::cout << item.toString() << std::endl;
+}
+
+/**
+ * @details
+ * Process physics events. Default implementation dumps the event to stdout
+ * using the ring item's toString() method.
+ */
+void
+CRingItemProcessor::processEvent(CPhysicsEventItem& item)
+{
+    std::cout << item.toString() << std::endl;
 }
 
 /**
@@ -125,15 +116,7 @@ CRingItemProcessor::processTextItem(CRingTextItem& item)
 void
 CRingItemProcessor::processEventCount(CRingPhysicsEventCountItem& item)
 {
-    time_t tm = item.getTimestamp();
-    std::cout << "Event count item";
-    if (item.hasBodyHeader()) {
-        std::cout << " from source id: " << item.getSourceId();
-    }
-    std::cout << std::endl;
-    std::cout << "Emitted at: " << std::ctime(&tm) << " "
-	      << int(item.getTimeOffset()/1000) << " seconds into the run \n";
-    std::cout << item.getEventCount() << " events since lastone\n";
+    std::cout << item.toString() << std::endl;
 }
 
 /**
@@ -144,8 +127,7 @@ CRingItemProcessor::processEventCount(CRingPhysicsEventCountItem& item)
 void
 CRingItemProcessor::processFormat(CDataFormatItem& item)
 {
-    std::cout << "Data format is for: "
-        << item.getMajor() << "." << item.getMinor() << std::endl;
+    std::cout << item.toString() << std::endl;
 }
 
 /**
@@ -160,15 +142,7 @@ CRingItemProcessor::processFormat(CDataFormatItem& item)
 void
 CRingItemProcessor::processGlomParams(CGlomParameters& item)
 {
-    std::cout << "Event built data. Glom is: ";
-    if (item.isBuilding()) {
-        std::cout << "building with coincidece interval: "
-            << item.coincidenceTicks() << std::endl;
-        std::cout << "Timestamp policy: "
-		  << glomPolicyMap[item.timestampPolicy()] << std::endl;
-    } else {
-        std::cout << "operating in passthrough (non-building) mode\n";
-    }
+    std::cout << item.toString() << std::endl;
 }
 
 /**
