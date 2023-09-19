@@ -28,13 +28,13 @@ For more information about how to run the `EventEditor` codes please refer to th
 For an explanation of how to run the `EventEditor` trace fitting framework, please refer to the DDASToys Manual or the output of the command `$DAQBIN/EventEditor --help` run from a terminal. The `DAQBIN` variable must point to an FRIBDAQ version 12.0 or later where the `EventEditor` software is installed. The manual also describes how to run the fitting software at NERSC and configure an analysis pipeline for trace fitting. Implementation of the fitting routines and their source code documentation is provided here. Notably, the structure of the fit extensions appended to each event is defined in the fit_extensions.h header.
 
 ## Converting event files containing fits to ROOT format
-<a name="eeconverter"/>
+<a name="eeconverter">
 The `eeconverter` program converts `EventEditor` output into a ROOT file format suitable for further analysis. Running `eeconverter --help` from the command line will show how to use the program and how to pass it arguments; running without any command line parameters will show you the minimum number of required arguments.
 
 The `eeconverter` program reads ring items from a data source -- in this case built NSCLDAQ events possibly containing fit information -- and hands them off to a ring item processor. The processor performs type-independent processing of each ring item, converting each FRIBDAQ PHYSICS_EVENT to a ROOT-ized data format and writing it to a ROOT file sink.
 
 ## Viewing traces and fits using traceview
-<a name="traceview"/>
+<a name="traceview">
 The `traceview` program can be used to display trace data and their respective fits (if present). Currently, `traceview` reads the fit and template configuration information from the files pointed to by the environment variables `FIT_CONFIGFILE` and `TEMPLATE_CONFIGFILE`. Refer to the DDASToys Manual for more information about the format of these configuration files.
 
 The `traceview` top menu is used to load data files and to exit the program. Successfully loading a file enables the GUI elements which allow you to parse the file and view its contents.

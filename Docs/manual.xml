@@ -27,7 +27,7 @@
     <revhistory>
       <revision>
         <revnumber>2.0</revnumber>
-        <date>8/3/2023</date>
+        <date>9/19/2023</date>
         <authorinitials>RF, ASC</authorinitials>
         <revremark>Original release</revremark>
       </revision>
@@ -40,10 +40,13 @@
       The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB. DDASToys software is supported for FRIBDAQ versions 12.0 and later.
     </para>
     <para>
-      This document introduces and describes what tools are provided, how to access and configure your user environment at NERSC to use these tools and how to submit jobs at NERSC using the Slurm Workload Manager. Detailed documentation of the DDASToys source code are provided in Doxygen reference manuals, installed in the share/sourcedocs/html and share/sourcedocs/latex directories located under the top-level DDASToys installation directory, which is generally /usr/opt/ddastoys. To view the Doxygen documentation, open share/sourcedocs/html/index.html with a web browser such as Firefox.
+      This document introduces and describes the tools provided by the DDASToys package, how to access and configure your user environment at NERSC to use these tools and how to submit jobs at NERSC using the Slurm Workload Manager. Though much of this document is oriented towards running DDASToys codes at NERSC, the user of Slurm at many High Performance Computing (HPC) facilities allows these scripts to be customized for applications outside of NERSC.
     </para>
     <para>
-      The DDASToys Manual is <emphasis>not</emphasis> intended as a comprehensive guide to NERSC systems or as a troubleshooting document to address issues you may encounter while running at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
+      Detailed documentation of the DDASToys source code are provided in Doxygen reference manuals, installed in the share/sourcedocs/html and share/sourcedocs/latex directories located under the top-level DDASToys installation directory, which is generally /usr/opt/ddastoys. To view the Doxygen documentation, open share/sourcedocs/html/index.html with a web browser such as Firefox.
+    </para>
+    <para>
+      The DDASToys Manual is <emphasis>not</emphasis> intended as a comprehensive guide to NERSC systems or as a troubleshooting document to address issues you may encounter while running your code at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
     </para>
     <para>
       The tools provided by this package are:
@@ -51,7 +54,7 @@
     <itemizedlist>
       <listitem>
 	<para>
-	  <literal>EventEditor</literal> with the <literal>FitEditor</literal> library plugins - parallel trace-fitting software which appends fit parameters for single- and double-pulse fits to fragments (hits) in an event, modifying the event structure.
+	  FRIBDAQ <literal>EventEditor</literal> <literal>FitEditor</literal> library plugins - Parallel trace-fitting software which appends fit parameters for single- and double-pulse fits to fragments (hits) in an event, modifying the event structure.
 	</para>
       </listitem>
       <listitem>
@@ -76,7 +79,7 @@
       </listitem>
       <listitem>
 	<para>
-	  <literal>eeconverter</literal> - A program to convert FRIBDAQ event files with (or without!) fit extensions to ROOT format. Each fragment in an event is converted in to a DDASFitHit object and each event is written as an entry in an output ROOT TTree saved in a ROOT TFile.
+	  <literal>eeconverter</literal> - A program to convert FRIBDAQ event files with (or without!) fit extensions to ROOT format. Each fragment in an event is converted into a DDASFitHit object and each event is written as an entry in an output ROOT TTree saved in a ROOT TFile.
 	</para>
       </listitem>
             <listitem>
@@ -95,7 +98,7 @@
       Shifter images and containers
     </title>
     <para>
-      Shifter is a tool for adapting concepts from Linux containers to High Performance computing (HPC) resources, allowing users to create their own software environment and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows FRIBDAQ to be built under a supported compilation and library environment.
+      Shifter is a tool for adapting concepts from Linux containers to HPC resources, allowing users to create their own software environment and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows FRIBDAQ to be built under a supported compilation and library environment.
     </para>    
     <para>
       A Shifter image is a single (large) file that contains a file-system image for the user utilities of a specific distribution of Linux. The <command>shifter</command> command can be used to run other commands, set environment variables, or even activate shells in the environment of a container running an instance of a file-system image. Finally, the <command>shifter</command> command allows pieces of the host file system to be mounted at specific points in the container. This allows us to build minimal containers, use them to build the software we need and the mount that software where we expect to see it in FRIBDAQ systems, for example, the /usr/opt directory tree familiar to FRIB users.
@@ -121,7 +124,7 @@
       </listitem>
     </itemizedlist>
     <para>
-      We then used the image to build the following software in a directory tree to be mounted in the image at /usr/opt:
+      We then use the image to build the following software in a directory tree to be mounted in the image at /usr/opt:
     </para>
     <itemizedlist>
       <listitem>
@@ -180,17 +183,17 @@
 	</callout>	
 	<callout arearefs="svolumes">
 	  <para>
-	    An optional flag to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_container</literal>, with multiple directories separated by semicolons. The user scratch space is mounted inside the container at /scratch. For users familiar with <literal>singularity</literal>, or <literal>apptainer</literal>, this is similar to the <literal>--bind</literal> flag.
+	    An optional flag to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_container</literal>, with multiple directories separated by semicolons. The user scratch space is mounted inside the container at /scratch. For users familiar with <literal>singularity</literal> or <literal>apptainer</literal>, this is similar to the <literal>--bind</literal> flag.
 	  </para>
 	</callout>
 	<callout arearefs="senvfile">
 	  <para>
-	    An optional flag to configure environment variables inside the shifter image. All environment variables defined in the calling process' environment are transferred into the image. Additional environment variables are defined in the shifter.env file provided to this flag. The contents of this file will be discussed in <xref linkend="sec_configfiles"/> when we discuss how to run the DDASToys applications at NERSC.
+	    An optional flag to configure environment variables inside the shifter image. All environment variables defined in the calling process' environment are transferred into the image. Additional environment variables are defined in the shifter.env file provided to this flag. The contents of this file will be discussed in <xref linkend="sec_configfiles"/> when we discuss how to run DDASToys applications at NERSC.
 	  </para>
 	</callout>
 	<callout arearefs="scmd">
 	  <para>
-	    The command to run inside the Shifter container. In this case, we spawn an interactive bash shell using <literal>/bin/bash</literal>.
+	    The command to run inside the Shifter container. In this case, we spawn an interactive Bash shell.
 	  </para>
 	</callout>
       </calloutlist>
@@ -203,27 +206,27 @@
     <section id="sec_createacct">
       <title>Creating a NERSC account</title>
       <para>
-	This guide assumes that the reader wishes to join an existing project. In order to join a project, you must create an account at NERSC. To do so, follow the "I need a new NERSC account" steps here: <ulink url="https://iris.nersc.gov/add-user"/>. Note that NERSC requires that you have an exciting ORCID id. You can register for an ORCID account here: <ulink url="https://orcid.org/signin"/>. Once you have created an account, you will receive two emails: the first informing you that the account request is being processed, and another when the account is approved and added to the project. This requires approval from both NERSC and the project PI, so the approval process may take a couple of days. For any account-related issues, contact accounts@nersc.gov.
+	This guide assumes that the reader wishes to join an existing project. In order to join a project, you must create an account at NERSC. To do so, follow the "I need a new NERSC account" steps here: <ulink url="https://iris.nersc.gov/add-user"/>. Note that NERSC requires that you have an exciting ORCID ID. You can register for an ORCID account here: <ulink url="https://orcid.org/signin"/>. Once you have created an account at NERSC, you will receive two emails: the first informing you that the account request is being processed, and another when the account is approved and added to the project. This requires approval from both NERSC and the project PI, so the approval process may take a couple of days. For any account-related issues, contact accounts@nersc.gov.
       </para>
     </section>
     
     <section id="sec_login">
       <title>Logging in to NERSC systems</title>
       <para>
-	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to Perlmutter requires multifactor identification (MFA). Instructions on how to set up MFA for your account at NERSC are found at <ulink url="https://docs.nersc.gov/connect/mfa"/>. You can optionally setup an SSH proxy to avoid entering your one time password (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/>. Note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your NERSC user account name. 
+	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to Perlmutter requires multifactor identification (MFA). Instructions on how to set up MFA for your account at NERSC are found at <ulink url="https://docs.nersc.gov/connect/mfa"/>. You can optionally setup an SSH proxy to avoid entering your one time password (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/>. Note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter from the outside via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your NERSC user account name. 
       </para>
     </section>
     
     <section id="sec_config">
       <title>Configuring your home directory</title>
       <para>
-	Connecting to NERSC systems using SSH will place you in your home directory on a login node. The first time you log in the home directory will be empty. This section describes some basic account configuration options which you may find useful.
+	Connecting to NERSC systems using SSH will place you in your home directory on a login node. The first time you log in the home directory will be empty. This section describes some basic account configuration options which first-time users may find helpful.
       </para>
       <para>
 	NERSC documentation is ambiguous with respect to the order in which shell initialization files ("dotfiles" such as ~/.bashrc) are sourced and under what conditions, but the user's ~/.bashrc appears to be sourced on both login and interactive non-login shells if it exists. NERSC provides a template .bashrc file available in the GitLab repository <ulink url="https://software.nersc.gov/NERSC/dotfiles"/>. Accessing the repository requires a NERSC account with MFA enabled.
       </para>
       <para>
-	To clone the repository, you will need to create a personal access token, save it somewhere secure, and use it in lieu of your account password when prompted. For further instructions, see <ulink url="https://software.nersc.gov/help/user/profile/personal_access_tokens"/>. This page can only be accessed once you have logged in to software.nersc.gov for example by following the first link. The template .bashrc file from this repository can be copied into your home directory. Alternatively you can create your own dotfiles.
+	To clone the repository, you will need to create a personal access token, save it somewhere secure, and use it in lieu of your account password when prompted. For further instructions, see <ulink url="https://software.nersc.gov/help/user/profile/personal_access_tokens"/>. This page can only be accessed once you have logged in to software.nersc.gov by following the first link. The template .bashrc file from this repository can be copied into your home directory. Alternatively you can create your own dotfiles.
       </para>
       <para>
 	Your desired environment configuration may differ depending on whether or not you are inside a Shifter container. The following if-else block (or similar) can be included in your .bashrc file to conditionally setup your environment
@@ -243,13 +246,13 @@
     <section id="sec_filesystems">
       <title>NERSC file systems and transferring data</title>
       <para>
-	NERSC has a variety of file systems with different levels of performance, data persistence and capacity configured for different purposes. See the NERSC file system documentation for details: <ulink url="https://docs.nersc.gov/filesystems"/>. Data is shared within a project using the Community File System (CFS) which is set with group read/write permissions by default. The CFS for this project is located at /global/cfs/cdirs/m4386. The environment variable <literal>CFS</literal> is automatically set by NERSC and expands to /global/cfs/cdirs. Account CFS space is intended for data storage, not for intensive I/O jobs.
+	NERSC has a variety of file systems with different levels of performance, data persistence and capacity which are configured for different purposes. See the NERSC file system documentation for details: <ulink url="https://docs.nersc.gov/filesystems"/>. Data is shared within a project using the Community File System (CFS) which is set with group read/write permissions by default. The CFS space for this project is located at /global/cfs/cdirs/m4386. The environment variable <literal>CFS</literal> is automatically set by NERSC and expands to /global/cfs/cdirs. Project CFS space is intended for data storage, not for intensive I/O jobs.
       </para>
       <para>
-	User accounts also have space on the Perlmutter scratch file system, which can be referenced using the environment variable <literal>PSCRATCH</literal> or <literal>SCRATCH</literal> which expands to /pscratch/sd/&lt;first_letter_of_username&gt;/&lt;username&gt;. Shifter can create and access local, temporary xfs files on the Lustre file system for I/O intensive jobs. Job output can be staged on the xfs space but must be moved to permanent storage (most likely, to the account CFS space) at the end of a job. Temporary file space can be requested by adding the following line to a batch script: <literal>#SBATCH --volume="/global/cscratch1/sd/&lt;username&gt;/tmpfiles:/tmp:perNodeCache=size=200G"</literal> which will create a 200 GB xfs file mounted at /tmp in the image. You must replace <literal>&lt;username&gt;</literal> with your own user name. 
+	User accounts also have space on the Perlmutter scratch file system, which can be referenced using the environment variable <literal>PSCRATCH</literal> or <literal>SCRATCH</literal> which expands to /pscratch/sd/&lt;first_letter_of_username&gt;/&lt;username&gt; (<emphasis>ASC note: e.g. my account scratch space is /pscratch/sd/c/chester</emphasis>). Shifter can create and access local, temporary xfs files on the Lustre file system for I/O intensive jobs. Job output can be staged on the xfs space but must be moved to permanent storage (most likely, to the project CFS space) at the end of a job. Temporary file space can be requested by adding the following line to a batch script: <literal>#SBATCH --volume="/global/cscratch1/sd/&lt;username&gt;/tmpfiles:/tmp:perNodeCache=size=200G"</literal> which will create a 200 GB xfs file mounted at /tmp in the image. You must replace <literal>&lt;username&gt;</literal> with your own user name. 
       </para>
       <para>
-	Transferring small files into and out of NERSC i.e. for testing, can be done using SCP and a NERSC data transfer node (DTN). Larger file transfers i.e. for experimental data sets should be done with Globus. The SDAQ group is responsible for managing Globus transfers. For small transfers, data can be sent to NERSC via a DTN using the command <command>scp /local/path/to/file &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file</command> and sent from NERSC to another location also via a DTN using the command <command>scp &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file /local/path/to/file</command> where again &lt;username&gt; must be replaced with your user account name; see <ulink url="https://docs.nersc.gov/services/scp"/>. For example, to transfer a file from a fishtank machine at FRIB to my NERSC home directory, I ran the command <command>scp helloworld_mpi.tar.gz chester@dtn01.nersc.gov:/global/homes/c/chester</command>. There are four DTNs at NERSC you can use to transfer files: dtn0[1234].nersc.gov. Transferring files will require you to provide a password and OTP.
+	Transferring small files into and out of NERSC i.e. for testing, can be done using SCP and a NERSC data transfer node (DTN). Larger file transfers i.e. for experimental data sets should be done with Globus. The SDAQ group is responsible for managing Globus transfers. For small transfers, data can be sent to NERSC over a DTN using the command <command>scp /local/path/to/file &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file</command> and retrieved from NERSC using the command <command>scp &lt;username&gt;@dtn01.nersc.gov:/remote/path/to/file /local/path/to/file</command> where again <literal>&lt;username&gt;</literal> must be replaced with your user account name; see <ulink url="https://docs.nersc.gov/services/scp"/>. For example, to transfer a file from a fishtank machine at FRIB to my (<emphasis>ASC</emphasis>) NERSC home directory, I ran the command <command>scp helloworld_mpi.tar.gz chester@dtn01.nersc.gov:/global/homes/c/chester</command>. There are four DTNs at NERSC you can use to transfer files: dtn0[1234].nersc.gov. Transferring files will require you to provide both your password and an OTP.
       </para>
     </section>
   </chapter>
@@ -257,12 +260,12 @@
   <chapter id="ch_plugins">
     <title>Fit plugin libraries for DDASToys</title>    
     <para>
-      This chapter describes in broad terms the fitting plugins for the <literal>EventEditor</literal> framework. The required components are listed below, with the template fitting method given as an example. Fit plugin libraries used with the <literal>EventEditor</literal> must contain the following:
+      This chapter describes the fitting plugins for the <literal>EventEditor</literal> framework in broad terms. The required components are listed below, with the template fitting method given as an example. Fit plugin libraries used with the <literal>EventEditor</literal> must contain the following:
     </para>
     <itemizedlist>
       <listitem>
 	<para>
-	  An editor class - A method for extending hits with fit information called when the <command>EventEditor</command> command is executed. The editor method subclasses <literal>CBuiltRingItemEditor::BodyEditor</literal> to modify event fragment body data and implements its mandatory interface to edit the event body and free dynamic extension data. The editor is responsible for determining which channels should be fit, getting trace data from the event fragment and performing the fit by calling the appropriate fitting subroutines. The data structures containing the fit information appended to each hit are defined in the fit_extensions.h header file. See FitEditorTemplate.h/cpp and its Doxygen documentation for more details. The editor class must contain a factory method called <literal>createEditor()</literal> to create itself when the <literal>EventEditor</literal> executable is run:	  
+	  An editor class - A method for extending hits with fit information called when the <command>EventEditor</command> command is executed. The editor method subclasses <literal>CBuiltRingItemEditor::BodyEditor</literal> to modify event fragment body data and implements its mandatory interface to edit the event body and free dynamic extension data. The editor is responsible for determining which channels should be fit, getting trace data from the event fragment and performing fits by calling the appropriate fitting subroutines. The data structures containing the fit information appended to each hit are defined in the fit_extensions.h header file. See FitEditorTemplate.h/cpp and its Doxygen documentation for more details. The editor class must contain a factory method called <literal>createEditor()</literal> to create itself when the <literal>EventEditor</literal> executable is run:	  
 	  <informalexample>
 	    <programlisting>
 	      extern "C" {
@@ -310,7 +313,7 @@
     <itemizedlist>
       <listitem>
 	<para>
-	  An unpacker library - An optional library implementing methods for unpacking event fragments with fit extensions into a useful data structure for downstream analysis. The <literal>libDDASFitHitUnpacker.so</literal> library provides an interface to unpack DDAS events with fit extensions into the data structure defined by the <literal>DDASFitHit</literal> class. <literal>DDASFitHit</literal> is derived from the <literal>DDASHit</literal> class, which is defined in the header file of the same name found in the FRIBDAQ include directory. This directory is pointed to by the <literal>DAQINC</literal> environment variable provided that the FRIBDAQ environment has been configured by sourcing its <literal>daqsetup.sh</literal> script. Again, refer to the Doxygen documentation for more information.
+	  An unpacker library - An optional library implementing methods for unpacking event fragments with fit extensions into a useful data structure for downstream analysis. The <literal>libDDASFitHitUnpacker.so</literal> library provides an interface to unpack DDAS events with fit extensions into the data structure defined by the <literal>DDASFitHit</literal> class. <literal>DDASFitHit</literal> is derived from the <literal>DDASHit</literal> class, which is defined in the header file of the same name found in the FRIBDAQ include directory, pointed to by the <literal>DAQINC</literal> environment variable provided that the FRIBDAQ environment has been configured by sourcing its <literal>daqsetup.sh</literal> script. Again, refer to the Doxygen documentation for more information.
 	</para>
       </listitem>
     </itemizedlist>
@@ -319,10 +322,10 @@
   <chapter id="ch_usingddastoys">
     <title>Data analysis with DDASToys</title>
     <para>
-      This chapter provides a how-to guide for fitting traces using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under the Slurm Workload Manager at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command>. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
+      If you have read this far, you are probably interested in actually processing some data at NERSC. This chapter is for you: a how-to guide for analyzing experimental data using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under Slurm at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command> from the terminal on a NERSC login node. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
     </para>
     <para>
-      Example job submission scripts discussed in this section are available at NERSC under $CFS/m4386/example_scripts. A brief summary of the available examples are provided here:
+      Example job submission scripts discussed in this section are available at NERSC under /global/cfs/cdirs/m4386/example_scripts. A brief summary of the available examples are provided here:
     </para>
     <itemizedlist>
 	<listitem>
@@ -332,12 +335,12 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    <literal>run_fit.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file. This script is called by<literal>submit_fit.sh</literal>. See <xref linkend="sec_singlejob"/> for details.
+	    <literal>run_fit.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file. This script is called by <literal>submit_fit.sh</literal>. See <xref linkend="sec_singlejob"/> for details.
 	  </para>
 	</listitem>
 	<listitem>
 	  <para>
-	    <literal>submit_fitarr.sh</literal> - Prepare a submission script and submit an <literal>EventEditor</literal> job array via <literal>sbatch</literal>. Discussed further in <xref linkend="sec_jobarrays"/> with annotated sample scripts given in <xref linkend="app_jobarray"/>.
+	    <literal>submit_fitarr.sh</literal> - Prepare a submission script and submit an <literal>EventEditor</literal> job array via <literal>sbatch</literal>. Discussed further in <xref linkend="sec_jobarrays"/> with annotated examples given in <xref linkend="app_jobarray"/>.
 	  </para>
 	</listitem>
 	<listitem>
@@ -357,7 +360,7 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    <literal>submit_combined.sh</literal> - Submit array jobs for fitting traces and conversion to ROOT format using a single script, where conversion to ROOT format depends on successful completion of the fitting job. This script uses the <literal>--parsable</literal> and <literal>--dependency</literal> options to control the analysis workflow. Creating a combined analysis pipeline is discussed in <xref linkend="sec_pipeline"/>. See <xref linkend="app_pipeline"/> for sample scripts.
+	    <literal>submit_combined.sh</literal> - Submit array jobs for fitting traces and conversion to ROOT format using a single script, where the conversion to ROOT format depends on successful completion of the fitting job. This script uses the <literal>--parsable</literal> and <literal>--dependency</literal> flags to control the analysis workflow. Creating a combined analysis pipeline is discussed in <xref linkend="sec_pipeline"/>. See <xref linkend="app_pipeline"/> for sample scripts.
 	  </para>
 	</listitem>
 	<listitem>
@@ -367,18 +370,18 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    <literal>shiftercmd</literal> - Run all passed arguments under the <literal>shifter</literal> container described in <xref linkend="ch_shifter"/>. For example, to spawn a bash shell in the container image, run the following command: <command>$CFS/m4386/example_scripts/shiftercmd /bin/bash</command>. This script expects that any environment variables you wish to propagate into the container are defined in a file shifter.env located in your account home directory. The formatting and contents of this file are discussed in <xref linkend="sec_configfiles"/> and a sample shifter.env file is provided in the example directory.
+	    <literal>shiftercmd</literal> - Run all passed arguments under the Shifter container described in <xref linkend="ch_shifter"/>. For example, to spawn a bash shell in the container image, run the following command: <command>/global/cfs/cdirs/m4386/example_scripts/shiftercmd /bin/bash</command>. This script expects that any environment variables you wish to propagate into the container are defined in ~/shifter.env, located in your account home directory. The formatting and contents of this file are discussed in <xref linkend="sec_configfiles"/> and a sample shifter.env file is provided in the example directory.
 	  </para>
 	</listitem>
       </itemizedlist>
     <para>
-      Running jobs on NERSC systems will charge hours to the allocation assigned to the account specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. The account for the FDSi e21062 project is m4386. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the account allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "shared" queue. To run jobs exclusively on each node, use the "regular" queue.
+      Running jobs on NERSC systems will charge hours to the allocation assigned to the project specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. The project for FDSi e21062 analysis is m4386. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and the constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the project allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "shared" queue which allows jobs from other users to run simultaneously on the same node. To run jobs exclusively on each node, use the "regular" queue.
     </para>
 
     <section id="sec_configfiles">
       <title>Configuration files required by <literal>EventEditor</literal></title>
       <para>
-	Here we return to our discussion from <xref linkend="ch_shifter"/> of the environment variable file provided as an argument to <literal>shifter</literal>. It is assumed in this section that the environment variable file is called shifter.env and is located in the account's home directory. The shifter.env file contains a list of environment variables to set inside the container when it is passed as an argument to the <command>shifter</command> command using <literal>--env-file=$HOME/shifter.env</literal>:
+	Here we return to our discussion from <xref linkend="ch_shifter"/> of the environment variable file provided as an argument to the <command>shifter</command>. It is assumed in this section that the environment variable file is called shifter.env and is located in your user account's home directory. The shifter.env file contains a list of environment variables to set inside the container when it is passed as an argument to the <command>shifter</command> command using <literal>--env-file=$HOME/shifter.env</literal>:
       </para>
       <informalexample>
 	<programlisting>
@@ -406,7 +409,7 @@
 	</callout>
 	<callout arearefs="rootinc">
 	  <para>
-	    Include path for DDASToys headers needed by the ROOT dictionary defining the output data structure.
+	    Include path for DDASToys headers needed by the ROOT dictionary that defines the output data structure.
 	  </para>
 	</callout>
       </calloutlist>
@@ -414,7 +417,7 @@
 	The structure of the configuration files pointed to by the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables are described below. The fitting routines expect the configuration files to have the formats defined in this section and will fail to run correctly if an improperly formatted file is provided. 
       </para>
       <para>
-	The fit configuration file pointed to by the <literal>FIT_CONFIGFILE</literal> environment variable is a multi-line, whitespace-separated text file describing which channels should be fit. The file can contain blank lines. Both leading and trailing whitespaces are ignored. If the first non-whitespace character on a line is '#', the line is considered a comment and ignored. Non-commented lines contain six whitespace-separated unsigned integers:
+	The fit configuration file pointed to by the <literal>FIT_CONFIGFILE</literal> environment variable is a multi-line, whitespace-separated text file describing which channels should be fit. The file can contain blank lines. Both leading and trailing whitespaces are ignored. If the first non-whitespace character on a line is `#', the line is considered a comment and ignored. Non-commented lines contain six whitespace-separated unsigned integers:
       </para>
       <itemizedlist>
 	<listitem>
@@ -424,7 +427,7 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    slot - The slot ID for the channel to be fit.
+	    slot - The slot ID for the channel to be fit. The first slot with an installed module is typically slot 2.
 	  </para>
 	</listitem>
 	<listitem>
@@ -469,7 +472,7 @@
       <itemizedlist>
 	<listitem>
 	  <para>
-	    align-point - Time reference point for the template in samples. The position of the fitted pulse reported by the template trace fit is given with respect to the align-point.
+	    align-point - Time reference point for the template in samples. The position of the fitted pulse (in samples) reported by the template trace fit is given with respect to the align-point.
 	  </para>
 	</listitem>
 	<listitem>
@@ -479,7 +482,7 @@
 	</listitem>	
       </itemizedlist>
       <para>
-	The remaining lines contain the floating point template data values. Shown below is an abbreviated example template configuration file.
+	The remaining lines contain the floating-point template data values. Shown below is an abbreviated example template configuration file.
       </para>
       <informalexample>
 	<programlisting>
@@ -489,7 +492,7 @@
 	  #   align-point npts
 	  #   template[0]
 	  #   template[1]
-	  #	template[2]
+	  #   template[2]
 	  #   ...
 	  #   template[npts-1]
 	  #
@@ -506,7 +509,7 @@
     <section id="sec_singlejob">
       <title>Running a single <literal>EventEditor</literal> job</title>
       <para>
-	The fribdaq/frib-buster:v4.2 container supports FRIBDAQ 12.0 and later which include parallel event editors. The FRIBDAQ <literal>EventEditor</literal> program provides the architecture for fitting event fragments containing traces. Plugin libraries which define the fitting algorithms and the data structure containing the fit results appended to each hit are provided by the user and loaded at the <literal>EventEditor</literal> program runtime. The <literal>EventEditor</literal> program supports parallel fitting using both ZMQ threading and OpenMPI. Running the command <command>$DAQBIN/EventEditor --help</command> from the command line describes the flags which can be passed to the program assuming the FRIBDAQ environment has been configured by sourcing its associated daqsetup.bash script.
+	The fribdaq/frib-buster:v4.2 container supports FRIBDAQ 12.0 and later which include parallel event editors. The FRIBDAQ <literal>EventEditor</literal> program provides the architecture for fitting event fragments containing traces. Plugin libraries which define the fitting algorithms and the data structure containing the fit results appended to each hit are provided by the user and loaded at the <literal>EventEditor</literal> program runtime. The <literal>EventEditor</literal> program supports parallel fitting using both ZMQ threading and OpenMPI. Running the command <command>$DAQBIN/EventEditor --help</command> from inside the container describes the flags which can be passed to the program assuming the FRIBDAQ environment has been configured by sourcing its associated daqsetup.bash script.
       </para>
       <para>
 	Shown below is an example Slurm job submission script which will configure the proper runtime environment and run the <literal>EventEditor</literal> program to fit traces using the template fitter. More information on how to run jobs at NERSC and how to use the Slurm batch system can be found at <ulink url="https://docs.nersc.gov/jobs/"/>. To submit a job using the following submission script, run the command <command>sbatch submit.sl</command>.
@@ -526,7 +529,7 @@
 	  # segments I think.
 	  # 
 
-	  #SBATCH --account=m4386                               <co id="sbatchflags"/>
+	  #SBATCH --account=m4386                                        <co id="sbatchflags"/>
 	  #SBATCH --licenses=scratch,cfs
 	  #SBATCH --constraint=cpu
 	  #SBATCH --qos=regular
@@ -535,20 +538,20 @@
 	  #SBATCH --time=00:30:00
 	  #SBATCH --output=slurm_output/slurm-fitoutput-%j.out
 
-	  #SBATCH --image=fribdaq/frib-buster:v4.2              <co id="shifterflags"/>
+	  #SBATCH --image=fribdaq/frib-buster:v4.2                       <co id="shifterflags"/>
 	  #SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt; \
 	  /global/cfs/cdirs/m4386/chester/rawdata:/rawdata;              \
 	  /global/cfs/cdirs/m4386/chester/fitted:/fitted;                \
 	  /global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
 	  #SBATCH --module=none
 
-	  shifter --env-file=$HOME/shifter.env $HOME/run_fit.sh <co id="shifterrun"/>
+	  shifter --env-file=$HOME/shifter.env $HOME/run_fit.sh          <co id="shifterrun"/>
 	</programlisting>
       </informalexample>
       <calloutlist>
 	<callout arearefs="sbatchflags">
 	  <para>
-	    Flags specifying job information such as the account to charge, number of tasks, and maximum allowed wall time. These flags are passed to <literal>sbatch</literal> when it is invoked to submit a job to Slurm. The <literal>--constraint=cpu</literal> flag specifies that this job will be run on Perlmutter CPU nodes rather than GPU nodes. Output from this job will be written to the file specified by the <literal>--output</literal> flag, in this case slurm_output/slurm-fitoutput-%j.out where %j is the Slurm job ID.
+	    Flags specifying job information such as the project account to charge, number of tasks, and maximum allowed wall time. These flags are passed to <literal>sbatch</literal> when it is invoked to submit a job. The <literal>--constraint=cpu</literal> flag specifies that this job will be run on Perlmutter CPU nodes rather than GPU nodes. Output from this job will be written to the file specified by the <literal>--output</literal> flag, in this case slurm_output/slurm-fitoutput-%j.out where %j is the Slurm job ID.
 	  </para>
 	</callout>
 	<callout arearefs="shifterflags">
@@ -558,12 +561,12 @@
 	</callout>
 	<callout arearefs="shifterrun">
 	  <para>
-	    Use the <command>shifter</command> command to run the script <literal>$HOME/run_fit.bash</literal> inside our container. Environment variables defined in the file <literal>$HOME</literal>/shifter.env will be set inside the container.
+	    Use the <command>shifter</command> command to run the script <literal>$HOME/run_fit.sh</literal> inside our container. Environment variables defined in the file <literal>$HOME</literal>/shifter.env will be set inside the container.
 	  </para>
 	</callout>
       </calloutlist>
       <para>
-	The script run_fit.bash calls the <literal>EventEditor</literal> to fit trace data in an FRIBDAQ event file:
+	The script <literal>run_fit.sh</literal> calls the <literal>EventEditor</literal> to fit trace data in an FRIBDAQ event file:
       </para>
       <informalexample>
 	<programlisting>
@@ -616,12 +619,12 @@
       <calloutlist>
 	<callout arearefs="rte">
 	  <para>
-	    Configure the runtime environment inside the container. Since the program we are running depends on FRIBDAQ, ensure that the FRIBDAQ environment is set up. The <literal>-f</literal> flag will overwrite any existing FRIBDAQ environment variables when the <literal>daqsetup.sh</literal> script is sourced. Additionally, we must add OpenMPI executables and libraries to the <literal>PATH</literal> and <literal>LD_LIBRARY_PATH</literal> inside the container, respectively. The environment variable <literal>OPAL_PREFIX</literal> is assumed to point to the top-level installation directory of OpenMPI inside our container image.
+	    Configure the runtime environment inside the container. Since the program we are running depends on FRIBDAQ, ensure that the FRIBDAQ environment is set up. The <literal>-f</literal> flag will overwrite any existing FRIBDAQ environment variables when the <literal>daqsetup.bash</literal> script is sourced. Additionally, we must add OpenMPI executables and libraries to <literal>PATH</literal> and <literal>LD_LIBRARY_PATH</literal> inside the container, respectively. The environment variable <literal>OPAL_PREFIX</literal> is assumed to point to the top-level installation directory of OpenMPI inside our container image.
 	  </para>
 	</callout>
 	<callout arearefs="stagefiles">
 	  <para>
-	    The following five lines define the input and output files in the account CFS space (<literal>input</literal> and <literal>output</literal>), temporary (staged) input and output files for the job (<literal>tmpin</literal> and <literal>tmpout</literal>), and copy the file pointed to by <literal>input</literal> to the locally staged input file <literal>tmpin</literal>. Temporary output for the job is staged in using the xfs file mounted at /tmp in the image. The final output file, named /output/run-0283-00-fitted.evt, is generated from the input file name.
+	    The following five lines define the input and output files in the account CFS space (<literal>input</literal> and <literal>output</literal>), temporary (staged) input and output files for the job (<literal>tmpin</literal> and <literal>tmpout</literal>), and copy the file pointed to by <literal>input</literal> to the locally staged input file <literal>tmpin</literal>. Temporary output for the job is staged in using the xfs file mounted at /tmp in the image. The final output file is saved to /output/run-0283-00-fitted.evt. The output file name is automatically generated from the input file name.
 	  </para>
 	</callout>
 	<callout arearefs="setworkers">
@@ -671,7 +674,7 @@
 	</callout>
 	<callout arearefs="cleanup">
 	  <para>
-	    Delete temporary input file(s) and move the temporary output to the CFS storage space. This step is critical for jobs utilizing temporary xfs space for I/O. Data stored in the temporary file space will not persist beyond the end of the job.
+	    Delete temporary input file(s) and move the temporary output to the project CFS storage space. This step is critical for jobs utilizing temporary xfs space for I/O. Data stored in the temporary file space will not persist beyond the end of the job.
 	  </para>
 	</callout>
       </calloutlist>
@@ -683,7 +686,7 @@
     <section id="sec_jobarrays">
       <title>Job arrays</title>
       <para>
-	Job arrays allow a collection of similar jobs to be submitted and managed together in Slurm. All individual jobs must have the same initial options: the values set using the <literal>--time</literal>, <literal>--ntasks</literal>, etc. flags must be identical. The <literal>--array</literal> flag sets a range of index values which can be accessed by an individual job via the <literal>SLURM_ARRAY_TASK_ID</literal> environment variable; for further information about submitting batch job arrays see <ulink url="https://slurm.schedmd.com/job_array.html"/>. Individual array tasks are interpreted by Slurm as single jobs which may impact their scheduling priority. An annotated example submission script to fit traces in multiple subruns indexed using a job array is given in <xref linkend="app_jobarray"/>.
+	Job arrays allow a collection of similar jobs to be submitted and managed together in Slurm. All individual jobs must have the same initial options: the values set using the <literal>--time</literal>, <literal>--ntasks</literal>, etc. flags must be identical. The <literal>--array</literal> flag sets a range of index values which can be accessed by an individual task via the <literal>SLURM_ARRAY_TASK_ID</literal> environment variable; for further information about submitting batch job arrays see <ulink url="https://slurm.schedmd.com/job_array.html"/>. Individual array tasks are interpreted by Slurm as single jobs which may impact their scheduling priority. An annotated example submission script to fit traces in multiple subruns of a single run, indexed using a job array, is given in <xref linkend="app_jobarray"/>.
       </para>
     </section>
     
@@ -697,18 +700,18 @@
     <section id="sec_eeconverter">
       <title>Using <literal>eeconverter</literal> to convert <literal>EventEditor</literal> output to ROOT format</title>
       <para>
-	Similar to the <literal>ddasdumper</literal>, the DDASToys <literal>eeconverter</literal> program converts FRIBDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided. Running <command>/usr/opt/ddastoys/bin/eeconverter --help</command> from the command line inside the container will show how to use the program and how to pass it arguments; running without any command line parameters will show you the minimum number of required arguments. A sample job submission script the script it calls to run the <literal>eeconverter</literal> program are described in <xref linkend="app_eeconverter"/>.
+	Similar to the <literal>ddasdumper</literal>, the DDASToys <literal>eeconverter</literal> program converts FRIBDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided. Running <command>/usr/opt/ddastoys/bin/eeconverter --help</command> from the command line inside the container will show how to use the program and how to pass it arguments; running without any command line parameters shows the minimum number of required arguments. A sample job submission script and the script it calls to run the <literal>eeconverter</literal> program are described in <xref linkend="app_eeconverter"/>.
       </para>
     </section>
 
     <section id="sec_pipeline">
       <title>Creating an analysis pipeline using <literal>sbatch</literal> job dependencies</title>
       <para>
-	Slurm job dependencies allow the user to delay the start of a job contingent on some set of conditions, including, for example, the successful completion of another job. Complex analysis pipelines can be constructed and submitted to the Slurm scheduler using a single script. As an example, consider an analysis chain using the DDASToys codes described in the previous sections. <xref linkend="app_eeconverter"/> contains scripts to fit trace data and convert all the fitted output to ROOT format:
+	Slurm job dependencies allow the user to delay the start of a job contingent on some set of conditions, including, for example, the successful completion of another job. Complex analysis pipelines can thus be constructed and submitted to the Slurm scheduler using a single script. As an example, consider an analysis workflow using the DDASToys codes described in the previous sections to fit trace data and convert all the fitted output to ROOT format:
 	<orderedlist>
 	  <listitem>
 	    <para>
-	      As a job array, and,
+	      Using job arrays, and,
 	    </para>
 	  </listitem>
 	  <listitem>
@@ -717,7 +720,7 @@
 	    </para>
 	  </listitem>
 	</orderedlist>
-	More information on creating analysis pipelines can be found on both the NERSC and Slurm documentation pages: <ulink url="https://docs.nersc.gov/jobs/examples/#dependencies"/> and <ulink url="https://slurm.schedmd.com/sbatch.html"/>, respectively. 
+	Sample scripts to perform this combined analysis and be found in <xref linkend="app_eeconverter"/>. More information on creating analysis pipelines can be found on both the NERSC and Slurm documentation pages: <ulink url="https://docs.nersc.gov/jobs/examples/#dependencies"/> and <ulink url="https://slurm.schedmd.com/sbatch.html"/>, respectively. 
       </para>
     </section>
     
@@ -726,7 +729,7 @@
   <appendix id="app_bashrc">
     <title>Sample .bashrc file</title>
     <para>
-      Lines ending in "\" belong on a single line in the .bashrc file used to create this appendix.
+      Important note: line breaks using the `\' character are shown for convenience and should be removed in a real .bashrc file.
     </para>
     <informalexample>
       <programlisting>
@@ -778,14 +781,14 @@
   <appendix id="app_jobarray">
     <title>Sample scripts for submitting <literal>EventEditor</literal> job arrays</title>
     <para>
-      Shown below is a slightly more advanced job submission script which illustrates two concepts. First, the example demonstrates how to group similar jobs into a job array and submit the array as a batch job to Slurm. Second, this example shows how to prepare your user environment on a login node and submit a batch job in a single step as described in <ulink url="https://docs.nersc.gov/jobs/best-practices/"/>. This script should be run from the command line as <command>./submit_array.bash</command>.
+      Shown below is a slightly more advanced job submission script which illustrates two concepts. First, the example demonstrates how to group similar jobs into a job array and submit the array as a batch job to Slurm. Second, this example shows how to prepare your user environment on a login node and submit a batch job in a single step as described in <ulink url="https://docs.nersc.gov/jobs/best-practices/"/>. This script should be run from the command line as <command>./submit_fitarr.sh</command>.
     </para>
     <informalexample>
       <programlisting>
-	#!/bin/bash -l                                           <co id="onlogin"/>
+	#!/bin/bash -l                                                     <co id="onlogin"/>
 
 	##
-	# submit_array.bash
+	# submit_fitarr.sh
 	#
 	# Prepare a submission script and submit an EventEditor job array
 	# via sbatch.
@@ -798,7 +801,7 @@
 	fc=$(find /global/cfs/cdirs/m4386/chester/rawdata -name "*.evt" | wc -l)
 	endseg=`expr $fc - 1`
 	
-	cat &lt;&lt;EOF &gt; fitarr_env.sl                               <co id="catenv"/>
+	cat &lt;&lt;EOF &gt; fitarr_env.sl                                          <co id="catenv"/>
 	#!/bin/bash
 
 	##
@@ -813,10 +816,10 @@
 	#SBATCH --constraint=cpu
 	#SBATCH --qos=shared
 	#SBATCH --time=00:30:00
-	#SBATCH --array=0-$endseg                                <co id="arrayflag"/>
-	#SBATCH --ntasks=35                                      <co id="arraytasks"/>
+	#SBATCH --array=0-$endseg                                          <co id="arrayflag"/>
+	#SBATCH --ntasks=35                                                <co id="arraytasks"/>
 	#SBATCH --nodes=1
-	#SBATCH --output=slurm_output/slurm-fitoutput-%A_%a.out  <co id="outputflag"/>
+	#SBATCH --output=slurm_output/slurm-fitoutput-%A_%a.out            <co id="outputflag"/>
 
 	#SBATCH --image=fribdaq/frib-buster:v4.2
 	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
@@ -829,7 +832,7 @@
 	shifter --env-file=$HOME/shifter.env $HOME/runee_array.sh
 	EOF
 
-	sbatch fitarr_env.sl                                     <co id="sbatcharray"/>
+	sbatch fitarr_env.sl                                               <co id="sbatcharray"/>
       </programlisting>
     </informalexample>
     <calloutlist>
@@ -860,7 +863,7 @@
       </callout>
       <callout arearefs="sbatcharray">
 	<para>
-	  Use the <command>sbatch</command> to submit the job script.
+	  Use the <command>sbatch</command> command to submit the job script.
 	</para>
       </callout>
     </calloutlist>
@@ -943,7 +946,7 @@
   <appendix id="app_eeconverter">
     <title>Sample scripts for converting <literal>EventEditor</literal> output to ROOT format</title>
     <para>
-      Shown below is a sample job submission script for running an <literal>eeconverter</literal> batch job. This script uses the method shown in <xref linkend="app_jobarray"/> to prepare the submission script on a login node before submitting the job using the <command>sbatch</command>. 
+      Shown below is a sample job submission script for running an <literal>eeconverter</literal> batch job. This script uses the method shown in <xref linkend="app_jobarray"/> to prepare the submission script on a login node before submitting the job using the <command>sbatch</command> command. 
     </para>
     <informalexample>
       <programlisting>
@@ -987,7 +990,7 @@
     <calloutlist>
       <callout arearefs="nodeconfig">
 	<para>
-	  One thing to note here is that the <literal>eeconverter</literal> uses only a single core (really, a single <emphasis>thread</emphasis>). This process should always be run on the shared queue.
+	  The <literal>SBATCH</literal> directives for <literal>eeconverter</literal> job submission. One thing to note here is that the <literal>eeconverter</literal> uses only a single core (really, a single <emphasis>thread</emphasis>). This process should always be run on the shared queue.
 	</para>
       </callout>
     </calloutlist>
@@ -1032,12 +1035,7 @@
     <calloutlist>
       <callout arearefs="eeconfig">
 	<para>
-	  Configure the environment needed to run the <literal>eeconverter</literal> program. Because this program converts output to ROOT format, ensure that the correct version of ROOT is configured by sourcing its <literal>thisroot.sh</literal> script.
-	</para>
-      </callout>
-      <callout arearefs="stageeeout">
-	<para>
-	  Stage input and output files in the temporary space allocated on the node where the job is running. The output file name is automatically generated from the input.
+	  Configure the environment needed to run the <literal>eeconverter</literal> program. Because this program converts output to ROOT format, ensure that the correct version of ROOT is configured by sourcing its <literal>thisroot.sh</literal> script in addition to the normal DAQ environment configuration.
 	</para>
       </callout>
       <callout arearefs="stageeeout">
@@ -1047,7 +1045,7 @@
       </callout>
       <callout arearefs="runeeconverter">
 	<para>
-	  Run the <literal>eeconverter</literal> program.
+	  Run the <literal>eeconverter</literal> program installed in the DDASToys directory tree.
 	</para>
       </callout>
       <callout arearefs="eeconvertersource">
@@ -1062,7 +1060,7 @@
       </callout>
             <callout arearefs="cleanupee">
 	<para>
-	  Remove the temporary input file and move the temporary output to its final destination on the account CFS space.
+	  Remove the temporary input file and move the temporary output to its final destination in the project CFS space.
 	</para>
       </callout>
     </calloutlist>
@@ -1071,7 +1069,7 @@
   <appendix id="app_pipeline">
     <title>Sample scripts for constructing an analysis pipeline using <literal>sbatch</literal> dependencies</title>
     <para>
-      Shown below is a sample job submission script for running combined analysis. This script uses the <literal>sbatch</literal> flags <literal>--parsable</literal> and <literal>--dependency</literal> flags to extract the job ID value and use it to condition the submission of the ROOT conversion job on the successful completion of the fitting job. Much of the content of these scripts is similar to what is presented in <xref linkend="ch_usingddastoys"/>, <xref linkend="app_jobarray"/> and <xref linkend="app_eeconverter"/>; please refer to those sections for details.
+      Shown below is a sample job submission script for running combined analysis. This script uses the <literal>sbatch</literal> flags <literal>--parsable</literal> and <literal>--dependency</literal> flags to extract the job ID value and use it to define a workflow where the submission of the ROOT conversion job is dependent on the successful completion of the fitting job. Much of the content of these scripts is similar to what is presented in <xref linkend="ch_usingddastoys"/>, <xref linkend="app_jobarray"/> and <xref linkend="app_eeconverter"/>; please refer to those sections for further details.
     </para>
     <informalexample>
       <programlisting>
@@ -1169,7 +1167,7 @@
       </callout>
       <callout arearefs="combinedcallfit">
 	<para>
-	  Run the <literal>EventEditor</literal> as a job array. The <literal>run_fitarr.sh</literal> script is the same as the one described in <xref linkend="app_jobarray"/>.
+	  Run the <literal>EventEditor</literal> as an array task. The <literal>run_fitarr.sh</literal> script is described in <xref linkend="app_jobarray"/>.
 	</para>
       </callout>
       <callout arearefs="combinedconvert">
@@ -1179,7 +1177,7 @@
       </callout>
       <callout arearefs="combinedcallconvert">
 	<para>
-	  Run the <literal>eeconverter</literal> as a job array. This script is described in more detail later in this section.
+	  Run the <literal>eeconverter</literal> as an array task. This script is described in more detail later in this section.
 	</para>
       </callout>
       <callout arearefs="parsable">
@@ -1189,12 +1187,12 @@
       </callout>
       <callout arearefs="dependency">
 	<para>
-	  Use the <literal>--dependency</literal> flag to submit the converter job if and only if the job specified by <literal>jobid</literal> has successfully executed (completed with return code 0).
+	  Use the <literal>--dependency</literal> flag to submit the converter job if and only if the fitting job specified by <literal>jobid</literal> has successfully executed (completed with return code 0).
 	</para>
       </callout>
 	</calloutlist>
 	<para>
-	  The script to run the <literal>eeconverter</literal> as a job array is shown below. There should be no surprises here: refer to <xref linkend="app_jobarray"/> and <xref linkend="app_eeconverter"/> for more information.
+	  The script to run the <literal>eeconverter</literal> as a job array is shown below. There should be no surprises here:
 	</para>
 	<informalexample>
 	  <programlisting>
