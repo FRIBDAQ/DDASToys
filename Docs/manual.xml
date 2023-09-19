@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-"file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd">
+"/usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd">
 
 <book>
   
@@ -319,10 +319,60 @@
   <chapter id="ch_usingddastoys">
     <title>Data analysis with DDASToys</title>
     <para>
-      This chapter provides a how-to guide for fitting traces using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under the Slurm Workload Manager at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command>. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>. Example job submission scripts discussed in this section are available at NERSC in $CFS/m4386/example_scripts.
+      This chapter provides a how-to guide for fitting traces using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under the Slurm Workload Manager at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command>. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
     </para>
     <para>
-      Running jobs on NERSC systems will charge hours to the allocation assigned to the account specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the account allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "regular" queue which may not be the best choice for production analysis.
+      Example job submission scripts discussed in this section are available at NERSC under $CFS/m4386/example_scripts. A brief summary of the available examples are provided here:
+    </para>
+    <itemizedlist>
+	<listitem>
+	  <para>
+	    <literal>submit_fit.sh</literal> -- Prepare a submission script and submit an <literal>EventEditor</literal> job via <literal>sbatch</literal>. A simplified version of this process is described in <xref linkend="sec_singlejob"/>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_fit.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file. This script is called by<literal>submit_fit.sh</literal>. See <xref linkend="sec_singlejob"/> for details.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>submit_fitarr.sh</literal> - Prepare a submission script and submit an <literal>EventEditor</literal> job array via <literal>sbatch</literal>. Discussed further in <xref linkend="sec_jobarrays"/> with annotated sample scripts given in <xref linkend="app_jobarray"/>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_fitarr.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file as an array task. This script is called by<literal>submit_fitarr.sh</literal>. See <xref linkend="sec_jobarrays"/> and <xref linkend="app_jobarray"/> for details.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>submit_converter.sh</literal> - Prepare a submission script and submit an <literal>eeconverter</literal> job to convert an event file to ROOT format. Additional information is provided in <xref linkend="sec_eeconverter"/> and <xref linkend="app_eeconverter"/>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_converter.sh</literal> - Run an <literal>eeconverter</literal> task to convert <literal>EventEditor</literal> output to ROOT format. See <xref linkend="sec_eeconverter"/> for more information and <xref linkend="app_eeconverter"/> for a sample script.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>submit_combined.sh</literal> - Submit array jobs for fitting traces and conversion to ROOT format using a single script, where conversion to ROOT format depends on successful completion of the fitting job. This script uses the <literal>--parsable</literal> and <literal>--dependency</literal> options to control the analysis workflow. Creating a combined analysis pipeline is discussed in <xref linkend="sec_pipeline"/>. See <xref linkend="app_pipeline"/> for sample scripts.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_converterarr.sh</literal> - Run an <literal>eeconverter</literal> array task to convert <literal>EventEditor</literal> output to ROOT format as part of the combined analysis pipeline described in <xref linkend="sec_pipeline"/>. A sample script is provided in <xref linkend="app_pipeline"/>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>shiftercmd</literal> - Run all passed arguments under the <literal>shifter</literal> container described in <xref linkend="ch_shifter"/>. For example, to spawn a bash shell in the container image, run the following command: <command>$CFS/m4386/example_scripts/shiftercmd /bin/bash</command>. This script expects that any environment variables you wish to propagate into the container are defined in a file shifter.env located in your account home directory. The formatting and contents of this file are discussed in <xref linkend="sec_configfiles"/> and a sample shifter.env file is provided in the example directory.
+	  </para>
+	</listitem>
+      </itemizedlist>
+    <para>
+      Running jobs on NERSC systems will charge hours to the allocation assigned to the account specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. The account for the FDSi e21062 project is m4386. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the account allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "shared" queue. To run jobs exclusively on each node, use the "regular" queue.
     </para>
 
     <section id="sec_configfiles">
@@ -453,7 +503,7 @@
       </informalexample>
     </section>
     
-    <section id="sec_basics">
+    <section id="sec_singlejob">
       <title>Running a single <literal>EventEditor</literal> job</title>
       <para>
 	The fribdaq/frib-buster:v4.2 container supports FRIBDAQ 12.0 and later which include parallel event editors. The FRIBDAQ <literal>EventEditor</literal> program provides the architecture for fitting event fragments containing traces. Plugin libraries which define the fitting algorithms and the data structure containing the fit results appended to each hit are provided by the user and loaded at the <literal>EventEditor</literal> program runtime. The <literal>EventEditor</literal> program supports parallel fitting using both ZMQ threading and OpenMPI. Running the command <command>$DAQBIN/EventEditor --help</command> from the command line describes the flags which can be passed to the program assuming the FRIBDAQ environment has been configured by sourcing its associated daqsetup.bash script.
@@ -633,7 +683,7 @@
     <section id="sec_jobarrays">
       <title>Job arrays</title>
       <para>
-	Job arrays allow collections of similar jobs to be submitted and managed together in Slurm. All individual jobs must have the same initial options: the values set using the <literal>--time</literal>, <literal>--ntasks</literal>, etc. flags must be identical. The <literal>--array</literal> flag sets a range of index values which can be accessed by an individual job via the <literal>SLURM_ARRAY_TASK_ID</literal> environment variable; for further information about submitting batch job arrays see <ulink url="https://slurm.schedmd.com/job_array.html"/>. Individual array tasks are interpreted by Slurm as single jobs which may impact their scheduling priority. An annotated example submission script to fit traces in multiple subruns indexed using a job array is given in <xref linkend="app_jobarray"/>.
+	Job arrays allow a collection of similar jobs to be submitted and managed together in Slurm. All individual jobs must have the same initial options: the values set using the <literal>--time</literal>, <literal>--ntasks</literal>, etc. flags must be identical. The <literal>--array</literal> flag sets a range of index values which can be accessed by an individual job via the <literal>SLURM_ARRAY_TASK_ID</literal> environment variable; for further information about submitting batch job arrays see <ulink url="https://slurm.schedmd.com/job_array.html"/>. Individual array tasks are interpreted by Slurm as single jobs which may impact their scheduling priority. An annotated example submission script to fit traces in multiple subruns indexed using a job array is given in <xref linkend="app_jobarray"/>.
       </para>
     </section>
     
@@ -645,27 +695,36 @@
     </section>
 
     <section id="sec_eeconverter">
-      <title>Converting <literal>EventEditor</literal> output to ROOT format</title>
+      <title>Using <literal>eeconverter</literal> to convert <literal>EventEditor</literal> output to ROOT format</title>
       <para>
-	Add:
-	- description
-	- example scripts (appendices are fine)
+	Similar to the <literal>ddasdumper</literal>, the DDASToys <literal>eeconverter</literal> program converts FRIBDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided. Running <command>/usr/opt/ddastoys/bin/eeconverter --help</command> from the command line inside the container will show how to use the program and how to pass it arguments; running without any command line parameters will show you the minimum number of required arguments. A sample job submission script the script it calls to run the <literal>eeconverter</literal> program are described in <xref linkend="app_eeconverter"/>.
       </para>
     </section>
 
     <section id="sec_pipeline">
       <title>Creating an analysis pipeline using <literal>sbatch</literal> job dependencies</title>
       <para>
-	Add:
-	- describe the point: single script to run the whole show
-	- appendices with annotated scripts
+	Slurm job dependencies allow the user to delay the start of a job contingent on some set of conditions, including, for example, the successful completion of another job. Complex analysis pipelines can be constructed and submitted to the Slurm scheduler using a single script. As an example, consider an analysis chain using the DDASToys codes described in the previous sections. <xref linkend="app_eeconverter"/> contains scripts to fit trace data and convert all the fitted output to ROOT format:
+	<orderedlist>
+	  <listitem>
+	    <para>
+	      As a job array, and,
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Using a single script with dependencies.
+	    </para>
+	  </listitem>
+	</orderedlist>
+	More information on creating analysis pipelines can be found on both the NERSC and Slurm documentation pages: <ulink url="https://docs.nersc.gov/jobs/examples/#dependencies"/> and <ulink url="https://slurm.schedmd.com/sbatch.html"/>, respectively. 
       </para>
     </section>
     
   </chapter>
 
   <appendix id="app_bashrc">
-    <title>Example .bashrc file</title>
+    <title>Sample .bashrc file</title>
     <para>
       Lines ending in "\" belong on a single line in the .bashrc file used to create this appendix.
     </para>
@@ -717,7 +776,7 @@
   </appendix>
 
   <appendix id="app_jobarray">
-    <title>Example job array submission script</title>
+    <title>Sample scripts for submitting <literal>EventEditor</literal> job arrays</title>
     <para>
       Shown below is a slightly more advanced job submission script which illustrates two concepts. First, the example demonstrates how to group similar jobs into a job array and submit the array as a batch job to Slurm. Second, this example shows how to prepare your user environment on a login node and submit a batch job in a single step as described in <ulink url="https://docs.nersc.gov/jobs/best-practices/"/>. This script should be run from the command line as <command>./submit_array.bash</command>.
     </para>
@@ -781,7 +840,7 @@
       </callout>
       <callout arearefs="catenv">
 	<para>
-	  Set up the environment for the batch job on the login node. Everything between this line and the next <literal>EOF</literal> will go into a batch script called prepare-env.sl.
+	  Set up the environment for the batch job on the login node. Everything between this line and the next <literal>EOF</literal> will be written to a Slurm batch submission script called fitarr_env.sl.
 	</para>
       </callout>
       <callout arearefs="arrayflag">
@@ -797,6 +856,11 @@
       <callout arearefs="outputflag">
 	<para>
 	  The patterns %A and %a are replaced in the output file by the job ID and array index ID, respectively. Analogous to the %j pattern used for non-array jobs.
+	</para>
+      </callout>
+      <callout arearefs="sbatcharray">
+	<para>
+	  Use the <command>sbatch</command> to submit the job script.
 	</para>
       </callout>
     </calloutlist>
@@ -874,6 +938,305 @@
 	</para>
       </callout>
     </calloutlist>
+  </appendix>
+
+  <appendix id="app_eeconverter">
+    <title>Sample scripts for converting <literal>EventEditor</literal> output to ROOT format</title>
+    <para>
+      Shown below is a sample job submission script for running an <literal>eeconverter</literal> batch job. This script uses the method shown in <xref linkend="app_jobarray"/> to prepare the submission script on a login node before submitting the job using the <command>sbatch</command>. 
+    </para>
+    <informalexample>
+      <programlisting>
+	#!/bin/bash -l
+
+	##
+	# Prepare a submission script and submit an EEConverter job.
+	#
+
+	cat &lt;&lt; EOF &gt; converter_env.sl
+	#!/bin/bash
+
+	##
+	# This file was created automatically by submit_converter.sh and submits
+	# a run file for conversion to ROOT format.
+	# 
+
+	#SBATCH --account=m4386                                            <co id="nodeconfig"/>
+	#SBATCH --licenses=scratch,cfs
+	#SBATCH --constraint=cpu
+	#SBATCH --qos=shared
+	#SBATCH --nodes=1
+	#SBATCH --ntasks=1
+	#SBATCH --time=00:30:00
+	#SBATCH --output=slurm_output/slurm-converter-%j.out
+
+	#SBATCH --image=fribdaq/frib-buster:v4.2
+	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
+	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
+	/global/cfs/cdirs/m4386/chester/converted:/converted;              \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
+	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --module=none
+
+	shifter --env-file=$HOME/shifter.env $HOME/run_converter.sh
+	EOF
+
+	sbatch converter_env.sl
+      </programlisting>
+    </informalexample>
+    <calloutlist>
+      <callout arearefs="nodeconfig">
+	<para>
+	  One thing to note here is that the <literal>eeconverter</literal> uses only a single core (really, a single <emphasis>thread</emphasis>). This process should always be run on the shared queue.
+	</para>
+      </callout>
+    </calloutlist>
+    <para>
+      The <literal>run_converter.sh</literal> script which calls the <literal>eeconverter</literal> program is shown below:
+    </para>
+    <informalexample>
+      <programlisting>
+	#!/bin/bash
+
+	##
+	# Convert EventEditor output to ROOT format
+	#
+
+	cd $HOME
+
+	. /usr/opt/daq/12.0-005/daqsetup.bash         <co id="eeconfig"/>
+	. /usr/opt/root/root-6.24.06/bin/thisroot.sh
+
+	input=/fitted/run-0283-00-fitted.evt          <co id="stageeeout"/>
+	output=/converted/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1).root
+	tmpin=/tmp/tmpin-$SLURM_JOB_ID.evt
+	tmpout=/tmp/tmpout-$SLURM_JOB_ID.evt
+	cp $input $tmpin
+
+	echo "JobID   $SLURM_JOB_ID"
+	echo "Time    $SLURM_JOB_START_TIME"
+	echo "Node    $SLURMD_NODENAME"
+	echo "Tasks   $SLURM_NTASKS"
+	echo "FileIn  $input"
+	echo "FileOut $output"
+	echo
+
+	time /usr/opt/ddastoys/bin/eeconverter \      <co id="runeeconverter"/>
+	-s file://$tmpin                       \      <co id="eeconvertersource"/>
+	-f $tmpout                                    <co id="eeconverterfileout"/>
+
+	rm $tmpin                                     <co id="cleanupee"/>
+	mv $tmpout $output
+      </programlisting>
+    </informalexample>
+    <calloutlist>
+      <callout arearefs="eeconfig">
+	<para>
+	  Configure the environment needed to run the <literal>eeconverter</literal> program. Because this program converts output to ROOT format, ensure that the correct version of ROOT is configured by sourcing its <literal>thisroot.sh</literal> script.
+	</para>
+      </callout>
+      <callout arearefs="stageeeout">
+	<para>
+	  Stage input and output files in the temporary space allocated on the node where the job is running. The output file name is automatically generated from the input.
+	</para>
+      </callout>
+      <callout arearefs="stageeeout">
+	<para>
+	  Stage input and output files in the temporary space allocated on the node where the job is running. The output file name is automatically generated from the input.
+	</para>
+      </callout>
+      <callout arearefs="runeeconverter">
+	<para>
+	  Run the <literal>eeconverter</literal> program.
+	</para>
+      </callout>
+      <callout arearefs="eeconvertersource">
+	<para>
+	  The <literal>-s</literal> or <literal>--source</literal> option specifies the input URI. In this case we read data from the file pointed to by <literal>tmpin</literal>, which is located in the temporary xfs space on the node where the job is running.
+	</para>
+      </callout>
+      <callout arearefs="eeconverterfileout">
+	<para>
+	  The <literal>-f</literal> or <literal>--fileout</literal> option specifies the output ROOT file path. In this case we write to file pointed to by <literal>tmpout</literal>, which is located in the temporary xfs space on the node where the job is running.
+	</para>
+      </callout>
+            <callout arearefs="cleanupee">
+	<para>
+	  Remove the temporary input file and move the temporary output to its final destination on the account CFS space.
+	</para>
+      </callout>
+    </calloutlist>
+  </appendix>
+
+  <appendix id="app_pipeline">
+    <title>Sample scripts for constructing an analysis pipeline using <literal>sbatch</literal> dependencies</title>
+    <para>
+      Shown below is a sample job submission script for running combined analysis. This script uses the <literal>sbatch</literal> flags <literal>--parsable</literal> and <literal>--dependency</literal> flags to extract the job ID value and use it to condition the submission of the ROOT conversion job on the successful completion of the fitting job. Much of the content of these scripts is similar to what is presented in <xref linkend="ch_usingddastoys"/>, <xref linkend="app_jobarray"/> and <xref linkend="app_eeconverter"/>; please refer to those sections for details.
+    </para>
+    <informalexample>
+      <programlisting>
+	#!/bin/bash -l
+
+	##
+	# Prepare submission scripts and submit fitting and ROOT conversion job
+	# arrays in a single step. The ROOT conversion job depends on good completion
+	# of the fit. --ntasks are MPI workers + 3. 30 mins run time is long enough
+	# for single segments I think. One array task per run segment.
+
+	# Prepare the user environment needed for the job. In this case, we count
+	# the number of files in the input directory and use that count to define
+	# the size of the job array:
+	#
+
+	fc=$(find /global/cfs/cdirs/m4386/chester/rawdata -name "*.evt" | wc -l)
+	endseg=`expr $fc - 1`
+
+	# Generate a submission script for fitting:
+
+	cat &lt;&lt;EOF &gt; fitarr_env_combined.sl                                  <co id="combinedfit"/>
+	#!/bin/bash
+
+	##
+	# This file was created automatically by submit_combined.sh and submits fitting 
+	# jobs in the container as a job array. --ntasks are MPI workers + 3. 30 mins 
+	# run time is long enough for single segments I think. One array task per run 
+	# segment.
+	#
+
+	#SBATCH --account=m4386
+	#SBATCH --licenses=scratch,cfs
+	#SBATCH --constraint=cpu
+	#SBATCH --qos=shared
+	#SBATCH --ntasks=64
+	#SBATCH --nodes=1
+	#SBATCH --time=00:30:00
+	#SBATCH --array=0-$endseg
+	#SBATCH --output=slurm_output/slurm-fitoutput-%A_%a.out
+
+	#SBATCH --image=fribdaq/frib-buster:v4.2
+	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
+	/global/cfs/cdirs/m4386/chester/rawdata:/rawdata;                  \
+	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
+	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --module=none
+
+	shifter --env-file=$HOME/shifter.env $HOME/run_fitarr.sh           <co id="combinedcallfit"/>
+	EOF
+
+	# And similarly for the ROOT conversion:
+
+	cat &lt;&lt;EOF &gt; converter_env_combined.sl                              <co id="combinedconvert"/>
+	#!/bin/bash 
+
+	##
+	# This file was created automatically by submit_combined.sh and submits a run
+	# file for conversion to ROOT format.
+	# 
+
+	#SBATCH --account=m4386
+	#SBATCH --licenses=scratch,cfs
+	#SBATCH --constraint=cpu
+	#SBATCH --qos=shared
+	#SBATCH --ntasks=1
+	#SBATCH --nodes=1
+	#SBATCH --time=00:30:00
+	#SBATCH --array=0-$endseg
+	#SBATCH --output=slurm_output/slurm-converter-%A_%a.out
+
+	#SBATCH --image=fribdaq/frib-buster:v4.2
+	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
+	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
+	/global/cfs/cdirs/m4386/chester/converted:/converted;              \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
+	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --module=none
+
+	shifter --env-file=$HOME/shifter.env $HOME/run_converterarr.sh     <co id="combinedcallconvert"/>
+	EOF
+
+	# Here we actually submit the jobs. Conversion to ROOT conditional on the fit:
+
+	jobid=$(sbatch --parsable fitarr_env_combined.sl)                  <co id="parsable"/>
+	sbatch --dependency=afterok:$jobid converter_env_combined.sl       <co id="dependency"/>
+      </programlisting>
+    </informalexample>
+        <calloutlist>
+      <callout arearefs="combinedfit">
+	<para>
+	  Create a job submission script for the first step of the analysis pipeline. In this case we submit the fitter as a job array.
+	</para>
+      </callout>
+      <callout arearefs="combinedcallfit">
+	<para>
+	  Run the <literal>EventEditor</literal> as a job array. The <literal>run_fitarr.sh</literal> script is the same as the one described in <xref linkend="app_jobarray"/>.
+	</para>
+      </callout>
+      <callout arearefs="combinedconvert">
+	<para>
+	  Create a job submission script for the second step of the analysis pipeline. In this case we submit the conversion as a job array.
+	</para>
+      </callout>
+      <callout arearefs="combinedcallconvert">
+	<para>
+	  Run the <literal>eeconverter</literal> as a job array. This script is described in more detail later in this section.
+	</para>
+      </callout>
+      <callout arearefs="parsable">
+	<para>
+	  Use the <literal>--parsable</literal> flag to store the Slurm job ID in the temporary variable <literal>jobid</literal>. This line submits the fitting job, and the ID assigned to this job by the Slurm scheduler is used to manage the workflow.
+	</para>
+      </callout>
+      <callout arearefs="dependency">
+	<para>
+	  Use the <literal>--dependency</literal> flag to submit the converter job if and only if the job specified by <literal>jobid</literal> has successfully executed (completed with return code 0).
+	</para>
+      </callout>
+	</calloutlist>
+	<para>
+	  The script to run the <literal>eeconverter</literal> as a job array is shown below. There should be no surprises here: refer to <xref linkend="app_jobarray"/> and <xref linkend="app_eeconverter"/> for more information.
+	</para>
+	<informalexample>
+	  <programlisting>
+	    #!/bin/bash
+
+	    ##
+	    # Set up the runtime environment, stage I/O and run the EEConverter to ROOT.
+	    # Use the array index to parameterize the subruns. After conversion cleanup
+	    # temporary input and move output to CFS
+	    #
+
+	    cd $HOME
+
+	    . /usr/opt/daq/12.0-005/daqsetup.bash
+	    . /usr/opt/root/root-6.24.06/bin/thisroot.sh
+
+	    if [ "$SLURM_ARRAY_TASK_ID" -lt 10 ]; then
+	    seg=$(printf "%02d" $SLURM_ARRAY_TASK_ID)
+	    else
+	    seg=$SLURM_ARRAY_TASK_ID
+	    fi
+
+	    input=/fitted/run-0283-$seg-fitted.evt
+	    output=/converted/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1).root
+	    tmpin=/tmp/tmpin-$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID.evt
+	    tmpout=/tmp/tmpout-$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID.evt
+	    cp $input $tmpin
+
+	    echo "JobID   $SLURM_ARRAY_JOB_ID_$SLURM_ARRAY_TASK_ID"
+	    echo "Time    $SLURM_JOB_START_TIME"
+	    echo "Node    $SLURMD_NODENAME"
+	    echo "Tasks   $SLURM_NTASKS"
+	    echo "FileIn  $input"
+	    echo "FileOut $output"
+	    echo
+
+	    time /usr/opt/ddastoys/bin/eeconverter -s file://$tmpin -f $tmpout
+
+	    rm $tmpin
+	    mv $tmpout $output
+	  </programlisting>
+	</informalexample>
   </appendix>
   
 </book>
