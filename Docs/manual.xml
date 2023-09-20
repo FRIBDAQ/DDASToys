@@ -521,31 +521,30 @@
 	  ##
 	  # submit.sl
 	  #
-	  # Usage:
-	  # sbatch submit.sl
+	  # Usage: sbatch submit.sl
 	  #
 	  # This file submits the fitter run inside the container. --ntasks are
 	  # MPI workers + 3. 30 mins run time is long enough for single
 	  # segments I think.
 	  # 
 
-	  #SBATCH --account=m4386                                        <co id="sbatchflags"/>
+	  #SBATCH --account=m4386                                            <co id="sbatchflags"/>
 	  #SBATCH --licenses=scratch,cfs
 	  #SBATCH --constraint=cpu
-	  #SBATCH --qos=regular
-	  #SBATCH --ntasks=35
+	  #SBATCH --qos=shared
+	  #SBATCH --ntasks=64
 	  #SBATCH --nodes=1
 	  #SBATCH --time=00:30:00
 	  #SBATCH --output=slurm_output/slurm-fitoutput-%j.out
 
-	  #SBATCH --image=fribdaq/frib-buster:v4.2                       <co id="shifterflags"/>
-	  #SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt; \
-	  /global/cfs/cdirs/m4386/chester/rawdata:/rawdata;              \
-	  /global/cfs/cdirs/m4386/chester/fitted:/fitted;                \
+	  #SBATCH --image=fribdaq/frib-buster:v4.2                           <co id="shifterflags"/>
+	  #SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
+	  /global/cfs/cdirs/m4386/experiment:/rawdata;                       \
+	  /global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
 	  /global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
 	  #SBATCH --module=none
 
-	  shifter --env-file=$HOME/shifter.env $HOME/run_fit.sh          <co id="shifterrun"/>
+	  shifter --env-file=$HOME/shifter.env $HOME/run_fit.sh              <co id="shifterrun"/>
 	</programlisting>
       </informalexample>
       <calloutlist>
@@ -575,6 +574,8 @@
 	  ##
 	  # run_fit.sh
 	  #
+	  # Usage: Run under a shifter container as part of an Slurm job.
+	  #
 	  # Run the EventEditor to fit traces in an .evt file. Stage I/O in
 	  # /tmp space, move tmp output to CFS on completion. Time fitting
 	  # call and write to Slurm output file
@@ -587,8 +588,8 @@
 	  export PATH=$OPAL_PREFIX/bin:$PATH
 	  export LD_LIBRARY_PATH=$OPAL_PREFIX/lib:$LD_LIBRARY_PATH
 
-	  input=/rawdata/run-0283-00.evt                      <co id="stagefiles"/>
-	  output=/fitted/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1)-fitted.evt
+	  input=/rawdata/run283/run-0283-00.evt               <co id="stagefiles"/>
+	  output=/fitted/$(echo $input | cut -d '/' -f 4 | cut -d '.' -f 1)-fitted.evt
 	  tmpin=/tmp/tmpin-$SLURM_JOB_ID.evt
 	  tmpout=/tmp/tmpout-$SLURM_JOB_ID.evt
 	  cp $input $tmpin
@@ -788,8 +789,6 @@
 	#!/bin/bash -l                                                     <co id="onlogin"/>
 
 	##
-	# submit_fitarr.sh
-	#
 	# Prepare a submission script and submit an EventEditor job array
 	# via sbatch.
 	# 
@@ -797,9 +796,10 @@
 	# Prepare the user environment needed for the job. In this case, we
 	# count the number of files in the input directory and use that count
 	# to define the size of the job array:
-	
-	fc=$(find /global/cfs/cdirs/m4386/chester/rawdata -name "*.evt" | wc -l)
-	endseg=`expr $fc - 1`
+
+	PROJECT=/global/cfs/cdirs/m4386
+	FC=$(find $PROJECT/experiment/run283 -name "*.evt" | wc -l)
+	ENDSEG=`expr $FC - 1`
 	
 	cat &lt;&lt;EOF &gt; fitarr_env.sl                                          <co id="catenv"/>
 	#!/bin/bash
@@ -816,17 +816,16 @@
 	#SBATCH --constraint=cpu
 	#SBATCH --qos=shared
 	#SBATCH --time=00:30:00
-	#SBATCH --array=0-$endseg                                          <co id="arrayflag"/>
-	#SBATCH --ntasks=35                                                <co id="arraytasks"/>
+	#SBATCH --array=0-$ENDSEG                                          <co id="arrayflag"/>
+	#SBATCH --ntasks=64                                                <co id="arraytasks"/>
 	#SBATCH --nodes=1
 	#SBATCH --output=slurm_output/slurm-fitoutput-%A_%a.out            <co id="outputflag"/>
 
 	#SBATCH --image=fribdaq/frib-buster:v4.2
-	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
-	/global/cfs/cdirs/m4386/chester/rawdata:/rawdata;                  \
-	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
-	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
-	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --volume="$PROJECT/opt-buster:/usr/opt;     \
+	$PROJECT/experiment:/rawdata;                       \
+	$PROJECT/chester/fitted:/fitted;                    \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
 	#SBATCH --module=none
 
 	shifter --env-file=$HOME/shifter.env $HOME/runee_array.sh
@@ -895,8 +894,8 @@
 	seg=$SLURM_ARRAY_TASK_ID
 	fi
 
-	input=/rawdata/run-0283-$seg.evt                        <co id="stagearray"/>
-	output=/fitted/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1)-fitted.evt
+	input=/rawdata/run283/run-0283-$seg.evt                 <co id="stagearray"/>
+	output=/fitted/$(echo $input | cut -d '/' -f 4 | cut -d '.' -f 1)-fitted.evt
 	tmpin=/tmp/tmpin-$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID.evt
 	tmpout=/tmp/tmpout-$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID.evt
 	cp $input $tmpin
@@ -956,6 +955,8 @@
 	# Prepare a submission script and submit an EEConverter job.
 	#
 
+	PROJECT=/global/cfs/cdirs/m4386
+	
 	cat &lt;&lt; EOF &gt; converter_env.sl
 	#!/bin/bash
 
@@ -974,11 +975,10 @@
 	#SBATCH --output=slurm_output/slurm-converter-%j.out
 
 	#SBATCH --image=fribdaq/frib-buster:v4.2
-	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
-	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
-	/global/cfs/cdirs/m4386/chester/converted:/converted;              \
-	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
-	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --volume="$PROJECT/opt-buster:/usr/opt;     \
+	$PROJECT/chester/fitted:/fitted;                    \
+	$PROJECT/chester/converted:/converted;              \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
 	#SBATCH --module=none
 
 	shifter --env-file=$HOME/shifter.env $HOME/run_converter.sh
@@ -1086,8 +1086,9 @@
 	# the size of the job array:
 	#
 
-	fc=$(find /global/cfs/cdirs/m4386/chester/rawdata -name "*.evt" | wc -l)
-	endseg=`expr $fc - 1`
+	PROJECT=/global/cfs/cdirs/m4386
+	FC=$(find $PROJECT/experiment/run283 -name "*.evt" | wc -l)
+	ENDSEG=`expr $FC - 1`
 
 	# Generate a submission script for fitting:
 
@@ -1108,15 +1109,14 @@
 	#SBATCH --ntasks=64
 	#SBATCH --nodes=1
 	#SBATCH --time=00:30:00
-	#SBATCH --array=0-$endseg
+	#SBATCH --array=0-$ENDSEG
 	#SBATCH --output=slurm_output/slurm-fitoutput-%A_%a.out
 
 	#SBATCH --image=fribdaq/frib-buster:v4.2
-	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
-	/global/cfs/cdirs/m4386/chester/rawdata:/rawdata;                  \
-	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
-	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
-	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --volume="$PROJECT/opt-buster:/usr/opt;     \
+	$PROJECT/experiment:/rawdata;                       \
+	$PROJECT/chester/fitted:/fitted;                    \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
 	#SBATCH --module=none
 
 	shifter --env-file=$HOME/shifter.env $HOME/run_fitarr.sh           <co id="combinedcallfit"/>
@@ -1139,15 +1139,14 @@
 	#SBATCH --ntasks=1
 	#SBATCH --nodes=1
 	#SBATCH --time=00:30:00
-	#SBATCH --array=0-$endseg
+	#SBATCH --array=0-$ENDSEG
 	#SBATCH --output=slurm_output/slurm-converter-%A_%a.out
 
 	#SBATCH --image=fribdaq/frib-buster:v4.2
-	#SBATCH --volume="/global/cfs/cdirs/m4386/opt-buster:/usr/opt;     \
-	/global/cfs/cdirs/m4386/chester/fitted:/fitted;                    \
-	/global/cfs/cdirs/m4386/chester/converted:/converted;              \
-	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G; \
-	/pscratch/sd/c/chester:/scratch"
+	#SBATCH --volume="$PROJECT/opt-buster:/usr/opt;     \
+	$PROJECT/chester/fitted:/fitted;                    \
+	$PROJECT/chester/converted:/converted;              \
+	/global/cscratch1/sd/chester/tmpfiles:/tmp:perNodeCache=size=100G"
 	#SBATCH --module=none
 
 	shifter --env-file=$HOME/shifter.env $HOME/run_converterarr.sh     <co id="combinedcallconvert"/>
