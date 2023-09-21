@@ -3,9 +3,6 @@
 CC = gcc
 CXX = g++
 
-SPECTCLINC=/usr/opt/spectcl/5.13-008.1/include
-SPECTCLLIB=/usr/opt/spectcl/5.13-008.1/lib
-
 # Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
 
 CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(SPECTCLINC) -I$(DAQINC)

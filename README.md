@@ -9,6 +9,7 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 Clone the DDASToys repository using `git clone https://github.com/FRIBDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In order to build this code you must:
 
 - Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
+- Set the environment variables SPECTCLINC and SPECTCLLIB to point to the /include and /lib directories of SpecTcl 5.13-008.1 or later (e.g. `export SPECTCLINC=/usr/opt/spectcl/5.13-008.1/include`).
 - Ensure Qt 5.11.3 or later is installed (required by the `traceview` GUI).
 - Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddaschannel.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. For FRIBDAQ 12.x this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh.
 
