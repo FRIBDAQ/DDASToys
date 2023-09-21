@@ -47,7 +47,8 @@ endif
 # DDASFitHitUnpacker.o and CRingItemProcessor.o exist.
 #
 
-all: libs objs subdirs docs
+all: exec docs
+exec: libs objs subdirs
 libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 objs: CRingItemProcessor.o
 subdirs: eeconverter traceview
