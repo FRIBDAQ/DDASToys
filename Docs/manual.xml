@@ -183,7 +183,7 @@
 	</callout>	
 	<callout arearefs="svolumes">
 	  <para>
-	    An optional flag to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_container</literal>, with multiple directories separated by semicolons. The user scratch space is mounted inside the container at /scratch. For users familiar with <literal>singularity</literal> or <literal>apptainer</literal>, this is similar to the <literal>--bind</literal> flag.
+	    An optional flag to specify volume mounting points inside the container. The syntax is <literal>--volume directory_outside_container:target_in_container</literal>, with multiple directories separated by semicolons. In this case, the user scratch space is mounted inside the container at /scratch. For users familiar with <literal>singularity</literal> or <literal>apptainer</literal>, this is similar to the <literal>--bind</literal> flag.
 	  </para>
 	</callout>
 	<callout arearefs="senvfile">
@@ -197,8 +197,26 @@
 	  </para>
 	</callout>
       </calloutlist>
-      For a more detailed discussion of Shifter flags run the command <command>shifter -h</command> on Perlmutter or refer to the NERSC Shifter documentation available here: <ulink url="https://docs.nersc.gov/development/shifter/shifter-tutorial"/> and here: <ulink url="https://docs.nersc.gov/development/shifter/how-to-use"/>.
+      For a more detailed discussion of Shifter flags run the command <command>shifter -h</command> on Perlmutter or refer to the NERSC Shifter documentation available here: <ulink url="https://docs.nersc.gov/development/shifter/shifter-tutorial"/> and here: <ulink url="https://docs.nersc.gov/development/shifter/how-to-use"/>. A troubleshooting guide is available at <ulink url="https://docs.nersc.gov/development/shifter/faq-troubleshooting/"/>.
     </para>
+
+    <section id="sec_bindpoints">
+      <title>A quick note about volume mounting in Shifter</title>
+      <para>
+	Occasionally mounting a volume in the image using the <literal>--bind</literal> flag will fail and report either an <literal>invalid volume map</literal> or the following error:
+	<informalexample>
+	  <programlisting>
+	    ERROR: unclean exit from bind-mount routine. /var/udiMount/&lt;path_in_image&gt;
+	        may still be mounted.
+	    BIND MOUNT FAILED from /var/udiMount/&lt;full_path_to_directory&gt;
+	        to /var/udiMount/&lt;path_in_image&gt;
+	    FAILED to setup user-requested mounts.
+	    FAILED to setup image
+	  </programlisting>
+	</informalexample>
+	 Most likely this is a permissions issue with the directory being mounted. Running the command <command>setfacl -m u:nobody:x &lt;full_path_to_directory&gt;</command> should resolve the issue. Only the owner of a directory is allowed to change its permissions. See <ulink url="https://docs.nersc.gov/development/shifter/faq-troubleshooting/#invalid-volume-map"/> for further information.
+      </para>
+    </section>
   </chapter>
 
   <chapter id="ch_gettingstarted">
@@ -322,62 +340,45 @@
   <chapter id="ch_usingddastoys">
     <title>Data analysis with DDASToys</title>
     <para>
-      If you have read this far, you are probably interested in actually processing some data at NERSC. This chapter is for you: a how-to guide for analyzing experimental data using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under Slurm at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command> from the terminal on a NERSC login node. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
-    </para>
-    <para>
-      Example job submission scripts discussed in this section are available at NERSC under /global/cfs/cdirs/m4386/example_scripts. A brief summary of the available examples are provided here:
-    </para>
-    <itemizedlist>
-	<listitem>
-	  <para>
-	    <literal>submit_fit.sh</literal> -- Prepare a submission script and submit an <literal>EventEditor</literal> job via <literal>sbatch</literal>. A simplified version of this process is described in <xref linkend="sec_singlejob"/>
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>run_fit.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file. This script is called by <literal>submit_fit.sh</literal>. See <xref linkend="sec_singlejob"/> for details.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>submit_fitarr.sh</literal> - Prepare a submission script and submit an <literal>EventEditor</literal> job array via <literal>sbatch</literal>. Discussed further in <xref linkend="sec_jobarrays"/> with annotated examples given in <xref linkend="app_jobarray"/>.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>run_fitarr.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file as an array task. This script is called by<literal>submit_fitarr.sh</literal>. See <xref linkend="sec_jobarrays"/> and <xref linkend="app_jobarray"/> for details.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>submit_converter.sh</literal> - Prepare a submission script and submit an <literal>eeconverter</literal> job to convert an event file to ROOT format. Additional information is provided in <xref linkend="sec_eeconverter"/> and <xref linkend="app_eeconverter"/>.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>run_converter.sh</literal> - Run an <literal>eeconverter</literal> task to convert <literal>EventEditor</literal> output to ROOT format. See <xref linkend="sec_eeconverter"/> for more information and <xref linkend="app_eeconverter"/> for a sample script.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>submit_combined.sh</literal> - Submit array jobs for fitting traces and conversion to ROOT format using a single script, where the conversion to ROOT format depends on successful completion of the fitting job. This script uses the <literal>--parsable</literal> and <literal>--dependency</literal> flags to control the analysis workflow. Creating a combined analysis pipeline is discussed in <xref linkend="sec_pipeline"/>. See <xref linkend="app_pipeline"/> for sample scripts.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>run_converterarr.sh</literal> - Run an <literal>eeconverter</literal> array task to convert <literal>EventEditor</literal> output to ROOT format as part of the combined analysis pipeline described in <xref linkend="sec_pipeline"/>. A sample script is provided in <xref linkend="app_pipeline"/>.
-	  </para>
-	</listitem>
-	<listitem>
-	  <para>
-	    <literal>shiftercmd</literal> - Run all passed arguments under the Shifter container described in <xref linkend="ch_shifter"/>. For example, to spawn a bash shell in the container image, run the following command: <command>/global/cfs/cdirs/m4386/example_scripts/shiftercmd /bin/bash</command>. This script expects that any environment variables you wish to propagate into the container are defined in ~/shifter.env, located in your account home directory. The formatting and contents of this file are discussed in <xref linkend="sec_configfiles"/> and a sample shifter.env file is provided in the example directory.
-	  </para>
-	</listitem>
-      </itemizedlist>
-    <para>
-      Running jobs on NERSC systems will charge hours to the allocation assigned to the project specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. The project for FDSi e21062 analysis is m4386. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and the constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the project allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "shared" queue which allows jobs from other users to run simultaneously on the same node. To run jobs exclusively on each node, use the "regular" queue.
+      If you have read this far, you are probably interested in processing some data at NERSC. This chapter is for you: a how-to guide for analyzing experimental data using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under Slurm at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command> from the terminal on a NERSC login node. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
     </para>
 
+    <section id="sec_importantinfo">
+      <title>Project information</title>
+      <para>
+	Information about the project, data storage, and software is summarized here:
+      </para>
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <emphasis role="strong">Project name:</emphasis> m4386
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis role="strong">Project storage:</emphasis> /global/cfs/cdirs/m4386
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis role="strong">usropt tree:</emphasis> /global/cfs/cdirs/m4386/opt-buster.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis role="strong">Experimental data:</emphasis> /global/cfs/cdirs/m4386/experiment (and subdirectories).
+	  </para>
+	</listitem>
+      </itemizedlist>     
+    </section>
+    
+    <section id="sec_queuesandqos">
+      <title>Job queues and QOS</title>
+      <para>
+	Running jobs on NERSC systems will charge hours to the allocation assigned to the project specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. The project for FDSi e21062 analysis is m4386. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and the constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the project allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "shared" queue which allows jobs from other users to run simultaneously on the same node. To run jobs exclusively on each node, use the "regular" queue.
+      </para>
+    </section>
+  
     <section id="sec_configfiles">
       <title>Configuration files required by <literal>EventEditor</literal></title>
       <para>
@@ -724,6 +725,60 @@
 	Sample scripts to perform this combined analysis and be found in <xref linkend="app_eeconverter"/>. More information on creating analysis pipelines can be found on both the NERSC and Slurm documentation pages: <ulink url="https://docs.nersc.gov/jobs/examples/#dependencies"/> and <ulink url="https://slurm.schedmd.com/sbatch.html"/>, respectively. 
       </para>
     </section>
+
+    <section id="sec_scripts">
+      <title>Example scripts</title>
+      <para>
+	Example job submission scripts for the analyses discussed in this section are available at NERSC under /global/cfs/cdirs/m4386/example_scripts. To use these scripts, copy them to your home directory and modify as needed, by, for example, changing the paths of the volume mounts to point to your analysis directories (<emphasis>ASC: rather than mine, in /chester under the top-level project directory</emphasis>). If you create a new directory for your analysis under the top-level project directory at $CFS/m4386, remember to set the correct permissions if you intend to mount it in the image, see <xref linkend="sec_bindpoints"/>. A brief summary of the available examples are provided here:
+      </para>
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <literal>submit_fit.sh</literal> -- Prepare a submission script and submit an <literal>EventEditor</literal> job via <literal>sbatch</literal>. A simplified version of this process is described in <xref linkend="sec_singlejob"/>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_fit.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file. This script is called by <literal>submit_fit.sh</literal>. See <xref linkend="sec_singlejob"/> for details.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>submit_fitarr.sh</literal> - Prepare a submission script and submit an <literal>EventEditor</literal> job array via <literal>sbatch</literal>. Discussed further in <xref linkend="sec_jobarrays"/> with annotated examples given in <xref linkend="app_jobarray"/>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_fitarr.sh</literal> - Run the <literal>EventEditor</literal> to fit traces in an event file as an array task. This script is called by<literal>submit_fitarr.sh</literal>. See <xref linkend="sec_jobarrays"/> and <xref linkend="app_jobarray"/> for details.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>submit_converter.sh</literal> - Prepare a submission script and submit an <literal>eeconverter</literal> job to convert an event file to ROOT format. Additional information is provided in <xref linkend="sec_eeconverter"/> and <xref linkend="app_eeconverter"/>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_converter.sh</literal> - Run an <literal>eeconverter</literal> task to convert <literal>EventEditor</literal> output to ROOT format. See <xref linkend="sec_eeconverter"/> for more information and <xref linkend="app_eeconverter"/> for a sample script.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>submit_combined.sh</literal> - Submit array jobs for fitting traces and conversion to ROOT format using a single script, where the conversion to ROOT format depends on successful completion of the fitting job. This script uses the <literal>--parsable</literal> and <literal>--dependency</literal> flags to control the analysis workflow. Creating a combined analysis pipeline is discussed in <xref linkend="sec_pipeline"/>. See <xref linkend="app_pipeline"/> for sample scripts.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>run_converterarr.sh</literal> - Run an <literal>eeconverter</literal> array task to convert <literal>EventEditor</literal> output to ROOT format as part of the combined analysis pipeline described in <xref linkend="sec_pipeline"/>. A sample script is provided in <xref linkend="app_pipeline"/>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <literal>shiftercmd</literal> - Run all passed arguments under the Shifter container described in <xref linkend="ch_shifter"/>. For example, <command>./shiftercmd /bin/bash</command> will spawn a Bash shell in the container. This script expects that environment variables you wish to propagate into the container are defined in a file called shifter.env located in your account home directory. The formatting and contents of this file are discussed in <xref linkend="sec_configfiles"/>. A sample shifter.env file is provided in the example directory.
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </section>
     
   </chapter>
 
@@ -1007,8 +1062,7 @@
 
 	cd $HOME
 
-	. /usr/opt/daq/12.0-005/daqsetup.bash         <co id="eeconfig"/>
-	. /usr/opt/root/root-6.24.06/bin/thisroot.sh
+	. /usr/opt/root/root-6.24.06/bin/thisroot.sh  <co id="eeconfig"/>
 
 	input=/fitted/run-0283-00-fitted.evt          <co id="stageeeout"/>
 	output=/converted/$(echo $input | cut -d '/' -f 3 | cut -d '.' -f 1).root
@@ -1035,7 +1089,7 @@
     <calloutlist>
       <callout arearefs="eeconfig">
 	<para>
-	  Configure the environment needed to run the <literal>eeconverter</literal> program. Because this program converts output to ROOT format, ensure that the correct version of ROOT is configured by sourcing its <literal>thisroot.sh</literal> script in addition to the normal DAQ environment configuration.
+	  Configure the environment needed to run the <literal>eeconverter</literal> program. Because this program converts output to ROOT format, ensure that the correct version of ROOT is configured by sourcing its <literal>thisroot.sh</literal>.
 	</para>
       </callout>
       <callout arearefs="stageeeout">
@@ -1205,7 +1259,6 @@
 
 	    cd $HOME
 
-	    . /usr/opt/daq/12.0-005/daqsetup.bash
 	    . /usr/opt/root/root-6.24.06/bin/thisroot.sh
 
 	    if [ "$SLURM_ARRAY_TASK_ID" -lt 10 ]; then
