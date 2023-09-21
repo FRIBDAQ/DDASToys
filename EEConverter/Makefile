@@ -3,11 +3,14 @@
 CC = gcc
 CXX = g++
 
+SPECTCLINC=/usr/opt/spectcl/5.13-008.1/include
+SPECTCLLIB=/usr/opt/spectcl/5.13-008.1/lib
+
 # Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
 
-CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DAQINC)
-LDFLAGS = -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
-LDLIBS = -ldataformat -lddasformat -lException -lurl -lFragmentIndex -ldaqio
+CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(SPECTCLINC) -I$(DAQINC)
+LDFLAGS = -L$(SPECTCLLIB) -Wl,-rpath=$(SPECTCLLIB) -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
+LDLIBS = -lTclGrammerApp -ldataformat -lddasformat -lException -lurl -ldaqio
 
 # Flags related to CERN ROOT:
 
