@@ -39,18 +39,16 @@ class CRingItem;
  * @details
  * The concept of this class is really simple. A virtual method for each
  * ring item type that we differentiate between. Similarly a virtual
- * method for ring item types that we don't break out. Only processEvent is 
- * pure virtual and must be implemented in all derived classes, the base class 
- * makes no assumptions about what you want to do with PHYSICS_EVENT items.
+ * method for ring item types that we don't break out.
  */
 
 class CRingItemProcessor
 {
 public:
     /** @brief Constructor. */
-    CRingItemProcessor();
+    CRingItemProcessor() {};
     /** @brief Destructor. */
-    virtual ~CRingItemProcessor();
+    virtual ~CRingItemProcessor() {};
   
 public:
     /**
@@ -68,6 +66,11 @@ public:
      * @param item Refereinces the CRingTextItem we got.
      */
     virtual void processTextItem(CRingTextItem& item);
+    /**
+     * @brief Output a physics event item to stdout.
+     * @param item Reference the physics event item.
+     */
+    virtual void processEvent(CPhysicsEventItem& item);
     /**
      * @brief Output an event count item to stdout.
      * @param item References the CPhysicsEventCountItem being dumped.
@@ -88,14 +91,6 @@ public:
      * @param item References the ring item for the event.
      */
     virtual void processUnknownItemType(CRingItem& item);
-
-    // Mandatory interface to convert events:
-
-    /**
-     * @brief Pure virtual method for processing physics events.
-     * @param item Reference the physics event item.
-     */
-    virtual void processEvent(CPhysicsEventItem& item) = 0;
 };
 
 #endif

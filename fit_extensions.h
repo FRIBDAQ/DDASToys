@@ -90,7 +90,7 @@ struct nullExtension {
  */ 
 struct FitInfo {
     DDAS::HitExtension s_extension; //!< The hit extension data.
-    std::uint32_t  s_size; //!< sizeof(DDAS::HitExtension)
+    std::uint32_t      s_size;      //!< sizeof(DDAS::HitExtension)
     /** @brief Creates FitInfo, set its size, and zeroes fit parameters. */
     FitInfo() : s_size(sizeof(FitInfo)) {
 	memset(&s_extension, 0, sizeof(DDAS::HitExtension));

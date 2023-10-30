@@ -102,8 +102,7 @@ DAQ::DDAS::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
 	    );
 	hit.setExtension(
 	    *(reinterpret_cast<const ::DDAS::HitExtension*>(pEnd))
-	    );
-    
+	    );    
     } else if (bodyBytes + sizeof(std::uint32_t) == bodySize) {        
 	// There's no hit extension actually -- it's a FitExtender null
 	// extension        
