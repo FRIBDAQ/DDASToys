@@ -130,8 +130,9 @@ private:
      * consisting of the fit limits [low, high] and whose second value is the 
      * saturation level above which trace data will not be included when fit. 
      */
-    std::map<unsigned, std::pair<std::pair<unsigned, unsigned>, unsigned> >
-    m_fitChannels;
+    std::map<
+    unsigned, std::pair<std::pair<unsigned, unsigned>, unsigned>
+    > m_fitChannels;
     std::vector<double> m_template; //!< Template trace data.
     unsigned m_alignPoint; //!< Sample no. align point for the template trace.
 };

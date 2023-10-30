@@ -50,7 +50,12 @@ class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
 {
 public:
     FitEditorAnalytic(); //!< Constructor.
+    FitEditorAnalytic(const FitEditorAnalytic& rhs);
+    FitEditorAnalytic(FitEditorAnalytic&& rhs) noexcept;
     virtual ~FitEditorAnalytic(); //!< Destructor.
+
+    FitEditorAnalytic& operator=(const FitEditorAnalytic& rhs);
+    FitEditorAnalytic& operator=(FitEditorAnalytic&& rhs) noexcept;
 
     // Mandatory interface from CBuiltRingItemEditor::BodyEditor
 public:

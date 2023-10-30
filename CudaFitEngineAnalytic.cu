@@ -473,7 +473,9 @@ void jacobian1(
  * Allocate the device vectors/matrices. Push the trace x/y points into the 
  * GPU where they stay until we're destroyed.
  */
-CudaFitEngine1::CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data) :
+CudaFitEngine1::CudaFitEngine1(
+    std::vector<std::pair<uint16_t, uint16_t>>& data
+    ) :
     FitEngine(data)
 {
     // Mashall the trace into x/y arrays... this lets them be CUDA memcpied
@@ -481,7 +483,7 @@ CudaFitEngine1::CudaFitEngine1(std::vector<std::pair<uint16_t, uint16_t>>& data)
     m_npts = data.size();    
     unsigned short x[m_npts];
     unsigned short y[m_npts];
-    for (int i =0; i < m_npts; i++) {
+    for (int i = 0; i < m_npts; i++) {
         x[i] = data[i].first;
         y[i] = data[i].second;
     }

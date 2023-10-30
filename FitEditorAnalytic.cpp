@@ -42,9 +42,32 @@ FitEditorAnalytic::FitEditorAnalytic() :
 	m_pConfig->readConfigFile();
     }
     catch (std::exception& e) {
-	std::cerr << "Error configuring FitExtender: " << e.what() << std::endl;
+	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
 	exit(EXIT_FAILURE);
     }
+}
+
+/**
+ * @brief Copy constructor.
+ *
+ * @param rhs Object to copy construct.
+ */
+FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic& rhs) :
+    m_pConfig(new Configuration(*rhs.m_pConfig))
+{}
+
+/**
+ * @brief Move constructor.
+ *
+ * @param rhs Object to move construct.
+ *
+ * @details
+ * Constructs using move assignment.
+ */
+FitEditorAnalytic::FitEditorAnalytic(FitEditorAnalytic&& rhs) noexcept :
+    m_pConfig(nullptr)
+{
+    *this = std::move(rhs);
 }
 
 /**
@@ -54,6 +77,43 @@ FitEditorAnalytic::FitEditorAnalytic() :
 FitEditorAnalytic::~FitEditorAnalytic()
 {
     delete m_pConfig;
+}
+
+/**
+ * @brief Copy assignment operator.
+ *
+ * @param rhs Object to copy assign.
+ *
+ * @return Reference to created object.
+ */
+FitEditorAnalytic&
+FitEditorAnalytic::operator=(const FitEditorAnalytic& rhs)
+{
+    if (this != &rhs) {
+	delete m_pConfig;
+	m_pConfig = new Configuration(*rhs.m_pConfig);
+    }
+
+    return *this;
+}
+
+/**
+ * @brief Move assignment operator.
+ *
+ * @param rhs Object to move assign.
+ *
+ * @return Reference to created object.
+ */
+FitEditorAnalytic&
+FitEditorAnalytic::operator=(FitEditorAnalytic&& rhs) noexcept
+{
+    if (this != &rhs) {
+	delete m_pConfig;	
+	m_pConfig = rhs.m_pConfig;
+	rhs.m_pConfig = nullptr;
+    }
+
+    return *this;
 }
 
 /**

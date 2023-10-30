@@ -69,7 +69,7 @@ namespace DAQ {
 	     * @brief Check whether hit has a fit extension.
 	     * @return True if the hit contains an extension, false otherwise.
 	     */
-	    bool hasExtension() const {return m_haveExtension;}
+	    bool hasExtension() const { return m_haveExtension; }
 	    /** 
 	     * @brief Get the extension data from the current hit.
 	     * @throw std::logic_error If the hit does not contain an extension.

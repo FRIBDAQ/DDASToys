@@ -9,6 +9,7 @@
 #define LMFIT_TEMPLATE_H
 
 #include <vector>
+#include <utility>
 
 #include "fit_extensions.h"
 
@@ -29,7 +30,7 @@ namespace DDAS {
 	 */
 	struct GslFitParameters {
 	    const std::vector<
-		std::pair<std::uint16_t, std::uint16_t>
+		std::pair<uint16_t, uint16_t>
 		>* s_pPoints; //!< Trace data stored as an (x, y) pair.
 	    const std::vector<double>* s_pTraceTemplate; //!< Template data.
 	};
@@ -55,10 +56,10 @@ namespace DDAS {
 	 *   above this value are removed from the fit.)
 	 */
 	void lmfit1(
-	    fit1Info* pResult, std::vector<std::uint16_t>& trace,
+	    fit1Info* pResult, std::vector<uint16_t>& trace,
 	    std::vector<double>& traceTemplate, unsigned alignPoint,
 	    const std::pair<unsigned, unsigned>& limits,
-	    std::uint16_t saturation = 0xffff
+	    uint16_t saturation = 0xffff
 	    );
 
 	/**
@@ -78,11 +79,11 @@ namespace DDAS {
 	 *   or above this value are removed from the fit.
 	 */
 	void lmfit2(
-	    fit2Info* pResult, std::vector<std::uint16_t>& trace,
+	    fit2Info* pResult, std::vector<uint16_t>& trace,
 	    std::vector<double>& traceTemplate, unsigned alignPoint,
 	    const std::pair<unsigned, unsigned>& limits,
 	    fit1Info* pSinglePulseFit = nullptr,
-	    std::uint16_t saturation = 0xffff
+	    uint16_t saturation = 0xffff
 	    );
 
 	/** @} */

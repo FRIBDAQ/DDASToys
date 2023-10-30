@@ -38,7 +38,12 @@ class FitEditorTemplate : public CBuiltRingItemEditor::BodyEditor
 {
 public:
     FitEditorTemplate(); //!< Constructor.
+    FitEditorTemplate(const FitEditorTemplate& rhs);
+    FitEditorTemplate(FitEditorTemplate&& rhs) noexcept;
     virtual ~FitEditorTemplate(); //!< Destructor.
+
+    FitEditorTemplate& operator=(const FitEditorTemplate& rhs);
+    FitEditorTemplate& operator=(FitEditorTemplate&& rhs) noexcept;
 
     // Mandatory interface from CBuiltRingItemEditor::BodyEditor
 public:

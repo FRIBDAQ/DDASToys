@@ -33,6 +33,7 @@
 #include <CRingScalerItem.h>
 #include <CRingTextItem.h>
 #include <CRingStateChangeItem.h>
+#include <CPhysicsEventItem.h>
 #include <CRingPhysicsEventCountItem.h>
 #include <CDataFormatItem.h>
 #include <CGlomParameters.h>
@@ -44,12 +45,6 @@ static std::map<CGlomParameters::TimestampPolicy, std::string> glomPolicyMap = {
     {CGlomParameters::last, "last"},
     {CGlomParameters::average, "average"}
 };
-
-CRingItemProcessor::CRingItemProcessor()
-{}
-
-CRingItemProcessor::~CRingItemProcessor()
-{}
 
 /**
  * @details
@@ -63,7 +58,7 @@ CRingItemProcessor::processScalerItem(CRingScalerItem& item)
 {
     time_t ts = item.getTimestamp();
     std::cout << "Scaler item recorded " << ctime(&ts) << std::endl;
-    for (size_t i=0; i<item.getScalerCount(); i++) {
+    for (size_t i = 0; i < item.getScalerCount(); i++) {
         std::cout << "Channel " << i << " had "
 		  << item.getScaler(i) << " counts\n";
     }
@@ -109,9 +104,20 @@ CRingItemProcessor::processTextItem(CRingTextItem& item)
     std::cout << "Here are the recorded strings: \n";
     
     std::vector<std::string> strings = item.getStrings();
-    for (size_t i=0; i<strings.size(); i++) {
+    for (size_t i = 0; i < strings.size(); i++) {
         std::cout << i << ": '" << strings[i] << "'\n";
     }
+}
+
+/**
+ * @details
+ * Here we "analyze" a physics event by dumping it to stdout. Derived classes 
+ * can implement their own event processing using this function.
+ */
+void
+CRingItemProcessor::processEvent(CPhysicsEventItem& item)
+{
+    std::cout << item.toString() << std::endl;
 }
 
 /**

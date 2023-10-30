@@ -36,19 +36,16 @@
 #include "jacobian_analytic.h"
 
 // Constants used in deriving estimates of k1, k2:
-
 static const double ln2(log(2));
 static const double ln3over4(log(3) - log(4));
 static const double ln9(log(9));
+static const double FALLBACK_K1(0.1); //!< Fallback for pulse risetime.
+static const double FALLBACK_K2(0.1); //!< Fallback for pulse decay.
 
-const double DDAS_FALLBACK_K1 = 0.1; //!< Fallback for pulse risetime.
-const double DDAS_FALLBACK_K2 = 0.1; //!< Fallback for pulse decay.
-
-const int SINGLE_MAXITERATIONS = 50;  //!< Max iterations for single pulse fit
-const int DOUBLE_MAXITERATIONS = 200; //!< Max iterations for double pulse fit
+static const int SINGLE_MAXITERS(50);  //!< Max iterations for single pulse fit.
+static const int DOUBLE_MAXITERS(200); //!< Max iterations for double pulse fit.
 
 // Single pulse fit parameter indices:
-
 static const int P1A_INDEX(0);
 static const int P1K1_INDEX(1);
 static const int P1K2_INDEX(2);
@@ -57,7 +54,6 @@ static const int P1C_INDEX(4);
 static const int P1_PARAM_COUNT(5);
 
 // Double pulse fit with all parameters free:
-
 static const int P2A1_INDEX(0);
 static const int P2K1_INDEX(1);
 static const int P2K2_INDEX(2);
@@ -69,8 +65,7 @@ static const int P2X2_INDEX(7);
 static const int P2C_INDEX(8); 
 static const int P2_PARAM_COUNT(9);
 
-// Double pulse fit with same time parameters parameter indices
-
+// Double pulse fit with same time parameters parameter indices:
 static const int P2FTA1_INDEX(0);
 static const int P2FTK1_INDEX(1);
 static const int P2FTK2_INDEX(2);
@@ -78,8 +73,7 @@ static const int P2FTX1_INDEX(3);
 static const int P2FTA2_INDEX(4);
 static const int P2FTX2_INDEX(5); 
 static const int P2FTC_INDEX(6); 
-static const int P2FT_PARAM_COUNT(7);
- 
+static const int P2FT_PARAM_COUNT(7); 
 
 /*------------------------------------------------------------------
  * Utility functions.
@@ -355,7 +349,7 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
     
     if ((k34 > 0) && (khalf > 0)) return 0.5*(k34 + khalf); // Average of both.
     if (k34 > 0) return k34; // Only have k34.
-    return DDAS_FALLBACK_K2; // Desparation measures.
+    return FALLBACK_K2; // Desparation measures.
 }
 
 /**
@@ -391,7 +385,7 @@ estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
 	}
     }
     
-    return DDAS_FALLBACK_K1; // Fall back value.
+    return FALLBACK_K1; // Fall back value.
 }
 
 /**
@@ -481,7 +475,7 @@ DDAS::AnalyticFit::lmfit1(
 	status = gsl_multifit_test_delta(
 	    solver->dx, solver->x, 1.0e-4, 1.0e-4
 	    );
-    } while((status == GSL_CONTINUE) && (iteration < SINGLE_MAXITERATIONS));
+    } while((status == GSL_CONTINUE) && (iteration < SINGLE_MAXITERS));
     
     // Fish the values out of the solvers.    
     double A  = gsl_vector_get(solver->x, P1A_INDEX);
@@ -714,7 +708,7 @@ DDAS::AnalyticFit::lmfit2(
 	status = gsl_multifit_test_delta(
 	    solver->dx, solver->x, 1.0e-4, 1.0e-4
 	    );        
-    } while((status == GSL_CONTINUE) && (iteration < DOUBLE_MAXITERATIONS));
+    } while((status == GSL_CONTINUE) && (iteration < DOUBLE_MAXITERS));
 
     // Fish our results and compute the chi square:
     
@@ -1044,7 +1038,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
 	status = gsl_multifit_test_delta(
 	    solver->dx, solver->x, 1.0e-4, 1.0e-4
 	    );        
-    } while((status == GSL_CONTINUE) && (iteration < DOUBLE_MAXITERATIONS));
+    } while((status == GSL_CONTINUE) && (iteration < DOUBLE_MAXITERS));
 
     // Fish our results and compute the chi square:    
     double A1 = gsl_vector_get(solver->x, P2FTA1_INDEX);  // Pulse 1 

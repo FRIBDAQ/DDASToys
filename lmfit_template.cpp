@@ -20,18 +20,16 @@
 
 #include "functions_template.h"
 
-const int SINGLE_MAXITERATIONS = 50;  //!< Max iterations for single pulse fit
-const int DOUBLE_MAXITERATIONS = 200; //!< Max iterations for double pulse fit
+static const int SINGLE_MAXITERS(50);  //!< Max iterations for single pulse fit.
+static const int DOUBLE_MAXITERS(200); //!< Max iterations for double pulse fit.
 
-// Single pulse fit parameter indices
-
+// Single pulse fit parameter indices:
 static const int P1A1_INDEX(0);
 static const int P1X1_INDEX(1);
 static const int P1C_INDEX(2);
 static const int P1_PARAM_COUNT(3);
 
-// Double pulse fit with all parameters free
-
+// Double pulse fit with all parameters free:
 static const int P2A1_INDEX(0);
 static const int P2X1_INDEX(1);
 static const int P2A2_INDEX(2);
@@ -39,7 +37,7 @@ static const int P2X2_INDEX(3);
 static const int P2C_INDEX(4);
 static const int P2_PARAM_COUNT(5);
 
-const int BASELINE = 8; //!< Samples for estimating the baseline
+static const int BASELINE(8); //!< Samples for estimating the baseline (unused).
 
 /*------------------------------------------------------------------
  * Utility functions.
@@ -56,15 +54,15 @@ const int BASELINE = 8; //!< Samples for estimating the baseline
  */
 static void
 reduceTrace(
-    std::vector<std::pair<std::uint16_t, std::uint16_t>>& points,
-    int low, int high,
-    const std::vector<std::uint16_t>& trace, std::uint16_t saturation
+    std::vector<std::pair<uint16_t, uint16_t>>& points,
+    unsigned low, unsigned high,
+    const std::vector<uint16_t>& trace, uint16_t saturation
     )
 {
-    for (int i =  low; i <= high; i++) {
+    for (unsigned i = low; i <= high; i++) {
 	if (trace[i] < saturation) {
 	    points.push_back(
-		std::pair<std::uint16_t, std::uint16_t>(i, trace[i])
+		std::pair<uint16_t, uint16_t>(i, trace[i])
 		);
 	}
     }
@@ -86,11 +84,8 @@ reduceTrace(
 static int
 gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
-  
     DDAS::TemplateFit::GslFitParameters* pParams
 	= reinterpret_cast<DDAS::TemplateFit::GslFitParameters*>(pData);
-  
-    // Note all points are  weighted by 1.0 in this computation.
     
     // Pull the fit parameterization from p:  
     double A1  = gsl_vector_get(p, P1A1_INDEX);
@@ -99,17 +94,17 @@ gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
     
     // Convert the raw data into its proper form:  
     const std::vector<
-	std::pair<std::uint16_t, std::uint16_t>
+	std::pair<uint16_t, uint16_t>
 	>& points(*pParams->s_pPoints); // Data
     const std::vector<double>& trtmp(*pParams->s_pTraceTemplate); // Template
   
     // Now loop over all the data points, filling in r with the weighted
-    // residuals    
-    for (size_t i=0; i<points.size(); i++) {
-	double x = points[i].first;  // Index is the x coordinate
-	double y = points[i].second; // Data pulse 
-	double p = DDAS::TemplateFit::singlePulse(A1, x1, C, x, trtmp);
-	gsl_vector_set(r, i, (p - y)); // Weighted by 1.0
+    // residuals (m - y) where m is the model data.
+    for (size_t i = 0; i<points.size(); i++) {
+	double x = points[i].first;
+	double y = points[i].second;
+	double m = DDAS::TemplateFit::singlePulse(A1, x1, C, x, trtmp);
+	gsl_vector_set(r, i, (m - y)); // Weighted by 1.0
     }
     
     return GSL_SUCCESS;
@@ -124,11 +119,11 @@ gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  */
 void
 DDAS::TemplateFit::lmfit1(
-    fit1Info* pResult, std::vector<std::uint16_t>& trace,
+    fit1Info* pResult, std::vector<uint16_t>& trace,
     std::vector<double>& traceTemplate,
     unsigned alignPoint,
     const std::pair<unsigned, unsigned>& limits,
-    std::uint16_t saturation
+    uint16_t saturation
     )
 {
     unsigned low  = limits.first;
@@ -136,11 +131,9 @@ DDAS::TemplateFit::lmfit1(
     
     // Produce the set of x/y points that are to be fit.  This is the trace
     // within the limits and with points at or above saturation removed  
-    std::vector<std::pair<std::uint16_t, std::uint16_t>> points;
+    std::vector<std::pair<uint16_t, uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);    
     unsigned npts = points.size(); // Number of points for the fit
-    size_t n = npts;
-    size_t p = P1_PARAM_COUNT;
 
     // Nonlinear least squares fitting in GSL 2.5 is done by approximating
     // the objective function g(x) by some low-order approximation in the
@@ -157,9 +150,13 @@ DDAS::TemplateFit::lmfit1(
     gsl_vector*                      initialGuess;
 
     // Make the solver workspace  
-    solver = gsl_multifit_nlinear_alloc(method, &function_params, n, p);
-    if (solver == nullptr) {
-	throw std::runtime_error("lmfit1 Unable to allocate fit solver workspace");
+    solver = gsl_multifit_nlinear_alloc(
+	method, &function_params, npts, P1_PARAM_COUNT
+	);
+    if (!solver) {
+	throw std::runtime_error(
+	    "lmfit1 Unable to allocate fit solver workspace"
+	    );
     }
    
     // Fill in function/data pointers:  
@@ -178,8 +175,8 @@ DDAS::TemplateFit::lmfit1(
     initialGuess = gsl_vector_alloc(P1_PARAM_COUNT);
 
     // Set up initial guesses based off the current trace:
-    double max = 0;
-    double maxSample = 0;
+    uint16_t max = 0;
+    unsigned maxSample = 0;
     for (unsigned i = low; i <= high; i++) {
 	if (trace[i] > max) {
 	    max = trace[i];
@@ -216,16 +213,15 @@ DDAS::TemplateFit::lmfit1(
     //            1 - small step,
     //            2 - small gradient,
     //            3 - small residual.  
-    int status = -1;
+    int status, info;
     double xtol = 1.0e-8;
     double gtol = pow(GSL_DBL_EPSILON, 1.0/3.0);
     double ftol  = 1.0e-8;
-    int info = 0;
 
     // Here's the driver for iterating and solving the system.
     // Iteration tracking callback parameters are nullptr.  
     status = gsl_multifit_nlinear_driver(
-	SINGLE_MAXITERATIONS, xtol, gtol, ftol, nullptr, nullptr, &info, solver
+	SINGLE_MAXITERS, xtol, gtol, ftol, nullptr, nullptr, &info, solver
 	);
     
     // Fish the values out of the solvers  
@@ -263,9 +259,7 @@ DDAS::TemplateFit::lmfit1(
  */
 static int
 gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
-{
-    // Note all points are weighted by 1.0 in this computation.
-  
+{ 
     DDAS::TemplateFit::GslFitParameters* pParams
 	= reinterpret_cast<DDAS::TemplateFit::GslFitParameters*>(pData); // Data
   
@@ -277,18 +271,17 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
     double C   = gsl_vector_get(p, P2C_INDEX);  // Constant baseline
     
     // Convert the raw data into its proper form:  
-    const std::vector<
-	std::pair<std::uint16_t, std::uint16_t>
-	>& points(*pParams->s_pPoints); // Data
+    const std::vector<std::pair<uint16_t, uint16_t>>&
+	points(*pParams->s_pPoints); // Data
     const std::vector<double>& trtmp(*pParams->s_pTraceTemplate); // Template
   
     // Now loop over all the data points, filling in r with the weighted
-    // residuals (weights by default are equal to 1)  
+    // residuals (m - y) where m is the model function.
     for (size_t i = 0; i < points.size(); i++) {
-	double x = points[i].first;  
-	double y = points[i].second; 
-	double p = DDAS::TemplateFit::doublePulse(A1, x1, A2, x2, C, x, trtmp);
-	gsl_vector_set(r, i, (p - y));
+	double x = points[i].first;
+	double y = points[i].second;
+	double m = DDAS::TemplateFit::doublePulse(A1, x1, A2, x2, C, x, trtmp);
+	gsl_vector_set(r, i, (m - y));
     }
     
     return GSL_SUCCESS; // Can't fail this function.
@@ -303,20 +296,19 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
  */
 void
 DDAS::TemplateFit::lmfit2(
-    fit2Info* pResult, std::vector<std::uint16_t>& trace,
+    fit2Info* pResult, std::vector<uint16_t>& trace,
     std::vector<double>& traceTemplate,
     unsigned alignPoint,
     const std::pair<unsigned, unsigned>& limits,
-    fit1Info* pSinglePulseFit, std::uint16_t saturation
+    fit1Info* pSinglePulseFit, uint16_t saturation
     )
 {
-  
     unsigned low = limits.first;
     unsigned high = limits.second;   
     
     // Now produce a set of x/y points to be fit from the trace,
     // limits and saturation value
-    std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
+    std::vector<std::pair<uint16_t, uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size(); // Number of points to fit
     
@@ -338,7 +330,7 @@ DDAS::TemplateFit::lmfit2(
     solver = gsl_multifit_nlinear_alloc(
 	method, &function_params, npts, P2_PARAM_COUNT
 	);
-    if (solver == nullptr) {
+    if (!solver) {
 	throw std::runtime_error(
 	    "lmfit2 Unable to allocate fit solver workspace"
 	    );
@@ -372,8 +364,8 @@ DDAS::TemplateFit::lmfit2(
     // If the single pulse fit gives bad values, fall back on the estimation.  
     double Xtrace = X10 + alignPoint; // Position on the actual trace
     if ((A10 < 0) || (Xtrace < 0) || (Xtrace > trace.size())) {
-	double max = 0;
-	double maxSample = 0;
+	uint16_t max = 0;
+	unsigned maxSample = 0;
 	for (unsigned i = low; i <= high; i++) {
 	    if (trace[i] > max) {
 		max = trace[i];
@@ -390,12 +382,12 @@ DDAS::TemplateFit::lmfit2(
     // the maximum value on the subtracted trace within the fitting limits and
     // hope that the fit can iron out the rest.
     double max = std::numeric_limits<double>::lowest();
-    double maxSample = 0;
+    unsigned maxSample = 0;
     for (unsigned i = low; i <= high; i++) {
-	double single = DDAS::TemplateFit::singlePulse(
-	    A10, X10, C0, static_cast<double>(i), traceTemplate
-	    );
-	double diff = trace[i] - single;
+	double diff
+	    = trace[i] - DDAS::TemplateFit::singlePulse(
+		A10, X10, C0, i, traceTemplate
+		);
 	if(diff > max) {
 	    max = diff;
 	    maxSample = i;
@@ -440,8 +432,7 @@ DDAS::TemplateFit::lmfit2(
     // Here's the driver for iterating and solving the system.
     // Iteration tracking callback parameters are NULL.  
     status = gsl_multifit_nlinear_driver(
-	DOUBLE_MAXITERATIONS, xtol, gtol, ftol,
-	nullptr, nullptr, &info, solver
+	DOUBLE_MAXITERS, xtol, gtol, ftol, nullptr, nullptr, &info, solver
 	);
 
     // Fish our results and compute the chi square

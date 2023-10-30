@@ -42,8 +42,31 @@ FitEditorTemplate::FitEditorTemplate() :
 }
 
 /**
+ * @brief Copy constructor.
+ *
+ * @param rhs Object to copy construct.
+ */
+FitEditorTemplate::FitEditorTemplate(const FitEditorTemplate& rhs) :
+    m_pConfig(new Configuration(*rhs.m_pConfig))
+{}
+
+/**
+ * @brief Move constructor.
+ *
+ * @param rhs Object to move construct.
+ *
  * @details
- * Delete the configuration object managed by this class.
+ * Constructs using move assignment.
+ */
+FitEditorTemplate::FitEditorTemplate(FitEditorTemplate&& rhs) noexcept :
+    m_pConfig(nullptr)
+{
+    *this = std::move(rhs);
+}
+
+/**
+ * @details
+ * Delete the Configuration object managed by this class.
  */
 FitEditorTemplate::~FitEditorTemplate()
 {
@@ -51,8 +74,45 @@ FitEditorTemplate::~FitEditorTemplate()
 }
 
 /**
+ * @brief Copy assignment operator.
+ *
+ * @param rhs Object to copy assign.
+ *
+ * @return Reference to created object.
+ */
+FitEditorTemplate&
+FitEditorTemplate::operator=(const FitEditorTemplate& rhs)
+{
+    if (this != &rhs) {
+	delete m_pConfig;
+	m_pConfig = new Configuration(*rhs.m_pConfig);
+    }
+
+    return *this;
+}
+
+/**
+ * @brief Move assignment operator.
+ *
+ * @param rhs Object to move assign.
+ *
+ * @return Reference to created object.
+ */
+FitEditorTemplate&
+FitEditorTemplate::operator=(FitEditorTemplate&& rhs) noexcept
+{
+    if (this != &rhs) {
+	delete m_pConfig;	
+	m_pConfig = rhs.m_pConfig;
+	rhs.m_pConfig = nullptr;
+    }
+
+    return *this;
+}
+
+/**
  * @details
- * This is the hook into the FitEditorAnalytic class. Here we:
+ * This is the hook into the FitEditorTemplate class. Here we:
  * - Parse the fragment into a hit.
  * - Produce a IOvec element for the existing hit (without any fit
  *   that might have been there).

@@ -189,7 +189,9 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  * Construct the fit engine and set the input data. Delegates to base 
  * class construction.
  */
-SerialFitEngine1::SerialFitEngine1(std::vector<std::pair<std::uint16_t, std::uint16_t>>& data) :
+SerialFitEngine1::SerialFitEngine1(
+    std::vector<std::pair<std::uint16_t, std::uint16_t>>& data
+    ) :
     CFitEngine(data)
 {}
 
@@ -259,7 +261,9 @@ SerialFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
  * @details
  * Delegates to base class construction.
  */
-SerialFitEngine2::SerialFitEngine2(std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data) :
+SerialFitEngine2::SerialFitEngine2(
+    std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+    ) :
     CFitEngine(data) {}
 
 void
