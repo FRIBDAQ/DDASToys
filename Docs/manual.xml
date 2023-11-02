@@ -37,7 +37,7 @@
   <chapter id="ch_intro">
     <title>Introduction </title>    
     <para>
-      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB. DDASToys software is supported for FRIBDAQ versions 12.0 and later.
+      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB. DDASToys software is supported for FRIBDAQ versions 12.0-005 and later. Bug reports and other issues related to the DDASToys software should be addressed to daqhelp@frib.msu.edu or chester@frib.msu.edu for more general inquiries.
     </para>
     <para>
       This document introduces and describes the tools provided by the DDASToys package, how to access and configure your user environment at NERSC to use these tools and how to submit jobs at NERSC using the Slurm Workload Manager. Though much of this document is oriented towards running DDASToys codes at NERSC, the user of Slurm at many High Performance Computing (HPC) facilities allows these scripts to be customized for applications outside of NERSC.
@@ -340,7 +340,7 @@
   <chapter id="ch_usingddastoys">
     <title>Data analysis with DDASToys</title>
     <para>
-      If you have read this far, you are probably interested in processing some data at NERSC. This chapter is for you: a how-to guide for analyzing experimental data using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under Slurm at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command> from the terminal on a NERSC login node. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>.
+      If you have read to this point, you are probably interested in processing some data at NERSC. This chapter is for you: a how-to guide for analyzing experimental data using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under Slurm at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command> from the terminal on a NERSC login node. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>. <xref linkend="app_troubleshooting"/> contains solutions to some commonly encountered issues running DDASToys code. 
     </para>
 
     <section id="sec_importantinfo">
@@ -834,6 +834,33 @@
     </informalexample>
   </appendix>
 
+  <appendix id="app_troubleshooting">
+    <title>Troubleshooting DDASToys code</title>
+    <para>
+      This appendix provides solutions for issues encountered while running DDASToys code.
+    </para>
+        <itemizedlist>
+	  <listitem>
+	    <para>
+	      The <literal>EventEditor</literal> code crashes with no output and a message similar to:
+	      <informalexample>
+		<programlisting>
+		  [pike:48184] *** Process received signal ***
+		  [pike:48184] Signal: Segmentation fault (11)
+		  [pike:48184] Signal code: Address not mapped (1)
+		  [pike:48184] Failing at address: 0x7fabb7027008
+		  [pike:48184] [ 0] /lib/x86_64-linux-gnu/libpthread.so.0(+0x12730)[0x7fabb80e5730]
+		  [pike:48184] [ 1] /usr/opt/mpi/openmpi-4.0.1/lib/pmix/mca_gds_ds21.so \
+		                    (pmix_gds_ds21_lock_init+0x129)[0x7fabb6e438d9]
+		  ... more errors ...
+		</programlisting>
+	      </informalexample>
+	      The last line shown above points to the issue, and the solution: disable the PMIx ds21 shared memory optimization by setting the environment variable <literal>PMIX_MCA_gds=^ds21</literal>. Note that this could be done in the shifter.env file used to define the runtime environment of DDASToys on a cluster such as NERSC.
+	    </para>
+	  </listitem>
+	</itemizedlist>    
+  </appendix>
+  
   <appendix id="app_jobarray">
     <title>Sample scripts for submitting <literal>EventEditor</literal> job arrays</title>
     <para>

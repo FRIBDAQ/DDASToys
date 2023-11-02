@@ -8,8 +8,7 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 # Building DDASToys
 Clone the DDASToys repository using `git clone https://github.com/FRIBDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In order to build this code you must:
 
-- Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
-- Set the environment variables SPECTCLINC and SPECTCLLIB to point to the /include and /lib directories of SpecTcl 5.13-008.1 or later (e.g. `export SPECTCLINC=/usr/opt/spectcl/5.13-008.1/include`).
+- Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-005 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
 - Ensure Qt 5.11.3 or later is installed (required by the `traceview` GUI).
 - Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddaschannel.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. For FRIBDAQ 12.x this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh.
 
@@ -29,13 +28,11 @@ For more information about how to run the `EventEditor` codes please refer to th
 For an explanation of how to run the `EventEditor` trace fitting framework, please refer to the DDASToys Manual or the output of the command `$DAQBIN/EventEditor --help` run from a terminal. The `DAQBIN` variable must point to an FRIBDAQ version 12.0 or later where the `EventEditor` software is installed. The manual also describes how to run the fitting software at NERSC and configure an analysis pipeline for trace fitting. Implementation of the fitting routines and their source code documentation is provided here. Notably, the structure of the fit extensions appended to each event is defined in the fit_extensions.h header.
 
 ## Converting event files containing fits to ROOT format
-<a name="eeconverter">
 The `eeconverter` program converts `EventEditor` output into a ROOT file format suitable for further analysis. Running `eeconverter --help` from the command line will show how to use the program and how to pass it arguments; running without any command line parameters will show you the minimum number of required arguments.
 
 The `eeconverter` program reads ring items from a data source -- in this case built NSCLDAQ events possibly containing fit information -- and hands them off to a ring item processor. The processor performs type-independent processing of each ring item, converting each FRIBDAQ PHYSICS_EVENT to a ROOT-ized data format and writing it to a ROOT file sink.
 
 ## Viewing traces and fits using traceview
-<a name="traceview">
 The `traceview` program can be used to display trace data and their respective fits (if present). Currently, `traceview` reads the fit and template configuration information from the files pointed to by the environment variables `FIT_CONFIGFILE` and `TEMPLATE_CONFIGFILE`. Refer to the DDASToys Manual for more information about the format of these configuration files.
 
 The `traceview` top menu is used to load data files and to exit the program. Successfully loading a file enables the GUI elements which allow you to parse the file and view its contents.
