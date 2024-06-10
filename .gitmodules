@@ -1,0 +1,3 @@
+[submodule "DDASFormat"]
+	path = DDASFormat
+	url = https://github.com/FRIBDAQ/DDASFormat.git
