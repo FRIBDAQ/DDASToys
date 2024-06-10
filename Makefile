@@ -17,16 +17,19 @@ CXX = g++
 
 MAXPOINTS = 200
 
-CXXFLAGS = -std=c++11 -g -O2 -Wall -I. -I$(DAQINC) 
-CXXLDFLAGS = -lgsl -lgslcblas -L$(DAQLIB) -lddasformat
+FMTINC=./DDASFormat
+FMTLIB=./DDASFormat
+
+CXXFLAGS = -std=c++11 -g -O2 -Wall -I. -I$(DAQINC) -I$(FMTINC)
+CXXLDFLAGS = -lgsl -lgslcblas -L$(FMTLIB) -lDDASFormat
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
 	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
 CUDALDFLAGS = -L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
-	--linker-options -rpath=$(DAQLIB)
+	--linker-options -rpath=$(FMTLIB)
 
 GNUCXXFLAGS = -fPIC
-GNULDFLAGS = -Wl,-rpath=$(DAQLIB) 
+GNULDFLAGS = -Wl,-rpath=$(FMTLIB)
 
 ifdef CUDA
 CXX = nvcc
@@ -49,7 +52,7 @@ endif
 
 all: exec docs
 exec: libs objs subdirs
-libs: libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 objs: CRingItemProcessor.o
 subdirs: eeconverter traceview
 
@@ -62,6 +65,9 @@ traceview:
 
 eeconverter:
 	$(MAKE) -C EEConverter
+
+libDDASFormat.so:
+	(cd DDASFormat; mkdir -p build; cd build; cmake --build ..; $(MAKE))
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
@@ -115,6 +121,7 @@ install:
 
 clean:
 	rm -f *.so *.o
+	(cd DDASFormat; cmake --build . --target clean)
 	$(MAKE) -C TraceView clean
 	rm -f TraceView/traceview
 	$(MAKE) -C EEConverter clean

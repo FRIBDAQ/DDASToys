@@ -3,11 +3,14 @@
 CC = gcc
 CXX = g++
 
+FMTINC=../DDASFormat
+FMTLIB=../DDASFormat
+
 # Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
 
-CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DAQINC)
-LDFLAGS = -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
-LDLIBS = -ldataformat -lddasformat -lException -lurl -ldaqio -lFragmentIndex
+CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DAQINC) -I$(FMTINC)
+LDFLAGS = -L$(DAQLIB) -Wl,-rpath=$(DAQLIB) -L$(FMTLIB) -Wl,-rpath=$(FMTLIB)
+LDLIBS = -ldataformat -lException -lurl -ldaqio -lFragmentIndex -lDDASFormat
 
 # Flags related to CERN ROOT:
 
@@ -25,13 +28,14 @@ eeconverter: eeconverter.o converterargs.o RootFileDataSink.o \
 
 libDDASRootFit.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o \
 	RootExtensions.o
-	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ $(LDFLAGS) -lddasformat
+	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ -L$(FMTLIB) \
+	-Wl,-rpath=$(FMTLIB) -lDDASFormat
 
 DDASRootFit.cpp: DDASRootFitEvent.h DDASRootFitHit.h ../DDASFitHit.h \
 	RootExtensions.h LinkDef.h
 	$(ROOTSYS)/bin/rootcling -f $@ \
 	-rml libDDASRootFit.so -rmf libDDASRootFit.rootmap \
-	-I$(DAQINC) $^
+	-I.. -I$(FMTINC) $^
 
 %.o : %.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
