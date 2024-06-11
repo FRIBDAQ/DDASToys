@@ -22,12 +22,11 @@ all: eeconverter libDDASRootFit.so
 eeconverter: eeconverter.o converterargs.o RootFileDataSink.o \
 	ProcessToRootSink.o CEventProcessor.o StringsToIntegers.o \
 	DDASRootFitHit.o DDASRootFitEvent.o DDASRootFit.o \
-	RootExtensions.o ../DDASFitHitUnpacker.o ../CRingItemProcessor.o
+	../DDASFitHitUnpacker.o ../CRingItemProcessor.o
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o $@ $^ \
 	$(LDFLAGS) $(LDLIBS) $(ROOTLDFLAGS)
 
-libDDASRootFit.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o \
-	RootExtensions.o
+libDDASRootFit.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o
 	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ -L$(FMTLIB) \
 	-Wl,-rpath=$(FMTLIB) -lDDASFormat
 

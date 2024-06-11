@@ -29,14 +29,8 @@
 #ifndef ROOTEXTENSIONS_H
 #define ROOTEXTENSIONS_H
 
+#include <fit_extensions.h>
 #include <TObject.h>
-
-namespace DDAS {
-    struct PulseDescription;
-    struct fit1Info;
-    struct fit2Info;
-    struct HitExtension;
-}
 
 /**
  * @ingroup ddasrootfit
@@ -47,28 +41,8 @@ namespace DDAS {
  * @struct RootPulseDescription
  * @brief Describes a single pulse without an offset.
  */
-struct RootPulseDescription : public TObject
-{
-    // Data members:
-   
-    Double_t position;  //!< Where the pulse is.
-    Double_t amplitude; //!< Pulse amplitude.
-    Double_t steepness; //!< Logistic steepness factor.
-    Double_t decayTime; //!< Decay time constant.
-   
-    // Methods:
-
-    /** @brief Constructor. */
-    RootPulseDescription();
-    /**
-     * @brief Assignment from a DDAS::PulseDescription. This is how this struct
-     * is intended to get is values.
-     * @param rhs Reference to a DDAS::PulseDescription that will provide 
-     *   our values.
-     * @return RootPulseDescription&  To support assignment chaining.
-     */
-    RootPulseDescription& operator=(const DDAS::PulseDescription& rhs);
-  
+struct RootPulseDescription : public DDAS::PulseDescription, public TObject
+{  
     /** @brief Required for inheritence from TObject. */  
     ClassDef(RootPulseDescription, 1);
 };
@@ -85,27 +59,8 @@ struct RootPulseDescription : public TObject
  * @struct RootFit1Info
  * @brief Full fitting information for the single pulse.
  */
-struct RootFit1Info : public TObject
+struct RootFit1Info : public DDAS::fit1Info, public TObject
 {
-    // Data members:
-  
-    RootPulseDescription pulse; //!< Description of the pulse parameters.
-    Double_t chiSquare;         //!< Chi-square value of the fit.
-    Double_t offset;            //!< Constant offset.
-    UInt_t iterations;          //!< Iterations for fit to converge
-    UInt_t fitStatus;           //!< Fit status from GSL.
-   
-    // Methods:
-
-    /** @brief Constructor. */
-    RootFit1Info();
-    /**
-     * @brief Assignment from a DDAS::fit1Info
-     * @param rhs References the DDAS::fitInfo from which we'll get our values.
-     * @return *this
-     */
-    RootFit1Info& operator=(const DDAS::fit1Info& rhs);
-
     /** @brief Required for inheritence from TObject. */
     ClassDef(RootFit1Info, 1);
 };
@@ -121,27 +76,8 @@ struct RootFit1Info : public TObject
  * @struct RootFit2Info
  * @brief Full fitting information for the double pulse.
  */
-struct RootFit2Info : public TObject
+struct RootFit2Info : public DDAS::fit2Info, public TObject
 {
-    // Data members:
-  
-    RootPulseDescription pulses[2]; //!< The two pulses.
-    Double_t chiSquare;             //!< Chi-square value of the fit.
-    Double_t offset;                //!< Offset on which they sit.
-    UInt_t iterations;              //!< Iterations needed to converge.
-    UInt_t fitStatus;               //!< Fit status from GSL.
-   
-    // Methods:
-    
-    /** @brief Constructor. */    
-    RootFit2Info();    
-    /**
-     * @brief Assignment from a DDAS::fit2Info.
-     * @param rhs References the DDAS::fit2Info from which we get our values.
-     * @return *this
-     */
-    RootFit2Info& operator=(const DDAS::fit2Info& rhs);
-
     /** @brief Required for inheritence from TObject. */
     ClassDef(RootFit2Info, 1);
 };
@@ -157,21 +93,8 @@ struct RootFit2Info : public TObject
  * @struct RootHitExtension
  * @brief The data structure containing the full information about the fits.
  */
-struct RootHitExtension : public TObject
+struct RootHitExtension : public DDAS::HitExtension, public TObject
 {
-    RootFit1Info onePulseFit; //!< Single pulse fit information.
-    RootFit2Info twoPulseFit; //!< Double pulse fit information.
-    Bool_t haveExtension;     //!< True if there is fit information for the hit.
-
-    /** @brief Constructor.*/
-    RootHitExtension();
-    /**
-     * @brief Assignment from a DDAS::HitExtension.
-     * @param rhs References the DDAS::HitExtension that gives us our values.
-     * @return *this
-     */
-    RootHitExtension& operator=(const DDAS::HitExtension& rhs);
-
     /** @brief Required for inheritence from TObject. */
     ClassDef(RootHitExtension, 1);
 };
