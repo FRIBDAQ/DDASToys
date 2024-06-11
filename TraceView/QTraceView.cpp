@@ -329,19 +329,19 @@ QTraceView::isValidHit(const DAQ::DDAS::DDASFitHit& hit)
     bool channelMatch = false;
     bool hasTrace = false;
     if ((m_pHitFilter[0]->text() == "*") ||
-	(m_pHitFilter[0]->text().toUInt() == hit.GetCrateID())) {
+	(m_pHitFilter[0]->text().toUInt() == hit.getCrateID())) {
 	crateMatch = true;
     }
     if ((m_pHitFilter[1]->text() == "*") ||
-	(m_pHitFilter[1]->text().toUInt() == hit.GetSlotID())) {
+	(m_pHitFilter[1]->text().toUInt() == hit.getSlotID())) {
 	slotMatch = true;
     }
     if ((m_pHitFilter[2]->text() == "*") ||
-	(m_pHitFilter[2]->text().toUInt() == hit.GetChannelID())) {
+	(m_pHitFilter[2]->text().toUInt() == hit.getChannelID())) {
 	channelMatch = true;
     }
 
-    std::vector<uint16_t> trace = hit.GetTrace();
+    std::vector<uint16_t> trace = hit.getTrace();
     if (!trace.empty()) {
 	hasTrace = true;
     }
@@ -366,9 +366,9 @@ QTraceView::updateSelectableHits()
 
     for (unsigned i = 0; i < m_filteredHits.size(); i++) {    
 	// Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
-	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].GetCrateID()
-	    ).arg(m_filteredHits[i].GetSlotID()
-		).arg(m_filteredHits[i].GetChannelID());    
+	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].getCrateID()
+	    ).arg(m_filteredHits[i].getSlotID()
+		).arg(m_filteredHits[i].getChannelID());    
 	QStandardItem* item = new QStandardItem(id);
 	model->setItem(i, item);
     }

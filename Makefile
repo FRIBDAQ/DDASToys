@@ -4,8 +4,11 @@
 # longest trace we're fitting if this is CUDA enabled.
 #
 # Required definitions:
+#  - cmake 3.15+ for building and installing the DDASFormat library and
+#    header files.
+#  - Qt 5.11+ for TraceView.
 #  - A version of the refactored NSCLDAQ containing the old DDAS headers
-#    and libraries has been set up.
+#    and libraries (12.1+ for this branch).
 #  - The same ROOT version used to compile the NSCLDAQ version used. These can
 #    be found under /usr/opt/root, (probably) not a module file. Source the
 #    approprite thisroot.sh script in /usr/opt/root/root-x.yy-zz/bin.
@@ -13,14 +16,49 @@
 #    find it in /usr/lib/x86_64-linux-gnu otherwise you may have to edit
 #    the Makefile to point at your GSL headers/libraries.
 
+# Check for cmake of the appropriate version. Requires at least cmake 3.15
+# which allows for overriding the default installation directory via --prefix
+# flag at install time rather than requiring -DCMAKE_INSTALL_PREFIX when
+# building. Ideally I'd like to port all of this over to a cmake build but
+# thats a more significant amount of work.
+
+# It's an error not to have cmake:
+ifeq (, $(shell which cmake))
+$(error No cmake in $(PATH), cmake 3.15+ is required to build DDASToys)
+endif
+
+# It's also an error if cmake version is 3.14 or earlier (e.g., on buster):
+CMAKE_VERSION_GT_315=$(shell cmake --version | head -1 | cut -d " " -f 3 | awk -F. '$$1 >= 3 && $$2 > 15')
+ifeq ($(CMAKE_VERSION_GT_315),)
+$(error cmake version 3.15+ required but found $(shell cmake --version | head -1))
+endif
+
+# If no qmake, we can still build everything except traceview:
+BUILD_TRACEVIEW=1
+ifeq (, $(shell which qmake))
+BUILD_TRACEVIEW=0
+$(info Qt version 5.11+ is required to build traceview, skipping)
+endif
+
+QT_VERSION_GT_511=$(shell qmake -qt=5 --version | tail -1 | cut -d " " -f 4 | awk -F. '$$1 >= 5 && $$2 >= 11')
+ifeq ($(QT_VERSION_GT_511),)
+BUILD_TRACEVIEW=0
+$(info Qt version 5.11+ required to build traceview but found $(shell qmake -qt=5 --version | tail -1 | cut -d " " -f 2-), skipping)
+endif
+
+# Now we actually get to the Making:
+
 CXX = g++
 
 MAXPOINTS = 200
 
-FMTINC=./DDASFormat
-FMTLIB=./DDASFormat
+# Format library install location (see .gitmodules):
 
-CXXFLAGS = -std=c++11 -g -O2 -Wall -I. -I$(DAQINC) -I$(FMTINC)
+FMTINC=$(PWD)/DDASFormat
+FMTBUILDDIR=$(PWD)/DDASFormat/build
+FMTLIB=$(FMTBUILDDIR)
+
+CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(DAQINC) -I$(FMTINC)
 CXXLDFLAGS = -lgsl -lgslcblas -L$(FMTLIB) -lDDASFormat
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
@@ -52,22 +90,26 @@ endif
 
 all: exec docs
 exec: libs objs subdirs
-libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so \
+	libDDASFitHitUnpacker.so
 objs: CRingItemProcessor.o
+subdirs: eeconverter
+ifeq ($(BUILD_TRACEVIEW), 1)
 subdirs: eeconverter traceview
+endif
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro)
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro FMTINC=$(FMTINC) FMTLIB=$(FMTLIB))
 	$(MAKE) -C TraceView
 
 eeconverter:
-	$(MAKE) -C EEConverter
+	FMTINC=$(FMTINC) FMTLIB=$(FMTLIB) $(MAKE) -C EEConverter
 
 libDDASFormat.so:
-	(cd DDASFormat; mkdir -p build; cd build; cmake --build ..; $(MAKE))
+	(mkdir -p $(FMTBUILDDIR); cd $(FMTBUILDDIR); cmake ..; $(MAKE))
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
@@ -105,6 +147,8 @@ install:
 	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
 
+	(cd DDASFormat/build; cmake --install . --prefix $(PREFIX)/DDASFormat)
+
 	for f in $(shell find . -type f -name "*.so"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	for f in $(shell find . -type f -name "*.pcm"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	for f in $(shell find . -type f -name "*.rootmap"); do install -m 0755 $$f $(PREFIX)/lib ; done
@@ -114,14 +158,16 @@ install:
 	for f in $(shell find ./EEConverter -type f -name "*Root*.h" ! -name "ProcessToRootSink.h"); do install -m 0644 $$f $(PREFIX)/include; done
 
 	install -m 0755 EEConverter/eeconverter $(PREFIX)/bin/eeconverter
+ifeq ($(BUILD_TRACEVIEW), 1)
 	install -m 0755 TraceView/traceview $(PREFIX)/bin/traceview
+endif
 
 	cp -r Docs/manual $(PREFIX)/share/
 	cp -r Docs/sourcedocs $(PREFIX)/share/
 
 clean:
 	rm -f *.so *.o
-	(cd DDASFormat; cmake --build . --target clean)
+	rm -rf $(FMTBUILDDIR)
 	$(MAKE) -C TraceView clean
 	rm -f TraceView/traceview
 	$(MAKE) -C EEConverter clean
