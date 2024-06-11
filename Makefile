@@ -16,6 +16,14 @@
 #    find it in /usr/lib/x86_64-linux-gnu otherwise you may have to edit
 #    the Makefile to point at your GSL headers/libraries.
 
+# Set the top level install path if not provided:
+
+DEFAULT_PREFIX=/usr/opt/ddastoys
+ifeq ($(PREFIX),)
+$(info No prefix specified, assuming $(DEFAULT_PREFIX))
+PREFIX=$(DEFAULT_PREFIX)
+endif
+
 # Check for cmake of the appropriate version. Requires at least cmake 3.15
 # which allows for overriding the default installation directory via --prefix
 # flag at install time rather than requiring -DCMAKE_INSTALL_PREFIX when
@@ -54,9 +62,9 @@ MAXPOINTS = 200
 
 # Format library install location (see .gitmodules):
 
-FMTINC=$(PWD)/DDASFormat
+FMTINC=$(PREFIX)/DDASFormat/include
+FMTLIB=$(PREFIX)/DDASFormat/lib
 FMTBUILDDIR=$(PWD)/DDASFormat/build
-FMTLIB=$(FMTBUILDDIR)
 
 CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(DAQINC) -I$(FMTINC)
 CXXLDFLAGS = -lgsl -lgslcblas -L$(FMTLIB) -lDDASFormat
@@ -109,7 +117,7 @@ eeconverter:
 	FMTINC=$(FMTINC) FMTLIB=$(FMTLIB) $(MAKE) -C EEConverter
 
 libDDASFormat.so:
-	(mkdir -p $(FMTBUILDDIR); cd $(FMTBUILDDIR); cmake ..; $(MAKE))
+	(mkdir -p $(FMTBUILDDIR); cd $(FMTBUILDDIR); cmake ..; $(MAKE); cmake --install . --prefix $(PREFIX)/DDASFormat)
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
@@ -147,9 +155,7 @@ install:
 	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
 
-	(cd DDASFormat/build; cmake --install . --prefix $(PREFIX)/DDASFormat)
-
-	for f in $(shell find . -type f -name "*.so"); do install -m 0755 $$f $(PREFIX)/lib ; done
+	for f in $(shell find . -type f -name "*.so" ! -name "libDDASFormat.so"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	for f in $(shell find . -type f -name "*.pcm"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	for f in $(shell find . -type f -name "*.rootmap"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	ln -sf $(PREFIX)/lib/DDASRootFit_rdict.pcm $(PREFIX)/bin/DDASRootFit_rdict.pcm

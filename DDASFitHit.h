@@ -52,6 +52,25 @@ namespace DAQ {
 	    DDASFitHit() { Reset(); } //!< Constructor.
 	    virtual ~DDASFitHit() {} //!< Destructor.
 
+	    /**
+	     * @brief Assignment operator.
+	     * @details
+	     * Calls base class operator= and sets the hit extension 
+	     * (if present).
+	     * @param rhs Reference to DDASFitHit for assignment.
+	     * @return Reference to lhs.
+	     */
+	    DDASFitHit& operator=(const DAQ::DDAS::DDASFitHit& rhs) {
+		if (this != &rhs) {
+		    DDASHit::operator=(rhs);
+		    if (rhs.hasExtension()) {
+			auto ext = rhs.getExtension();
+			setExtension(ext);
+		    }
+		}
+		return *this;
+	    }
+
 	    /** @brief Reset the hit information. */
 	    void Reset() {
 		m_haveExtension = false;

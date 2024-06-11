@@ -79,7 +79,7 @@ public:
 private:
     DAQ::DDAS::DDASFitHitUnpacker* m_pUnpacker; //!< Unpacker for fit events.
     DDASRootFitEvent* m_pTreeEvent; //!< The ROOT-ized event to write.
-    std::vector<RootHitExtension> m_extensions; //!< Fit extensions.
+    //std::vector<RootHitExtension> m_extensions; //!< Fit extensions.
     TTree* m_pTree; //!< Tree in the output file we write to.
     TFile* m_pFile; //!< The output ROOT file.
     bool m_warnedPutUsed; //!< Warning flag to call the right put.

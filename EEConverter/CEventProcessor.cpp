@@ -248,7 +248,9 @@ CEventProcessor::processRingItem(CRingItem& item)
     case PAUSE_RUN:
     case RESUME_RUN:
     {
-	CRingStateChangeItem& statechange(dynamic_cast<CRingStateChangeItem&>(*castableItem));
+	CRingStateChangeItem& statechange(
+	    dynamic_cast<CRingStateChangeItem&>(*castableItem)
+	    );
 	m_pProcessor->processStateChangeItem(statechange);
 	break;
     }
@@ -261,14 +263,18 @@ CEventProcessor::processRingItem(CRingItem& item)
     }
     case PHYSICS_EVENT:
     {
-	CPhysicsEventItem& event(dynamic_cast<CPhysicsEventItem&>(*castableItem));
+	CPhysicsEventItem& event(
+	    dynamic_cast<CPhysicsEventItem&>(*castableItem)
+	    );
 	m_pProcessor->processEvent(event);
 	break;
     }
     case PHYSICS_EVENT_COUNT:
     {
 	CRingPhysicsEventCountItem&
-	    eventcount(dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem));
+	    eventcount(
+		dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem)
+		);
 	m_pProcessor->processEventCount(eventcount);
 	break;
     }
@@ -280,7 +286,9 @@ CEventProcessor::processRingItem(CRingItem& item)
     }
     case EVB_GLOM_INFO:
     {
-	CGlomParameters& glomparams(dynamic_cast<CGlomParameters&>(*castableItem));
+	CGlomParameters& glomparams(
+	    dynamic_cast<CGlomParameters&>(*castableItem)
+	    );
 	m_pProcessor->processGlomParams(glomparams);
 	break;
     }

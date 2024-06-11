@@ -22,6 +22,8 @@
 
 #include "DDASRootFitHit.h"
 
+#include <iostream>
+
 #include "DDASFitHit.h"
 #include "RootExtensions.h"
 
@@ -38,10 +40,10 @@ DDASRootFitHit&
 DDASRootFitHit::operator=(const DDASRootFitHit& rhs)
 {
     if (this != &rhs) {
-	TObject::operator=(rhs);
 	DAQ::DDAS::DDASFitHit::operator=(rhs);
+	TObject::operator=(rhs);
     }
-  
+
     return *this;
 }
 
@@ -49,8 +51,8 @@ DDASRootFitHit&
 DDASRootFitHit::operator=(const DAQ::DDAS::DDASFitHit& rhs)
 {
     if (this != &rhs) {
-	DAQ::DDAS::DDASFitHit hit(rhs);
-	*this = hit;
+	DAQ::DDAS::DDASFitHit::operator=(rhs);
+	TObject::Clear(); // ??
     }
 
     return *this;
@@ -63,4 +65,3 @@ DDASRootFitHit::Reset()
     hit.Reset();
     *this = hit;
 }
-

@@ -6,10 +6,10 @@ QMAKE_CXXFLAGS += $(shell $(ROOTSYS)/bin/root-config --cflags)
 CONFIG += qt warn_on thread console
 
 isEmpty(FMTINC) {
-FMTINC=../DDASFormat
+FMTINC=/usr/opt/ddastoys/DDASFormat/include
 }
 isEmpty(FMTLIB) {
-FMTLIB=../DDASFormat/build
+FMTLIB=/usr/opt/ddastoys/DDASFormat/lib
 }
 message(Using FMTINC="$$FMTINC")
 message(Using FMTLIB="$$FMTLIB")

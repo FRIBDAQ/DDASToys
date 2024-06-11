@@ -27,6 +27,12 @@
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedefs;
 
+#pragma link C++ class DAQ::DDAS::DDASFitHit+;
+#pragma link C++ class DAQ::DDAS::DDASHit+;
+#pragma link C++ class DDAS::HitExtension+;
+#pragma link C++ class DDAS::fit1Info+;
+#pragma link C++ class DDAS::fit2Info+;
+#pragma link C++ class DDAS::PulseDescription+;
 #pragma link C++ class DDASRootFitEvent+;
 #pragma link C++ class DDASRootFitHit+;
 #pragma link C++ class RootFit1Info+;

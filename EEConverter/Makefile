@@ -3,8 +3,8 @@
 CC = gcc
 CXX = g++
 
-FMTINC?=../DDASFormat
-FMTLIB?=../DDASFormat/build
+FMTINC?=/usr/opt/ddastoys/DDASFormat/include
+FMTLIB?=/usr/opt/ddastoys/DDASFormat/lib
 
 # Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
 

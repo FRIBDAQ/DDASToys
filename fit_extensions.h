@@ -45,8 +45,8 @@ namespace DDAS {
      */
     struct fit1Info { // Info from single pulse fit:
 	PulseDescription pulse; //!< Description of the pulse parameters.
-	double chiSquare;       //!< Chi-square value of the fit.
-	double  offset;         //!< Constant offset.
+	double   chiSquare;     //!< Chi-square value of the fit.
+	double   offset;        //!< Constant offset.
 	unsigned iterations;    //!< Iterations for fit to converge.
 	unsigned fitStatus;     //!< Fit status from GSL.
 
@@ -58,8 +58,8 @@ namespace DDAS {
      */
     struct fit2Info { // Info from double pulse fit:
 	PulseDescription pulses[2]; //!< The two pulses.
-	double chiSquare;           //!< Chi-square value of the fit.
-	double offset;              //!< Shared constant offset.
+	double   chiSquare;         //!< Chi-square value of the fit.
+	double   offset;            //!< Shared constant offset.
 	unsigned iterations;        //!< Iterations needed to converge.
 	unsigned fitStatus;         //!< Fit status from GSL.
     };
