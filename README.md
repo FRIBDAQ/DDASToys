@@ -38,7 +38,7 @@ Type `make install PREFIX=/where/to/install/ddastoys` to install the DDASToys so
 
 The `libFitEditorX.so` libraries are plugin extensions for the `EventEditor` program allowing fits to be parallelized using either ZMQ threading or MPI. `$DAQBIN/EventEditor --help` will provide some guidance on how to run this code. The `libDDASFitHitUnpacker.so` library defines an unpacker for DDAS hits with fit extensions. Event fragments are unpacked into the DDASFitHit class. The `libDDASRootFit.so` library contains the dictionary needed by ROOT for I/O of custom classes and sources defining the data structure in the output ROOT file.
 
-For more information refer to the DDASToys Manual installed in \$(PREFIX)/share/manual/manual.pdf or point a web browser at \$(PREFIX)/share/manual/manual.html.
+For more information refer to the DDASToys Manual installed in <span>$</span>(PREFIX)/share/manual/manual.pdf or point a web browser at <span>$</span>(PREFIX)/share/manual/manual.html.
 
 # Running DDASToys Codes
 For more information about how to run the `EventEditor` codes please refer to the DDASToys manual.
