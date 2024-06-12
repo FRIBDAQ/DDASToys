@@ -154,7 +154,7 @@
       </listitem>	
     </itemizedlist>
     <para>
-      To illustrate the use of Shifter to run containerized applications, consider the following command to spawn a bash shell inside our container:
+      These specific software versions are tied to the buster usropt tree, if you elect to use an image derived from the FRIB bullseye container the bullseye usropt tree will contain different versions of the above software installed in the same locations. To illustrate the use of Shifter to run containerized applications, consider the following command to spawn a bash shell inside our container:
       <informalexample>
 	<programlisting>
 	  shifter                          \ <co id="shifter"/> 

@@ -6,10 +6,10 @@ QMAKE_CXXFLAGS += $(shell $(ROOTSYS)/bin/root-config --cflags)
 CONFIG += qt warn_on thread console
 
 isEmpty(FMTINC) {
-FMTINC=/usr/opt/ddastoys/DDASFormat/include
+FMTINC=$(HOME)/ddastoys/DDASFormat/include
 }
 isEmpty(FMTLIB) {
-FMTLIB=/usr/opt/ddastoys/DDASFormat/lib
+FMTLIB=$(HOME)/ddastoys/DDASFormat/lib
 }
 message(Using FMTINC="$$FMTINC")
 message(Using FMTLIB="$$FMTLIB")
@@ -18,7 +18,7 @@ INCLUDEPATH += .. $${FMTINC} $(DAQINC) $(ROOTSYS)/include
 
 ## FRIBDAQ libraries
 
-LIBS += -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$${FMTLIB} -lDDASFormat -Wl,-rpath=$${FMTLIB}
+LIBS += -L$${FMTLIB} -lDDASFormat -Wl,-rpath=$${FMTLIB} -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB)
 
 ## ROOT libraries
 

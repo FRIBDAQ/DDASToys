@@ -18,30 +18,19 @@
 
 # Set the top level install path if not provided:
 
-DEFAULT_PREFIX=/usr/opt/ddastoys
+DEFAULT_PREFIX=$(HOME)/ddastoys
 ifeq ($(PREFIX),)
 $(info No prefix specified, assuming $(DEFAULT_PREFIX))
 PREFIX=$(DEFAULT_PREFIX)
 endif
 
-# Check for cmake of the appropriate version. Requires at least cmake 3.15
-# which allows for overriding the default installation directory via --prefix
-# flag at install time rather than requiring -DCMAKE_INSTALL_PREFIX when
-# building. Ideally I'd like to port all of this over to a cmake build but
-# thats a more significant amount of work.
-
-# It's an error not to have cmake:
+# cmake is required to build the DDASFormat library. Note the format library
+# itself will enforce the cmake version requirement:
 ifeq (, $(shell which cmake))
-$(error No cmake in $(PATH), cmake 3.15+ is required to build DDASToys)
+$(error No cmake found in $(PATH), cmake is required to build DDASToys)
 endif
 
-# It's also an error if cmake version is 3.14 or earlier (e.g., on buster):
-CMAKE_VERSION_GT_315=$(shell cmake --version | head -1 | cut -d " " -f 3 | awk -F. '$$1 >= 3 && $$2 > 15')
-ifeq ($(CMAKE_VERSION_GT_315),)
-$(error cmake version 3.15+ required but found $(shell cmake --version | head -1))
-endif
-
-# If no qmake, we can still build everything except traceview:
+# traceview requires qmake, skip the build if its not installed
 BUILD_TRACEVIEW=1
 ifeq (, $(shell which qmake))
 BUILD_TRACEVIEW=0
@@ -62,11 +51,12 @@ MAXPOINTS = 200
 
 # Format library install location (see .gitmodules):
 
-FMTINC=$(PREFIX)/DDASFormat/include
-FMTLIB=$(PREFIX)/DDASFormat/lib
+FMTPATH=$(PREFIX)/DDASFormat
+FMTINC=$(FMTPATH)/include
+FMTLIB=$(FMTPATH)/lib
 FMTBUILDDIR=$(PWD)/DDASFormat/build
 
-CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(DAQINC) -I$(FMTINC)
+CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(FMTINC) -I$(DAQINC)
 CXXLDFLAGS = -lgsl -lgslcblas -L$(FMTLIB) -lDDASFormat
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
@@ -117,7 +107,7 @@ eeconverter:
 	FMTINC=$(FMTINC) FMTLIB=$(FMTLIB) $(MAKE) -C EEConverter
 
 libDDASFormat.so:
-	(mkdir -p $(FMTBUILDDIR); cd $(FMTBUILDDIR); cmake ..; $(MAKE); cmake --install . --prefix $(PREFIX)/DDASFormat)
+	(mkdir -p $(FMTBUILDDIR); cd $(FMTBUILDDIR); cmake .. -DCMAKE_INSTALL_PREFIX=$(FMTPATH); $(MAKE); $(MAKE) install)
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
