@@ -8,7 +8,7 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 # Building DDASToys
 Clone the DDASToys repository using `git clone https://github.com/FRIBDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tagged version of the repository. Some tags of note:
 * 4.0-001 : Version used at NERSC during Feb., 2024 FDSi experiment e21062. Frozen and not maintained.
-* 5.0-001 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
+* 5.0-002 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
 
 ## Build Instructions for DDASToys 5.0-000 and Later
 - Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-008 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
