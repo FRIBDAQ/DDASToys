@@ -8,13 +8,13 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 # Building DDASToys
 Clone the DDASToys repository using `git clone https://github.com/FRIBDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tagged version of the repository. Some tags of note:
 * 4.0-001 : Version used at NERSC during Feb., 2024 FDSi experiment e21062. Frozen and not maintained.
-* 5.0-000 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
+* 5.0-001 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
 
 ## Build Instructions for DDASToys 5.0-000 and Later
 - Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-008 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
 - Ensure CMake 3.13 or later is installed. CMake 3.13+ is required to build the DDASFormat library.
 - Ensure Qt 5.11.3 or later is installed. Qt is required by the `traceview` GUI.
-- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddaschannel.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB buster container this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh; in the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
+- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddasrootformat.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB buster container this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh; in the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
 
 Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `make PREFIX=/where/to/install/ddastoys`. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
 * Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers at `$(PREFIX)/DDASFormat`,
@@ -24,9 +24,9 @@ Once the environment is correctly configured, navigate into the cloned repositor
 Type `make install PREFIX=/where/to/install/ddastoys` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree.
 
 ## Build Instructions for DDASToys 4.0-001 and Earlier
-- This tag is most likely only usable with FRIBDAQ 12.0 due to changes to the DDAS format library first implemented in 12.1. Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-005 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
-- Ensure Qt 5.11.3 or later is installed (required by the `traceview` GUI).
-- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddaschannel.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB buster container this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh; in the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
+- This tag is most likely only usable with FRIBDAQ 12.0 due to changes to the DDAS format library first implemented in 12.1. Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-005 or later.
+- Ensure Qt 5.11.3 or later is installed.
+- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against.
 
 Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `make`. This will create the following:
 * The `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
@@ -38,7 +38,7 @@ Type `make install PREFIX=/where/to/install/ddastoys` to install the DDASToys so
 
 The `libFitEditorX.so` libraries are plugin extensions for the `EventEditor` program allowing fits to be parallelized using either ZMQ threading or MPI. `$DAQBIN/EventEditor --help` will provide some guidance on how to run this code. The `libDDASFitHitUnpacker.so` library defines an unpacker for DDAS hits with fit extensions. Event fragments are unpacked into the DDASFitHit class. The `libDDASRootFit.so` library contains the dictionary needed by ROOT for I/O of custom classes and sources defining the data structure in the output ROOT file.
 
-For more information refer to the DDASToys Manual installed in $(PREFIX)/share/manual/manual.pdf or point a web browser at $(PREFIX)/share/manual/manual.html.
+For more information refer to the DDASToys Manual installed in \$(PREFIX)/share/manual/manual.pdf or point a web browser at \$(PREFIX)/share/manual/manual.html.
 
 # Running DDASToys Codes
 For more information about how to run the `EventEditor` codes please refer to the DDASToys manual.
