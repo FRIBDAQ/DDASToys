@@ -186,10 +186,10 @@ QHitData::updateHitData(const DAQ::DDAS::DDASFitHit& hit)
 { 
     QString id = QString(
 	"Crate: %1 Slot: %2 Channel: %3"
-	).arg(hit.GetCrateID()).arg(hit.GetSlotID()).arg(hit.GetChannelID());
+	).arg(hit.getCrateID()).arg(hit.getSlotID()).arg(hit.getChannelID());
     QString data = QString(
 	"Energy: %1 Time: %2"
-	).arg(hit.GetEnergy()).arg(hit.GetTime());  
+	).arg(hit.getEnergy()).arg(hit.getTime());  
     m_pId->setText(id);
     m_pRawData->setText(data);
 }

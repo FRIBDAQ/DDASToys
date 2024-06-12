@@ -76,7 +76,7 @@ Double_t
 DDASRootFitEvent::GetFirstTime() const
 {
     if (!m_hits.empty()) {
-	return m_hits.front()->GetTime();
+	return m_hits.front()->getTime();
     } else {
 	return 0.0;
     }
@@ -86,7 +86,7 @@ Double_t
 DDASRootFitEvent::GetLastTime() const
 {
     if (!m_hits.empty()) {
-	return m_hits.back()->GetTime();
+	return m_hits.back()->getTime();
     } else {
 	return 0.0;
     }

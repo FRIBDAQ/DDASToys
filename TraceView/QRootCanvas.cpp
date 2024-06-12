@@ -207,7 +207,7 @@ QRootCanvas::paintEvent(QPaintEvent*)
 void
 QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
 {
-    std::vector<std::uint16_t> trace = hit.GetTrace();
+    std::vector<std::uint16_t> trace = hit.getTrace();
   
     // Create histograms if they do not exist, otherwise ensure correct size.
   

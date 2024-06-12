@@ -22,101 +22,38 @@
 
 #include "DDASRootFitHit.h"
 
+#include <iostream>
+
 #include "DDASFitHit.h"
 #include "RootExtensions.h"
 
-/**
- * @details
- * Resets the hit vector.
- */
-DDASRootFitHit::DDASRootFitHit() : TObject()
-{
-    Reset();
-}
+DDASRootFitHit::DDASRootFitHit() : DAQ::DDAS::DDASFitHit(), TObject()
+{}
 
-DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) : TObject(rhs)
+DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) :
+    DAQ::DDAS::DDASFitHit(rhs), TObject(rhs)
 {
     *this = rhs;
-}
-
-/**
- * @details
- * Resets the hit vector.
- */
-DDASRootFitHit::~DDASRootFitHit()
-{
-    Reset();
 }
 
 DDASRootFitHit&
 DDASRootFitHit::operator=(const DDASRootFitHit& rhs)
 {
     if (this != &rhs) {
+	DAQ::DDAS::DDASFitHit::operator=(rhs);
 	TObject::operator=(rhs);
-	Reset(); // Probably not needed
-	time                = rhs.GetTime();
-	coarsetime          = rhs.GetCoarseTime();
-	cfd                 = rhs.cfd;
-	energy              = rhs.GetEnergy();
-	timehigh            = rhs.GetTimeHigh();
-	timelow             = rhs.GetTimeLow();
-	timecfd             = rhs.timecfd;
-	channelnum          = rhs.GetChannelID();
-	finishcode          = rhs.GetFinishCode();
-	channellength       = rhs.GetChannelLength();
-	channelheaderlength = rhs.GetChannelLengthHeader();
-	overflowcode        = rhs.GetOverflowCode();
-	chanid              = rhs.GetChannelID();
-	slotid              = rhs.GetSlotID();
-	crateid             = rhs.GetCrateID();
-	id                  = rhs.id;
-	cfdtrigsourcebit    = rhs.cfdtrigsourcebit;
-	cfdfailbit          = rhs.cfdfailbit;
-	tracelength         = rhs.tracelength;
-	ModMSPS             = rhs.GetModMSPS();
-	energySums          = rhs.energySums;
-	qdcSums             = rhs.qdcSums;
-	trace               = rhs.GetTrace();
-	externalTimestamp   = rhs.externalTimestamp;
-	m_adcResolution     = rhs.GetADCResolution();
-	m_hdwrRevision      = rhs.GetHardwareRevision();
-	m_adcOverUnderflow  = rhs.GetADCOverflowUnderflow();
-
     }
-  
+
     return *this;
 }
 
 DDASRootFitHit&
 DDASRootFitHit::operator=(const DAQ::DDAS::DDASFitHit& rhs)
 {
-    time                = rhs.GetTime();
-    coarsetime          = rhs.GetCoarseTime();
-    cfd                 = 0; // not used
-    energy              = rhs.GetEnergy();
-    timehigh            = rhs.GetTimeHigh();
-    timelow             = rhs.GetTimeLow();
-    timecfd             = rhs.GetTimeCFD();
-    channelnum          = rhs.GetChannelID();
-    finishcode          = rhs.GetFinishCode();
-    channellength       = rhs.GetChannelLength();
-    channelheaderlength = rhs.GetChannelLengthHeader();
-    overflowcode        = rhs.GetOverflowCode();
-    chanid              = rhs.GetChannelID();
-    slotid              = rhs.GetSlotID();
-    crateid             = rhs.GetCrateID();
-    id                  = 0;
-    cfdtrigsourcebit    = rhs.GetCFDTrigSource();
-    cfdfailbit          = rhs.GetCFDFailBit();
-    tracelength         = rhs.GetTraceLength();
-    ModMSPS             = rhs.GetModMSPS();
-    energySums          = rhs.GetEnergySums();
-    qdcSums             = rhs.GetQDCSums();
-    trace               = rhs.GetTrace();
-    externalTimestamp   = rhs.GetExternalTimestamp();
-    m_adcResolution     = rhs.GetADCResolution();
-    m_hdwrRevision      = rhs.GetHardwareRevision();
-    m_adcOverUnderflow  = rhs.GetADCOverflowUnderflow();
+    if (this != &rhs) {
+	DAQ::DDAS::DDASFitHit::operator=(rhs);
+	TObject::Clear(); // ??
+    }
 
     return *this;
 }
@@ -128,4 +65,3 @@ DDASRootFitHit::Reset()
     hit.Reset();
     *this = hit;
 }
-

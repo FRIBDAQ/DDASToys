@@ -177,9 +177,9 @@ FitManager::getDoublePulseFit(const DDAS::HitExtension& ext, unsigned low, unsig
 unsigned
 FitManager::getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit)
 {
-    unsigned crate = hit.GetCrateID();
-    unsigned slot = hit.GetSlotID();
-    unsigned channel = hit.GetChannelID();
+    unsigned crate   = hit.getCrateID();
+    unsigned slot    = hit.getSlotID();
+    unsigned channel = hit.getChannelID();
     auto limits = m_pConfig->getFitLimits(crate, slot, channel);
 
     return limits.first.first;
@@ -195,9 +195,9 @@ FitManager::getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit)
 unsigned
 FitManager::getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit)
 {
-    unsigned crate = hit.GetCrateID();
-    unsigned slot = hit.GetSlotID();
-    unsigned channel = hit.GetChannelID();
+    unsigned crate   = hit.getCrateID();
+    unsigned slot    = hit.getSlotID();
+    unsigned channel = hit.getChannelID();
     auto limits = m_pConfig->getFitLimits(crate, slot, channel);
 
     return limits.first.second;

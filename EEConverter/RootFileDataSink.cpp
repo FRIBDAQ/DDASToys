@@ -57,7 +57,7 @@ RootFileDataSink::RootFileDataSink(const char* filename, const char* treename) :
 	m_pTree = new TTree(treename, treename);
 	m_pTreeEvent = new DDASRootFitEvent();        
 	m_pTree->Branch("RawHits", m_pTreeEvent, BUFFERSIZE);
-	m_pTree->Branch("HitFits", &m_extensions, BUFFERSIZE);
+	//m_pTree->Branch("HitFits", &m_extensions, BUFFERSIZE);
 	gDirectory->Cd(oldDir); // Restore the directory
         
     } catch (...) {
@@ -92,7 +92,7 @@ void
 RootFileDataSink::putItem(const CRingItem& item)
 {
     m_pTreeEvent->Reset(); // Free dynamic hist from last event
-    m_extensions.clear();
+    //m_extensions.clear();
     
     // Bust the ring item up into event builder fragments:
     
@@ -115,16 +115,16 @@ RootFileDataSink::putItem(const CRingItem& item)
 	// Check if the hit has an extension (initialized to false). If so,
 	// fill it from the fit and set has extension to true.
 	
-	RootHitExtension ext;
-	if (fitHit.hasExtension()) {
-	    ext = fitHit.getExtension(); 
-	}
-	m_extensions.push_back(ext); // Add to fit branch
+	// RootHitExtension ext;
+	// if (fitHit.hasExtension()) {
+	//     ext = fitHit.getExtension(); 
+	// }
+	// m_extensions.push_back(ext); // Add to fit branch
     }
     
     // Fill the tree now that we have all the hits marshalled:
     
-    m_pTree->Fill();    
+    m_pTree->Fill();
 }
 
 /**

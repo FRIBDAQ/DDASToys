@@ -6,9 +6,6 @@
 
 #include "ProcessToRootSink.h"
 
-#include <memory>
-#include <iostream>
-
 #include <CRingItemFactory.h>
 #include <CPhysicsEventItem.h>
 
