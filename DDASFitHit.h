@@ -63,6 +63,7 @@ namespace DAQ {
 	    DDASFitHit& operator=(const DAQ::DDAS::DDASFitHit& rhs) {
 		if (this != &rhs) {
 		    DDASHit::operator=(rhs);
+		    bool m_haveExtension = false;
 		    if (rhs.hasExtension()) {
 			auto ext = rhs.getExtension();
 			setExtension(ext);
