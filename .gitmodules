@@ -1,3 +1,6 @@
 [submodule "DDASFormat"]
 	path = DDASFormat
 	url = https://github.com/FRIBDAQ/DDASFormat.git
+[submodule "UnifiedFormat"]
+	path = UnifiedFormat
+	url = https://github.com/FRIBDAQ/UnifiedFormat.git
