@@ -112,7 +112,6 @@ QRootCanvas::clear()
 //
 
 //____________________________________________________________________________
-
 void
 QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 {
@@ -130,7 +129,6 @@ QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 }
 
 //____________________________________________________________________________
-
 void
 QRootCanvas::mousePressEvent(QMouseEvent *e)
 {
@@ -322,5 +320,3 @@ QRootCanvas::drawFitLegend()
   
     m_pFitLegend->Draw();  
 }
-
-/** @} */

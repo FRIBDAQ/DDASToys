@@ -47,7 +47,8 @@ public:
      * @brief Constructor.
      * @param pFitMgr Pointer to a FitManager for plotting fit data. 
      *   The FitManager object is handled by the caller.
-     * @param parent  (optional) Pointer to QWidget parent object.
+     * @param parent Pointer to QWidget parent object (optional, 
+     *   default=nullptr).
      */
     QRootCanvas(FitManager* pFitMgr, QWidget* parent = nullptr);
     /** @brief Destructor. */

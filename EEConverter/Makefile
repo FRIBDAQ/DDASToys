@@ -10,7 +10,7 @@ UFMTLIB=$(UFMT)/lib
 
 CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
 LDFLAGS = -L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) -L$(DAQLIB) -Wl,-rpath=$(DAQLIB) -L$(UFMTLIB) -Wl,-rpath=$(UFMTLIB)
-LDLIBS = -lDDASFormat -ldataformat -lException -lurl -ldaqio -lAbstractFormat
+LDLIBS = -lDDASFormat -ldataformat -lException -lurl -ldaqio -lAbstractFormat 
 
 # Flags related to CERN ROOT:
 
