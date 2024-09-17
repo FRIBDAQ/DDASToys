@@ -49,5 +49,5 @@ converterargs.o:
 clean:
 	rm -f *.o *.so *.pcm *.rootmap
 	rm -f DDASRootFit.cpp
-	converterargs.c converterargs.h
-	eeconverter
+	rm -f converterargs.c converterargs.h
+	rm -f eeconverter
