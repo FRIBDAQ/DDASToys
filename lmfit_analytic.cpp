@@ -1075,5 +1075,3 @@ DDAS::AnalyticFit::lmfit2fixedT(
     gsl_multifit_fdfsolver_free(solver);    
     gsl_vector_free(initialGuess);
 }
-
-/** @} */
