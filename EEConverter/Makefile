@@ -6,7 +6,7 @@ CXX = g++
 UFMTINC=$(UFMT)/include
 UFMTLIB=$(UFMT)/lib
 
-# Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
+# Assume DAQ environment is set up, DDASFMT stuff from toplevel Makefile:
 
 CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
 LDFLAGS = -L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) 		\
