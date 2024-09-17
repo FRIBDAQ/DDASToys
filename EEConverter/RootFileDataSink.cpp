@@ -26,7 +26,7 @@
 
 #include <CRingItem.h>
 #include <CRingItemFactory.h>
-#include <FragmentIndex.h>
+#include <FragmentIndex.h> // From UnifiedFormat
 #include <TTree.h>
 #include <TFile.h>
 #include <TDirectory.h>
@@ -36,7 +36,6 @@
 #include "DDASFitHitUnpacker.h"
 #include "RootExtensions.h"
 #include "DDASFitHit.h"
-
 
 using namespace ufmt;
 

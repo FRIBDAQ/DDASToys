@@ -8,7 +8,7 @@
 #include <iostream>
 #include <ctime>
 
-#include <FragmentIndex.h>
+#include <FragmentIndex.h> // From UnifiedFormat
 #include <CRingItem.h>
 #include <CRingStateChangeItem.h>
 #include <CPhysicsEventItem.h>
@@ -16,7 +16,8 @@
 
 #include <DDASFitHit.h>
 #include <DDASFitHitUnpacker.h>
-using  namespace ufmt;
+
+using namespace ufmt;
 
 //____________________________________________________________________________
 /**
