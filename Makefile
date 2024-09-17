@@ -15,6 +15,7 @@
 #  - A version of Gnu Scientific Library (gsl) is installed, we expect to
 #    find it in /usr/lib/x86_64-linux-gnu otherwise you may have to edit
 #    the Makefile to point at your GSL headers/libraries.
+#    UFMT - base of unified format library installation.
 
 # Set the top level install path if not provided:
 
@@ -49,14 +50,20 @@ CXX = g++
 
 MAXPOINTS = 200
 
-# Format library install location (see .gitmodules):
+# Unified format library
+
+UFMTINC=$(UFMT)/include
+UFMTLIB=$(UFMT)/lib
+
+# DDASFormat library install location (see .gitmodules):
+
 
 FMTPATH=$(PREFIX)/DDASFormat
 FMTINC=$(FMTPATH)/include
 FMTLIB=$(FMTPATH)/lib
 FMTBUILDDIR=$(PWD)/DDASFormat/build
 
-CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(FMTINC) -I$(DAQINC)
+CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(FMTINC) -I$(DAQINC) -I$(UFMTINC)
 CXXLDFLAGS = -lgsl -lgslcblas -L$(FMTLIB) -lDDASFormat
 
 CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
