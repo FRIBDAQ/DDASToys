@@ -1,38 +1,52 @@
 # DDASToys documentation
 
 # Introduction
-This page contains source code documentation for DDASToys. This code is used to build shared plugin libraries which can then be used by the FRIBDAQ `EventEditor` program to fit recorded trace data. DDASToys is supported as part of FRIBDAQ releases 12.0 and later. The implemented classes and functions in DDASToys are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code.
+This page contains source code documentation for DDASToys. This code is used to build shared plugin libraries which can then be used by the NSCLDAQ `EventEditor` program to fit recorded trace data. DDASToys is supported as part of NSCLDAQ releases 12.0 and later. The implemented classes and functions in DDASToys are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code.
 
-Two companion programs for analyzing DDAS data with fits are provided as part of the DDASToys package. Trace data and their associated fits can be examined using the `traceview` program. Similar to the `ddasdumper`, the DDASToys `eeconverter` program converts FRIBDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided.
+Two companion programs for analyzing DDAS data with fits are provided as part of the DDASToys package. Trace data and their associated fits can be examined using the `traceview` program. Similar to the `ddasdumper`, the DDASToys `eeconverter` program converts NSCLDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided.
 
 # Building DDASToys
-Clone the DDASToys repository using `git clone https://github.com/FRIBDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tagged version of the repository. Some tags of note:
+Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tagged version of the repository. Some tags of note:
 * 4.0-001 : Version used at NERSC during Feb., 2024 FDSi experiment e21062. Frozen and not maintained.
 * 5.0-002 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
+* 5.1-000 : The final tag prior to incorporating the machine learning inference. This version of DDASToys also requires the user to point at the location of the UnifiedFormat library external to this project e.g., from the version of NSCLDAQ that you build against. The variable UFMT should point to the top-level installation directory of the unified format version you'd like to use (version 2.1 or later required).
 
-## Build Instructions for DDASToys 5.0-000 and Later
-- Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-008 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
+## Build Instructions for DDASToys 5.1 and later
+- Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.1-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
 - Ensure CMake 3.13 or later is installed. CMake 3.13+ is required to build the DDASFormat library.
 - Ensure Qt 5.11.3 or later is installed. Qt is required by the `traceview` GUI.
-- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddasrootformat.so | grep root` provided that the FRIBDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB buster container this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh; in the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
+- Configure the same CERN ROOT environment used to compile the NSCLDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddasrootformat.so | grep root` provided that the NSCLDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB buster container this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh; in the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
 
-Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `make PREFIX=/where/to/install/ddastoys`. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
+Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make`. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
 * Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers at `$(PREFIX)/DDASFormat`,
 * Build the `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
 * Build the `traceview` and `eeconverter` programs (note `traceview` is only built if Qt 5.11.3+ is found),
 * The full DDASToys documentation.
-Type `make install PREFIX=/where/to/install/ddastoys` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree.
+Type `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree. You can also build and install the project using a single command: `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make all install`.
 
-## Build Instructions for DDASToys 4.0-001 and Earlier
-- This tag is most likely only usable with FRIBDAQ 12.0 due to changes to the DDAS format library first implemented in 12.1. Setup the FRIBDAQ environment by sourcing the daqsetup.bash script from FRIBDAQ 12.0-005 or later.
+## Build Instructions for DDASToys 5.0
+- Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.0-005 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
+- Ensure CMake 3.13 or later is installed. CMake 3.13+ is required to build the DDASFormat library.
+- Ensure Qt 5.11.3 or later is installed. Qt is required by the `traceview` GUI.
+- Configure the same CERN ROOT environment used to compile the NSCLDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddasrootformat.so | grep root` provided that the NSCLDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB buster container this is most likely /usr/opt/root/root-6.24.06/bin/thisroot.sh; in the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
+
+Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `PREFIX=/where/to/install/ddastoys make`. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
+* Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers at `$(PREFIX)/DDASFormat`,
+* Build the `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
+* Build the `traceview` and `eeconverter` programs (note `traceview` is only built if Qt 5.11.3+ is found),
+* The full DDASToys documentation.
+Type `PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree. You can also build and install the project using a single command: `PREFIX=/where/to/install/ddastoys make all install`.
+
+## Build Instructions for DDASToys 4.0 and Earlier
+- This tag is most likely only usable with NSCLDAQ 12.0 due to changes to the DDAS format library first implemented in 12.1. Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.0-005 or later.
 - Ensure Qt 5.11.3 or later is installed.
-- Configure the same CERN ROOT environment used to compile the FRIBDAQ version you are compiling the DDASToys code against.
+- Configure the same CERN ROOT environment used to compile the NSCLDAQ version you are compiling the DDASToys code against.
 
 Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `make`. This will create the following:
 * The `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
 * The `traceview` and `eeconverter` programs
 * The full DDASToys documentation.
-Type `make install PREFIX=/where/to/install/ddastoys` to install the DDASToys software and documentation at a directory of your choosing.
+Type `PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation at a directory of your choosing.
 
 # DDASToys Overview
 
@@ -44,12 +58,12 @@ For more information refer to the DDASToys Manual installed in <span>$</span>(PR
 For more information about how to run the `EventEditor` codes please refer to the DDASToys manual.
 
 ## Fitting Traces Using the Plugin Libraries
-For an explanation of how to run the `EventEditor` trace fitting framework, please refer to the DDASToys Manual or the output of the command `$DAQBIN/EventEditor --help` run from a terminal. The `DAQBIN` variable must point to an FRIBDAQ version 12.0 or later where the `EventEditor` software is installed. The manual also describes how to run the fitting software at NERSC and configure an analysis pipeline for trace fitting. Implementation of the fitting routines and their source code documentation is provided here. Notably, the structure of the fit extensions appended to each event is defined in the fit_extensions.h header.
+For an explanation of how to run the `EventEditor` trace fitting framework, please refer to the DDASToys Manual or the output of the command `$DAQBIN/EventEditor --help` run from a terminal. The `DAQBIN` variable must point to an NSCLDAQ version 12.0 or later where the `EventEditor` software is installed. The manual also describes how to run the fitting software at NERSC and configure an analysis pipeline for trace fitting. Implementation of the fitting routines and their source code documentation is provided here. Notably, the structure of the fit extensions appended to each event is defined in the fit_extensions.h header.
 
 ## Converting Event Files Containing Fits to ROOT Format
 The `eeconverter` program converts `EventEditor` output into a ROOT file format suitable for further analysis. Running `eeconverter --help` from the command line will show how to use the program and how to pass it arguments; running without any command line parameters will show you the minimum number of required arguments.
 
-The `eeconverter` program reads ring items from a data source -- in this case built NSCLDAQ events possibly containing fit information -- and hands them off to a ring item processor. The processor performs type-independent processing of each ring item, converting each FRIBDAQ PHYSICS_EVENT to a ROOT-ized data format and writing it to a ROOT file sink.
+The `eeconverter` program reads ring items from a data source -- in this case built NSCLDAQ events possibly containing fit information -- and hands them off to a ring item processor. The processor performs type-independent processing of each ring item, converting each NSCLDAQ PHYSICS_EVENT to a ROOT-ized data format and writing it to a ROOT file sink.
 
 ## Viewing Traces and Fits Using Traceview
 The `traceview` program can be used to display trace data and their respective fits (if present). Currently, `traceview` reads the fit and template configuration information from the files pointed to by the environment variables `FIT_CONFIGFILE` and `TEMPLATE_CONFIGFILE`. Refer to the DDASToys Manual for more information about the format of these configuration files.
