@@ -16,6 +16,7 @@
 
 #include <DDASFitHit.h>
 #include <DDASFitHitUnpacker.h>
+using  namespace ufmt;
 
 //____________________________________________________________________________
 /**
