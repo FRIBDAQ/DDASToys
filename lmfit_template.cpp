@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
+#include <limits>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
