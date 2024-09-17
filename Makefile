@@ -18,6 +18,9 @@
 #    the Makefile to point at your GSL headers/libraries.
 #  - UMFT: Base of unified format library installation. May or may not come
 #    from the NSCLDAQ version DDASToys is compiled against.
+#
+# To build: UFMT=/path/to/ufmt PREFIX=/path/to/install/dir make all install
+#
 
 # Set the top level install path if not provided:
 
