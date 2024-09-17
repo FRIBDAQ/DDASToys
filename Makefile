@@ -74,8 +74,10 @@ DDASFMTBUILDDIR=$(PWD)/DDASFormat/build
 CXXFLAGS=-std=c++14 -g -O2 -Wall -I. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
 CXXLDFLAGS=-lgsl -lgslcblas -L$(DDASFMTLIB) -lDDASFormat
 
-CUDACXXFLAGS=-DCUDA --compiler-options -fPIC -I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
-CUDALDFLAGS=-L/usr/opt/libcudaoptimize/lib -lCudaOptimize --linker-options -rpath=$(DDASFMTLIB)
+CUDACXXFLAGS=-DCUDA --compiler-options -fPIC 				\
+	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
+CUDALDFLAGS=-L/usr/opt/libcudaoptimize/lib -lCudaOptimize 		\
+	--linker-options -rpath=$(DDASFMTLIB)
 
 GNUCXXFLAGS=-fPIC
 GNULDFLAGS=-Wl,-rpath=$(DDASFMTLIB)
@@ -101,7 +103,8 @@ endif
 
 all: exec docs
 exec: libs objs subdirs
-libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so 	\
+	libDDASFitHitUnpacker.so
 objs: CRingItemProcessor.o
 subdirs: eeconverter
 ifeq ($(BUILD_TRACEVIEW), 1)
@@ -121,20 +124,20 @@ eeconverter:
 libDDASFormat.so:
 	(mkdir -p $(DDASFMTBUILDDIR); cd $(DDASFMTBUILDDIR); cmake .. -DCMAKE_INSTALL_PREFIX=$(DDASFMTPATH); $(MAKE); $(MAKE) install)
 
-libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
-	functions_analytic.o lmfit_analytic.o \
-	CFitEngine.o SerialFitEngineAnalytic.o \
+libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o 		\
+	functions_analytic.o lmfit_analytic.o 				\
+	CFitEngine.o SerialFitEngineAnalytic.o 				\
 	$(CUDAOBJ)
-	$(CXX) -o libFitEditorAnalytic.so -shared $^ \
+	$(CXX) -o libFitEditorAnalytic.so -shared $^ 			\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
-libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o \
+libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o 		\
 	functions_template.o lmfit_template.o 
-	$(CXX) -o libFitEditorTemplate.so -shared $^ \
+	$(CXX) -o libFitEditorTemplate.so -shared $^ 			\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
-	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ \
+	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ 		\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 ##
