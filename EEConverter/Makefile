@@ -6,11 +6,15 @@ CXX = g++
 FMTINC?=$(HOME)/ddastoys/DDASFormat/include
 FMTLIB?=$(HOME)/ddastoys/DDASFormat/lib
 
+UFMTINC=$(UFMT)/include
+UFMTLIB=$(UFMT)/lib
+
 # Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
 
-CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(FMTINC) -I$(DAQINC)
-LDFLAGS = -L$(FMTLIB) -Wl,-rpath=$(FMTLIB) -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
-LDLIBS = -lDDASFormat -ldataformat -lException -lurl -ldaqio -lFragmentIndex
+CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(FMTINC) -I$(DAQINC) -I$(UFMTINC)
+LDFLAGS = -L$(FMTLIB) -Wl,-rpath=$(FMTLIB) -L$(DAQLIB) -Wl,-rpath=$(DAQLIB) \
+	-L$(UFMTLIB) -Wl,-rpath=$(UFMTLIB)
+LDLIBS = -lDDASFormat -ldataformat -lException -lurl -ldaqio -lAbstractFormat
 
 # Flags related to CERN ROOT:
 

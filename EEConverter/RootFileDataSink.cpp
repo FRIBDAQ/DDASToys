@@ -37,6 +37,9 @@
 #include "RootExtensions.h"
 #include "DDASFitHit.h"
 
+
+using namespace ufmt;
+
 static const Int_t BUFFERSIZE(1024*1024); // 1 MB
 
 /**
