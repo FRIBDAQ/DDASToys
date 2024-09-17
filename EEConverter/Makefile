@@ -3,17 +3,13 @@
 CC = gcc
 CXX = g++
 
-FMTINC?=$(HOME)/ddastoys/DDASFormat/include
-FMTLIB?=$(HOME)/ddastoys/DDASFormat/lib
-
 UFMTINC=$(UFMT)/include
 UFMTLIB=$(UFMT)/lib
 
 # Assume DAQ environment is set up -- need DDAS verson with lddasfitformat!
 
-CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(FMTINC) -I$(DAQINC) -I$(UFMTINC)
-LDFLAGS = -L$(FMTLIB) -Wl,-rpath=$(FMTLIB) -L$(DAQLIB) -Wl,-rpath=$(DAQLIB) \
-	-L$(UFMTLIB) -Wl,-rpath=$(UFMTLIB)
+CXXFLAGS = -Wall -g -O2 -fPIC -I.. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
+LDFLAGS = -L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) -L$(DAQLIB) -Wl,-rpath=$(DAQLIB) -L$(UFMTLIB) -Wl,-rpath=$(UFMTLIB)
 LDLIBS = -lDDASFormat -ldataformat -lException -lurl -ldaqio -lAbstractFormat
 
 # Flags related to CERN ROOT:
@@ -23,22 +19,14 @@ ROOTLDFLAGS = $(shell $(ROOTSYS)/bin/root-config --libs --ldflags)
 
 all: eeconverter libDDASRootFit.so
 
-eeconverter: eeconverter.o converterargs.o RootFileDataSink.o \
-	ProcessToRootSink.o CEventProcessor.o StringsToIntegers.o \
-	DDASRootFitHit.o DDASRootFitEvent.o DDASRootFit.o \
-	../DDASFitHitUnpacker.o ../CRingItemProcessor.o
-	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o $@ $^ \
-	$(LDFLAGS) $(LDLIBS) $(ROOTLDFLAGS)
+eeconverter: eeconverter.o converterargs.o RootFileDataSink.o ProcessToRootSink.o CEventProcessor.o StringsToIntegers.o DDASRootFitHit.o DDASRootFitEvent.o DDASRootFit.o ../DDASFitHitUnpacker.o ../CRingItemProcessor.o
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS) $(ROOTLDFLAGS)
 
 libDDASRootFit.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o
-	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ -L$(FMTLIB) \
-	-Wl,-rpath=$(FMTLIB) -lDDASFormat
+	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ -L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) -lDDASFormat
 
-DDASRootFit.cpp: DDASRootFitEvent.h DDASRootFitHit.h ../DDASFitHit.h \
-	RootExtensions.h LinkDef.h
-	$(ROOTSYS)/bin/rootcling -f $@ \
-	-rml libDDASRootFit.so -rmf libDDASRootFit.rootmap \
-	-I.. -I$(FMTINC) $^
+DDASRootFit.cpp: DDASRootFitEvent.h DDASRootFitHit.h ../DDASFitHit.h RootExtensions.h LinkDef.h
+	$(ROOTSYS)/bin/rootcling -f $@ 	-rml libDDASRootFit.so -rmf libDDASRootFit.rootmap -I.. -I$(DDASFMTINC) $^
 
 %.o : %.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<
@@ -50,7 +38,7 @@ converterargs.o:
 .PHONY: clean cleanest
 
 clean:
-	rm -f *.o *.so *.pcm *.rootmap \
-	rm -f DDASRootFit.cpp \
-	converterargs.c converterargs.h \
+	rm -f *.o *.so *.pcm *.rootmap 		\
+	rm -f DDASRootFit.cpp 			\
+	converterargs.c converterargs.h 	\
 	eeconverter

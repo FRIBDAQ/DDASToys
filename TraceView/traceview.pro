@@ -5,20 +5,17 @@ QT += widgets
 QMAKE_CXXFLAGS += $(shell $(ROOTSYS)/bin/root-config --cflags)
 CONFIG += qt warn_on thread console
 
-isEmpty(FMTINC) {
-FMTINC=$(HOME)/ddastoys/DDASFormat/include
-}
-isEmpty(FMTLIB) {
-FMTLIB=$(HOME)/ddastoys/DDASFormat/lib
-}
-message(Using FMTINC="$$FMTINC")
-message(Using FMTLIB="$$FMTLIB")
+message(Using DAQROOT="$(DAQROOT)")
+message(Using DDASFMTINC="$$DDASFMTINC")
+message(Using DDASFMTLIB="$$DDASFMTLIB")
+message(Using UFMT="$(UFMT)")
+message(Using ROOTSYS="$(ROOTSYS)")
 
-INCLUDEPATH += .. $${FMTINC} $(DAQINC) $(ROOTSYS)/include
+INCLUDEPATH += .. $${DDASFMTINC} $(DAQINC) $(UFMT)/include $(ROOTSYS)/include
 
 ## FRIBDAQ libraries
 
-LIBS += -L$${FMTLIB} -lDDASFormat -Wl,-rpath=$${FMTLIB} -L$(DAQLIB) -lFragmentIndex -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB)
+LIBS += -L$${DDASFMTLIB} -lDDASFormat -Wl,-rpath=$${DDASFMTLIB} -L$(DAQLIB) -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$(UFMT)/lib -lAbstractFormat -Wl,-rpath=$(UFMT)/lib
 
 ## ROOT libraries
 

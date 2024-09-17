@@ -1,3 +1,4 @@
+##
 # A refactored NSCLDAQ version containing the DDAS software must be defined
 # externally. This NSCLDAQ version must have the fragement index stuff built
 # in, major version 12.x and higher. MAXPOINTS should be modified to match the
@@ -11,11 +12,12 @@
 #    and libraries (12.1+ for this branch).
 #  - The same ROOT version used to compile the NSCLDAQ version used. These can
 #    be found under /usr/opt/root, (probably) not a module file. Source the
-#    approprite thisroot.sh script in /usr/opt/root/root-x.yy-zz/bin.
+#    approprite thisroot.sh script in /usr/opt/root/root-M.mm-ee/bin.
 #  - A version of Gnu Scientific Library (gsl) is installed, we expect to
 #    find it in /usr/lib/x86_64-linux-gnu otherwise you may have to edit
 #    the Makefile to point at your GSL headers/libraries.
-#    UFMT - base of unified format library installation.
+#  - UMFT: Base of unified format library installation. May or may not come
+#    from the NSCLDAQ version DDASToys is compiled against.
 
 # Set the top level install path if not provided:
 
@@ -27,11 +29,13 @@ endif
 
 # cmake is required to build the DDASFormat library. Note the format library
 # itself will enforce the cmake version requirement:
+
 ifeq (, $(shell which cmake))
 $(error No cmake found in $(PATH), cmake is required to build DDASToys)
 endif
 
-# traceview requires qmake, skip the build if its not installed
+# traceview requires qmake, skip the build if its not installed:
+
 BUILD_TRACEVIEW=1
 ifeq (, $(shell which qmake))
 BUILD_TRACEVIEW=0
@@ -46,46 +50,45 @@ endif
 
 # Now we actually get to the Making:
 
-CXX = g++
+CXX=g++
 
-MAXPOINTS = 200
+MAXPOINTS=250
 
-# Unified format library
+# Unified format library:
 
 UFMTINC=$(UFMT)/include
 UFMTLIB=$(UFMT)/lib
 
-# DDASFormat library install location (see .gitmodules):
+# DDAS format library (see .gitmodules):
 
+DDASFMTPATH=$(PREFIX)/DDASFormat
+DDASFMTINC=$(DDASFMTPATH)/include
+DDASFMTLIB=$(DDASFMTPATH)/lib
+DDASFMTBUILDDIR=$(PWD)/DDASFormat/build
 
-FMTPATH=$(PREFIX)/DDASFormat
-FMTINC=$(FMTPATH)/include
-FMTLIB=$(FMTPATH)/lib
-FMTBUILDDIR=$(PWD)/DDASFormat/build
+# Flags depend on whether we build for GPU fitting:
 
-CXXFLAGS = -std=c++14 -g -O2 -Wall -I. -I$(FMTINC) -I$(DAQINC) -I$(UFMTINC)
-CXXLDFLAGS = -lgsl -lgslcblas -L$(FMTLIB) -lDDASFormat
+CXXFLAGS=-std=c++14 -g -O2 -Wall -I. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
+CXXLDFLAGS=-lgsl -lgslcblas -L$(DDASFMTLIB) -lDDASFormat
 
-CUDACXXFLAGS = -DCUDA --compiler-options -fPIC \
-	-I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
-CUDALDFLAGS = -L/usr/opt/libcudaoptimize/lib -lCudaOptimize \
-	--linker-options -rpath=$(FMTLIB)
+CUDACXXFLAGS=-DCUDA --compiler-options -fPIC -I/usr/opt/libcudaoptimize/include -DMAXPOINTS=$(MAXPOINTS)
+CUDALDFLAGS=-L/usr/opt/libcudaoptimize/lib -lCudaOptimize --linker-options -rpath=$(DDASFMTLIB)
 
-GNUCXXFLAGS = -fPIC
-GNULDFLAGS = -Wl,-rpath=$(FMTLIB)
+GNUCXXFLAGS=-fPIC
+GNULDFLAGS=-Wl,-rpath=$(DDASFMTLIB)
 
 ifdef CUDA
 CXX = nvcc
 CUDAOBJ = CudaFitEngineAnalytic.o cudafit_analytic.o
 
 .SUFFIXES: .cu
-EXTRACXXFLAGS = $(CUDACXXFLAGS)
-EXTRALDFLAGS = $(CUDALDFLAGS)
+EXTRACXXFLAGS=$(CUDACXXFLAGS)
+EXTRALDFLAGS=$(CUDALDFLAGS)
 .cu.o:
 	$(CXX) -c $(CXXFLAGS) $(EXTRACXXFLAGS) $^
 else
-EXTRACXXFLAGS = $(GNUCXXFLAGS)
-EXTRALDFLAGS = $(GNULDFLAGS)
+EXTRACXXFLAGS=$(GNUCXXFLAGS)
+EXTRALDFLAGS=$(GNULDFLAGS)
 endif
 
 ##
@@ -95,8 +98,7 @@ endif
 
 all: exec docs
 exec: libs objs subdirs
-libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so \
-	libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
 objs: CRingItemProcessor.o
 subdirs: eeconverter
 ifeq ($(BUILD_TRACEVIEW), 1)
@@ -107,14 +109,14 @@ endif
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro FMTINC=$(FMTINC) FMTLIB=$(FMTLIB))
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
 	$(MAKE) -C TraceView
 
 eeconverter:
-	FMTINC=$(FMTINC) FMTLIB=$(FMTLIB) $(MAKE) -C EEConverter
+	DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
 
 libDDASFormat.so:
-	(mkdir -p $(FMTBUILDDIR); cd $(FMTBUILDDIR); cmake .. -DCMAKE_INSTALL_PREFIX=$(FMTPATH); $(MAKE); $(MAKE) install)
+	(mkdir -p $(DDASFMTBUILDDIR); cd $(DDASFMTBUILDDIR); cmake .. -DCMAKE_INSTALL_PREFIX=$(DDASFMTPATH); $(MAKE); $(MAKE) install)
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o \
 	functions_analytic.o lmfit_analytic.o \
@@ -170,7 +172,7 @@ endif
 
 clean:
 	rm -f *.so *.o
-	rm -rf $(FMTBUILDDIR)
+	rm -rf $(DDASFMTBUILDDIR)
 	$(MAKE) -C TraceView clean
 	rm -f TraceView/traceview
 	$(MAKE) -C EEConverter clean
