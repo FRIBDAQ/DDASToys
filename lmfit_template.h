@@ -13,10 +13,10 @@
 
 #include "fit_extensions.h"
 
-/** @namespace DDAS */
-namespace DDAS {
-    /** @namespace DDAS::TemplateFit */
-    namespace TemplateFit {
+/** @namespace ddastoys */
+namespace ddastoys {
+    /** @namespace ddastoys::templatefit */
+    namespace templatefit {
 
 	/**
 	 * @ingroup template
@@ -29,9 +29,8 @@ namespace DDAS {
 	 * function evaluators 
 	 */
 	struct GslFitParameters {
-	    const std::vector<
-		std::pair<uint16_t, uint16_t>
-		>* s_pPoints; //!< Trace data stored as an (x, y) pair.
+	    /** Trace data stored as an (x, y) pair. */
+	    const std::vector<std::pair<uint16_t, uint16_t>>* s_pPoints;
 	    const std::vector<double>* s_pTraceTemplate; //!< Template data.
 	};
 
@@ -44,7 +43,6 @@ namespace DDAS {
 	
 	/**
 	 * @brief Driver for the GSL LM fitter for single pulses.
-	 *
 	 * @param pResult       Struct that will get the results of the fit.
 	 * @param trace         References the trace to fit.
 	 * @param traceTemplate References the template trace for the fit. 
@@ -64,7 +62,6 @@ namespace DDAS {
 
 	/**
 	 * @brief Driver for the GSL LM fitter for double pulses.
-	 *
 	 * @param pResult       Struct that will get the results of the fit.
 	 * @param trace         References the trace to fit.
 	 * @param traceTemplate References the template trace for the fit. 

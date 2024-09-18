@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
    // Display the GUI
   
-   QTraceView window(parser, nullptr);
+   ddastoys::QTraceView window(parser, nullptr);
    window.setWindowTitle("DDAS TraceView");
    window.resize(window.sizeHint());
    window.show();

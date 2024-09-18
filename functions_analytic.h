@@ -28,10 +28,10 @@
 #include <vector>
 #include <cstdint>
 
-/** @namespace DDAS */
-namespace DDAS {
-    /** @namespace DDAS::AnalyticFit */
-    namespace AnalyticFit {
+/** @namespace ddastoys */
+namespace ddastoys {
+    /** @namespace ddastoys::analyticfit */
+    namespace analyticfit {
 	/**
 	 * @ingroup analytic
 	 * @{

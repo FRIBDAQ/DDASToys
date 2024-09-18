@@ -26,7 +26,8 @@
 #include <cstdint>
 #include <cstring>
 
-namespace DDAS {
+/** @namespace ddastoys */
+namespace ddastoys {
 
     /**
      * @struct PulseDescription
@@ -49,7 +50,6 @@ namespace DDAS {
 	double   offset;        //!< Constant offset.
 	unsigned iterations;    //!< Iterations for fit to converge.
 	unsigned fitStatus;     //!< Fit status from GSL.
-
     };
     
     /**
@@ -71,6 +71,7 @@ namespace DDAS {
     struct HitExtension { // Data added to hits with traces:
 	fit1Info onePulseFit; //!< Single pulse fit information.
 	fit2Info twoPulseFit; //!< Double pulse fit information.
+	double doublePulseProb; //!< Probability the trace is a double pulse.
     };  
 }
 
@@ -89,11 +90,11 @@ struct nullExtension {
  * @brief A fit extension that knows its size.
  */ 
 struct FitInfo {
-    DDAS::HitExtension s_extension; //!< The hit extension data.
-    std::uint32_t      s_size;      //!< sizeof(DDAS::HitExtension)
+    ddastoys::HitExtension s_extension; //!< The hit extension data.
+    std::uint32_t      s_size;      //!< sizeof(ddastoys::HitExtension)
     /** @brief Creates FitInfo, set its size, and zeroes fit parameters. */
     FitInfo() : s_size(sizeof(FitInfo)) {
-	memset(&s_extension, 0, sizeof(DDAS::HitExtension));
+	memset(&s_extension, 0, sizeof(ddastoys::HitExtension));
     }
 };
 

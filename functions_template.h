@@ -10,10 +10,10 @@
 #include <vector>
 #include <cstdint>
 
-/** @namespace DDAS */
-namespace DDAS {
-    /** @namespace DDAS::TemplateFit */
-    namespace TemplateFit {
+/** @namespace ddastoys */
+namespace ddastoys {
+    /** @namespace ddastoys::templatefit */
+    namespace templatefit {
 	/**
 	 * @ingroup template
 	 * @{

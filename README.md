@@ -8,8 +8,8 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 # Building DDASToys
 Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tagged version of the repository. Some tags of note:
 * 4.0-001 : Version used at NERSC during Feb., 2024 FDSi experiment e21062. Frozen and not maintained.
-* 5.0-002 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
-* 5.1-000 : The final tag prior to incorporating the machine learning inference. This version of DDASToys also requires the user to point at the location of the UnifiedFormat library external to this project e.g., from the version of NSCLDAQ that you build against. The variable UFMT should point to the top-level installation directory of the unified format version you'd like to use (version 2.1 or later required).
+* 5.0-002 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The ddastoys::DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
+* 5.1-000 : The final tag prior to incorporating the machine learning inference. This version of DDASToys also requires the user to point at the location of the [UnifiedFormat](https://github.com/FRIBDAQ/UnifiedFormat) library external to this project e.g., from the version of NSCLDAQ that you build against. The variable `UFMT` should point to the top-level installation directory of the unified format version you'd like to use (version 2.1 or later required).
 
 ## Build Instructions for DDASToys 5.1 and later
 - Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.1-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.

@@ -26,6 +26,8 @@
 
 #include "functions_analytic.h"
 
+using namespace ddastoys::analyticfit;
+
 /**
  * @ingroup template
  * @{
@@ -50,8 +52,6 @@ static const int P2K3_INDEX(5);
 static const int P2K4_INDEX(6);
 static const int P2X2_INDEX(7);
 static const int P2C_INDEX(8);
-
-using namespace DDAS;
 
 //////////////////////////////////////////////////////////////////////////////
 // Partial derivative functions that are common:
@@ -248,7 +248,7 @@ SerialFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
     for (size_t i =0; i < npts; i++) {
 	double xi = x[i];
 	double yactual = y[i];        
-	double fitted  = DDAS::AnalyticFit::singlePulse(A, k1, k2, x1, C, xi);
+	double fitted  = singlePulse(A, k1, k2, x1, C, xi);
 	gsl_vector_set(r, i, (fitted - yactual));
     }
 }
@@ -287,9 +287,7 @@ SerialFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
     for (size_t i = 0; i < npts; i++) {
 	double xc = x[i];
 	double yc = y[i];
-	double p  = DDAS::AnalyticFit::doublePulse(
-	    A1, k1, k2, x1, A2, k3, k4, x2, C, xc
-	    );
+	double p  = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xc);
 	gsl_vector_set(r, i, (p - yc));
     }
 }

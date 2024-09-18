@@ -18,7 +18,7 @@
  * that sits on top of a constant offset.
  */
 double
-DDAS::TemplateFit::singlePulse(
+ddastoys::templatefit::singlePulse(
     double A1, double x1, double C, double x,
     const std::vector<double>& trace_template
     )
@@ -49,7 +49,7 @@ DDAS::TemplateFit::singlePulse(
  * The second pulse gets a constant term of 0.
  */
 double
-DDAS::TemplateFit::doublePulse(
+ddastoys::templatefit::doublePulse(
     double A1, double x1, double A2, double x2, double C, double x,
     const std::vector<double>& trace_template
     )
@@ -65,7 +65,7 @@ DDAS::TemplateFit::doublePulse(
  * Neyman's chi-square value is computed from a passed set of (x, y) data.
  */
 double
-DDAS::TemplateFit::chiSquare1(
+ddastoys::templatefit::chiSquare1(
     double A1, double x1, double C,
     const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
     const std::vector<double>& trace_template
@@ -91,7 +91,7 @@ DDAS::TemplateFit::chiSquare1(
  * Neyman's chi-square value is computed from a passed set of (x, y) data.
  */
 double
-DDAS::TemplateFit::chiSquare2(
+ddastoys::templatefit::chiSquare2(
     double A1, double x1, double A2, double x2, double C,
     const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
     const std::vector<double>& trace_template

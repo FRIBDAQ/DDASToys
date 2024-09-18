@@ -31,22 +31,21 @@ class TTree;
 class TFile;
 
 class CRingItem;
-namespace DAQ {
-    namespace DDAS {
-	class DDASFitHitUnpacker;
-    }
-}
 
-class DDASRootFitEvent; // Holds the decoded event for output.
-class RootHitExtension;
+namespace ddastoys {    
+    class DDASFitHitUnpacker;
+    class DDASRootFitEvent; // Holds the decoded event for output.
+    class RootHitExtension;
+}
 
 /**
  * @class RootFileDataSink
- * @brief This class knows how to write ROOT files from the ring items created
- * by the fitting program.
- * @note  Put is not intended to be used by this file. If it's used, a warning 
- * will be output to stderr. pData will then be treated as a raw ring item, 
- * turned into a CRingItem and putItem will be called from then on.
+ * @brief This class knows how to write ROOT files from the ring items 
+ * created by the fitting program.
+ * @note  Put is not intended to be used by this file. If it's used, a 
+ * warning will be output to stderr. pData will then be treated as a raw 
+ * ring item, turned into a CRingItem and putItem will be called from 
+ * then on.
  */
 
 class RootFileDataSink : public CDataSink
@@ -55,8 +54,8 @@ public:
     /**
      * @brief Constructor.
      * @param filename  ROOT file to open. 
-     * @param treename  Name of the tree to create in the root file. The tree 
-     *   name defaults to "DDASFit" if not provided.
+     * @param treename  Name of the tree to create in the root file. 
+     *   The tree name defaults to "DDASFit" if not provided.
      * @throw ... All exceptions back to the caller.
      */
     RootFileDataSink(const char* filename, const char* treename="DDASFit");
@@ -77,8 +76,8 @@ public:
     virtual void put(const void* pData, size_t nBytes);
   
 private:
-    DAQ::DDAS::DDASFitHitUnpacker* m_pUnpacker; //!< Unpacker for fit events.
-    DDASRootFitEvent* m_pTreeEvent; //!< The ROOT-ized event to write.
+    ddastoys::DDASFitHitUnpacker* m_pUnpacker; //!< Unpacker for fit hits.
+    ddastoys::DDASRootFitEvent* m_pTreeEvent; //!< The ROOT-ized event to write.
     //std::vector<RootHitExtension> m_extensions; //!< Fit extensions.
     TTree* m_pTree; //!< Tree in the output file we write to.
     TFile* m_pFile; //!< The output ROOT file.

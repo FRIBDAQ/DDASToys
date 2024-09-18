@@ -18,6 +18,9 @@
 #    the Makefile to point at your GSL headers/libraries.
 #  - UMFT: Base of unified format library installation. May or may not come
 #    from the NSCLDAQ version DDASToys is compiled against.
+#  - LibTorch: for the ML inference editors. The Makefile variables TORCHINC
+#    and TORCHLIB point to the API headers/libraries. If the expected
+#    directories do not exist, the build will skip building the ML stuff.
 #
 # To build: UFMT=/path/to/ufmt PREFIX=/path/to/install/dir make all install
 #
@@ -42,13 +45,27 @@ endif
 BUILD_TRACEVIEW=1
 ifeq (, $(shell which qmake))
 BUILD_TRACEVIEW=0
-$(info Qt version 5.11+ is required to build traceview, skipping)
+$(info Qt version 5.11+ is required to build traceview, skipping...)
 endif
 
 QT_VERSION_GT_511=$(shell qmake -qt=5 --version | tail -1 | cut -d " " -f 4 | awk -F. '$$1 >= 5 && $$2 >= 11')
 ifeq ($(QT_VERSION_GT_511),)
 BUILD_TRACEVIEW=0
-$(info Qt version 5.11+ required to build traceview but found $(shell qmake -qt=5 --version | tail -1 | cut -d " " -f 2-), skipping)
+$(info Qt version 5.11+ required to build traceview but found $(shell qmake -qt=5 --version | tail -1 | cut -d " " -f 2-), skipping...)
+endif
+
+
+# We have to check for Torch stuff here, and skip building the inference model
+# fit editor if LibTorch isn't installed where we think it should be. Edit for
+# your install path if needed:
+
+TORCHINC=/usr/include/torch/csrc/api/include 
+TORCHLIB=/usr/include/torch/csrc/api/lib 
+
+BUILD_MLINFERENCE=1
+ifeq ($(shell test -d $(TORCHINC) && echo 1 || echo 0), 0)
+BUILD_MLINFERENCE=0
+$(info LibTorch is required to build the ML inference editor, skipping...)
 endif
 
 # Now we actually get to the Making:
@@ -103,23 +120,15 @@ endif
 
 all: exec docs
 exec: libs objs subdirs
-libs: libDDASFormat.so libFitEditorAnalytic.so libFitEditorTemplate.so 	\
-	libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libDDASFitHitUnpacker.so libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
+ifeq ($(BUILD_MLINFERENCE), 1)
+libs: libDDASFormat.so libDDASFitHitUnpacker.so libFitEditorAnalytic.so libFitEditorTemplate.so libFitEditorMLInference.so libDDASFitHitUnpacker.so
+endif
 objs: CRingItemProcessor.o
 subdirs: eeconverter
 ifeq ($(BUILD_TRACEVIEW), 1)
 subdirs: eeconverter traceview
 endif
-
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
-
-traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
-	$(MAKE) -C TraceView
-
-eeconverter:
-	DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
 
 libDDASFormat.so:
 	(mkdir -p $(DDASFMTBUILDDIR); cd $(DDASFMTBUILDDIR); cmake .. -DCMAKE_INSTALL_PREFIX=$(DDASFMTPATH); $(MAKE); $(MAKE) install)
@@ -136,9 +145,33 @@ libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o 		\
 	$(CXX) -o libFitEditorTemplate.so -shared $^ 			\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
+libFitEditorMLInference.so: FitEditorMLInference.o Configuration.o 	\
+	functions_analytic.o mlinference.o
+	$(CXX) -I$(TORCHINC) -o libFitEditorMLInference.so -shared $^	\
+	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10	\
+	$(CXXLDFLAGS) $(EXTRALDFLAGS) 					\
+
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ 		\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
+
+traceview:
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
+	$(MAKE) -C TraceView
+
+eeconverter:
+	DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
+
+FitEditorMLInference.o: FitEditorMLInference.cpp
+	$(CXX) $(CXXFLAGS) -I$(TORCHINC) $(EXTRACXXFLAGS) -c $^ 	\
+	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
+
+mlinference.o: mlinference.cpp
+	$(CXX) $(CXXFLAGS) -I$(TORCHINC) $(EXTRACXXFLAGS) -c $^ 	\
+	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 ##
 # Build docbooks and doxygen documentation

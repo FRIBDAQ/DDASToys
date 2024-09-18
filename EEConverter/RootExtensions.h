@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -32,72 +33,76 @@
 #include <fit_extensions.h>
 #include <TObject.h>
 
-/**
- * @ingroup ddasrootfit
- * @{
- */
+/** @namespace ddastoys */
+namespace ddastoys {
 
-/**
- * @struct RootPulseDescription
- * @brief Describes a single pulse without an offset.
- */
-struct RootPulseDescription : public DDAS::PulseDescription, public TObject
-{  
-    /** @brief Required for inheritence from TObject. */  
-    ClassDef(RootPulseDescription, 1);
-};
+    /**
+     * @ingroup ddasrootfit
+     * @{
+     */
 
-/** @} */
+    /**
+     * @struct RootPulseDescription
+     * @brief Describes a single pulse without an offset.
+     */
+    struct RootPulseDescription : public PulseDescription, public TObject
+    {  
+	/** @brief Required for inheritence from TObject. */  
+	ClassDef(RootPulseDescription, 1);
+    };
+
+    /** @} */
 
 
-/**
- * @ingroup ddasrootfit
- * @{
- */
+    /**
+     * @ingroup ddasrootfit
+     * @{
+     */
 
-/**
- * @struct RootFit1Info
- * @brief Full fitting information for the single pulse.
- */
-struct RootFit1Info : public DDAS::fit1Info, public TObject
-{
-    /** @brief Required for inheritence from TObject. */
-    ClassDef(RootFit1Info, 1);
-};
+    /**
+     * @struct RootFit1Info
+     * @brief Full fitting information for the single pulse.
+     */
+    struct RootFit1Info : public fit1Info, public TObject
+    {
+	/** @brief Required for inheritence from TObject. */
+	ClassDef(RootFit1Info, 1);
+    };
 
-/** @} */
+    /** @} */
 
-/**
- * @ingroup ddasrootfit
- * @{
- */
+    /**
+     * @ingroup ddasrootfit
+     * @{
+     */
 
-/**
- * @struct RootFit2Info
- * @brief Full fitting information for the double pulse.
- */
-struct RootFit2Info : public DDAS::fit2Info, public TObject
-{
-    /** @brief Required for inheritence from TObject. */
-    ClassDef(RootFit2Info, 1);
-};
+    /**
+     * @struct RootFit2Info
+     * @brief Full fitting information for the double pulse.
+     */
+    struct RootFit2Info : public fit2Info, public TObject
+    {
+	/** @brief Required for inheritence from TObject. */
+	ClassDef(RootFit2Info, 1);
+    };
 
-/** @} */
+    /** @} */
 
-/**
- * @ingroup ddasrootfit
- * @{
- */
+    /**
+     * @ingroup ddasrootfit
+     * @{
+     */
 
-/**
- * @struct RootHitExtension
- * @brief The data structure containing the full information about the fits.
- */
-struct RootHitExtension : public DDAS::HitExtension, public TObject
-{
-    /** @brief Required for inheritence from TObject. */
-    ClassDef(RootHitExtension, 1);
-};
+    /**
+     * @struct RootHitExtension
+     * @brief The data structure containing the full fit information.
+     */
+    struct RootHitExtension : public HitExtension, public TObject
+    {
+	/** @brief Required for inheritence from TObject. */
+	ClassDef(RootHitExtension, 1);
+    };
+}
 
 /** @} */
 

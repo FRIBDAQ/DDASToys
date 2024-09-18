@@ -36,6 +36,7 @@
 #include "jacobian_analytic.h"
 
 // Constants used in deriving estimates of k1, k2:
+
 static const double ln2(log(2));
 static const double ln3over4(log(3) - log(4));
 static const double ln9(log(9));
@@ -46,6 +47,7 @@ static const int SINGLE_MAXITERS(50);  //!< Max iterations for single pulse fit.
 static const int DOUBLE_MAXITERS(200); //!< Max iterations for double pulse fit.
 
 // Single pulse fit parameter indices:
+
 static const int P1A_INDEX(0);
 static const int P1K1_INDEX(1);
 static const int P1K2_INDEX(2);
@@ -54,6 +56,7 @@ static const int P1C_INDEX(4);
 static const int P1_PARAM_COUNT(5);
 
 // Double pulse fit with all parameters free:
+
 static const int P2A1_INDEX(0);
 static const int P2K1_INDEX(1);
 static const int P2K2_INDEX(2);
@@ -66,6 +69,7 @@ static const int P2C_INDEX(8);
 static const int P2_PARAM_COUNT(9);
 
 // Double pulse fit with same time parameters parameter indices:
+
 static const int P2FTA1_INDEX(0);
 static const int P2FTK1_INDEX(1);
 static const int P2FTK2_INDEX(2);
@@ -125,8 +129,8 @@ static double
 dp1dA(double k1, double k2, double x1, double x, double w,
       double erise, double efall)
 {
-    double d = efall;             // decay(1.0, k2, x1, x);
-    double l = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x);
+    double d = efall;             // decay(1.0, k2, x1, x)
+    double l = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
     
     return d*l / w;
 }
@@ -147,11 +151,11 @@ static double
 dp1dk1(double A, double k1, double k2, double x1, double x, double w,
        double erise, double efall)
 {
-    double d1  = A*efall;           // decay(A, k2, x1, x);  
-    double d2  = erise;             // decay(1.0, k1, x1,  x);
+    double d1  = A*efall;           // decay(A, k2, x1, x)
+    double d2  = erise;             // decay(1.0, k1, x1,  x)
     double num = d1*d2*(x - x1);
-    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x);   
-     
+    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
+    
     return (num*l*l)/w;
 }
 
@@ -171,9 +175,9 @@ static double
 dp1dk2(double A, double k1, double k2, double x1, double x, double w,
        double erise, double efall)
 {
-    double d1  = A*efall;           // decay(A, k2, x1, x);
+    double d1  = A*efall;           // decay(A, k2, x1, x)
     double num = d1*(x1 - x);
-    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x);
+    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
     
     return (num*l)/w;
 }
@@ -195,9 +199,9 @@ static double
 dp1dx1(double A, double k1, double k2, double x1, double x, double w,
        double erise, double efall)
 {
-    double dk1 = erise;             // decay(1.0, k1, x1, x);
-    double dk2 = efall;             // decay (1.0, k2, x1, x);
-    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x);
+    double dk1 = erise;             // decay(1.0, k1, x1, x)
+    double dk2 = efall;             // decay (1.0, k2, x1, x)
+    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
     
     double left  = A*k2*dk2*l;
     double right = A*k1*dk1*dk2*l*l;
@@ -250,6 +254,7 @@ static int
 gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
     // Note all points are weighted by 1.0 in this computation.
+    
     CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->residuals(p, r);
     
@@ -272,6 +277,7 @@ static int
 gsl_p1Jacobian(const gsl_vector* p, void* pData, gsl_matrix* J)
 {
     // Note: the weights will all be 1.0.
+    
     CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->jacobian(p, J);
   
@@ -331,17 +337,18 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
     for (size_t i = x0; i < trace.size(); i++) {
         
 	// If we've not computed k34 and we crossed the 3/4 threshold
-	// compute k34:        
+	// compute k34:
+	
 	double v = trace[i] - C0;
 	if ((k34 < 0.0) && (v < 0.75*maxval)) {
 	    k34 = ln3over4/(x0 - i);
 	}
 
-	// Similarly for khalf:        
+	// Similarly for khalf:
+	
 	if ((khalf < 0.0) && (v < 0.5*maxval)) {
-	    khalf = ln2/(i - x0);            
-	    // Note that we've got both so we can quit:            
-	    break;
+	    khalf = ln2/(i - x0);
+	    break; // Note that we've got both so we can quit.
 	}
     }
   
@@ -377,7 +384,8 @@ estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
 {
     double max = trace[xmax] - C0; // Background subtracted max.
     
-    // Hunt for 1/2 max position:    
+    // Hunt for 1/2 max position:
+    
     for (int i = xmax; i >= 0; i--) {
 	double v = trace[i] - C0;
 	if (v < 0.5*max) {
@@ -394,7 +402,7 @@ estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
  * by chi-square minimization.
  */
 void
-DDAS::AnalyticFit::lmfit1(
+ddastoys::analyticfit::lmfit1(
     fit1Info* pResult, std::vector<std::uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits, std::uint16_t saturation
     )
@@ -403,7 +411,8 @@ DDAS::AnalyticFit::lmfit1(
     unsigned high = limits.second;
     
     // Produce the set of x/y points that are to be fit.  This is the trace
-    // within the limits and with points at or above saturation removed:    
+    // within the limits and with points at or above saturation removed:
+    
     std::vector<std::pair<std::uint16_t, std::uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);
 #ifdef CUDA
@@ -418,13 +427,15 @@ DDAS::AnalyticFit::lmfit1(
     gsl_multifit_function_fdf function;
     gsl_vector* initialGuess;
     
-    // Make the solver workspace:    
+    // Make the solver workspace:
+    
     solver = gsl_multifit_fdfsolver_alloc(method, npts, P1_PARAM_COUNT);
     if (solver == nullptr) {
 	throw std::runtime_error("lmfit1 Unable to allocate fit solver workspace");
     }
     
-    // Fill in function/data pointers:    
+    // Fill in function/data pointers:
+    
     function.f   = gsl_p1Residuals;
     function.df  = gsl_p1Jacobian;
     function.fdf = gsl_p1Compute;
@@ -437,7 +448,8 @@ DDAS::AnalyticFit::lmfit1(
     
     // A0/X0 wil be determined by the maximum point on the trace.
     // Note that the guesses don't correct for flattops.
-    // Hopefully the fits themselves will iron that all out.  
+    // Hopefully the fits themselves will iron that all out.
+    
     initialGuess = gsl_vector_alloc(P1_PARAM_COUNT);
     
     double   max = 0;
@@ -462,10 +474,12 @@ DDAS::AnalyticFit::lmfit1(
     gsl_vector_set(initialGuess, P1X1_INDEX, X10);
     gsl_vector_set(initialGuess, P1C_INDEX, C0);
     
-    // Final solver setup:    
+    // Final solver setup:
+    
     gsl_multifit_fdfsolver_set(solver, &function, initialGuess);
     
-    // Iterate until there's either convergence or the iteration count is hit.  
+    // Iterate until there's either convergence or the iteration count is hit.
+    
     int status;
     unsigned iteration(0);
     do {
@@ -477,7 +491,8 @@ DDAS::AnalyticFit::lmfit1(
 	    );
     } while((status == GSL_CONTINUE) && (iteration < SINGLE_MAXITERS));
     
-    // Fish the values out of the solvers.    
+    // Fish the values out of the solvers.
+    
     double A  = gsl_vector_get(solver->x, P1A_INDEX);
     double K1 = gsl_vector_get(solver->x, P1K1_INDEX);
     double K2 = gsl_vector_get(solver->x, P1K2_INDEX);
@@ -486,7 +501,8 @@ DDAS::AnalyticFit::lmfit1(
     
     double ChiSquare = chiSquare1(A, K1 , K2, X1, C, points);
     
-    // Set the result struct from the fit parameters and the chi square.    
+    // Set the result struct from the fit parameters and the chi square.
+    
     pResult->iterations = iteration;
     pResult->fitStatus     = status;
     pResult->chiSquare = ChiSquare;
@@ -507,7 +523,7 @@ DDAS::AnalyticFit::lmfit1(
  * vector/matrix cols are defined at the top of this file.
  */
 
-/*
+/**
  * @brief Compute the residuals for the double pulse case. Note that we use
  * weight of 1.0 for each point.
  *
@@ -543,6 +559,7 @@ static int
 gsl_p2Jacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 {
     // Note: weights are all set to 1.0
+    
     CFitEngine* pEngine = reinterpret_cast<CFitEngine*>(pData);
     pEngine->jacobian(p, j);
   
@@ -576,7 +593,7 @@ gsl_p2Compute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix* 
  * by chi-square minimization.
  */
 void
-DDAS::AnalyticFit::lmfit2(
+ddastoys::analyticfit::lmfit2(
     fit2Info* pResult, std::vector<std::uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     fit1Info* pSinglePulseFit, std::uint16_t saturation
@@ -586,7 +603,8 @@ DDAS::AnalyticFit::lmfit2(
     unsigned high = limits.second;    
     
     // Now produce a set of x/y points to be fit from the trace,
-    // limits and saturation value:    
+    // limits and saturation value:
+    
     std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size(); // Number of points to fit.  
@@ -596,19 +614,24 @@ DDAS::AnalyticFit::lmfit2(
     SerialFitEngine2 engine(points);
 #endif
   
-    // Set up basic solver stuff:    
+    // Set up basic solver stuff:
+    
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
     gsl_multifit_fdfsolver* solver;
     gsl_multifit_function_fdf function;
     gsl_vector* initialGuess;
     
-    // Make the solver workspace:    
+    // Make the solver workspace:
+    
     solver = gsl_multifit_fdfsolver_alloc(method, npts, P2_PARAM_COUNT);
     if (solver == nullptr) {
-	throw std::runtime_error("lmfit2 Unable to allocate fit solver workspace");
+	throw std::runtime_error(
+	    "lmfit2 Unable to allocate fit solver workspace"
+	    );
     }    
     
-    // Fill in the function data pointers:    
+    // Fill in the function data pointers:
+    
     function.f   = gsl_p2Residuals;
     function.df  = gsl_p2Jacobian;
     function.fdf = gsl_p2Compute;
@@ -617,18 +640,20 @@ DDAS::AnalyticFit::lmfit2(
     
     function.params = &engine;    
     
-    // For LM, initial parameter guesses are not that sensitive (I think).    
+    // For LM, initial parameter guesses are not that sensitive (I think).
+    
     initialGuess = gsl_vector_alloc(P2_PARAM_COUNT);
     
     // Use Fit with one pulse to get initial guesses:
     // Since often double pulse fits are done after a single pulse fit the user
     // _may_ provide the results of that fit... which still may be nonsense
-    // and require a backwards fit    
+    // and require a backwards fit.
+    
     fit1Info fit1;
     if (!pSinglePulseFit) {
 	lmfit1(&fit1, trace, limits);
     } else {
-	fit1 = *pSinglePulseFit; // Use what's passed in if possbible.
+	fit1 = *pSinglePulseFit; // Use what's passed in if possible.
     }  
     
     double C0 = fit1.offset;
@@ -636,10 +661,6 @@ DDAS::AnalyticFit::lmfit2(
     double K10 = fit1.pulse.steepness;
     double K20 = fit1.pulse.decayTime;
     double X10 = fit1.pulse.position;
-    double A10;
-    double K30;
-    double K40;
-    double X20;
   
     if ((A0 < 0) || (K10 < 0) || (K20 < 0) || (X10 < 0)) {
 	std::vector<std::uint16_t> reversed = trace;
@@ -678,11 +699,11 @@ DDAS::AnalyticFit::lmfit2(
 	    maxchannel = i;
 	}
     }
-        
-    A10 = maxvalue;
-    K30 = K10;
-    K40 = K20;
-    X20 = maxchannel;        
+
+    double A10 = maxvalue;
+    double K30 = K10;
+    double K40 = K20;
+    double X20 = maxchannel;        
 
     gsl_vector_set(initialGuess, P2A1_INDEX, A0);    // Left pulse
     gsl_vector_set(initialGuess, P2K1_INDEX, K10);
@@ -696,7 +717,8 @@ DDAS::AnalyticFit::lmfit2(
     
     gsl_vector_set(initialGuess, P2C_INDEX, C0);  
 
-    // Final fitter/solvers setup:    
+    // Final fitter/solvers setup:
+    
     gsl_multifit_fdfsolver_set(solver, &function, initialGuess);
         
     int status;
@@ -751,7 +773,7 @@ DDAS::AnalyticFit::lmfit2(
  * same.
  */
  
-/*
+/**
  * @brief Compute the residuals for the double pulse case. Note that we use
  * weight of 1.0 for each point.
  *
@@ -764,7 +786,8 @@ DDAS::AnalyticFit::lmfit2(
 static int
 gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
-    // Pull out the current fit parameterization    
+    // Pull out the current fit parameterization:
+    
     double A1    = gsl_vector_get(p, P2FTA1_INDEX);   // Pulse 1.
     double k1    = gsl_vector_get(p, P2FTK1_INDEX);
     double k2    = gsl_vector_get(p, P2FTK2_INDEX);
@@ -775,23 +798,24 @@ gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)
     double k3    = gsl_vector_get(p, P2FTK1_INDEX);   // k3 = k1
     double k4    = gsl_vector_get(p, P2FTK2_INDEX);   // k4 = k2
     double x2    = gsl_vector_get(p, P2FTX2_INDEX);
-    
-    double C     = gsl_vector_get(p, P2FTC_INDEX);    // constant.
+   
+    double C     = gsl_vector_get(p, P2FTC_INDEX);    // Constant.
     
     // Recast pData as a reference to the trace:    
-    DDAS::AnalyticFit::GslFitParameters* pParams
-	= reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
-    const std::vector<
-	std::pair<std::uint16_t, std::uint16_t>
-	>& points(*pParams->s_pPoints);
+    ddastoys::analyticfit::GslFitParameters* pParams
+	= reinterpret_cast<ddastoys::analyticfit::GslFitParameters*>(pData);
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>>& points(
+	*pParams->s_pPoints
+	);
     
-    // Compute double pulse residuals for each point:    
+    // Compute double pulse residuals for each point:
+    
     for (size_t i = 0; i < points.size(); i++) {
 	double x = points[i].first;
 	double y = points[i].second;
-	double p = DDAS::AnalyticFit::doublePulse(A1, k1, k2, x1,
-						  A2, k3, k4, x2,
-						  C, x);
+	double p = ddastoys::analyticfit::doublePulse(
+	    A1, k1, k2, x1, A2, k3, k4, x2, C, x
+	    );
 	gsl_vector_set(r, i, (p - y)); // divided by w = 1.0.
     }
     
@@ -815,9 +839,9 @@ gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)
 static int
 gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 {
-    // Note: all weights are set to 0.
-  
-    // Fish the current fit parameters from p:    
+    // Note: all weights are set to 0.  
+    // Fish the current fit parameters from p:
+    
     double A1    = gsl_vector_get(p, P2FTA1_INDEX);   // Pulse 1.
     double k1    = gsl_vector_get(p, P2FTK1_INDEX);
     double k2    = gsl_vector_get(p, P2FTK2_INDEX);
@@ -829,22 +853,25 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     double k4    = gsl_vector_get(p, P2FTK2_INDEX);   // k4 = k2
     double x2    = gsl_vector_get(p, P2FTX2_INDEX);
         
-    // Recast pData as a reference to the trace vector:    
-    DDAS::AnalyticFit::GslFitParameters* pParams
-	= reinterpret_cast<DDAS::AnalyticFit::GslFitParameters*>(pData);
-    const std::vector<
-	std::pair<std::uint16_t, std::uint16_t>
-	>& points(*pParams->s_pPoints);
+    // Recast pData as a reference to the trace vector:
+    
+    ddastoys::analyticfit::GslFitParameters* pParams
+	= reinterpret_cast<ddastoys::analyticfit::GslFitParameters*>(pData);
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>>& points(
+	*pParams->s_pPoints
+	);
    
     // Loop over the data points producing the Jacobian for each point.
     // Note we can re-use the partial derivative functions for the single pulse
     // case since the two pulses are independent and have identical functional
-    // forms.  
+    // forms.
+    
     for (size_t i = 0; i < points.size(); i++) {
 	double x = points[i].first;
         
 	// Pulse 1 terms (A, k1, k2, x1):        
-	// Compute some reuseable exponentials:        
+	// Compute some reuseable exponentials:
+	
 	double erise1 = exp(-k1*(x - x1));
 	double efall1 = exp(-k2*(x - x1));
         
@@ -868,7 +895,8 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 	    j, i, P2FTX1_INDEX, dp1dx1(A1, k1, k2, x1, x, 1.0, erise1, efall1)
 	    );
         
-	// For pulse 2 elements:  A1->A2,  x1 -> x2        
+	// For pulse 2 elements:  A1->A2,  x1 -> x2:
+	
 	gsl_matrix_set(
 	    j, i, P2FTA2_INDEX, dp1dA(k3, k4, x2, x, 1.0, erise2, efall2)
 	    );
@@ -876,7 +904,8 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
 	    j, i, P2FTX2_INDEX, dp1dx1(A2, k3, k4, x2, x, 1.0, erise2, efall2)
 	    );
         
-	// Don't forget the constant term        
+	// Don't forget the constant term:
+	
 	gsl_matrix_set(j, i, P2FTC_INDEX, dp1dC(A1, k1, k2, x1, x, 1.0));     
     }
     
@@ -912,7 +941,7 @@ gsl_p2ftCompute(const gsl_vector* p, void* pData,
  * by chi-square minimization.
  */
 void
-DDAS::AnalyticFit::lmfit2fixedT(
+ddastoys::analyticfit::lmfit2fixedT(
     fit2Info* pResult, std::vector<std::uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     fit1Info* pSinglePulseFit, std::uint16_t saturation
@@ -922,21 +951,26 @@ DDAS::AnalyticFit::lmfit2fixedT(
     unsigned high = limits.second;    
     
     // Now produce a set of x/y points to be fit from the trace,
-    // limits and saturation value:    
+    // limits and saturation value:
+    
     std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size(); // Number of points to fit.
     
-    // Set up basic solver stuff:    
+    // Set up basic solver stuff:
+    
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
     gsl_multifit_fdfsolver*     solver;
     gsl_multifit_function_fdf  function;
     gsl_vector*                initialGuess;
     
-    // Make the solver workspace:    
+    // Make the solver workspace:
+    
     solver = gsl_multifit_fdfsolver_alloc(method, npts, P2FT_PARAM_COUNT);
     if (solver == nullptr) {
-	throw std::runtime_error("lmfit2fixed Unable to allocate fit solver workspace");
+	throw std::runtime_error(
+	    "lmfit2fixed Unable to allocate fit solver workspace"
+	    );
     }    
     
     // Fill in the function data pointers:    
@@ -946,17 +980,19 @@ DDAS::AnalyticFit::lmfit2fixedT(
     function.n   = npts;
     function.p   = P2FT_PARAM_COUNT;
     
-    DDAS::AnalyticFit::GslFitParameters params = {&points};
+    GslFitParameters params = {&points};
     
     function.params = &params;    
     
-    // For LM, initial parameter guesses are not that sensitive (I think).    
+    // For LM, initial parameter guesses are not that sensitive (I think).
+    
     initialGuess = gsl_vector_alloc(P2FT_PARAM_COUNT);
     
     // Use Fit with one pulse to get initial guesses:
     // Since often double pulse fits are done after a single pulse fit the user
     // _may_ provide the results of that fit... which still may be nonsense
-    // and require a backwards fit    
+    // and require a backwards fit
+    
     fit1Info fit1;
     if (!pSinglePulseFit) {
 	lmfit1(&fit1, trace, limits);
@@ -984,9 +1020,7 @@ DDAS::AnalyticFit::lmfit2fixedT(
 	A0  = fit1.pulse.amplitude;
 	K10 = -fit1.pulse.steepness;
 	K20 = -fit1.pulse.decayTime;
-	X10 = npts - fit1.pulse.position;
-       
-       
+	X10 = npts - fit1.pulse.position;       
     }
     
     // For estimates of the second trace, use the maximum value and position
@@ -1000,7 +1034,8 @@ DDAS::AnalyticFit::lmfit2fixedT(
     // Note, we only consider the region of interest of the trace fitted.
     
     // Note as well that we don't correct for flattops on these estamtors
-    // The fit _should_ converge things to the right answers.    
+    // The fit _should_ converge things to the right answers.
+    
     int maxchannel = 0;
     double maxvalue = -1.0e6;
     for (unsigned i = limits.first; i <= limits.second; i++)  {      
@@ -1025,10 +1060,12 @@ DDAS::AnalyticFit::lmfit2fixedT(
     
     gsl_vector_set(initialGuess, P2FTC_INDEX, C0);
     
-    // Final fitter/solvers setup:    
+    // Final fitter/solvers setup:
+    
     gsl_multifit_fdfsolver_set(solver, &function, initialGuess);
 
     // Iterate until converged or we hit the iteration limit:
+    
     int status;
     unsigned iteration(0);
     do {
@@ -1040,7 +1077,8 @@ DDAS::AnalyticFit::lmfit2fixedT(
 	    );        
     } while((status == GSL_CONTINUE) && (iteration < DOUBLE_MAXITERS));
 
-    // Fish our results and compute the chi square:    
+    // Fish our results and compute the chi square:
+    
     double A1 = gsl_vector_get(solver->x, P2FTA1_INDEX);  // Pulse 1 
     double K1 = gsl_vector_get(solver->x, P2FTK1_INDEX);
     double K2 = gsl_vector_get(solver->x, P2FTK2_INDEX);

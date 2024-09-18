@@ -40,7 +40,7 @@
  * - Sets the extension if there is one.
  */
 const void*
-DAQ::DDAS::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
+ddastoys::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
 {  
     // Find the ring item body:    
     const RingItem* pItem = reinterpret_cast<const RingItem*>(p);
@@ -92,16 +92,16 @@ DAQ::DDAS::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
 	    reinterpret_cast<const std::uint32_t*>(pEnd),
 	    hit
 	    );        
-    } else if ((bodyBytes + sizeof(::DDAS::HitExtension)) == bodySize) {    
+    } else if ((bodyBytes + sizeof(::ddastoys::HitExtension)) == bodySize) {    
 	// Hit with fits    
-	pEnd -= sizeof(::DDAS::HitExtension); // Also points to extension.
+	pEnd -= sizeof(::ddastoys::HitExtension); // Also points to extension.
 	unpack(
 	    reinterpret_cast<const std::uint32_t*>(pBody),
 	    reinterpret_cast<const std::uint32_t*>(pEnd),
 	    hit
 	    );
 	hit.setExtension(
-	    *(reinterpret_cast<const ::DDAS::HitExtension*>(pEnd))
+	    *(reinterpret_cast<const ::ddastoys::HitExtension*>(pEnd))
 	    );    
     } else if (bodyBytes + sizeof(std::uint32_t) == bodySize) {        
 	// There's no hit extension actually -- it's a FitExtender null

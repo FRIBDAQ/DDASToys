@@ -19,24 +19,26 @@
 
 using namespace ufmt;
 
+namespace ddastoys {
+    
 //____________________________________________________________________________
 /**
  * @details
  * Also constructs a DDASFitHitUnpacker object.
  */
-TraceViewProcessor::TraceViewProcessor() :
-    m_pUnpacker(new DAQ::DDAS::DDASFitHitUnpacker)
-{}
+    TraceViewProcessor::TraceViewProcessor() :
+	m_pUnpacker(new DDASFitHitUnpacker)
+    {}
 
 //____________________________________________________________________________
 /**
  * @details
  * Processor owns the unpacker, so delete on destruction.
  */
-TraceViewProcessor::~TraceViewProcessor()
-{
-    delete m_pUnpacker;
-}
+    TraceViewProcessor::~TraceViewProcessor()
+    {
+	delete m_pUnpacker;
+    }
 
 //____________________________________________________________________________
 /**
@@ -44,25 +46,27 @@ TraceViewProcessor::~TraceViewProcessor()
  * Break PHYSICS_EVENTs into fragments, convert the fragments into DDASFitHits 
  * and append them to the event (just a vector of DDASFitHits).
  */
-void
-TraceViewProcessor::processEvent(CPhysicsEventItem& item)
-{ 
-    // Clear event vector before processing the hit.
+    void
+    TraceViewProcessor::processEvent(CPhysicsEventItem& item)
+    { 
+	// Clear event vector before processing the hit.
   
-    m_hits.clear();
+	m_hits.clear();
 
-    // Bust the ring item up into event builder fragments.
+	// Bust the ring item up into event builder fragments.
   
-    FragmentIndex frags(
-	reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
-	);
+	FragmentIndex frags(
+	    reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
+	    );
 
-    // Decode the DDAS hit in each fragment and add it to the event.
+	// Decode the DDAS hit in each fragment and add it to the event.
   
-    DAQ::DDAS::DDASFitHit hit;
-    for (unsigned i = 0; i < frags.getNumberFragments(); i++) {
-	hit.Reset();
-	m_pUnpacker->decode(frags.getFragment(i).s_itemhdr, hit);
-	m_hits.push_back(hit);
-    }  
+	DDASFitHit hit;
+	for (unsigned i = 0; i < frags.getNumberFragments(); i++) {
+	    hit.Reset();
+	    m_pUnpacker->decode(frags.getFragment(i).s_itemhdr, hit);
+	    m_hits.push_back(hit);
+	}  
+    }
+    
 }
