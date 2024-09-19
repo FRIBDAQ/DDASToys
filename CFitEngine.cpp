@@ -10,7 +10,8 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -26,10 +27,12 @@
  * @details
  * Marshall the x/y points into the coordinate vectors.
  */
-CFitEngine::CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data)
+ddastoys::CFitEngine::CFitEngine(
+    std::vector<std::pair<uint16_t, uint16_t>>& data
+    )
 {
-  for (size_t i = 0; i < data.size(); i++) {
-    x.push_back(data[i].first);
-    y.push_back(data[i].second);
-  }
+    for (size_t i = 0; i < data.size(); i++) {
+	x.push_back(data[i].first);
+	y.push_back(data[i].second);
+    }
 }

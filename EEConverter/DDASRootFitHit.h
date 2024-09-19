@@ -30,24 +30,24 @@
 /** @namespace ddastoys */
 namespace ddastoys {
 
-/**
- * @defgroup ddasrootfit libDDASRootFit.so
- * @brief ROOT data format and classes. Basically a ROOT-ized DDASFitHit 
- * and fit_extensions.h.
- */
+    /**
+     * @defgroup ddasrootfitformat libDDASRootFit.so
+     * @brief ROOT data format and classes. Basically a ROOT-ized DDASFitHit 
+     * and fit_extensions.h.
+     */
 
-/**
- * @ingroup ddasrootfit
- * @{
- */
+    /**
+     * @ingroup ddasrootfitformat
+     * @{
+     */
 
-/**
- * @class DDASRootFitHit
- * @brief This class is a ROOT serializable DDAS hit with possible fit data.
- * @details
- * This is a very, very simple class. It inherits from DAQ::DDAS::DDASFitHit 
- * and ROOT's TObject class and adds a ROOT `ClassDef()` macro.
- */
+    /**
+     * @class DDASRootFitHit
+     * @brief This class is a ROOT serializable DDAS hit with possible fit data.
+     * @details
+     * This is a very, very simple class. It inherits from ddastoys::DDASFitHit
+     * and ROOT's TObject class and adds a ROOT `ClassDef()` macro.
+     */
     class DDASRootFitHit : public DDASFitHit, public TObject
     {
     public:

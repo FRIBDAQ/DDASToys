@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */

@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  traceview.cpp
  * @brief traceview main. Run the Qt application.
@@ -12,6 +28,8 @@
 #include <TSystem.h>
 
 #include "QTraceView.h"
+
+using namespace ddastoys;
 
 /**
  * @brief traceview main.
@@ -58,7 +76,7 @@ int main(int argc, char* argv[])
 
    // Display the GUI
   
-   ddastoys::QTraceView window(parser, nullptr);
+   QTraceView window(parser, nullptr);
    window.setWindowTitle("DDAS TraceView");
    window.resize(window.sizeHint());
    window.show();

@@ -10,7 +10,8 @@
      Authors:
              Ron Fox
              Jeromy Tompkins 
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -29,9 +30,11 @@
 
 /** @namespace ddastoys */
 namespace ddastoys {
+
+    class DDASRootFitHit;
     
     /**
-     * @ingroup ddasrootfit
+     * @ingroup ddasrootfitformat
      * @{
      */
 
@@ -43,14 +46,12 @@ namespace ddastoys {
      * An event is just a sequence (vector) of hits. Hits are stored here as 
      * pointers to DDASRootFitHit objects which are hits that are also derived 
      * from TObject.
-     *
      * @note The code assumes that the pointers in m_hits point to dynamically
      * allocated data. Thus the destructor will destroy the hits as well.
      * @note Copy construction and assignment are implemented as deep operations
      * as demanded by ROOT.
      */
-    class DDASRootFitHit;
-
+    
     class DDASRootFitEvent : public TObject
     {
     public:

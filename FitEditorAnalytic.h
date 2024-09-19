@@ -10,7 +10,8 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -33,20 +34,22 @@ namespace DAQ {
     }
 }
 
+/** @namespace ddastoys */
 namespace ddastoys {
     
     class Configuration;
 
-/**
- * @class FitEditorAnalytic
- * @brief Fit trace data using the analytic fitting functions and extend hits.
- *
- * @details
- * Extending the hit with this editor overwrites any existing extension. This 
- * class is intended for use with the EventEditor framework providing a 
- * complete description of the new event body. Resides in the DAQ::DDAS
- * namespace.
- */
+    /**
+     * @class FitEditorAnalytic
+     * @brief Fit trace data using the analytic fitting functions and extend 
+     * hits.
+     *
+     * @details
+     * Extending the hit with this editor overwrites any existing extension. 
+     * This class is intended for use with the EventEditor framework providing 
+     * a complete description of the new event body. Resides in the 
+     * ddastoys:: namespace.
+     */
 
     class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
     {
@@ -83,7 +86,8 @@ namespace ddastoys {
 	// Mandatory interface from CBuiltRingItemEditor::BodyEditor
     public:
 	/**
-	 * @brief Perform the fit and create a fit extension for a single fragment. 
+	 * @brief Perform the fit and create a fit extension for a single 
+	 * fragment. 
 	 * @param pHdr     Pointer to the ring item header of the hit.
 	 * @param pBHdr    Pointer to the body header pointer for the hit.
 	 * @param bodySize Number of bytes in the body.
@@ -91,7 +95,8 @@ namespace ddastoys {
 	 * @return         Final segment descriptors.
 	 */
 	virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(
-	    pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody
+	    pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize,
+	    void* pBody
 	    );
 	/**
 	 * @brief Free the dynamic fit extension descriptor(s).

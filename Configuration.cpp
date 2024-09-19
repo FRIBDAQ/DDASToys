@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  Configuration.cpp
  * @brief Configuration manager class implementation.
@@ -31,7 +47,6 @@ static inline std::string &trim(std::string &s) {
     return ltrim(rtrim(s));
 }
 
-namespace ddastoys {
 
 /**
  * @details
@@ -44,47 +59,47 @@ namespace ddastoys {
  * which the trace datapoints will not be fit. Most commonly this saturation 
  * value is set to the saturation value of the ADC.
  */
-    void
-    Configuration::readConfigFile()
-    {
-	std::string filename = getFileNameFromEnv("FIT_CONFIGFILE");
+void
+ddastoys::Configuration::readConfigFile()
+{
+    std::string filename = getFileNameFromEnv("FIT_CONFIGFILE");
   
-	std::ifstream f(filename);    
-	if (f.fail()) {
-	    std::string msg("Unable to open the configuration file: ");
-	    msg += filename;
-	    throw std::invalid_argument(msg);
-	}
+    std::ifstream f(filename);    
+    if (f.fail()) {
+	std::string msg("Unable to open the configuration file: ");
+	msg += filename;
+	throw std::invalid_argument(msg);
+    }
     
-	while (!f.eof()) {
-	    std::string originalline("");    
-	    std::getline(f, originalline, '\n');   
-	    std::string line = isComment(originalline);
+    while (!f.eof()) {
+	std::string originalline("");    
+	std::getline(f, originalline, '\n');   
+	std::string line = isComment(originalline);
     
-	    if (line != "") {
-		unsigned crate, slot, channel, low, high, saturation;
-		std::string modelPath;
-		std::stringstream sline(line);
-		sline >> crate >> slot >> channel >> low  >> high >> saturation
-		      >> modelPath;
+	if (line != "") {
+	    unsigned crate, slot, channel, low, high, saturation;
+	    std::string modelPath;
+	    std::stringstream sline(line);
+	    sline >> crate >> slot >> channel >> low  >> high >> saturation
+		  >> modelPath;
 	    
-		if (sline.fail()) {
-		    std::string msg(
-			"Error processing line in configuration file '"
-			);
-		    msg += originalline;
-		    msg += "'";
-		    throw std::invalid_argument(msg);
-		}
-	    
-		// Compute the channel index and add the channel to the map:
-		unsigned index = channelIndex(crate, slot, channel);
-		std::pair<unsigned, unsigned> limits(low, high);
-		ConfigInfo info = {limits, saturation, modelPath};	    
-		m_fitChannels[index] = info;
+	    if (sline.fail()) {
+		std::string msg(
+		    "Error processing line in configuration file '"
+		    );
+		msg += originalline;
+		msg += "'";
+		throw std::invalid_argument(msg);
 	    }
+	    
+	    // Compute the channel index and add the channel to the map:
+	    unsigned index = channelIndex(crate, slot, channel);
+	    std::pair<unsigned, unsigned> limits(low, high);
+	    ConfigInfo info = {limits, saturation, modelPath};	    
+	    m_fitChannels[index] = info;
 	}
     }
+}
 
 /**
  * @details 
@@ -95,70 +110,72 @@ namespace ddastoys {
  * the template trace. The remaining lines in the configuration file contain 
  * the floating point template trace data itself.
  */
-    void
-    Configuration::readTemplateFile()
-    {
-	std::string filename = getFileNameFromEnv("TEMPLATE_CONFIGFILE");
+void
+ddastoys::Configuration::readTemplateFile()
+{
+    std::string filename = getFileNameFromEnv("TEMPLATE_CONFIGFILE");
 
-	std::ifstream f(filename);
-	if (f.fail()) {
-	    std::string errmsg("Unable to open the template file: ");
-	    errmsg += filename;
-	    throw std::invalid_argument(errmsg);
-	}
-
-	if (!m_template.empty()) m_template.clear();
-  
-	int nread = 0;
-	unsigned npts;
-	double val;
-	while (!f.eof()) {
-	    std::string originalline("");
-	    std::getline(f, originalline, '\n');
-	    std::string line = isComment(originalline);
-	    if (line != "") {
-		std::stringstream sline(line);
-      
-		if (nread == 0) {
-		    sline >> m_alignPoint >> npts;
-		} else {
-		    sline >> val;
-		    m_template.push_back(val);
-		}
-      
-		if (sline.fail()) {
-		    std::string errmsg("Error processing line in template file '");
-		    errmsg += originalline;
-		    errmsg += "'";
-		    throw std::invalid_argument(errmsg);
-		}
-      
-		nread++;
-	    }    
-	}
-
-	// The template should know how long it is. If you read in more data
-	// points throw an exception.  
-	if (m_template.size() != npts) {
-	    std::string errmsg("Template configfile thinks the trace is ");
-	    errmsg += npts;
-	    errmsg += " samples but read in ";
-	    errmsg += m_template.size();
-	    throw std::length_error(errmsg); // I guess this is the right one?
-	}
-
-	// Ensure the alignment point is contained in the trace. Note that because
-	// m_alignPoint is an unsigned type it cannot be negative.  
-	if (m_alignPoint >= m_template.size()) {
-	    std::string errmsg("Invalid template alignment point ");
-	    errmsg += m_alignPoint;
-	    errmsg += " >= template size ";
-	    errmsg += m_template.size();
-	    throw std::invalid_argument(errmsg);
-	}
-
-	f.close();
+    std::ifstream f(filename);
+    if (f.fail()) {
+	std::string errmsg("Unable to open the template file: ");
+	errmsg += filename;
+	throw std::invalid_argument(errmsg);
     }
+
+    if (!m_template.empty()) m_template.clear();
+  
+    int nread = 0;
+    unsigned npts;
+    double val;
+    while (!f.eof()) {
+	std::string originalline("");
+	std::getline(f, originalline, '\n');
+	std::string line = isComment(originalline);
+	if (line != "") {
+	    std::stringstream sline(line);
+      
+	    if (nread == 0) {
+		sline >> m_alignPoint >> npts;
+	    } else {
+		sline >> val;
+		m_template.push_back(val);
+	    }
+      
+	    if (sline.fail()) {
+		std::string errmsg("Error processing line in template file '");
+		errmsg += originalline;
+		errmsg += "'";
+		throw std::invalid_argument(errmsg);
+	    }
+      
+	    nread++;
+	}    
+    }
+
+    // The template should know how long it is. If you read in more data
+    // points throw an exception:
+    
+    if (m_template.size() != npts) {
+	std::string errmsg("Template configfile thinks the trace is ");
+	errmsg += npts;
+	errmsg += " samples but read in ";
+	errmsg += m_template.size();
+	throw std::length_error(errmsg); // I guess this is the right one?
+    }
+
+    // Ensure the alignment point is contained in the trace. Note that because
+    // m_alignPoint is an unsigned type it cannot be negative:
+    
+    if (m_alignPoint >= m_template.size()) {
+	std::string errmsg("Invalid template alignment point ");
+	errmsg += m_alignPoint;
+	errmsg += " >= template size ";
+	errmsg += m_template.size();
+	throw std::invalid_argument(errmsg);
+    }
+
+    f.close();
+}
 
 /**
  * @details
@@ -166,35 +183,35 @@ namespace ddastoys {
  * Caller should exit with failure message if we attempt to fit an unmapped 
  * channel.
  */
-    bool
-    Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
-    {
-	int index = channelIndex(crate, slot, channel);
-	return (m_fitChannels.find(index) != m_fitChannels.end());
-    }
+bool
+ddastoys::Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
+{
+    int index = channelIndex(crate, slot, channel);
+    return (m_fitChannels.find(index) != m_fitChannels.end());
+}
 
-    std::pair<unsigned, unsigned>
-    Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
-    {
-	int index = channelIndex(crate, slot, channel);
-	return m_fitChannels[index].s_limits;
-    }
+std::pair<unsigned, unsigned>
+ddastoys::Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
+{
+    int index = channelIndex(crate, slot, channel);
+    return m_fitChannels[index].s_limits;
+}
 
-    unsigned
-    Configuration::getSaturationValue(
-	unsigned crate, unsigned slot, unsigned channel
-	)
-    {
-	int index = channelIndex(crate, slot, channel);
-	return m_fitChannels[index].s_saturation;
-    }
+unsigned
+ddastoys::Configuration::getSaturationValue(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    int index = channelIndex(crate, slot, channel);
+    return m_fitChannels[index].s_saturation;
+}
 
-    std::string
-    Configuration::getModelPath(unsigned crate, unsigned slot, unsigned channel)
-    {
-	int index = channelIndex(crate, slot, channel);
-	return m_fitChannels[index].s_modelPath;
-    }
+std::string
+ddastoys::Configuration::getModelPath(unsigned crate, unsigned slot, unsigned channel)
+{
+    int index = channelIndex(crate, slot, channel);
+    return m_fitChannels[index].s_modelPath;
+}
 
 /**
  * @details
@@ -202,50 +219,50 @@ namespace ddastoys {
  * list vector, the model names are sorted in the returned vector which may 
  * be different than how they appear in the configuration file.
  */
-    std::vector<std::string>
-    Configuration::getModelList()
-    {
-	std::vector<std::string> models;
-	for (const auto& entry : m_fitChannels) {
-	    models.push_back(entry.second.s_modelPath);
-	}
-	std::sort(models.begin(), models.end());
-	models.erase(std::unique(models.begin(), models.end()), models.end());
-    
-	return models;
+std::vector<std::string>
+ddastoys::Configuration::getModelList()
+{
+    std::vector<std::string> models;
+    for (const auto& entry : m_fitChannels) {
+	models.push_back(entry.second.s_modelPath);
     }
+    std::sort(models.begin(), models.end());
+    models.erase(std::unique(models.begin(), models.end()), models.end());
+    
+    return models;
+}
 
 ///
 // Private methods
 //
 
-    std::string
-    Configuration::getFileNameFromEnv(const char* envname)
-    {
-	const char* pFilename = getenv(envname);
-	if (!pFilename) {
-	    std::string msg("No translation for environment variable: ");
-	    msg += envname;
-	    msg += " Point that to the proper configuration file and re-run";
-	    throw std::invalid_argument(msg);
-	}
+std::string
+ddastoys::Configuration::getFileNameFromEnv(const char* envname)
+{
+    const char* pFilename = getenv(envname);
+    if (!pFilename) {
+	std::string msg("No translation for environment variable: ");
+	msg += envname;
+	msg += " Point that to the proper configuration file and re-run";
+	throw std::invalid_argument(msg);
+    }
     
-	return std::string(pFilename);
-    }
+    return std::string(pFilename);
+}
 
-    std::string
-    Configuration::isComment(std::string line)
-    {
-	trim(line); // Modifies it
-	if (line[0] == '#') return std::string("");
+std::string
+ddastoys::Configuration::isComment(std::string line)
+{
+    trim(line); // Modifies it
+    if (line[0] == '#') return std::string("");
 
-	return line;
-    }
+    return line;
+}
 
-    unsigned
-    Configuration::channelIndex(unsigned crate, unsigned slot, unsigned channel)
-    {
-	return (crate << 8) | (slot << 4) | channel;
-    }
-
+unsigned
+ddastoys::Configuration::channelIndex(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    return (crate << 8) | (slot << 4) | channel;
 }

@@ -37,7 +37,7 @@
 namespace ddastoys {
 
     /**
-     * @ingroup ddasrootfit
+     * @ingroup ddasrootfitformat
      * @{
      */
 
@@ -51,14 +51,6 @@ namespace ddastoys {
 	ClassDef(RootPulseDescription, 1);
     };
 
-    /** @} */
-
-
-    /**
-     * @ingroup ddasrootfit
-     * @{
-     */
-
     /**
      * @struct RootFit1Info
      * @brief Full fitting information for the single pulse.
@@ -68,13 +60,6 @@ namespace ddastoys {
 	/** @brief Required for inheritence from TObject. */
 	ClassDef(RootFit1Info, 1);
     };
-
-    /** @} */
-
-    /**
-     * @ingroup ddasrootfit
-     * @{
-     */
 
     /**
      * @struct RootFit2Info
@@ -86,12 +71,6 @@ namespace ddastoys {
 	ClassDef(RootFit2Info, 1);
     };
 
-    /** @} */
-
-    /**
-     * @ingroup ddasrootfit
-     * @{
-     */
 
     /**
      * @struct RootHitExtension
@@ -102,8 +81,9 @@ namespace ddastoys {
 	/** @brief Required for inheritence from TObject. */
 	ClassDef(RootHitExtension, 1);
     };
-}
 
-/** @} */
+    /** @} */
+
+}
 
 #endif

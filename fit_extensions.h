@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -73,29 +74,31 @@ namespace ddastoys {
 	fit2Info twoPulseFit; //!< Double pulse fit information.
 	double doublePulseProb; //!< Probability the trace is a double pulse.
     };  
-}
+
 
 /**
  * @struct nullExtension
  * @brief A null fit extension is a single 32-bit word.
  */
-struct nullExtension {
-    std::uint32_t s_size; //!< sizeof(std::uint32_t)
-    /** @brief Creates a nullExtension and sets its size. */
-    nullExtension() : s_size(sizeof(std::uint32_t)) {}
-};
+    struct nullExtension {
+	std::uint32_t s_size; //!< sizeof(std::uint32_t)
+	/** @brief Creates a nullExtension and sets its size. */
+	nullExtension() : s_size(sizeof(std::uint32_t)) {}
+    };
 
 /**
  * @struct FitInfo
  * @brief A fit extension that knows its size.
  */ 
-struct FitInfo {
-    ddastoys::HitExtension s_extension; //!< The hit extension data.
-    std::uint32_t      s_size;      //!< sizeof(ddastoys::HitExtension)
-    /** @brief Creates FitInfo, set its size, and zeroes fit parameters. */
-    FitInfo() : s_size(sizeof(FitInfo)) {
-	memset(&s_extension, 0, sizeof(ddastoys::HitExtension));
-    }
-};
+    struct FitInfo {
+	HitExtension s_extension; //!< The hit extension data.
+	std::uint32_t s_size;      //!< sizeof(ddastoys::HitExtension)
+	/** @brief Creates FitInfo, set its size, and zeroes fit parameters. */
+	FitInfo() : s_size(sizeof(FitInfo)) {
+	    memset(&s_extension, 0, sizeof(HitExtension));
+	}
+    };
+    
+}
 
 #endif

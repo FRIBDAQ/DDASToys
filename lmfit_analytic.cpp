@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -34,6 +35,9 @@
 
 #include "functions_analytic.h"
 #include "jacobian_analytic.h"
+
+using namespace ddastoys;
+using namespace ddastoys::analyticfit;
 
 // Constants used in deriving estimates of k1, k2:
 
@@ -431,7 +435,9 @@ ddastoys::analyticfit::lmfit1(
     
     solver = gsl_multifit_fdfsolver_alloc(method, npts, P1_PARAM_COUNT);
     if (solver == nullptr) {
-	throw std::runtime_error("lmfit1 Unable to allocate fit solver workspace");
+	throw std::runtime_error(
+	    "lmfit1 Unable to allocate fit solver workspace"
+	    );
     }
     
     // Fill in function/data pointers:
@@ -541,6 +547,7 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
   
     return GSL_SUCCESS;
 }
+
 /**
  * @brief Compute the jacobian matrix. 
  *
@@ -705,12 +712,12 @@ ddastoys::analyticfit::lmfit2(
     double K40 = K20;
     double X20 = maxchannel;        
 
-    gsl_vector_set(initialGuess, P2A1_INDEX, A0);    // Left pulse
+    gsl_vector_set(initialGuess, P2A1_INDEX, A0);    // Pulse 1
     gsl_vector_set(initialGuess, P2K1_INDEX, K10);
     gsl_vector_set(initialGuess, P2K2_INDEX, K20);
     gsl_vector_set(initialGuess, P2X1_INDEX, X10);
   
-    gsl_vector_set(initialGuess, P2A2_INDEX, A10);   // Right pulse.
+    gsl_vector_set(initialGuess, P2A2_INDEX, A10);   // Pulse 2.
     gsl_vector_set(initialGuess, P2K3_INDEX, K30);
     gsl_vector_set(initialGuess, P2K4_INDEX, K40);
     gsl_vector_set(initialGuess, P2X2_INDEX, X20);
@@ -734,12 +741,12 @@ ddastoys::analyticfit::lmfit2(
 
     // Fish our results and compute the chi square:
     
-    double A1 = gsl_vector_get(solver->x, P2A1_INDEX);  // Pulse 1 
+    double A1 = gsl_vector_get(solver->x, P2A1_INDEX);  // Pulse 1. 
     double K1 = gsl_vector_get(solver->x, P2K1_INDEX);
     double K2 = gsl_vector_get(solver->x, P2K2_INDEX);
     double X1 = gsl_vector_get(solver->x, P2X1_INDEX);
     
-    double A2 = gsl_vector_get(solver->x, P2A2_INDEX);  // Pulse 2
+    double A2 = gsl_vector_get(solver->x, P2A2_INDEX);  // Pulse 2.
     double K3 = gsl_vector_get(solver->x, P2K3_INDEX);
     double K4 = gsl_vector_get(solver->x, P2K4_INDEX);
     double X2 = gsl_vector_get(solver->x, P2X2_INDEX);
@@ -759,7 +766,7 @@ ddastoys::analyticfit::lmfit2(
     pResult->pulses[0].steepness = K1;
     pResult->pulses[0].decayTime = K2;
     
-    pResult->pulses[1].position  = X2;   // Pulse 1.
+    pResult->pulses[1].position  = X2;   // Pulse 2.
     pResult->pulses[1].amplitude = A2;
     pResult->pulses[1].steepness = K3;
     pResult->pulses[1].decayTime = K4;    
@@ -769,8 +776,8 @@ ddastoys::analyticfit::lmfit2(
 }
 
 /*---------------------------------------------------------------------------
- * Double pulse with the time constants between the pulses constrained to be the
- * same.
+ * Double pulse with the time constants between the pulses constrained to be 
+ * the same.
  */
  
 /**
@@ -802,18 +809,16 @@ gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)
     double C     = gsl_vector_get(p, P2FTC_INDEX);    // Constant.
     
     // Recast pData as a reference to the trace:    
-    ddastoys::analyticfit::GslFitParameters* pParams
-	= reinterpret_cast<ddastoys::analyticfit::GslFitParameters*>(pData);
-    const std::vector<std::pair<std::uint16_t, std::uint16_t>>& points(
-	*pParams->s_pPoints
-	);
+    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>>&
+	points(*pParams->s_pPoints);
     
     // Compute double pulse residuals for each point:
     
     for (size_t i = 0; i < points.size(); i++) {
 	double x = points[i].first;
 	double y = points[i].second;
-	double p = ddastoys::analyticfit::doublePulse(
+	double p = doublePulse(
 	    A1, k1, k2, x1, A2, k3, k4, x2, C, x
 	    );
 	gsl_vector_set(r, i, (p - y)); // divided by w = 1.0.
@@ -855,11 +860,9 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
         
     // Recast pData as a reference to the trace vector:
     
-    ddastoys::analyticfit::GslFitParameters* pParams
-	= reinterpret_cast<ddastoys::analyticfit::GslFitParameters*>(pData);
-    const std::vector<std::pair<std::uint16_t, std::uint16_t>>& points(
-	*pParams->s_pPoints
-	);
+    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>>&
+	points(*pParams->s_pPoints);
    
     // Loop over the data points producing the Jacobian for each point.
     // Note we can re-use the partial derivative functions for the single pulse
@@ -960,7 +963,7 @@ ddastoys::analyticfit::lmfit2fixedT(
     // Set up basic solver stuff:
     
     const gsl_multifit_fdfsolver_type* method = gsl_multifit_fdfsolver_lmsder;
-    gsl_multifit_fdfsolver*     solver;
+    gsl_multifit_fdfsolver*    solver;
     gsl_multifit_function_fdf  function;
     gsl_vector*                initialGuess;
     

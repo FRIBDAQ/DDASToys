@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  lmfit_template.cpp
  * @brief Implementation of template fitting functions we use in GSL's LM 
@@ -20,6 +36,8 @@
 #include <gsl/gsl_multifit_nlinear.h> // Updated nonlinear solver
 
 #include "functions_template.h"
+
+using namespace ddastoys::templatefit;
 
 static const int SINGLE_MAXITERS(50);  //!< Max iterations for single pulse fit.
 static const int DOUBLE_MAXITERS(200); //!< Max iterations for double pulse fit.
@@ -85,8 +103,7 @@ reduceTrace(
 static int
 gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 {
-    ddastoys::templatefit::GslFitParameters* pParams
-	= reinterpret_cast<ddastoys::templatefit::GslFitParameters*>(pData);
+    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
     
     // Pull the fit parameterization from p:
     
@@ -107,7 +124,7 @@ gsl_p1Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
     for (size_t i = 0; i<points.size(); i++) {
 	double x = points[i].first;
 	double y = points[i].second;
-	double m = ddastoys::templatefit::singlePulse(A1, x1, C, x, trtmp);
+	double m = singlePulse(A1, x1, C, x, trtmp);
 	gsl_vector_set(r, i, (m - y)); // Weighted by 1.0
     }
     
@@ -172,7 +189,7 @@ ddastoys::templatefit::lmfit1(
     function.df  = nullptr; // Finite difference method from gsl 2.5.
     function.n   = npts;
     function.p   = P1_PARAM_COUNT;
-    ddastoys::templatefit::GslFitParameters params;
+    GslFitParameters params;
     params.s_pPoints = &points;
     params.s_pTraceTemplate = &traceTemplate;
     function.params = &params;
@@ -275,8 +292,7 @@ ddastoys::templatefit::lmfit1(
 static int
 gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 { 
-    ddastoys::templatefit::GslFitParameters* pParams
-	= reinterpret_cast<ddastoys::templatefit::GslFitParameters*>(pData); // Data
+    GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData); 
   
     // Pull the fit parameterization from p:
     
@@ -298,7 +314,7 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
     for (size_t i = 0; i < points.size(); i++) {
 	double x = points[i].first;
 	double y = points[i].second;
-	double m = ddastoys::templatefit::doublePulse(A1, x1, A2, x2, C, x, trtmp);
+	double m = doublePulse(A1, x1, A2, x2, C, x, trtmp);
 	gsl_vector_set(r, i, (m - y));
     }
     
@@ -363,7 +379,7 @@ ddastoys::templatefit::lmfit2(
     function.df  = nullptr; // Finite difference method from gsl 2.5.
     function.n   = npts;
     function.p   = P2_PARAM_COUNT;    
-    ddastoys::templatefit::GslFitParameters params = {&points};
+    GslFitParameters params = {&points};
     params.s_pTraceTemplate = &traceTemplate;
     function.params = &params;   
 
@@ -410,9 +426,7 @@ ddastoys::templatefit::lmfit2(
     unsigned maxSample = 0;
     
     for (unsigned i = low; i <= high; i++) {
-	double diff = trace[i] - ddastoys::templatefit::singlePulse(
-	    A10, X10, C0, i, traceTemplate
-	    );
+	double diff = trace[i] - singlePulse(A10, X10, C0, i, traceTemplate);
 	if(diff > max) {
 	    max = diff;
 	    maxSample = i;

@@ -10,7 +10,8 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -26,10 +27,11 @@
 
 #include "functions_analytic.h"
 
+using namespace ddastoys;
 using namespace ddastoys::analyticfit;
 
 /**
- * @ingroup template
+ * @ingroup analytic
  * @{
  */
 
@@ -189,7 +191,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  * Construct the fit engine and set the input data. Delegates to base 
  * class construction.
  */
-SerialFitEngine1::SerialFitEngine1(
+ddastoys::analyticfit::SerialFitEngine1::SerialFitEngine1(
     std::vector<std::pair<std::uint16_t, std::uint16_t>>& data
     ) :
     CFitEngine(data)
@@ -202,7 +204,9 @@ SerialFitEngine1::SerialFitEngine1(
  * are the trace data.
  */
 void
-SerialFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
+ddastoys::analyticfit::SerialFitEngine1::jacobian(
+    const gsl_vector* p, gsl_matrix* J
+    )
 {
     double A   = gsl_vector_get(p, P1A_INDEX);
     double k1  = gsl_vector_get(p, P1K1_INDEX);
@@ -233,7 +237,9 @@ SerialFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
 }
 
 void
-SerialFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
+ddastoys::analyticfit::SerialFitEngine1::residuals(
+    const gsl_vector* p, gsl_vector* r
+    )
 {
     // Extract the fit parameters:    
     double A  = gsl_vector_get(p, P1A_INDEX);
@@ -261,13 +267,15 @@ SerialFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
  * @details
  * Delegates to base class construction.
  */
-SerialFitEngine2::SerialFitEngine2(
+ddastoys::analyticfit::SerialFitEngine2::SerialFitEngine2(
     std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
     ) :
     CFitEngine(data) {}
 
 void
-SerialFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
+ddastoys::analyticfit::SerialFitEngine2::residuals(
+    const gsl_vector* p, gsl_vector* r
+    )
 {
     // Pull out the current fit parameterization>
     
@@ -298,7 +306,9 @@ SerialFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
  * the fit parameters.
  */
 void
-SerialFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* J)
+ddastoys::analyticfit::SerialFitEngine2::jacobian(
+    const gsl_vector* p, gsl_matrix* J
+    )
 {
     // Fish the current fit parameters from p:    
     double A1    = gsl_vector_get(p, P2A1_INDEX); // Pulse 1.

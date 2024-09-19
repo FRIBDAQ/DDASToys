@@ -155,13 +155,6 @@ libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ 		\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
-traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
-	$(MAKE) -C TraceView
-
-eeconverter:
-	DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
-
 FitEditorMLInference.o: FitEditorMLInference.cpp
 	$(CXX) $(CXXFLAGS) -I$(TORCHINC) $(EXTRACXXFLAGS) -c $^ 	\
 	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
@@ -172,6 +165,13 @@ mlinference.o: mlinference.cpp
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
+
+traceview:
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
+	$(MAKE) -C TraceView
+
+eeconverter:
+	DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
 
 ##
 # Build docbooks and doxygen documentation

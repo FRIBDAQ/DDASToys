@@ -19,7 +19,7 @@ LDLIBS = -lDDASFormat -ldataformat -lException -lurl -ldaqio -lAbstractFormat
 ROOTCFLAGS  = $(shell $(ROOTSYS)/bin/root-config --cflags)
 ROOTLDFLAGS = $(shell $(ROOTSYS)/bin/root-config --libs --ldflags)
 
-all: eeconverter libDDASRootFit.so
+all: eeconverter libDDASRootFitFormat.so
 
 eeconverter: eeconverter.o converterargs.o RootFileDataSink.o 		\
 	ProcessToRootSink.o CEventProcessor.o StringsToIntegers.o 	\
@@ -28,7 +28,7 @@ eeconverter: eeconverter.o converterargs.o RootFileDataSink.o 		\
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o $@ $^ 			\
 	$(LDFLAGS) $(LDLIBS) $(ROOTLDFLAGS)
 
-libDDASRootFit.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o
+libDDASRootFitFormat.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o
 	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ 			\
 	-L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) -lDDASFormat
 
