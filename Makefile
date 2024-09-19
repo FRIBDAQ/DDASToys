@@ -196,7 +196,7 @@ install:
 	for f in $(shell find . -type f -name "*.so" ! -name "libDDASFormat.so"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	for f in $(shell find . -type f -name "*.pcm"); do install -m 0755 $$f $(PREFIX)/lib ; done
 	for f in $(shell find . -type f -name "*.rootmap"); do install -m 0755 $$f $(PREFIX)/lib ; done
-	ln -sf $(PREFIX)/lib/DDASRootFit_rdict.pcm $(PREFIX)/bin/DDASRootFit_rdict.pcm
+	ln -sf $(PREFIX)/lib/DDASRootFitFormat_rdict.pcm $(PREFIX)/bin/DDASRootFitFormat_rdict.pcm
 
 	for f in $(shell find . -maxdepth 1 -type f -name "*.h" ! -name "CRingItemProcessor.h"); do install -m 0644 $$f $(PREFIX)/include; done
 	for f in $(shell find ./EEConverter -type f -name "*Root*.h" ! -name "ProcessToRootSink.h"); do install -m 0644 $$f $(PREFIX)/include; done

@@ -23,19 +23,20 @@ all: eeconverter libDDASRootFitFormat.so
 
 eeconverter: eeconverter.o converterargs.o RootFileDataSink.o 		\
 	ProcessToRootSink.o CEventProcessor.o StringsToIntegers.o 	\
-	DDASRootFitHit.o DDASRootFitEvent.o DDASRootFit.o 		\
+	DDASRootFitHit.o DDASRootFitEvent.o DDASRootFitFormat.o 	\
 	../DDASFitHitUnpacker.o ../CRingItemProcessor.o
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o $@ $^ 			\
 	$(LDFLAGS) $(LDLIBS) $(ROOTLDFLAGS)
 
-libDDASRootFitFormat.so: DDASRootFit.o DDASRootFitHit.o DDASRootFitEvent.o
+libDDASRootFitFormat.so: DDASRootFitFormat.o DDASRootFitHit.o 		\
+	DDASRootFitEvent.o
 	$(CXX) -fPIC -shared -o $@ $(CXXFLAGS) $^ 			\
 	-L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) -lDDASFormat
 
-DDASRootFit.cpp: DDASRootFitEvent.h DDASRootFitHit.h ../DDASFitHit.h 	\
-	RootExtensions.h LinkDef.h
+DDASRootFitFormat.cpp: DDASRootFitEvent.h DDASRootFitHit.h 		\
+	../DDASFitHit.h RootExtensions.h LinkDef.h
 	$(ROOTSYS)/bin/rootcling -f $@ 	-rml libDDASRootFit.so 		\
-	-rmf libDDASRootFit.rootmap -I.. -I$(DDASFMTINC) $^
+	-rmf libDDASRootFitFormat.rootmap -I.. -I$(DDASFMTINC) $^
 
 %.o : %.cpp
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) $<

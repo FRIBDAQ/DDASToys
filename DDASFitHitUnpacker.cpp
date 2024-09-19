@@ -30,7 +30,9 @@
 
 #include <DataFormat.h>
 
-#include <DDASFitHit.h>
+#include "DDASFitHit.h"
+
+using namespace ddastoys;
 
 /**
  * @details
