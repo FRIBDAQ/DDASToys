@@ -97,15 +97,13 @@ static const int P2FT_PARAM_COUNT(7);
  * @param[in]  saturation Saturation level.
  */
 static void reduceTrace(
-    std::vector<std::pair<std::uint16_t, std::uint16_t>>& points,
+    std::vector<std::pair<uint16_t, uint16_t>>& points,
     int low, int high,
-    const std::vector<std::uint16_t>& trace, std::uint16_t saturation)
+    const std::vector<uint16_t>& trace, uint16_t saturation)
 {
     for (int i = low; i <= high; i++) {
 	if (trace[i] < saturation) {
-	    points.push_back(
-		std::pair<std::uint16_t, std::uint16_t>(i, trace[i])
-		);
+	    points.push_back(std::pair<uint16_t, uint16_t>(i, trace[i]));
 	}
     }
     
@@ -332,7 +330,7 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
  * @note For now we're not correcting for flat-tops. 
  */
 static double
-estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
+estimateK2(int x0, double C0, const std::vector<uint16_t>& trace)
 {
     double khalf = -1.0; // Assume k is positive.
     double k34   = -1.0;
@@ -384,7 +382,7 @@ estimateK2(int x0, double C0, const std::vector<std::uint16_t>& trace)
  * correcting for flattops.
  */
 double
-estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
+estimateK1(int xmax, double C0, const std::vector<uint16_t>& trace)
 {
     double max = trace[xmax] - C0; // Background subtracted max.
     
@@ -407,8 +405,8 @@ estimateK1(int xmax, double C0, const std::vector<std::uint16_t>& trace)
  */
 void
 ddastoys::analyticfit::lmfit1(
-    fit1Info* pResult, std::vector<std::uint16_t>& trace,
-    const std::pair<unsigned, unsigned>& limits, std::uint16_t saturation
+    fit1Info* pResult, std::vector<uint16_t>& trace,
+    const std::pair<unsigned, unsigned>& limits, uint16_t saturation
     )
 {
     unsigned low  = limits.first;
@@ -417,7 +415,7 @@ ddastoys::analyticfit::lmfit1(
     // Produce the set of x/y points that are to be fit.  This is the trace
     // within the limits and with points at or above saturation removed:
     
-    std::vector<std::pair<std::uint16_t, std::uint16_t>> points;
+    std::vector<std::pair<uint16_t, uint16_t>> points;
     reduceTrace(points, low, high, trace, saturation);
 #ifdef CUDA
     CudaFitEngine1 engine(points);
@@ -601,9 +599,9 @@ gsl_p2Compute(const gsl_vector* p, void* pData, gsl_vector* resids, gsl_matrix* 
  */
 void
 ddastoys::analyticfit::lmfit2(
-    fit2Info* pResult, std::vector<std::uint16_t>& trace,
+    fit2Info* pResult, std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    fit1Info* pSinglePulseFit, std::uint16_t saturation
+    fit1Info* pSinglePulseFit, uint16_t saturation
     )
 {
     unsigned low = limits.first;
@@ -612,7 +610,7 @@ ddastoys::analyticfit::lmfit2(
     // Now produce a set of x/y points to be fit from the trace,
     // limits and saturation value:
     
-    std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
+    std::vector<std::pair<uint16_t, uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size(); // Number of points to fit.  
 #ifdef CUDA
@@ -670,7 +668,7 @@ ddastoys::analyticfit::lmfit2(
     double X10 = fit1.pulse.position;
   
     if ((A0 < 0) || (K10 < 0) || (K20 < 0) || (X10 < 0)) {
-	std::vector<std::uint16_t> reversed = trace;
+	std::vector<uint16_t> reversed = trace;
 	std::reverse(reversed.begin(), reversed.end());
 	std::pair<unsigned, unsigned> revLimits;
 	revLimits.second = trace.size() - limits.first;
@@ -810,7 +808,7 @@ gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)
     
     // Recast pData as a reference to the trace:    
     GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    const std::vector<std::pair<std::uint16_t, std::uint16_t>>&
+    const std::vector<std::pair<uint16_t, uint16_t>>&
 	points(*pParams->s_pPoints);
     
     // Compute double pulse residuals for each point:
@@ -861,7 +859,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     // Recast pData as a reference to the trace vector:
     
     GslFitParameters* pParams = reinterpret_cast<GslFitParameters*>(pData);
-    const std::vector<std::pair<std::uint16_t, std::uint16_t>>&
+    const std::vector<std::pair<uint16_t, uint16_t>>&
 	points(*pParams->s_pPoints);
    
     // Loop over the data points producing the Jacobian for each point.
@@ -922,7 +920,7 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
  * evaluate the Jacobian and calculate the fit residuals.
  *
  * @param[in]  p      The current fit parameterization.
- * @param[in]  pData  std::vector<std::uint16_t>*
+ * @param[in]  pData  std::vector<uint16_t>*
  * @param[out] resids Will have residuals stored here.
  * @param[out] J      Will have the Jacobian elements stored here.
  *
@@ -945,9 +943,9 @@ gsl_p2ftCompute(const gsl_vector* p, void* pData,
  */
 void
 ddastoys::analyticfit::lmfit2fixedT(
-    fit2Info* pResult, std::vector<std::uint16_t>& trace,
+    fit2Info* pResult, std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    fit1Info* pSinglePulseFit, std::uint16_t saturation
+    fit1Info* pSinglePulseFit, uint16_t saturation
     )
 {
     unsigned low = limits.first;
@@ -956,7 +954,7 @@ ddastoys::analyticfit::lmfit2fixedT(
     // Now produce a set of x/y points to be fit from the trace,
     // limits and saturation value:
     
-    std::vector<std::pair<std::uint16_t, std::uint16_t> > points;
+    std::vector<std::pair<uint16_t, uint16_t> > points;
     reduceTrace(points, low, high, trace, saturation);
     int npts = points.size(); // Number of points to fit.
     
@@ -1012,7 +1010,7 @@ ddastoys::analyticfit::lmfit2fixedT(
     double X20;
     
     if ((A0 < 0) || (K10 < 0) || (K20 < 0) || (X10 < 0)) {       
-	std::vector<std::uint16_t> reversed = trace;
+	std::vector<uint16_t> reversed = trace;
 	std::reverse(reversed.begin(), reversed.end());
 	std::pair<unsigned, unsigned> revLimits;
 	revLimits.second = trace.size() - limits.first;

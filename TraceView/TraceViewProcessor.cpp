@@ -21,7 +21,7 @@
 
 #include "TraceViewProcessor.h"
 
-#include <iostream>1
+#include <iostream>
 #include <ctime>
 
 #include <FragmentIndex.h> // From UnifiedFormat

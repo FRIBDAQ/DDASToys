@@ -24,6 +24,7 @@
 #ifndef LMFIT_TEMPLATE_H
 #define LMFIT_TEMPLATE_H
 
+#include <cstdint>
 #include <vector>
 #include <utility>
 

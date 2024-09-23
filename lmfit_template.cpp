@@ -78,11 +78,9 @@ reduceTrace(
     const std::vector<uint16_t>& trace, uint16_t saturation
     )
 {
-    for (unsigned i = low; i <= high; i++) {
+    for (int i = low; i <= high; i++) {
 	if (trace[i] < saturation) {
-	    points.push_back(
-		std::pair<uint16_t, uint16_t>(i, trace[i])
-		);
+	    points.push_back(std::pair<uint16_t, uint16_t>(i, trace[i]));
 	}
     }
     

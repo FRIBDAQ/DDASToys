@@ -137,9 +137,9 @@ ddastoys::FitEditorAnalytic::operator()(
 	hit
 	);
 
-    unsigned crate = hit.getCrateID();
-    unsigned slot  = hit.getSlotID();
-    unsigned chan  = hit.getChannelID();
+    auto crate = hit.getCrateID();
+    auto slot  = hit.getSlotID();
+    auto chan  = hit.getChannelID();
   
     if (m_pConfig->fitChannel(crate, slot, chan)) {
 	std::vector<std::uint16_t> trace = hit.getTrace();
