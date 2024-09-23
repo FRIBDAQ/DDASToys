@@ -129,9 +129,7 @@ private:
     QLabel* m_pId;       //!< Global ID value.
     QLabel* m_pRawData;  //!< Energy and timestamp.
     QLabel* m_pFit1Prob; //!< Single-pulse prob. from ML classifier
-    //!< (not implemented) 
     QLabel* m_pFit2Prob; //!< Double-pulse prob. from ML classifier
-    //!< (not implemented) 
     QComboBox* m_pFitMethod;  //!< Fit method selection box.
     QPushButton* m_pPrintFit; //!< Print button.
 };

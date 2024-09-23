@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 {
   QApplication app(argc, argv);
   app.setApplicationName("traceview");
-  app.setApplicationVersion("1.0");
+  app.setApplicationVersion("2.0");
 
   // Note: "any option value that looks like a builtin Qt option, will be
   // treated by QCoreApplication as a builtin Qt option," see
@@ -61,13 +61,36 @@ int main(int argc, char* argv[])
   // This may not be an exhaustive list.
 
    QCommandLineParser parser;
+   
    parser.setApplicationDescription("traceview command line parser");
    parser.addHelpOption();
    parser.addVersionOption();
-   parser.addOptions({
-	  {{"s", "source"}, "Data source file (.evt).", "source"},
-	  {{"m", "method"}, "Trace fitting method.", "method", "template"}
-     });
+
+   // Set options:
+   
+   std::vector<QCommandLineOption> opts;
+   QCommandLineOption sourceOpt(
+       QStringList() << "s" << "source",
+       QCoreApplication::translate("main", "Path to input data file (.evt)"),
+       QCoreApplication::translate("main", "source")
+       );
+   opts.push_back(sourceOpt);
+   QCommandLineOption methodOpt(
+       QStringList() << "m" << "method",
+       QCoreApplication::translate(
+	   "main",
+	   "Fitting method (one of 'analytic', 'template', 'ml_inference')"
+	   ),
+       QCoreApplication::translate("main", "method", "a")
+       );
+   opts.push_back(methodOpt);
+
+   // Add options and configure the parser:
+   
+   for (const auto& opt : opts) {
+       parser.addOption(opt);
+   }
+   
    parser.process(app);
 
    // After the QCommandLineParser so ROOT TApplication parser doesn't consume

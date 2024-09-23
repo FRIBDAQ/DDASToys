@@ -98,10 +98,10 @@ static const int P2FT_PARAM_COUNT(7);
  */
 static void reduceTrace(
     std::vector<std::pair<uint16_t, uint16_t>>& points,
-    int low, int high,
+    unsigned low, unsigned high,
     const std::vector<uint16_t>& trace, uint16_t saturation)
 {
-    for (int i = low; i <= high; i++) {
+    for (unsigned i = low; i <= high; i++) {
 	if (trace[i] < saturation) {
 	    points.push_back(std::pair<uint16_t, uint16_t>(i, trace[i]));
 	}

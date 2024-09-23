@@ -281,7 +281,8 @@ QRootCanvas::drawSingleFit(const DDASFitHit& hit)
     }
     m_pFit1Hist->SetLineColor(kRed);
     std::string options = "hist same";
-    if (m_pFitManager->getMethod() == ANALYTIC) {
+    auto method = m_pFitManager->getMethod();
+    if (method == ANALYTIC || method == ML_INFERENCE) {
 	options = "hist c same";
     }
     m_pFit1Hist->Draw(options.c_str());
@@ -319,7 +320,8 @@ QRootCanvas::drawDoubleFit(const DDASFitHit& hit)
     }
     m_pFit2Hist->SetLineColor(kBlue);
     std::string options = "hist same";
-    if (m_pFitManager->getMethod() == ANALYTIC) {
+    auto method = m_pFitManager->getMethod();
+    if (method == ANALYTIC || method == ML_INFERENCE) {
 	options = "hist c same";
     }
     m_pFit2Hist->Draw(options.c_str());

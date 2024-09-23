@@ -458,8 +458,8 @@ QTraceView::parseArgs(QCommandLineParser& parser)
 	} catch (std::invalid_argument& e) {
 	    std::cerr << "QTraceView::parseArgs(): Unknown fitting method "
 		      << method.toStdString() << " read from command line."
-		      << " Setting fit method to 'Template'." << std::endl;
-	    m_pHitData->setFitMethod("Template");
+		      << " Setting fit method to 'Analytic'." << std::endl;
+	    m_pHitData->setFitMethod("Analytic");
 	}
     }  
 }

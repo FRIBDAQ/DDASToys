@@ -120,9 +120,12 @@ endif
 
 all: exec docs
 exec: libs objs subdirs
-libs: libDDASFormat.so libDDASFitHitUnpacker.so libFitEditorAnalytic.so libFitEditorTemplate.so libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libDDASFitHitUnpacker.so libFitEditorAnalytic.so \
+	libFitEditorTemplate.so libDDASFitHitUnpacker.so
 ifeq ($(BUILD_MLINFERENCE), 1)
-libs: libDDASFormat.so libDDASFitHitUnpacker.so libFitEditorAnalytic.so libFitEditorTemplate.so libFitEditorMLInference.so libDDASFitHitUnpacker.so
+libs: libDDASFormat.so libDDASFitHitUnpacker.so libFitEditorAnalytic.so \
+	libFitEditorTemplate.so libFitEditorMLInference.so 		\
+	libDDASFitHitUnpacker.so
 endif
 objs: CRingItemProcessor.o
 subdirs: eeconverter

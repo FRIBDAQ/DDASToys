@@ -46,7 +46,7 @@ namespace ddastoys {
     {
     private:
 	bool m_haveExtension; //!< True iff has extension data.
-	::ddastoys::HitExtension m_extension; //!< The extension data.
+	HitExtension m_extension; //!< The extension data.
       
     public:
 	DDASFitHit() { Reset(); } //!< Constructor.
@@ -60,7 +60,7 @@ namespace ddastoys {
 	 * @param rhs Reference to DDASFitHit for assignment.
 	 * @return Reference to lhs.
 	 */
-	DDASFitHit& operator=(const ddastoys::DDASFitHit& rhs) {
+	DDASFitHit& operator=(const DDASFitHit& rhs) {
 	    if (this != &rhs) {
 		DAQ::DDAS::DDASHit::operator=(rhs);
 		m_haveExtension = false;
@@ -81,7 +81,7 @@ namespace ddastoys {
 	 * @brief Set the hit extension information for this hit. 
 	 * @param extension Reference to the extension for this hit.
 	 */
-	void setExtension(const ::ddastoys::HitExtension& extension) {
+	void setExtension(const HitExtension& extension) {
 	    m_extension = extension;
 	    m_haveExtension = true;
 	}
@@ -95,7 +95,7 @@ namespace ddastoys {
 	 * @throw std::logic_error If the hit does not contain an extension.
 	 * @return Reference to the extension of the current hit.
 	 */      
-	const ::ddastoys::HitExtension& getExtension() const {
+	const HitExtension& getExtension() const {
 	    if (m_haveExtension) {
 		return m_extension;
 	    } else {
@@ -105,6 +105,7 @@ namespace ddastoys {
 	    }
 	}   
     };
-} // ddastoys
+    
+} // namespace ddastoys
 
 #endif

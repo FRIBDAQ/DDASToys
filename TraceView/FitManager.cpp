@@ -78,14 +78,18 @@ FitManager::configure(std::string method)
     } else if (method == "Template") {
 	setMethod(TEMPLATE);
     
-	// Read the template file if we haven't already
+	// Read the template file if we haven't already:
     
 	if (!m_templateConfig) {
 	    readTemplateFile();
 	    m_templateConfig = true;
 	}
+    } else if (method == "ML_Inference") {
+	setMethod(ML_INFERENCE);	
     } else {
-	std::cerr << "ERROR: FitManager cannot configure trace viewer for unknown fit method " << method << std::endl;
+	std::cerr << "ERROR: FitManager cannot configure trace viewer"
+		  << " for unknown fit method " << method
+		  << std::endl;
 	exit(EXIT_FAILURE);
     }
 }
@@ -146,12 +150,13 @@ FitManager::getSinglePulseFit(
     // Checking one parameter ought to be enough to determine if the expected
     // parameter set matches the fit method. For analytic fits the steepness
     // parameter is some number != 0 while for the template fits the steepness
-    // is equal to 0 by definition. Note that this warning is issued for the
-    // single pulse fits at the moment, and if we have some classifier-steered
-    // fitting this may not be sufficient because events will only contain one
-    // set of fit data corresponding to the idenfied pulse type.
-  
-    checkParamValue(k1);
+    // is equal to 0 by definition. Skip the warning for the ML inference using
+    // the analyitc fitting functions, as we know that the single-pulse fit
+    // does not exist.
+
+    if (m_method == ANALYTIC || m_method == TEMPLATE) {
+	checkParamValue(k1);
+    }
   
     for (unsigned i = low; i <= high; i++) {
 	fit.push_back(singlePulse(A1, k1, k2, x1, C, i));
@@ -198,7 +203,7 @@ FitManager::getLowFitLimit(const DDASFitHit& hit)
     unsigned crate   = hit.getCrateID();
     unsigned slot    = hit.getSlotID();
     unsigned channel = hit.getChannelID();
-    auto limits = m_pConfig->getFitLimits(crate, slot, channel);
+    auto limits      = m_pConfig->getFitLimits(crate, slot, channel);
 
     return limits.first;
 }
@@ -216,7 +221,7 @@ FitManager::getHighFitLimit(const DDASFitHit& hit)
     unsigned crate   = hit.getCrateID();
     unsigned slot    = hit.getSlotID();
     unsigned channel = hit.getChannelID();
-    auto limits = m_pConfig->getFitLimits(crate, slot, channel);
+    auto limits      = m_pConfig->getFitLimits(crate, slot, channel);
 
     return limits.second;
 }
@@ -244,6 +249,8 @@ FitManager::singlePulse(
 	auto traceTemplate = m_pConfig->getTemplate();
 	return templatefit::singlePulse(A1, x1, C, x, traceTemplate);
     }
+    case ML_INFERENCE:
+	return analyticfit::singlePulse(A1, k1, k2, x1, C, x);
     default:
     
 	// This really is an error, but we'll stuff the fit with zeroes.
@@ -267,17 +274,18 @@ FitManager::doublePulse(
 {
     switch (m_method) {
     case ANALYTIC:
-	return analyticfit::doublePulse(
-	    A1, k1, k2, x1, A2, k3, k4, x2, C, x
-	    );
+	return analyticfit::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
     case TEMPLATE:
     {
-	return templatefit::doublePulse(
-	    A1, x1, A2, x2, C, x, m_pConfig->getTemplate()
-	    );
+	auto traceTemplate = m_pConfig->getTemplate();
+	return templatefit::doublePulse(A1, x1, A2, x2, C, x, traceTemplate);
     }
-    default:    
-	// This really is an error, but we'll stuff the fit with zeroes.    
+    case ML_INFERENCE:
+	return analyticfit::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+    default:
+	
+	// This really is an error, but we'll stuff the fit with zeroes:
+	
 	return 0;
     }
 }

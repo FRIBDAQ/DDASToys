@@ -56,8 +56,9 @@ namespace ddastoys {
 
 /** @brief Fit method enum class */
 enum fitMethod {
-    ANALYTIC, //!< Analytic fit enum.
-    TEMPLATE  //!< Template fit enum.
+    ANALYTIC,   //!< Analytic fit.
+    TEMPLATE,   //!< Template fit.
+    ML_INFERENCE //!< Machine learning inference fit.
 };
 
 class FitManager
