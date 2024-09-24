@@ -32,14 +32,14 @@
 
 #include "DDASFitHit.h"
 
-//using namespace ddastoys; // Fit extensions, DDASFitHit, etc.
+using namespace ddastoys; // Fit extensions, DDASFitHit, etc.
 
 /**
  * @details
  * The decode function:
  * - Determines the limits of the hit.
  * - Determines where, or if, there's an extension block.
- * - Unpacks the original hit using DDASHitUnpacker::unpack.
+ * - Unpacks the original hit using `DAQ::DDAS::DDASHitUnpacker::unpack()`.
  * - Sets the extension if there is one.
  *
  * The first 32 bits of the body contain the number of 16-bit words in the 

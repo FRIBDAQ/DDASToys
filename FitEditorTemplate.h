@@ -44,8 +44,7 @@ namespace ddastoys {
 
     /**
      * @class FitEditorTemplate
-     * @brief Fit trace data with the template fitting functions and add hit 
-     * extensions.
+     * @brief Fit trace data with the template fitting functions.
      *
      * @details
      * Editing the hit overwrites any existing extension. This class is 

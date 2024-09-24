@@ -44,7 +44,7 @@ namespace ddastoys {
 	 * Jacobian matrix of partial derivatives. At the implementation level 
 	 * we have two  types of fits we need done: Single pulse fits and 
 	 * double pulse fits (the engines with names ending in 1 or 2). For 
-	 * each fit type we have two fit  engines:
+	 * each fit type we have two fit engines:
 	 *   1) Serial computation (the engines with names starting with Serial)
 	 *   2) GPU accelerated (the engines with names starting with Cuda).
 	 * Finally a fit factory can generate the appropriate fit engine as 
@@ -57,7 +57,7 @@ namespace ddastoys {
 	     * @param data The trace data.
 	     */
 	    SerialFitEngine1(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /** Destructor. */
 	    ~SerialFitEngine1() {}
@@ -107,7 +107,7 @@ namespace ddastoys {
 	     * @brief Constructor.
 	     */
 	    CudaFitEngine1(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /**
 	     * @brief Destructor.
@@ -155,7 +155,7 @@ namespace ddastoys {
 	     * @param data The trace.
 	     */
 	    SerialFitEngine2(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /**
 	     * @brief Compute the Jacobian matrix.
@@ -204,7 +204,7 @@ namespace ddastoys {
 	     * @param data The trace data in x/y pairs.
 	     */
 	    CudaFitEngine2(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /** @brief Destructor. */
 	    ~CudaFitEngine2();
@@ -239,7 +239,7 @@ namespace ddastoys {
 	     * @return Pointer to the created fit engine object. 
 	     */
 	    CFitEngine* createSerialFitEngine1(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /** 
 	     * @brief Create a single pulse Cuda-enabled fit engine. 
@@ -247,7 +247,7 @@ namespace ddastoys {
 	     * @return Pointer to the created fit engine object. 
 	     */
 	    CFitEngine* createCudaFitEngine1(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /** 
 	     * @brief Create a double pulse serial fit engine. 
@@ -255,7 +255,7 @@ namespace ddastoys {
 	     * @return Pointer to the created fit engine object. 
 	     */
 	    CFitEngine* createSerialFitEngine2(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	    /** 
 	     * @brief Create a double pulse Cuda-enabled fit engine. 
@@ -263,7 +263,7 @@ namespace ddastoys {
 	     * @return Pointer to the created fit engine object. 
 	     */
 	    CFitEngine* createCudaFitEngine2(
-		std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+		std::vector<std::pair<uint16_t, uint16_t>>&  data
 		);
 	};
 

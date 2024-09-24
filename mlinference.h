@@ -17,7 +17,7 @@
 
 /**
  * @file mlinference.h
- * @brief Function definitions for machine learning inference editor.
+ * @brief Function definitions for the machine-learning inference editor.
  */
 
 #ifndef MLINFERENCE_H
@@ -43,11 +43,11 @@ namespace ddastoys {
 
 	/**
 	 * @brief Perform ML inference to determine the pulse parameters.
-	 * @param pResult Pointer to the fit results.
-	 * @param trace References the trace we're processing.
-	 * @param saturation ADC saturation value. Only samples below the 
+	 * @param[in, out] pResult Pointer to the fit results.
+	 * @param[in] trace References the trace we're processing.
+	 * @param[in] saturation ADC saturation value. Only samples below the 
 	 *   saturation threshold are used to extrat the pulse parameters.
-	 * @param module References the inference model for this channel.
+	 * @param[in] module References the inference model for this channel.
 	 */
 	void performInference(
 	    FitInfo* pResult,

@@ -138,21 +138,22 @@ FitEditorTemplate::operator()(
     std::vector<CBuiltRingItemEditor::BodySegment> result;
     
     // Regardless we want a segment that includes the hit. Note that the first
-    // std::uint32_t of the body is the size of the standard hit part in
-    // std::uint16_t words.
+    // uint32_t of the body is the size of the standard hit part in
+    // uint16_t words.
     
-    std::uint16_t* pSize = static_cast<std::uint16_t*>(pBody);
+    uint16_t* pSize = static_cast<uint16_t*>(pBody);
     CBuiltRingItemEditor::BodySegment hitInfo(
-	*pSize*sizeof(std::uint16_t),pSize, false
+	*pSize*sizeof(uint16_t),pSize, false
 	);
     result.push_back(hitInfo);
     
-    // Make the hit:    
+    // Make the hit:
+    
     DAQ::DDAS::DDASHit hit;
     DAQ::DDAS::DDASHitUnpacker unpacker;
     unpacker.unpack(
-	static_cast<std::uint32_t*>(pBody),
-	static_cast<std::uint32_t*>(nullptr),
+	static_cast<uint32_t*>(pBody),
+	static_cast<uint32_t*>(nullptr),
 	hit
 	);
 
@@ -161,7 +162,7 @@ FitEditorTemplate::operator()(
     auto chan  = hit.getChannelID();
   
     if (m_pConfig->fitChannel(crate, slot, chan)) {
-	std::vector<std::uint16_t> trace = hit.getTrace();
+	std::vector<uint16_t> trace = hit.getTrace();
 	FitInfo* pFit = new FitInfo; // Have an extension though may be zero 
     
 	if (trace.size() > 0) { // Need a trace to fit
@@ -169,8 +170,10 @@ FitEditorTemplate::operator()(
 	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);  
 	    int classification = pulseCount(hit);
 	    
-	    if (classification) {	  
-		// Bit 0 do single fit, bit 1 do double fit.                    
+	    if (classification) {
+		
+		// Bit 0 do single fit, bit 1 do double fit.
+		
 		if (classification & 1) {
 		    lmfit1(
 			&(pFit->s_extension.onePulseFit), trace,

@@ -37,15 +37,17 @@ namespace ddastoys {
      * @brief Abstract base class for marshalling data to the fitting 
      * subsystems to calculate Jacobian elements and residuals.
      */
+    
     class CFitEngine {
     protected:
-	std::vector<std::uint16_t> x; //!< Trace x coords.
-	std::vector<std::uint16_t> y; //!< Trace y coords.
+	std::vector<uint16_t> x; //!< Trace x coordinate vector.
+	std::vector<uint16_t> y; //!< Trace y coordinate vector.
     public:
-	/** @brief Constructor. */
-	CFitEngine(
-	    std::vector<std::pair<std::uint16_t, std::uint16_t>>& data
-	    );
+	/** 
+	 * @brief Constructor.
+	 * @param data (x, y) data to store in the coordinate vectors.
+	 */
+	CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data);
 	/** @brief Destructor. */
 	virtual ~CFitEngine() {}
 	/** @brief Virtual method for calculating the Jacobian matrix */

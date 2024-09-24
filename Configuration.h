@@ -41,14 +41,18 @@ namespace ddastoys {
      */
 
     /**
-     * @ingroup analytic template
+     * @defgroup mlinference libFitEditorMLInfernence.so
+     * @brief Plugin library for machine-learning inference fitting.
+     */
+
+    /**
+     * @ingroup analytic template mlinference
      * @{
      */
 
     /**
      * @class Configuration
      * @brief Manage fit configuration information.
-     *
      * @details
      * This class is a configuration manager for the DDASToys programs. It is 
      * responsible for opening and reading data from configuration files 
@@ -102,8 +106,8 @@ namespace ddastoys {
 	/**
 	 * @brief Get the (inclusive) fit limits for a single 
 	 * crate/slot/channel combination.
-	 * @param crate The crate ID.
-	 * @param slot The slot ID.
+	 * @param crate   The crate ID.
+	 * @param slot    The slot ID.
 	 * @param channel The channel ID.
 	 * @return Pair of [low, high] fit limits (inclusive).
 	 */
@@ -113,8 +117,8 @@ namespace ddastoys {
 	/**
 	 * @brief Get the ADC saturation value for a single crate/slot/channel 
 	 * combination.
-	 * @param crate The crate ID.
-	 * @param slot The slot ID.
+	 * @param crate   The crate ID.
+	 * @param slot    The slot ID.
 	 * @param channel The channel ID.
 	 * @return The saturation value of the trace for this channel.
 	 */
@@ -124,12 +128,14 @@ namespace ddastoys {
 	/**
 	 * @brief Get the ML inference model path for a single 
 	 * crate/slot/channel combination.
-	 * @param crate The crate ID.
-	 * @param slot The slot ID.
+	 * @param crate   The crate ID.
+	 * @param slot    The slot ID.
 	 * @param channel The channel ID.
 	 * @return Path to the ML inference model.
 	 */
-	std::string getModelPath(unsigned crate, unsigned slot, unsigned channel);
+	std::string getModelPath(
+	    unsigned crate, unsigned slot, unsigned channel
+	    );
 	/**
 	 * @brief Get the list of unique model names specified in the 
 	 * configuration file.

@@ -41,14 +41,14 @@ namespace ddastoys {
 
     /**
      * @class FitEditorAnalytic
-     * @brief Fit trace data using the analytic fitting functions and extend 
-     * hits.
+     * @brief Fit trace data using the analytic fitting functions and populate
+     * and save a hit extension with the results.
      *
      * @details
      * Extending the hit with this editor overwrites any existing extension. 
      * This class is intended for use with the EventEditor framework providing 
-     * a complete description of the new event body. Resides in the 
-     * ddastoys:: namespace.
+     * a complete description of the new event body. Resides in the ddastoys 
+     * namespace.
      */
 
     class FitEditorAnalytic : public CBuiltRingItemEditor::BodyEditor
@@ -108,7 +108,7 @@ namespace ddastoys {
     private:
 	/**
 	 * @brief This is a hook into which to add the ML classifier.
-	 * @param hit - references a hit.
+	 * @param hit References a hit.
 	 * @return int
 	 * @retval 0  No fits.
 	 * @retval 1  Only fit a single trace.

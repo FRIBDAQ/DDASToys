@@ -83,7 +83,7 @@ ddastoys::templatefit::doublePulse(
 double
 ddastoys::templatefit::chiSquare1(
     double A1, double x1, double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points,
     const std::vector<double>& trace_template
     )
 {    
@@ -109,7 +109,7 @@ ddastoys::templatefit::chiSquare1(
 double
 ddastoys::templatefit::chiSquare2(
     double A1, double x1, double A2, double x2, double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points,
     const std::vector<double>& trace_template
     )
 {    

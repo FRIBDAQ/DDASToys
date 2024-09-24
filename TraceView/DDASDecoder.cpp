@@ -40,7 +40,7 @@
 #include <CRingTextItem.h>              //              |
 #include <CPhysicsEventItem.h>          //              |
 #include <CRingPhysicsEventCountItem.h> //              |
-#include <CGlomParameters.h>            //              |
+#include <CGlomParameters.h>            //              V
 #include <CDataFormatItem.h>            //          ----+----
 
 #include <DDASFitHit.h>
@@ -68,8 +68,8 @@ DDASDecoder::createDataSource(std::string src)
 {
     m_count = 0; // Reset when creating a new source
     src = "file://" + src; // File URI formatting.
-    std::vector<std::uint16_t> sample;
-    std::vector<std::uint16_t> exclude;
+    std::vector<uint16_t> sample;
+    std::vector<uint16_t> exclude;
     m_pSourceURL = new URL(src);
     std::cout << "Filename in DDASDecoder: "
 	      << m_pSourceURL->getPath() << std::endl;
@@ -222,7 +222,7 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
     case PHYSICS_EVENT_COUNT:
     {
-	CRingPhysicsEventCountItem&	eventcount(
+	CRingPhysicsEventCountItem& eventcount(
 	    dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem)
 	    );
 	m_pProcessor->processEventCount(eventcount);

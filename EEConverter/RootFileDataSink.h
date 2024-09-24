@@ -43,7 +43,7 @@ namespace ddastoys {
  * @class RootFileDataSink
  * @brief This class knows how to write ROOT files from the ring items 
  * created by the fitting program.
- * @note  Put is not intended to be used by this file. If it's used, a 
+ * @note Put is not intended to be used by this file. If it's used, a 
  * warning will be output to stderr. pData will then be treated as a raw 
  * ring item, turned into a CRingItem and putItem will be called from 
  * then on.
@@ -79,7 +79,6 @@ public:
 private:
     ddastoys::DDASFitHitUnpacker* m_pUnpacker; //!< Unpacker for fit hits.
     ddastoys::DDASRootFitEvent* m_pTreeEvent; //!< The ROOT-ized event to write.
-    //std::vector<RootHitExtension> m_extensions; //!< Fit extensions.
     TTree* m_pTree; //!< Tree in the output file we write to.
     TFile* m_pFile; //!< The output ROOT file.
     bool m_warnedPutUsed; //!< Warning flag to call the right put.

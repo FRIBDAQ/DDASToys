@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 	   "main",
 	   "Fitting method (one of 'analytic', 'template', 'ml_inference')"
 	   ),
-       QCoreApplication::translate("main", "method", "a")
+       QCoreApplication::translate("main", "method")
        );
    opts.push_back(methodOpt);
 
@@ -95,12 +95,12 @@ int main(int argc, char* argv[])
 
    // After the QCommandLineParser so ROOT TApplication parser doesn't consume
    // shared default args such as --help and --version.   
-   TApplication rootapp("Simple Qt ROOT Application", &argc, argv);
+   TApplication rootapp("TraceViewROOTApp", &argc, argv);
 
    // Display the GUI
   
    QTraceView window(parser, nullptr);
-   window.setWindowTitle("DDAS TraceView");
+   window.setWindowTitle("DDASToys TraceView");
    window.resize(window.sizeHint());
    window.show();
   

@@ -46,9 +46,8 @@ namespace ddastoys {
 	 * function evaluators 
 	 */
 	struct GslFitParameters {
-	    const std::vector<
-		std::pair<uint16_t, uint16_t>
-		>* s_pPoints; /*!< Data points. Pair is x, y. */
+	    /** Data points. Pair is (x, y). */
+	    const std::vector<std::pair<uint16_t, uint16_t>>* s_pPoints;
 	};
 
 	/** @} */

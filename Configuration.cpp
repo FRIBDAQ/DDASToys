@@ -26,7 +26,7 @@
 #include <sstream>
 #include <iostream>
 
-///
+////////////////////////////////////////////////////////////////////////////////
 // Local trim functions
 //
 
@@ -52,13 +52,27 @@ static inline std::string &trim(std::string &s) {
  * @details
  * Lines in the configuration file can be empty or have as their first 
  * non-blank character "#" in which case they are ignored. All other lines 
- * specify channels that should be fit and contain six whitespace integers: 
- * crate slot channel low high saturation. The crate, slot, channel identify
- * a channel to fit while low, high are the limits of  the trace to fit (first 
- * sample index, last sample index), and the saturation defines a limit above 
- * which the trace datapoints will not be fit. Most commonly this saturation 
- * value is set to the saturation value of the ADC.
- */
+ * specify channels that should be fit and must contain six whitespace integers
+ * and one string: crate slot channel low high saturation model. The crate, 
+ * slot, and channel are unsigned integers used to identify a channel to fit. 
+ * Low and high specify the inclusive limits of the trace to fit in samples. 
+ * The saturation value defines a limit above which the trace data points will 
+ * not be fit. Most commonly this saturation value is set to the saturation 
+ * value of the ADC. The last parameter is a string specifying a path to a 
+ * PyTorch model for the machine-learning inference fitting. Not all parameters
+ * are used by each fitting method but default values must be provided.
+ * Please refer to the following:
+ *
+ * @warning While all parameters must be specified in the configuration, 
+ * depending on the fitting method, some of them may be ignored in parts of the
+ * code. Specifically, the machine-learning inference fitting will ignore the 
+ * fit limits, as it requires the input data to be the same shape as the 
+ * training data which is assumed to be the full acquired trace. The traceview 
+ * plotter will use these low and high limits to draw the fit so in practice it
+ * is best to set them to sensible values. Non-ML based fitting methods will 
+ * ignore the model parameter. An empty string ("") is a vaild input in the 
+ * configuration file. 
+*/
 void
 ddastoys::Configuration::readConfigFile()
 {
@@ -93,6 +107,7 @@ ddastoys::Configuration::readConfigFile()
 	    }
 	    
 	    // Compute the channel index and add the channel to the map:
+	    
 	    unsigned index = channelIndex(crate, slot, channel);
 	    std::pair<unsigned, unsigned> limits(low, high);
 	    ConfigInfo info = {limits, saturation, modelPath};	    
@@ -187,13 +202,17 @@ bool
 ddastoys::Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
 {
     int index = channelIndex(crate, slot, channel);
+    
     return (m_fitChannels.find(index) != m_fitChannels.end());
 }
 
 std::pair<unsigned, unsigned>
-ddastoys::Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
+ddastoys::Configuration::getFitLimits(
+    unsigned crate, unsigned slot, unsigned channel
+    )
 {
     int index = channelIndex(crate, slot, channel);
+    
     return m_fitChannels[index].s_limits;
 }
 
@@ -203,21 +222,26 @@ ddastoys::Configuration::getSaturationValue(
     )
 {
     int index = channelIndex(crate, slot, channel);
+    
     return m_fitChannels[index].s_saturation;
 }
 
 std::string
-ddastoys::Configuration::getModelPath(unsigned crate, unsigned slot, unsigned channel)
+ddastoys::Configuration::getModelPath(
+    unsigned crate, unsigned slot, unsigned channel
+    )
 {
     int index = channelIndex(crate, slot, channel);
+    
     return m_fitChannels[index].s_modelPath;
 }
 
 /**
  * @details
- * As a consequence of the sort-and-erase idiom used to uniqueify the model 
- * list vector, the model names are sorted in the returned vector which may 
- * be different than how they appear in the configuration file.
+ * As a consequence of the sort-and-erase idiom used to uniquify the model 
+ * list, the model paths names are sorted in the returned vector and may be 
+ * in a different order than how they appear in the configuration file.
+ * It is the responsibilty of the caller to deal with this.
  */
 std::vector<std::string>
 ddastoys::Configuration::getModelList()

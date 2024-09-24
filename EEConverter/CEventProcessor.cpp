@@ -44,7 +44,7 @@
 #include <CPhysicsEventItem.h>            //                 |
 #include <CRingPhysicsEventCountItem.h>   //                 |
 #include <CDataFormatItem.h>              //                 |
-#include <CGlomParameters.h>              //                 |
+#include <CGlomParameters.h>              //                 V
 #include <CDataFormatItem.h>              //             ----+----
 
 #include "CRingItemProcessor.h"
@@ -91,25 +91,19 @@ CEventProcessor::operator()(int argc, char* argv[])
     // types that will be skipped. They also allow us to specify types
     // that we may only want to sample (e.g. for online ring items).
   
-    std::vector<std::uint16_t> sample; // Not used
-    std::vector<std::uint16_t> exclude;
+    std::vector<uint16_t> sample; // Not used
+    std::vector<uint16_t> exclude;
 
     /**
      * @todo (ASC 1/20/23): Awkward way to process the sample and exclude 
-     * types. Can we return a vector of std::uint16_t or whatever the 
-     * CDataSourceFactory wants? Item type codes are std::uint32_t so why are
+     * types. Can we return a vector of uint16_t or whatever the 
+     * CDataSourceFactory wants? Item type codes are uint32_t so why are
      * we mixing between signed/unsigned ints and different bits?
      */
   
     std::vector<int> excludeToInt;
     if (parse.exclude_given) {
-	try {
-	    excludeToInt = stringListToIntegers(std::string(parse.exclude_arg));
-	}
-	catch (CException& e) {
-	    std::cerr << "Invalid value for --exclude, must be a list of item types but was: " << std::string(parse.exclude_arg) << std::endl;
-	    throw;    
-	}
+	excludeToInt = stringListToIntegers(std::string(parse.exclude_arg));
 	for (const auto& ele : excludeToInt) {
 	    exclude.push_back(ele);
 	}
@@ -135,14 +129,7 @@ CEventProcessor::operator()(int argc, char* argv[])
 	      << m_pDataSource->getPath() << std::endl;
   
     CDataSource* pSource = nullptr;
-    try {
-	pSource = CDataSourceFactory::makeSource(sourceName, sample, exclude);
-    }
-    catch(CException& e) {
-	std::cerr << "Failed to open the data source " << sourceName << ": "
-		  << e.ReasonText() << std::endl;
-	throw;
-    }
+    pSource = CDataSourceFactory::makeSource(sourceName, sample, exclude);
     std::unique_ptr<CDataSource> source(pSource);
 
     // Make the processor using the outout data format and file sink name:
@@ -272,8 +259,7 @@ CEventProcessor::processRingItem(CRingItem& item)
     }
     case PHYSICS_EVENT_COUNT:
     {
-	CRingPhysicsEventCountItem&
-	    eventcount(
+	CRingPhysicsEventCountItem& eventcount(
 		dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem)
 		);
 	m_pProcessor->processEventCount(eventcount);

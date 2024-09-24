@@ -71,7 +71,7 @@ TraceViewProcessor::processEvent(CPhysicsEventItem& item)
     // Bust the ring item up into event builder fragments.
   
     FragmentIndex frags(
-	reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
+	reinterpret_cast<uint16_t*>(item.getBodyPointer())
 	);
 
     // Decode the DDAS hit in each fragment and add it to the event.

@@ -18,9 +18,8 @@
 
 /** 
  * @file  DDASFitHitUnpacker.h
- * @brief Unpack DDAS data where the traces may have a HitExtension
- * that contains one and two pulse fits.
- * @note DDASFitHitUnpacker is in the DAQ::DDAS namespace.
+ * @brief Defines a class to unpack DDAS data with fit extensions.
+ * @note DDASFitHitUnpacker is in the ddastoys namespace.
  */
 
 #ifndef DDASFITHITUNPACKER_H
@@ -38,7 +37,8 @@ namespace ddastoys {
      * data.
      * @details
      * If no fit extension data is present, the rest of the event is 
-     * unpacked similar to the "normal" DDAS unpacker used by e.g. SpecTcl.
+     * unpacked similar to the "normal" DDAS unpacker from the DDASFormat 
+     * library.
      * @{
      */
 	
@@ -47,12 +47,17 @@ namespace ddastoys {
      * @brief Unpack raw hit data from DDAS event files.
      *
      * @details
-     * The DDASHitUnpacker is capable of unpacking raw hits from 
-     * DDAS files. Typical trace analysis may involve fitting traces to 
-     * one or two pulses This class extends the DDASHitUnpacker class to 
-     * support access to the results of the fit which have been tacked on 
-     * the back end of a hit by some hit extender.
-     */    
+     * The DDASHitUnpacker is capable of unpacking raw hits from NSCLDAQ event 
+     * data which include hit extension data. Hit extensions are data 
+     * structures which contain additional information appended to each hit 
+     * which cannot be obtained from the digitizer module, for example from 
+     * post-processing traces. A typical trace analysis may involve fitting
+     * traces and performing further analysis with the fit output (event 
+     * classification, measuring physics observables, etc.). This class 
+     * is an extension of DAQ::DDAS::DDASHitUnpacker and retains all the 
+     * funcitonality of the base class.
+     */
+    
     class DDASFitHitUnpacker : public DAQ::DDAS::DDASHitUnpacker
     {
     public:

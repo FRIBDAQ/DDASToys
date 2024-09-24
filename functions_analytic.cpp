@@ -32,7 +32,7 @@
 /**
  * @details
  * A logistic function is a function with a sigmoidal shape. We use it to fit 
- * the rising edge of signals DDAS digitizes from detectors. See e.g. 
+ * the rising edge of signals from DDAS digitizes. See e.g. 
  * https://en.wikipedia.org/wiki/Logistic_function for a discussion of this
  * function.
  */
@@ -152,7 +152,7 @@ double pulseAmplitude(double A, double k1, double k2, double x0)
 double
 ddastoys::analyticfit::chiSquare1(
     double A1, double k1, double k2,double x1, double C,
-    const std::vector<std::uint16_t>& trace, int low, int high
+    const std::vector<uint16_t>& trace, int low, int high
     )
 {
     if (high == -1) high = trace.size() - 1;
@@ -180,7 +180,7 @@ ddastoys::analyticfit::chiSquare1(
 double
 ddastoys::analyticfit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
     )
 {    
     double result = 0.0;
@@ -207,7 +207,7 @@ double
 ddastoys::analyticfit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
-    double C, const std::vector<std::uint16_t>& trace,
+    double C, const std::vector<uint16_t>& trace,
     int low, int high
     )
 {
@@ -240,7 +240,7 @@ ddastoys::analyticfit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
     )
 {
     double result = 0.0;
@@ -262,7 +262,7 @@ ddastoys::analyticfit::chiSquare2(
 void
 ddastoys::analyticfit::writeTrace(
     const char* filename, const char* title,
-    const std::vector<std::uint16_t>& trace
+    const std::vector<uint16_t>& trace
     )
 {
     std::ofstream o(filename);
@@ -278,14 +278,14 @@ ddastoys::analyticfit::writeTrace(
 void
 ddastoys::analyticfit::writeTrace2(
     const char* filename, const char* title,
-    const std::vector<std::uint16_t>& t1,
-    const std::vector<std::uint16_t>& t2
+    const std::vector<uint16_t>& t1,
+    const std::vector<uint16_t>& t2
     )
 {
     std::ofstream o(filename);    
     o << title << std::endl;
     for (size_t i = 0; i < t1.size(); i++) {
-	std::uint16_t diff = t1[i] - t2[i];
+	uint16_t diff = t1[i] - t2[i];
 	o << i << " " << t1[i] << " " << t2[i]
 	  << " " << diff*diff/t1[i] << std::endl;
     }

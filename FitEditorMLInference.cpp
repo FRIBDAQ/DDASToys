@@ -16,7 +16,7 @@
 
 /** 
  * @file  FitEditorMLInference.cpp
- * @brief Implementation of the FitEditor class for analytic fitting.
+ * @brief Implementation of the FitEditor class for machine-learning inference.
  */
 
 #include "FitEditorMLInference.h"
@@ -37,7 +37,8 @@ using namespace ddastoys::mlinference;
  * @details
  * Sets up the configuration manager to parse config files and manage 
  * configuration data. Reads the fit config file. Loads all ML models
- * specified in the configuration.
+ * specified in the configuration. Stores models in a map keyed by the
+ * path to their associated PyTorch file.
  */
 ddastoys::FitEditorMLInference::FitEditorMLInference() :
     m_pConfig(new Configuration)
@@ -124,7 +125,7 @@ ddastoys::FitEditorMLInference::~FitEditorMLInference()
  *   that might have been there).
  * - See if the configuration manager says we should fit and if so, get the 
  *   trace from the hit.
- * - 
+ * - Do the inference step
  * - Create an IOvec entry for the extension we created (dynamic).
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
@@ -135,12 +136,12 @@ ddastoys::FitEditorMLInference::operator()(
     std::vector<CBuiltRingItemEditor::BodySegment> result;
     
     // Regardless we want a segment that includes the hit. Note that the first
-    // std::uint32_t of the body is the size of the standard hit part in
-    // std::uint16_t words.
+    // uint32_t of the body is the size of the standard hit part in
+    // uint16_t words.
     
-    std::uint16_t* pSize = static_cast<std::uint16_t*>(pBody);
+    uint16_t* pSize = static_cast<uint16_t*>(pBody);
     CBuiltRingItemEditor::BodySegment hitInfo(
-	*pSize*sizeof(std::uint16_t), pSize, false
+	*pSize*sizeof(uint16_t), pSize, false
 	);
     result.push_back(hitInfo);
     
@@ -149,8 +150,8 @@ ddastoys::FitEditorMLInference::operator()(
     DAQ::DDAS::DDASHit hit;
     DAQ::DDAS::DDASHitUnpacker unpacker;
     unpacker.unpack(
-	static_cast<std::uint32_t*>(pBody),
-	static_cast<std::uint32_t*>(nullptr),
+	static_cast<uint32_t*>(pBody),
+	static_cast<uint32_t*>(nullptr),
 	hit
 	);
 

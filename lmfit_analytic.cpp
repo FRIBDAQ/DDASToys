@@ -125,7 +125,7 @@ static void reduceTrace(
  * @param x  x value at which to evaluate all this.
  * @param w  Weight for the point.
  *
- * @return Value of (dP1/dA)(x)/w
+ * @return Value of (dP1/dA)(x)/w.
  */
 static double
 dp1dA(double k1, double k2, double x1, double x, double w,
@@ -141,13 +141,13 @@ dp1dA(double k1, double k2, double x1, double x, double w,
  * @brief Partial of single pulse with respect to the rise time constant k1.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
- * @param k2 Current guess at the decay time constant.
+ * @param k1 Current guess at rise steepness parameter.
+ * @param k2 Current guess at the decay constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
  * @param w  Weight for the point.
  *
- * @return Value of (dP1/dk1)(x)/w
+ * @return Value of (dP1/dk1)(x)/w.
  */
 static double
 dp1dk1(double A, double k1, double k2, double x1, double x, double w,
@@ -165,8 +165,8 @@ dp1dk1(double A, double k1, double k2, double x1, double x, double w,
  * @brief Partial of a single pulse with respect to the decay time constant.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
- * @param k2 Current guess at the decay time constant.
+ * @param k1 Current guess at rise steepness parameter.
+ * @param k2 Current guess at the decay constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
  * @param w  Weight for the point.
@@ -189,8 +189,8 @@ dp1dk2(double A, double k1, double k2, double x1, double x, double w,
  * of the pulse's rise.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
- * @param k2 Current guess at the decay time constant.
+ * @param k1 Current guess at rise steepness parameter.
+ * @param k2 Current guess at the decay constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
  * @param w  Weight for the point .
@@ -216,8 +216,8 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
  * evaluated at a point.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
- * @param k2 Current guess at the decay time constant.
+ * @param k1 Current guess at rise steepness parameter.
+ * @param k2 Current guess at the decay constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
  * @param w  Weight for the point 
@@ -296,7 +296,7 @@ gsl_p1Jacobian(const gsl_vector* p, void* pData, gsl_matrix* J)
  *
  * @return GSL_SUCCESS completion status.
  *
- * @note GPU implementation hint: That both functions are nicely data parallel
+ * @note GPU implementation hint: Both functions are nicely data parallel
  *   and can run in parallel w.r.t. to each other.
  */
 static int
@@ -312,18 +312,18 @@ gsl_p1Compute(const gsl_vector* p, void*pData, gsl_vector* resids, gsl_matrix* J
  * @brief Estimate the decay constant for a single trace given that we know 
  * where the maximum is.
  *
+ * @param x0    Channel of the trace maximum starting the search.
+ * @param C0    Estimate for the constant.
+ * @param trace The trace.
+ *
  * @details
  * We use that k = ln2/(x-x0) when x is the point at half max and that 
  * k = ln(3/4)/(x0-x) when x is the point at 3/4 max.
  *
  * We search from the max channel and if we're lucky we find both the 3/4
  * and the 1/2 values for x-x0 -- then we take the average as our estimate.
- * If we only find the k for 3/4 we use it. If we find neither we fall back 
- * to 0.1 as originally.
- *
- * @param x0    Channel of the trace maximum starting the search.
- * @param C0    Estimate for the constant.
- * @param trace The trace.
+ * If we only find the k for 3/4 we use it. If we find neither we use the 
+ * fallback parameter.
  *
  * @note For now assume that the 3/4 and 1/2 points are inside the AOI if
  *   they exist. In the future could confine the search to the AOI.
@@ -365,19 +365,18 @@ estimateK2(int x0, double C0, const std::vector<uint16_t>& trace)
  * @brief Estimate a value for the steepness parameter of the rising side 
  * of the pulse. 
  *
- * @details
- * We approximate xmax as 0.9 of maximum and use that ln(9)/(xmax - xhalf) 
- * gives k where xhalf is the position of 1/2 height. If we can't find xhalf 
- * then we fall back on a guess of 0.1.
- *
- * @todo Should allow this fallback value to be an input parameter.
- *
  * @param xmax  Where the maximum point is.
  * @param C0    Estimate for the constant offset.
  * @param trace The trace data.
  *
  * @return The risetime estimate.
  *
+ * @details
+ * We approximate xmax as 0.9 of maximum and use that ln(9)/(xmax - xhalf) 
+ * gives k where xhalf is the position of 1/2 height. If we can't find xhalf 
+ * then we fall back on a guess of 0.1.
+ *
+ * @todo Should allow this fallback value to be an input parameter.
  * @note For now assume that the half position is within the AOI and are not 
  * correcting for flattops.
  */
@@ -412,7 +411,7 @@ ddastoys::analyticfit::lmfit1(
     unsigned low  = limits.first;
     unsigned high = limits.second;
     
-    // Produce the set of x/y points that are to be fit.  This is the trace
+    // Produce the set of x,y points that are to be fit.  This is the trace
     // within the limits and with points at or above saturation removed:
     
     std::vector<std::pair<uint16_t, uint16_t>> points;
@@ -535,7 +534,7 @@ ddastoys::analyticfit::lmfit1(
  * @param[in]  pData Actually a pointer to a GslFitParameters object.
  * @param[out] r     Pointer to the vector to contain the residuals.
  * 
- * @return GSL_SUCCESS can't really fail.
+ * @return GSL_SUCCESS, can't really fail.
  */
 static int
 gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
@@ -547,7 +546,7 @@ gsl_p2Residuals(const gsl_vector* p, void* pData, gsl_vector* r)
 }
 
 /**
- * @brief Compute the jacobian matrix. 
+ * @brief Compute the Jacobian matrix. 
  *
  * @details 
  * Rows for each data point, columns for each partial derivative of the 
@@ -837,7 +836,7 @@ gsl_p2ftResiduals(const gsl_vector* p, void* pData, gsl_vector* r)
  * @param[in]  pData Actually a pointer to a GslFitParameterse struct.
  * @param[out] j     gsl_matrix into which the Jacobian will be computed.
  *
- * @result GSL_SUCCESS I don't see how this can fail (flw).
+ * @result GSL_SUCCESS, I don't see how this can fail.
  */
 static int
 gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
@@ -849,7 +848,6 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
     double k1    = gsl_vector_get(p, P2FTK1_INDEX);
     double k2    = gsl_vector_get(p, P2FTK2_INDEX);
     double x1    = gsl_vector_get(p, P2FTX1_INDEX);
-    
     
     double A2    = gsl_vector_get(p, P2FTA2_INDEX);   // Pulse 2.
     double k3    = gsl_vector_get(p, P2FTK1_INDEX);   // k3 = k1
@@ -925,7 +923,6 @@ gsl_p2ftJacobian(const gsl_vector* p, void* pData, gsl_matrix* j)
  * @param[out] J      Will have the Jacobian elements stored here.
  *
  * @result GSL_SUCCESS can only be that.
- *
  */
 static int
 gsl_p2ftCompute(const gsl_vector* p, void* pData,

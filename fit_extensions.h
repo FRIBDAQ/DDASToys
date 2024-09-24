@@ -18,7 +18,7 @@
 
 /** 
  * @file  fit_extensions.h
- * @brief Define structs used by fitting functions and to extend DDAS hits
+ * @brief Define structs used by fitting functions and to extend DDAS hits.
  */
 
 #ifndef FIT_EXTENSIONS_H
@@ -38,7 +38,7 @@ namespace ddastoys {
 	double position;  //!< Where the pulse is.
 	double amplitude; //!< Pulse amplitude.
 	double steepness; //!< Logistic steepness factor.
-	double decayTime; //!< Decay time constant.    
+	double decayTime; //!< Exponential decay constant.    
     };
 
     /**
@@ -71,8 +71,8 @@ namespace ddastoys {
      * extension struct for DDASToys pre-6.0-000.
      */
     struct HitExtensionLegacy { // Data added to hits with traces:
-	fit1Info onePulseFit; //!< Single pulse fit information.
-	fit2Info twoPulseFit; //!< Double pulse fit information.
+	fit1Info onePulseFit; //!< Single-pulse fit information.
+	fit2Info twoPulseFit; //!< Double-pulse fit information.
     };
 
     /**
@@ -80,10 +80,10 @@ namespace ddastoys {
      * @brief The data structure appended to each fit hit.
      */
     struct HitExtension { // Data added to hits with traces:
-	fit1Info onePulseFit; //!< Single pulse fit information.
-	fit2Info twoPulseFit; //!< Double pulse fit information.
-	double singleProb; //!< Probability of single pulse
-	double doubleProb; //!< Probability of double pulse.
+	fit1Info onePulseFit; //!< Single-pulse fit information.
+	fit2Info twoPulseFit; //!< Double-pulse fit information.
+	double singleProb;    //!< Probability of single pulse
+	double doubleProb;    //!< Probability of double pulse.
 	/** @brief Default constructor. */
 	HitExtension() = default;
 	/** 

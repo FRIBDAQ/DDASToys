@@ -48,6 +48,7 @@ namespace ddastoys {
      * This is a very, very simple class. It inherits from ddastoys::DDASFitHit
      * and ROOT's TObject class and adds a ROOT `ClassDef()` macro.
      */
+    
     class DDASRootFitHit : public DDASFitHit, public TObject
     {
     public:

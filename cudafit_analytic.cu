@@ -18,8 +18,12 @@
 #include <PSO_Optimizer.h>  // Particle swarm
 
 #include "fit_extensions.h" // For the fit extension formats.
-#include "functions_analytic.h"
+#include "functions_analytic.h" // Fitting functions
 #include "reductions.cu"
+
+using namespace ddastoys;
+using namespace ddastoys::analyticfit;
+using namespace ddastoys::cudafit;
 
 // Define the parameter numbers for the fits:
 
@@ -594,8 +598,8 @@ h_fitDouble(
 }
 
 void
-cudafit1(
-    DDAS::fit1Info* pResult, const std::vector<uint16_t>& trace,
+ddastoys::cudafit::cudafit1(
+    fit1Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     uint16_t saturation, bool freeTraceWhenDone
     )
@@ -641,15 +645,15 @@ cudafit1(
     pResult->pulse.steepness= pParams[K1];
     pResult->pulse.decayTime = pParams[K2];
 
-    pResult->chiSquare =  DDAS::AnalyticFit::chiSquare1(
+    pResult->chiSquare =  chiSquare1(
 	pParams[A1], pParams[K1], pParams[K2], pParams[X1], pParams[C],
 	trace, limits.first, limits.second
 	);
 }
 
 void
-cudafit2(
-    DDAS::fit2Info* pResult, const std::vector<uint16_t>& trace,
+ddastoys::cudafit::cudafit2(
+    fit2Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     uint16_t saturation = 0xffff, bool traceIsLoaded = false
     )
@@ -697,6 +701,7 @@ cudafit2(
   
     // We only allowed one case so pull the best fitness and best solution
     // from it:
+    
     pResult->fitStatus = 0;
     pResult->iterations= opt.getCurrentEvals();
     float * pParams    = opt.getBestSolution(0);
@@ -711,7 +716,7 @@ cudafit2(
     pResult->pulses[1].amplitude= pParams[A2];
     pResult->pulses[1].steepness= pParams[K3];
     pResult->pulses[1].decayTime = pParams[K4];
-    pResult->chiSquare = DDAS::AnalyticFit::chiSquare2(
+    pResult->chiSquare = chiSquare2(
 	pParams[A1], pParams[K1], pParams[K2], pParams[X1],
 	pParams[A2], pParams[K3], pParams[K4], pParams[X2],
 	pParams[C], trace, limits.first, limits.second

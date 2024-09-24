@@ -299,7 +299,7 @@ namespace ROOT {
       ::ddastoys::HitExtension *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::ddastoys::HitExtension));
       static ::ROOT::TGenericClassInfo 
-         instance("ddastoys::HitExtension", "fit_extensions.h", 72,
+         instance("ddastoys::HitExtension", "fit_extensions.h", 82,
                   typeid(::ddastoys::HitExtension), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &ddastoyscLcLHitExtension_Dictionary, isa_proxy, 4,
                   sizeof(::ddastoys::HitExtension) );
@@ -387,7 +387,7 @@ namespace ROOT {
       ::ddastoys::DDASRootFitHit *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::ddastoys::DDASRootFitHit >(nullptr);
       static ::ROOT::TGenericClassInfo 
-         instance("ddastoys::DDASRootFitHit", ::ddastoys::DDASRootFitHit::Class_Version(), "DDASRootFitHit.h", 51,
+         instance("ddastoys::DDASRootFitHit", ::ddastoys::DDASRootFitHit::Class_Version(), "DDASRootFitHit.h", 52,
                   typeid(::ddastoys::DDASRootFitHit), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::ddastoys::DDASRootFitHit::Dictionary, isa_proxy, 4,
                   sizeof(::ddastoys::DDASRootFitHit) );

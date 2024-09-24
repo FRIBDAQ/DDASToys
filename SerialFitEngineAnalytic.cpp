@@ -18,7 +18,7 @@
 
 /** 
  * @file  SerialFitEngineAnalytic.cpp
- * @brief Implement the serial fit engines for single and double pulse fits.
+ * @brief Implement the serial fit engines for single- and double-pulse fits.
  */
 
 #include "jacobian_analytic.h"
@@ -57,6 +57,7 @@ static const int P2C_INDEX(8);
 
 //////////////////////////////////////////////////////////////////////////////
 // Partial derivative functions that are common:
+//
 
 /**
  * @brief Returns the partial derivative of a single pulse with respect to the
@@ -73,11 +74,14 @@ static const int P2C_INDEX(8);
  * @return Value of (dP1/dA)(x)/w
  */
 static double
-dp1dA(double k1, double k2, double x1, double x, double w,
-      double erise, double efall)
+dp1dA(
+    double k1, double k2, double x1, double x, double w,
+    double erise, double efall
+    )
 {
-    double d = efall;             // decay(1.0, k2, x1, x);
-    double l = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x);
+    double d = efall;             // decay(1.0, k2, x1, x)
+    double l = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
+    
     return d*l / w;
 }
 
@@ -96,11 +100,13 @@ dp1dA(double k1, double k2, double x1, double x, double w,
  * @return Value of (dP1/dk1)(x)/w
  */
 static double
-dp1dk1(double A, double k1, double k2, double x1, double x, double w,
-       double erise, double efall)
+dp1dk1(
+    double A, double k1, double k2, double x1, double x, double w,
+    double erise, double efall
+    )
 {
-    double d1 =   A*efall; // decay(A, k2, x1, x)
-    double d2 =   erise;   // part of logistic deriv.
+    double d1  =   A*efall;          // decay(A, k2, x1, x)
+    double d2  =   erise;            // Part of logistic derivative
     double num = d1*d2*(x - x1);
     double l   =  1.0/(1.0 + erise); //  logistic(1.0, k1, x1, x)
     
@@ -115,19 +121,21 @@ dp1dk1(double A, double k1, double k2, double x1, double x, double w,
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
- * @param w  Weight for the point 
+ * @param w  Weight for the point.
  * @param erise, efall Pre-computed common exponential terms needed to 
  *   evaluate the derivative.
  *
- * @return Value of (dP1/dk2)(x)/w
+ * @return Value of (dP1/dk2)(x)/w.
  */
 static double
-dp1dk2(double A, double k1, double k2, double x1, double x, double w,
-       double erise, double efall)
+dp1dk2(
+    double A, double k1, double k2, double x1, double x, double w,
+       double erise, double efall
+    )
 {
-    double d1 = A*efall; // decay(A, k2, x1, x)
+    double d1  = A*efall;           // decay(A, k2, x1, x)
     double num = d1*(x1 - x);
-    double l = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
+    double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
     
     return (num*l)/w;
 }
@@ -145,17 +153,19 @@ dp1dk2(double A, double k1, double k2, double x1, double x, double w,
  * @param erise, efall Pre-computed common exponential terms needed to 
  *   evaluate the derivative.
  *
- * @return Value of (dP1/dk2)(x)/w
+ * @return Value of (dP1/dk2)(x)/w.
  */
 static double
-dp1dx1(double A, double k1, double k2, double x1, double x, double w,
-       double erise, double efall)
+dp1dx1(
+    double A, double k1, double k2, double x1, double x, double w,
+    double erise, double efall
+    )
 {
     double dk1 = erise;             // decay(1.0, k1, x1, x)
     double dk2 = efall;             // decay(1.0, k2, x1, x)
     double l   = 1.0/(1.0 + erise); // logistic(1.0, k1, x1, x)
     
-    double left = A*k2*dk2*l;
+    double left  = A*k2*dk2*l;
     double right = A*k1*dk1*dk2*l*l;
     
     return (left - right)/w;
@@ -172,19 +182,18 @@ dp1dx1(double A, double k1, double k2, double x1, double x, double w,
  * @param x  x value at which to evaluate all this.
  * @param w  Weight for the point.
  *
- * @return Value of (dP1/dC)(x)/w
+ * @return Value of (dP1/dC)(x)/w.
  */
 static double
 dp1dC(double A, double k1, double k2, double x1, double x, double w)
 {
-    
     return 1.0/w;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// Serial fit engine 1
-//   Implementation of fit engine for single pulse serial execution.
+////////////////////////////////////////////////////////////////////////////////
+// Implement SerialFitEngine1 - The serialized fit engine for single pulses.
 //
+
 
 /**
  * @details
@@ -192,7 +201,7 @@ dp1dC(double A, double k1, double k2, double x1, double x, double w)
  * class construction.
  */
 ddastoys::analyticfit::SerialFitEngine1::SerialFitEngine1(
-    std::vector<std::pair<std::uint16_t, std::uint16_t>>& data
+    std::vector<std::pair<uint16_t, uint16_t>>& data
     ) :
     CFitEngine(data)
 {}
@@ -216,18 +225,22 @@ ddastoys::analyticfit::SerialFitEngine1::jacobian(
     size_t npts = x.size();
     for (size_t i =0; i < npts; i++) {
 	double xi = x[i];
-	double erise = exp(-k1*(xi - x1)); // these are common subexpressions
-	double efall = exp(-k2*(xi - x1)); // we can factor out here:
+	
+	// Rise and fall are common, pre-calculate them here:
+	
+	double erise = exp(-k1*(xi - x1));
+	double efall = exp(-k2*(xi - x1));
         
-	// Compute the partials:
-	// Weights are equal to 1.0
+	// Compute the partials, weights are equal to 1.0:
+	
 	double Ai   = dp1dA(k1, k2, x1, xi, 1.0, erise, efall);
 	double k1i  = dp1dk1(A, k1, k2, x1, xi, 1.0, erise, efall);
 	double k2i  = dp1dk2(A, k1, k2, x1, xi, 1.0, erise, efall);
 	double x1i  = dp1dx1(A, k1, k2, x1, xi, 1.0, erise, efall);
 	double Ci   = dp1dC(A, k1, k2, x1, xi, 1.0);
         
-	// Stuff them into the proper elements of the jacobian matrix.        
+	// Stuff them into the proper elements of the jacobian matrix:
+	
 	gsl_matrix_set(J, i, P1A_INDEX, Ai);
 	gsl_matrix_set(J, i, P1K1_INDEX, k1i);
 	gsl_matrix_set(J, i, P1K2_INDEX, k2i);
@@ -241,7 +254,8 @@ ddastoys::analyticfit::SerialFitEngine1::residuals(
     const gsl_vector* p, gsl_vector* r
     )
 {
-    // Extract the fit parameters:    
+    // Extract the fit parameters:
+    
     double A  = gsl_vector_get(p, P1A_INDEX);
     double k1 = gsl_vector_get(p, P1K1_INDEX);
     double k2 = gsl_vector_get(p, P1K2_INDEX);
@@ -249,7 +263,8 @@ ddastoys::analyticfit::SerialFitEngine1::residuals(
     double C  = gsl_vector_get(p, P1C_INDEX);
 
     // x, y are vectors that are the actual trace, and have the same number
-    // of elements. 
+    // of elements:
+    
     size_t npts = x.size();
     for (size_t i =0; i < npts; i++) {
 	double xi = x[i];
@@ -260,15 +275,15 @@ ddastoys::analyticfit::SerialFitEngine1::residuals(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Implement SerialFitEngine2 - the serialized fit engine for double
-// pulses.
+// Implement SerialFitEngine2 - The serialized fit engine for double pulses.
+//
 
 /**
  * @details
  * Delegates to base class construction.
  */
 ddastoys::analyticfit::SerialFitEngine2::SerialFitEngine2(
-    std::vector<std::pair<std::uint16_t, std::uint16_t>>&  data
+    std::vector<std::pair<uint16_t, uint16_t>>&  data
     ) :
     CFitEngine(data) {}
 
@@ -277,7 +292,7 @@ ddastoys::analyticfit::SerialFitEngine2::residuals(
     const gsl_vector* p, gsl_vector* r
     )
 {
-    // Pull out the current fit parameterization>
+    // Pull out the current fit parameterization:
     
     double A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
     double k1    = gsl_vector_get(p, P2K1_INDEX);
@@ -289,7 +304,7 @@ ddastoys::analyticfit::SerialFitEngine2::residuals(
     double k4    = gsl_vector_get(p, P2K4_INDEX);
     double x2    = gsl_vector_get(p, P2X2_INDEX);
     
-    double C     = gsl_vector_get(p, P2C_INDEX);    // constant.
+    double C     = gsl_vector_get(p, P2C_INDEX);    // Constant.
     
     size_t npts = x.size();
     for (size_t i = 0; i < npts; i++) {
@@ -310,7 +325,8 @@ ddastoys::analyticfit::SerialFitEngine2::jacobian(
     const gsl_vector* p, gsl_matrix* J
     )
 {
-    // Fish the current fit parameters from p:    
+    // Fish the current fit parameters from p:
+    
     double A1    = gsl_vector_get(p, P2A1_INDEX); // Pulse 1.
     double k1    = gsl_vector_get(p, P2K1_INDEX);
     double k2    = gsl_vector_get(p, P2K2_INDEX);
@@ -344,7 +360,7 @@ ddastoys::analyticfit::SerialFitEngine2::jacobian(
 	    J, i, P2X1_INDEX, dp1dx1(A1, k1, k2, x1, xc, 1.0, erise1, efall1)
 	    );
         
-	// For pulse 2 elements:  A1->A2, k1 -> k3, k2 -> k4, x1 -> x2
+	// For pulse 2 elements:  A1->A2, k1 -> k3, k2 -> k4, x1 -> x2:
         
 	gsl_matrix_set(
 	    J, i, P2A2_INDEX, dp1dA(k3, k4, x2, xc, 1.0, erise2, efall2)
@@ -359,7 +375,7 @@ ddastoys::analyticfit::SerialFitEngine2::jacobian(
 	    J, i, P2X2_INDEX, dp1dx1(A2, k3, k4, x2, xc, 1.0, erise2, efall2)
 	    );
         
-	// Don't forget the constant term
+	// Don't forget the constant term:
         
 	gsl_matrix_set(
 	    J, i, P2C_INDEX, dp1dC(A1, k1, k2, x1, xc, 1.0)

@@ -17,7 +17,7 @@
 
 /**
  * @file mlinference.cpp
- * @brief Function implementations for machine learning inference editor.
+ * @brief Function implementations for machine-learning inference editor.
  */
 
 #include "mlinference.h"
@@ -67,11 +67,6 @@ reduceTrace(std::vector<uint16_t>& trace, unsigned saturation)
     return reduced;
 }
 
-
-/*------------------------------------------------------------------
- * Input and output data processing.
- */
-
 /**
  * @brief Pre-process the input and return a torch tensor.
  * 
@@ -85,7 +80,7 @@ reduceTrace(std::vector<uint16_t>& trace, unsigned saturation)
  * - Remove the DC offset.
  * - Normalizing the trace by dividing each sample by the max value following 
  *   baseline removal.
- * Not that the trace-as-a-normalized-tensor is floating point.
+ * Note that the trace-as-a-normalized-tensor is floating point.
  *
  * @note (ASC 9/23/24): Adopted from 
  * https://github.com/bashir-sadeghi/frib/tree/main/pytorch_to_cpp
@@ -100,7 +95,7 @@ static std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
 preprocessInput(std::vector<uint16_t>& trace, unsigned nsamples)
 {    
     // Convert the trace into a torch tensor. Note that first we transform
-    // the input to float and hope this is 32 bits...
+    // the input to float and hope this is 32 bits:
 
     std::vector<float> fTrace(trace.begin(), trace.end());
 
@@ -117,7 +112,7 @@ preprocessInput(std::vector<uint16_t>& trace, unsigned nsamples)
     torch::Tensor offset = torch::mean(slice);
     input -= offset;
   
-    // Divide each row by its maximum value:
+    // Divide the trace by its maximum value:
 
     torch::Tensor max = torch::max(input);
     input /= max;
@@ -130,12 +125,11 @@ preprocessInput(std::vector<uint16_t>& trace, unsigned nsamples)
 /**
  * @brief Post-process the input and return the results.
  *
- * @param pResult Pointer to results storage.
- * @param output References our processed tensor.
- * @param xscale x-axis normalziation factor (the trace size).
- * @param yscale y-axis normalization factor (max value)
- *
- * @return Fit struct containing the results.
+ * @param[in,out] pResult Pointer to results storage.
+ * @param[in] output References our processed tensor.
+ * @param[in] xscale x-axis normalziation factor (the trace size).
+ * @param[in] yscale y-axis normalization factor (max value).
+ * @param[in] offset y-axis offset of amplitude-adjusted normalized trace.
  */
 static void
 postProcessOutput(
@@ -150,7 +144,7 @@ postProcessOutput(
     torch::Tensor logit = tup->elements()[1].toTensor();
     torch::Tensor prob = torch::softmax(logit, 1);
 
-    // // Extract the parameters and rescale them:
+    // Extract the parameters and rescale them:
     
     torch::Tensor t1 = xscale * tup->elements()[2].toTensor();
     torch::Tensor a1 = yscale * tup->elements()[3].toTensor();
@@ -182,10 +176,15 @@ postProcessOutput(
     pResult->s_extension.doubleProb = prob[0][1].item<double>();
 }
 
-/*------------------------------------------------------------------
- * Perform the inference:
+/**
+ * @details
+ * This is the interface to perform the machine-learning inference fit on a 
+ * single trace analogous to the lmfit functions for iterative fitting. 
+ * The steps are pretty simple:
+ * - Preprocess the trace (offest removal and normalization).
+ * - Perform inference on normalized input.
+ * - Postprocess the trace (rescaling, extract and store fit parameters).
  */
-
 void
 ddastoys::mlinference::performInference(
     FitInfo* pResult,
@@ -198,9 +197,9 @@ ddastoys::mlinference::performInference(
     unsigned baselineSamples = 20; // How many samples for baseline removal?
     auto preprocessed = preprocessInput(trace, baselineSamples);
     
-    auto normalizedInput = std::get<0>(preprocessed);
-    auto max = std::get<1>(preprocessed);
-    auto offset = std::get<2>(preprocessed);
+    auto normalizedInput = std::get<0>(preprocessed); // torch::Tensor
+    auto max = std::get<1>(preprocessed);             //      |
+    auto offset = std::get<2>(preprocessed);          //      V
     auto samples = static_cast<double>(trace.size());
 
     normalizedInput = normalizedInput.unsqueeze(0); // trace.size() x 1 matrix

@@ -19,7 +19,7 @@
 /** 
  * @file  DDASFitHit.h
  * @brief Extends DDASHit to include fit data that's been tacked on to the
- * end of a hit with traces.
+ * end of a hit.
  */
 
 #ifndef DDASFITHIT_H
@@ -38,27 +38,26 @@ namespace ddastoys {
      * @brief Encapsulates data for DDAS hits that may have fitted traces.
      *
      * @details
-     * This is produced by FitHitUnpacker::decode. This is basically just 
-     * a DDASHit with extra fields.     
+     * These objects are produced by `DDASFitHitUnpacker::decode()`. 
+     * They are basically just DAQ::DDAS::DDASHits with some extra fields.     
      */
 
     class DDASFitHit : public DAQ::DDAS::DDASHit
     {
     private:
-	bool m_haveExtension; //!< True iff has extension data.
+	bool m_haveExtension;     //!< True iff has extension data.
 	HitExtension m_extension; //!< The extension data.
       
     public:
 	DDASFitHit() { Reset(); } //!< Constructor.
-	virtual ~DDASFitHit() {} //!< Destructor.
+	virtual ~DDASFitHit() {}  //!< Destructor.
 
 	/**
 	 * @brief Assignment operator.
-	 * @details
-	 * Calls base class operator= and sets the hit extension 
-	 * (if present).
 	 * @param rhs Reference to DDASFitHit for assignment.
 	 * @return Reference to lhs.
+	 * @details
+	 * Calls base class operator= and sets the hit extension (if present).
 	 */
 	DDASFitHit& operator=(const DDASFitHit& rhs) {
 	    if (this != &rhs) {

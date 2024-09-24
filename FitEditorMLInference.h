@@ -16,7 +16,7 @@
 
 /** 
  * @file  FitEditorMLInference.h
- * @brief Definition of the FitEditor class for analytic fitting.
+ * @brief Definition of the FitEditor class for machine-learning inference.
  */
 
 #ifndef FITEDITORMLINFERENCE_H
@@ -44,14 +44,13 @@ namespace ddastoys {
 
     /**
      * @class FitEditorMLInference
-     * @brief Fit trace data using the analytic fitting functions and extend 
-     * hits.
+     * @brief Fit trace data using machine-learning inference with a detector 
+     * response model defined by the analytic fit functions.
      *
      * @details
      * Extending the hit with this editor overwrites any existing extension. 
      * This class is intended for use with the EventEditor framework providing 
-     * a complete description of the new event body. Resides in the ddastoys:: 
-     * namespace.
+     * a complete description of the new event body.
      */
  
     class FitEditorMLInference : public CBuiltRingItemEditor::BodyEditor

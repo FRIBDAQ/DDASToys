@@ -36,11 +36,15 @@
  *
  * @return int
  * @retval EXIT_SUCCESS If the program executes and completes properly.
- * @retval EXIT_FAILURE Otherwise.
+ * @retval EXIT_FAILURE Otherwise. Most commonly because some part of the 
+ *   processing code threw and exception which is handled here. The error 
+ *   messages should point the user to the problem.
  *
  * @details
- * Creates and calls the event processor's operator(). Handles exceptions 
- * thrown by other parts of the program (hopefully).
+ * Creates and calls the event processor's operator(). 
+ *
+ * @note To users: Please report unhandled exceptions or unclear error messages
+ * to daqhelp!
  */
 int main(int argc, char** argv)
 {  
