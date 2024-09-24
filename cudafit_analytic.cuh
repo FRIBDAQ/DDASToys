@@ -12,7 +12,7 @@ namespace ddastoys {
     struct fit2Info;
 
     /** @namespace ddastoys::cudafit */
-    namespace cudafit {
+    namespace analyticfit {
 
 	// Fit a single pulse:
 

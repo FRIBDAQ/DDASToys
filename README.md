@@ -12,7 +12,7 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
 * 5.1-000 : The final tag prior to incorporating the machine learning inference. This version of DDASToys also requires the user to point at the location of the [UnifiedFormat](https://github.com/FRIBDAQ/UnifiedFormat) library external to this project e.g., from the version of NSCLDAQ that you build against. The variable `UFMT` should point to the top-level installation directory of the unified format version you'd like to use (version 2.1 or later required).
 * 6.0-000 : The first version with the machine learning inference model. Besides the machine learning, a number of changes have been implemented in this version:
   - libDDASRootFit.so renamed to libDDASRootFitFormat.so
-  - Consistent and clear namespaceing. The ROOT format library libDDASRootFitFormat.so is in the `ddastoys` namespace, all fitting functions and plugin-specific code have their own namespaces: `ddastoys::analyticfit`, `ddastoys::templatefit`, `ddastoys:mlinference`, `ddastoys::cuda`.
+  - Consistent and clear namespaceing. The ROOT format library libDDASRootFitFormat.so is in the `ddastoys` namespace, all fitting functions and plugin-specific code have their own namespaces: `ddastoys::analyticfit`, `ddastoys::templatefit`, `ddastoys:mlinference`.
   - An additional entry in the fit configuration file is required. This entry is used to specify the path to a machine learning inference model for determining pulse parameters for that channel. In the case where you do not want to use the machine learning inference, this input parameter does nothing. Some placeholder must be present in the fit configuration file, which can be an empty string "".
 
 ## Build Instructions for DDASToys 5.1 and later

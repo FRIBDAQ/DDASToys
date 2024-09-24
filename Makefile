@@ -88,7 +88,7 @@ DDASFMTBUILDDIR=$(PWD)/DDASFormat/build
 
 # Flags depend on whether we build for GPU fitting:
 
-CXXFLAGS=-std=c++14 -g -O2 -Wall -I. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
+CXXFLAGS=-std=c++14 -g -O2 -I. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
 CXXLDFLAGS=-lgsl -lgslcblas -L$(DDASFMTLIB) -lDDASFormat
 
 CUDACXXFLAGS=-DCUDA --compiler-options -fPIC 				\
@@ -96,7 +96,7 @@ CUDACXXFLAGS=-DCUDA --compiler-options -fPIC 				\
 CUDALDFLAGS=-L/usr/opt/libcudaoptimize/lib -lCudaOptimize 		\
 	--linker-options -rpath=$(DDASFMTLIB)
 
-GNUCXXFLAGS=-fPIC
+GNUCXXFLAGS=-fPIC -Wall
 GNULDFLAGS=-Wl,-rpath=$(DDASFMTLIB)
 
 ifdef CUDA

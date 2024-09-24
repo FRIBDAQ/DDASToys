@@ -23,7 +23,6 @@
 
 using namespace ddastoys;
 using namespace ddastoys::analyticfit;
-using namespace ddastoys::cudafit;
 
 // Define the parameter numbers for the fits:
 
@@ -598,7 +597,7 @@ h_fitDouble(
 }
 
 void
-ddastoys::cudafit::cudafit1(
+ddastoys::analyticfit::cudafit1(
     fit1Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     uint16_t saturation, bool freeTraceWhenDone
@@ -652,7 +651,7 @@ ddastoys::cudafit::cudafit1(
 }
 
 void
-ddastoys::cudafit::cudafit2(
+ddastoys::analyticfit::cudafit2(
     fit2Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     uint16_t saturation = 0xffff, bool traceIsLoaded = false
