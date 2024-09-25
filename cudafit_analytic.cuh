@@ -6,12 +6,15 @@
 #ifndef CUDAFIT_ANALYTIC_CUH
 #define CUDAFIT_ANALYTIC_CUH
 
+#include <cstdint>
+#include <vector>
+
 /** @namespace ddastoys */
 namespace ddastoys {
     struct fit1Info;
     struct fit2Info;
 
-    /** @namespace ddastoys::cudafit */
+    /** @namespace ddastoys::analyticfit */
     namespace analyticfit {
 
 	// Fit a single pulse:
@@ -30,7 +33,7 @@ namespace ddastoys {
 	cudafit1(
 	    fit1Info* pResult, const std::vector<uint16_t>& trace,
 	    const std::pair<unsigned, unsigned>& limits,
-	    uint16_t saturation = 0xffff, bool freeTraceWhenDone=true
+	    uint16_t saturation=0xffff, bool freeTraceWhenDone=true
 	    );
 
 	// Fit two pulses:
@@ -50,7 +53,7 @@ namespace ddastoys {
 	cudafit2(
 	    ddastoys::fit2Info* pResult, const std::vector<uint16_t>& trace,
 	    const std::pair<unsigned, unsigned>& limits,
-	    uint16_t saturation = 0xffff, bool traceIsLoaded = false
+	    uint16_t saturation=0xffff, bool traceIsLoaded=false
 	    );
 
     } // namespace cudafit

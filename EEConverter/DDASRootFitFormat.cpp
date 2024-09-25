@@ -1363,9 +1363,9 @@ nullptr
     };
     static const char* includePaths[] = {
 "..",
-"/user/chester/ddastoys/DDASFormat/include",
+"/user/0400x/ddastoys/DDASFormat/include",
 "/usr/opt/root/6.26.04/include/",
-"/aaron/DDASToys/EEConverter/",
+"/user/0400x/DDASToys/EEConverter/",
 nullptr
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(

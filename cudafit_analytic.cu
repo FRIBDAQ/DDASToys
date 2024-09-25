@@ -7,6 +7,8 @@
  * have global data for the device pointers to the trace.
  */
 
+#include "cudafit_analytic.cuh"
+
 #include <limits>
 #include <ctime>
 #include <iostream>
@@ -22,7 +24,6 @@
 #include "reductions.cu"
 
 using namespace ddastoys;
-using namespace ddastoys::analyticfit;
 
 // Define the parameter numbers for the fits:
 
@@ -84,7 +85,8 @@ reportCudaError(const char* context)
  * 
  * @return Final number of points to fit.
  */
-static unsigned traceToGPU(
+static unsigned
+traceToGPU(
     std::vector<uint16_t> trace, std::pair<unsigned, unsigned> limits,
     uint16_t saturation
     )
@@ -281,6 +283,7 @@ __host__ __device__
 float chiFitness1(const float* pParams, float x, float y, float wt)
 {
     // Get the parameters from the fit:
+  
     float a  = pParams[A1];
     float k1 = pParams[K1];
     float k2 = pParams[K2];
@@ -654,7 +657,7 @@ void
 ddastoys::analyticfit::cudafit2(
     fit2Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    uint16_t saturation = 0xffff, bool traceIsLoaded = false
+    uint16_t saturation, bool traceIsLoaded
     )
 {
     // If needed get the trace into the GPU:
