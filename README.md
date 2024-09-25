@@ -1,6 +1,6 @@
 # DDASToys documentation
 
-**Note**
+[!IMPORTANT]
 Current version: 6.0-000
 
 # Introduction
