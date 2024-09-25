@@ -1,8 +1,5 @@
 # DDASToys documentation
 
-[!IMPORTANT]
-Current version: 6.0-000
-
 # Introduction
 This page contains source code documentation for DDASToys. This code is used to build shared plugin libraries which can then be used by the NSCLDAQ `EventEditor` program to fit recorded trace data. DDASToys is supported as part of NSCLDAQ releases 12.0 and later. The implemented classes and functions in DDASToys are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code.
 
