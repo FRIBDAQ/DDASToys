@@ -1,5 +1,8 @@
 # DDASToys documentation
 
+[!NOTE]
+Current version: 6.0-000
+
 # Introduction
 This page contains source code documentation for DDASToys. This code is used to build shared plugin libraries which can then be used by the NSCLDAQ `EventEditor` program to fit recorded trace data. DDASToys is supported as part of NSCLDAQ releases 12.0 and later. The implemented classes and functions in DDASToys are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code.
 
@@ -14,6 +17,8 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
   - libDDASRootFit.so renamed to libDDASRootFitFormat.so
   - Consistent and clear namespaceing. The ROOT format library libDDASRootFitFormat.so is in the `ddastoys` namespace, all fitting functions and plugin-specific code have their own namespaces: `ddastoys::analyticfit`, `ddastoys::templatefit`, `ddastoys:mlinference`.
   - An additional entry in the fit configuration file is required. This entry is used to specify the path to a machine learning inference model for determining pulse parameters for that channel. In the case where you do not want to use the machine learning inference, this input parameter does nothing. Some placeholder must be present in the fit configuration file, which can be an empty string "".
+
+
 
 ## Build Instructions for DDASToys 5.1 and later
 - Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.1-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
