@@ -10,15 +10,15 @@
      Authors:
              Ron Fox
              Jeromy Tompkins
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
 
 /** 
  * @file  CRingItemProcessor.cpp
- * @brief Default implementation of the the CRingItemProcessor class 
- * non-mandatory virtual methods.
+ * @brief Default implementation of the the CRingItemProcessor class methods.
  */
 
 #include "CRingItemProcessor.h"
@@ -50,7 +50,7 @@ static std::map<CGlomParameters::TimestampPolicy, std::string> glomPolicyMap = {
  * @details
  * Your own processing should create a new class and override this if you 
  * want to process scalers. Note that this and all ring item types have a
- * toString() method that returns the string the NSCL DAQ Dumper outputs for
+ * toString() method that returns the string the NSCLDAQ dumper outputs for
  * each item type.
  */
 void

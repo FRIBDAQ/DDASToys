@@ -10,8 +10,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -19,7 +20,7 @@
 /** 
  * @file  functions_analytic.h
  * @brief Provide code to evaluate various functions used to fit DDAS pulses.
- * @note  All functions are in the DDAS::AnalyticFit namespace.
+ * @note  All functions are in the ddastoys::analyticfit namespace.
  */
 
 #ifndef FUNCTIONS_ANALYTIC_H
@@ -28,10 +29,11 @@
 #include <vector>
 #include <cstdint>
 
-/** @namespace DDAS */
-namespace DDAS {
-    /** @namespace DDAS::AnalyticFit */
-    namespace AnalyticFit {
+/** @namespace ddastoys */
+namespace ddastoys {
+    /** @namespace ddastoys::analyticfit */
+    namespace analyticfit {
+	
 	/**
 	 * @ingroup analytic
 	 * @{
@@ -42,7 +44,7 @@ namespace DDAS {
 	 * and point.
 	 * @param A  Amplitude of the signal.
 	 * @param k  Steepness of the signal (related to the rise time).
-	 * @param x1 Mid point of the rise of the logistic.
+	 * @param x1 Mid-point of the rise of the logistic.
 	 * @param x  Location at which to evaluate the function.
 	 * @return Function value at x.
 	 */
@@ -54,7 +56,7 @@ namespace DDAS {
 	 * @param k  Decay constant of the signal.
 	 * @param x1 Position of the pulse.
 	 * @param x  Where to evaluate the signal.
-	 * @return Function value at x
+	 * @return Function value at x.
 	 */
 	double decay(double A, double k, double x1, double x);
 	/**
@@ -86,7 +88,7 @@ namespace DDAS {
 	 * @param A1 Amplitude of the first pulse.
 	 * @param k1 Steepness of first pulse rise.
 	 * @param k2 Decay time of the first pulse.
-	 * @param x1 position of the first pulse.
+	 * @param x1 Position of the first pulse.
 	 * @param A2 Amplitude of the second pulse.
 	 * @param k3 Steepness of second pulse rise.
 	 * @param k4 Decay time of second pulse.
@@ -129,7 +131,7 @@ namespace DDAS {
 	 */
 	double chiSquare1(
 	    double A1, double k1, double k2, double x1, double C,
-	    const std::vector<std::uint16_t>& trace,
+	    const std::vector<uint16_t>& trace,
 	    int low = 0 , int high = -1
 	    );
 	/**
@@ -141,14 +143,13 @@ namespace DDAS {
 	 * @param k2 Decay time of pulse fall.
 	 * @param x1 Position of the pulse.
 	 * @param C  Constant offset of the trace.
-	 * @param points Set of x, y data points which contribute to the total 
-	 *   chi-square value
-   	 * @return double  The chi-square goodness-of-fit statistic.
+	 * @param points Set of (x, y) data points which contribute to the 
+	 *   total chi-square value
+   	 * @return The chi-square goodness-of-fit statistic.
 	 */
 	double chiSquare1(
 	    double A1, double k1, double k2, double x1, double C,
-	    const std::vector<std::pair<std::uint16_t,
-	    std::uint16_t> >& points
+	    const std::vector<std::pair<uint16_t, uint16_t> >& points
 	    );
 	/**
 	 * @brief Computes the chi-square goodness of a specific 
@@ -174,7 +175,7 @@ namespace DDAS {
 	    double A1, double k1, double k2, double x1,
 	    double A2, double k3, double k4, double x2,
 	    double C,    
-	    const std::vector<std::uint16_t>& trace,
+	    const std::vector<uint16_t>& trace,
 	    int low = 0, int high = -1
 	    );    
 	/**
@@ -198,21 +199,20 @@ namespace DDAS {
 	    double A1, double k1, double k2, double x1,
 	    double A2, double k3, double k4, double x2,
 	    double C,
-	    const std::vector<std::pair<std::uint16_t,
-	    std::uint16_t> >& points
+	    const std::vector<std::pair<uint16_t, uint16_t> >& points
 	    );
 	/**
-	 * @brief Write  a single trace to file.
+	 * @brief Write a single trace to a file.
 	 *  @param filename  Where to write.
 	 *  @param title     Title string.
 	 *  @param trace     The trace data.
 	 */	
 	void writeTrace(
 	    const char* filename, const char* title,
-	    const std::vector<std::uint16_t>& trace
+	    const std::vector<uint16_t>& trace
 	    );
 	/**
-	 * @brief Write two traces to file.
+	 * @brief Write two traces to a file.
 	 * @param filename Where to write.
 	 * @param title    Title string.
 	 * @param t1       The first trace.
@@ -220,8 +220,8 @@ namespace DDAS {
 	 */
 	void writeTrace2(
 	    const char* filename, const char* title,
-	    const std::vector<std::uint16_t>& trace1,
-	    const std::vector<std::uint16_t>& trace2
+	    const std::vector<uint16_t>& trace1,
+	    const std::vector<uint16_t>& trace2
 	    );
 
 	/** @} */

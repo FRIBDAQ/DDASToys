@@ -9,15 +9,16 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
 
 /** 
  * @file  DDASRootFitHit.h
- * @brief Define a Hit with fitting data that can serialized by ROOT.
+ * @brief Define a hit with fitting data that can serialized by ROOT.
  */
 
 #ifndef DDASROOTFITHIT_H
@@ -26,61 +27,66 @@
 #include <DDASFitHit.h>
 #include <TObject.h>
 
-/**
- * @defgroup ddasrootfit libDDASRootFit.so
- * @brief ROOT data format and classes. Basically a ROOT-ized DDASFitHit 
- * and fit_extensions.h.
- */
+/** @namespace ddastoys */
+namespace ddastoys {
 
-/**
- * @ingroup ddasrootfit
- * @{
- */
-
-/**
- * @class DDASRootFitHit
- * @brief This class is a ROOT serializable DDAS hit with possible fit data.
- * @details
- * This is a very, very simple class. It inherits from DAQ::DDAS::DDASFitHit 
- * and ROOT's TObject class and adds a ROOT `ClassDef()` macro.
- */
-class DDASRootFitHit : public DAQ::DDAS::DDASFitHit, public TObject
-{
-public:
-    /** @brief Constructor. */
-    DDASRootFitHit();
     /**
-     * @brief Copy constructor.
-     * @param rhs Reference the hit to copy-construct.
+     * @defgroup ddasrootfitformat libDDASRootFit.so
+     * @brief ROOT data format and classes. Basically a ROOT-ized DDASFitHit 
+     * and fit_extensions.h.
      */
-    DDASRootFitHit(const DDASRootFitHit& rhs);
+
+    /**
+     * @ingroup ddasrootfitformat
+     * @{
+     */
+
+    /**
+     * @class DDASRootFitHit
+     * @brief This class is a ROOT serializable DDAS hit with possible fit data.
+     * @details
+     * This is a very, very simple class. It inherits from ddastoys::DDASFitHit
+     * and ROOT's TObject class and adds a ROOT `ClassDef()` macro.
+     */
     
-    /**
-     * @brief Assignment from another DDASRootFitHit.
-     * @param rhs The hit we are assigning from.
-     * @return *this.
-     */
-    DDASRootFitHit& operator=(const DDASRootFitHit& rhs);
-    /**
-     * @brief Assignment from a DAQ::DDAS::DDASFitHit.
-     * @param rhs The hit we're assigning from.
-     * @return *this.
-     * @note This is the "normal" way we'll get data. Default construction and 
-     * then assignment from a decoded DDASFitHit.
-     */
-    DDASRootFitHit& operator=(const DAQ::DDAS::DDASFitHit& rhs);
+    class DDASRootFitHit : public DDASFitHit, public TObject
+    {
+    public:
+	/** @brief Constructor. */
+	DDASRootFitHit();
+	/**
+	 * @brief Copy constructor.
+	 * @param rhs Reference the hit to copy-construct.
+	 */
+	DDASRootFitHit(const DDASRootFitHit& rhs);
+    
+	/**
+	 * @brief Assignment from another DDASRootFitHit.
+	 * @param rhs The hit we are assigning from.
+	 * @return *this.
+	 */
+	DDASRootFitHit& operator=(const DDASRootFitHit& rhs);
+	/**
+	 * @brief Assignment from a DAQ::DDAS::DDASFitHit.
+	 * @param rhs The hit we're assigning from.
+	 * @return *this.
+	 * @note This is the "normal" way we'll get data. Default construction 
+	 *   and then assignment from a decoded DDASFitHit.
+	 */
+	DDASRootFitHit& operator=(const DDASFitHit& rhs);
 
-    /**
-     * @brief Reset the object to empty. This is really just a matter of 
-     * assigning a reset hit to ourselves.
-     */
-    void Reset();
+	/**
+	 * @brief Reset the object to empty. This is really just a matter of 
+	 * assigning a reset hit to ourselves.
+	 */
+	void Reset();
   
-    // Tell ROOT we're implementing the class:
+	// Tell ROOT we're implementing the class:
   
-    ClassDef(DDASRootFitHit, 1)
-};
+	ClassDef(DDASRootFitHit, 1)
+    };
 
 /** @} */
+}
 
 #endif

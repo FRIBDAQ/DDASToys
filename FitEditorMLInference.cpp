@@ -8,8 +8,6 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Authors:
-             Ron Fox
-             Giordano Cerriza
 	     Aaron Chester
 	     FRIB
 	     Michigan State University
@@ -17,11 +15,11 @@
 */
 
 /** 
- * @file  FitEditorAnalytic.cpp
- * @brief Implementation of the FitEditor class for analytic fitting.
+ * @file  FitEditorMLInference.cpp
+ * @brief Implementation of the FitEditor class for machine-learning inference.
  */
 
-#include "FitEditorAnalytic.h"
+#include "FitEditorMLInference.h"
 
 #include <iostream>
 
@@ -29,17 +27,20 @@
 #include <DDASHitUnpacker.h>
 
 #include "Configuration.h"
-#include "lmfit_analytic.h"
+#include "fit_extensions.h"
+#include "mlinference.h"
 
 using namespace ddastoys;
-using namespace ddastoys::analyticfit;
+using namespace ddastoys::mlinference;
 
 /**
  * @details
  * Sets up the configuration manager to parse config files and manage 
- * configuration data. Reads the fit config file.
+ * configuration data. Reads the fit config file. Loads all ML models
+ * specified in the configuration. Stores models in a map keyed by the
+ * path to their associated PyTorch file.
  */
-ddastoys::FitEditorAnalytic::FitEditorAnalytic() :
+ddastoys::FitEditorMLInference::FitEditorMLInference() :
     m_pConfig(new Configuration)
 {  
     try {
@@ -49,9 +50,26 @@ ddastoys::FitEditorAnalytic::FitEditorAnalytic() :
 	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
 	exit(EXIT_FAILURE);
     }
+
+    // Load all the models and store for later access:
+    
+    auto modelList = m_pConfig->getModelList();
+    for (const auto& m : modelList) {
+	try {
+	    torch::jit::script::Module module = torch::jit::load(m);
+	    m_models[m] = module;
+	}
+	catch (const c10::Error& e) {
+	    std::cerr << "Failed to load model " << m << ": " << e.what()
+		      << std::endl;
+	    exit(EXIT_FAILURE);
+	}
+    }
 }
 
-ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic& rhs) :
+ddastoys::FitEditorMLInference::FitEditorMLInference(
+    const FitEditorMLInference& rhs
+    ) :
     m_pConfig(new Configuration(*rhs.m_pConfig))
 {}
 
@@ -59,14 +77,16 @@ ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic& rhs) :
  * @details
  * Constructs using move assignment.
  */
-ddastoys::FitEditorAnalytic::FitEditorAnalytic(FitEditorAnalytic&& rhs) noexcept :
+ddastoys::FitEditorMLInference::FitEditorMLInference(
+    FitEditorMLInference&& rhs
+    ) noexcept :
     m_pConfig(nullptr)
 {
     *this = std::move(rhs);
 }
 
-FitEditorAnalytic&
-ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic& rhs)
+FitEditorMLInference&
+ddastoys::FitEditorMLInference::operator=(const FitEditorMLInference& rhs)
 {
     if (this != &rhs) {
 	delete m_pConfig;
@@ -76,8 +96,8 @@ ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic& rhs)
     return *this;
 }
 
-FitEditorAnalytic&
-ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic&& rhs) noexcept
+FitEditorMLInference&
+ddastoys::FitEditorMLInference::operator=(FitEditorMLInference&& rhs) noexcept
 {
     if (this != &rhs) {
 	delete m_pConfig;	
@@ -92,26 +112,24 @@ ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic&& rhs) noexcept
  * @details
  * Delete the Configuration object managed by this class.
  */
-ddastoys::FitEditorAnalytic::~FitEditorAnalytic()
+ddastoys::FitEditorMLInference::~FitEditorMLInference()
 {
     delete m_pConfig;
 }
 
 /**
  * @details
- * This is the hook into the FitEditorAnalytic class. Here we:
+ * This is the hook into the FitEditorMLInference class. Here we:
  * - Parse the fragment into a hit.
  * - Produce a IOvec element for the existing hit (without any fit
  *   that might have been there).
- * - See if the configuration manager says we should fit and if so, create 
- *   the trace.
- * - Get the fit limits and saturation value.
- * - Get the number of pulses to fit.
- * - Do the fits.
+ * - See if the configuration manager says we should fit and if so, get the 
+ *   trace from the hit.
+ * - Do the inference step
  * - Create an IOvec entry for the extension we created (dynamic).
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-ddastoys::FitEditorAnalytic::operator()(
+ddastoys::FitEditorMLInference::operator()(
     pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody
     )
 { 
@@ -142,45 +160,14 @@ ddastoys::FitEditorAnalytic::operator()(
     auto chan  = hit.getChannelID();
   
     if (m_pConfig->fitChannel(crate, slot, chan)) {
-	std::vector<uint16_t> trace = hit.getTrace();
+	auto trace = hit.getTrace();
 	FitInfo* pFit = new FitInfo; // Have an extension tho may be zero.
 	
 	if (trace.size() > 0) { // Need a trace to fit
-	    auto limits = m_pConfig->getFitLimits(crate, slot, chan);
 	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
-	    int classification = pulseCount(hit);
+	    auto modelPath = m_pConfig->getModelPath(crate, slot, chan);
 	    
-	    if (classification) {
-		
-		// Bit 0 do single fit, bit 1 do double fit.
-		    
-		if (classification & 1) {
-		    lmfit1(
-			&(pFit->s_extension.onePulseFit), trace, limits, sat
-			);
-		}                    
-		if (classification & 2 ) {
-		    
-		    // The single pulse fit guides the double pulse fit.
-		    // Note that lmfit2 will perform a single fit if no guess
-		    // is provided. If we have already fit the single pulse,
-		    // set the guess to those results.
-		    
-		    if (classification & 1) {
-			fit1Info guess = pFit->s_extension.onePulseFit;
-			lmfit2(
-			    &(pFit->s_extension.twoPulseFit), trace, limits,
-			    &guess, sat
-			    );
-		    } else {
-			// nullptr: no guess for single params.
-			lmfit2(
-			    &(pFit->s_extension.twoPulseFit), trace, limits,
-			    nullptr, sat
-			    );
-		    }
-		}	  
-	    }	
+	    performInference(pFit, trace, sat, m_models[modelPath]);
 	}
     
 	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
@@ -188,17 +175,15 @@ ddastoys::FitEditorAnalytic::operator()(
     
     } else { // No fit performed
 	nullExtension* p = new nullExtension;
-	CBuiltRingItemEditor::BodySegment nofit(
-	    sizeof(nullExtension), p, true
-	    );
+	CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
 	result.push_back(nofit);
-    }    
+    }
     
-    return result;
+    return result; // Return the description
 }
 
 void
-ddastoys::FitEditorAnalytic::free(iovec& e)
+ddastoys::FitEditorMLInference::free(iovec& e)
 {
     if (e.iov_len == sizeof(FitInfo)) {
 	FitInfo* pFit = static_cast<FitInfo*>(e.iov_base);
@@ -207,21 +192,6 @@ ddastoys::FitEditorAnalytic::free(iovec& e)
 	nullExtension* p = static_cast<nullExtension*>(e.iov_base);
 	delete p;
     }
-}
-
-///
-// Private methods
-//
-
-/**
- * @details
- * In the absence of the classifier, perform single- and double-pulse fits 
- * for every mapped channel.
- */
-int
-ddastoys::FitEditorAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
-{
-    return 3; // In absence of classifier.
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -237,7 +207,7 @@ ddastoys::FitEditorAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
  * extern "C" prevents namespace mangling by the C++ compiler.
  */
 extern "C" {
-    ddastoys::FitEditorAnalytic* createEditor() {
-	return new ddastoys::FitEditorAnalytic;
+    ddastoys::FitEditorMLInference* createEditor() {
+	return new ddastoys::FitEditorMLInference;
     }
 }

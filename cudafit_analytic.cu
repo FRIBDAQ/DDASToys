@@ -7,6 +7,8 @@
  * have global data for the device pointers to the trace.
  */
 
+#include "cudafit_analytic.cuh"
+
 #include <limits>
 #include <ctime>
 #include <iostream>
@@ -18,8 +20,10 @@
 #include <PSO_Optimizer.h>  // Particle swarm
 
 #include "fit_extensions.h" // For the fit extension formats.
-#include "functions_analytic.h"
+#include "functions_analytic.h" // Fitting functions
 #include "reductions.cu"
+
+using namespace ddastoys;
 
 // Define the parameter numbers for the fits:
 
@@ -81,7 +85,8 @@ reportCudaError(const char* context)
  * 
  * @return Final number of points to fit.
  */
-static unsigned traceToGPU(
+static unsigned
+traceToGPU(
     std::vector<uint16_t> trace, std::pair<unsigned, unsigned> limits,
     uint16_t saturation
     )
@@ -278,6 +283,7 @@ __host__ __device__
 float chiFitness1(const float* pParams, float x, float y, float wt)
 {
     // Get the parameters from the fit:
+  
     float a  = pParams[A1];
     float k1 = pParams[K1];
     float k2 = pParams[K2];
@@ -594,8 +600,8 @@ h_fitDouble(
 }
 
 void
-cudafit1(
-    DDAS::fit1Info* pResult, const std::vector<uint16_t>& trace,
+ddastoys::analyticfit::cudafit1(
+    fit1Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
     uint16_t saturation, bool freeTraceWhenDone
     )
@@ -641,17 +647,17 @@ cudafit1(
     pResult->pulse.steepness= pParams[K1];
     pResult->pulse.decayTime = pParams[K2];
 
-    pResult->chiSquare =  DDAS::AnalyticFit::chiSquare1(
+    pResult->chiSquare =  chiSquare1(
 	pParams[A1], pParams[K1], pParams[K2], pParams[X1], pParams[C],
 	trace, limits.first, limits.second
 	);
 }
 
 void
-cudafit2(
-    DDAS::fit2Info* pResult, const std::vector<uint16_t>& trace,
+ddastoys::analyticfit::cudafit2(
+    fit2Info* pResult, const std::vector<uint16_t>& trace,
     const std::pair<unsigned, unsigned>& limits,
-    uint16_t saturation = 0xffff, bool traceIsLoaded = false
+    uint16_t saturation, bool traceIsLoaded
     )
 {
     // If needed get the trace into the GPU:
@@ -697,6 +703,7 @@ cudafit2(
   
     // We only allowed one case so pull the best fitness and best solution
     // from it:
+    
     pResult->fitStatus = 0;
     pResult->iterations= opt.getCurrentEvals();
     float * pParams    = opt.getBestSolution(0);
@@ -711,7 +718,7 @@ cudafit2(
     pResult->pulses[1].amplitude= pParams[A2];
     pResult->pulses[1].steepness= pParams[K3];
     pResult->pulses[1].decayTime = pParams[K4];
-    pResult->chiSquare = DDAS::AnalyticFit::chiSquare2(
+    pResult->chiSquare = chiSquare2(
 	pParams[A1], pParams[K1], pParams[K2], pParams[X1],
 	pParams[A2], pParams[K3], pParams[K4], pParams[X2],
 	pParams[C], trace, limits.first, limits.second

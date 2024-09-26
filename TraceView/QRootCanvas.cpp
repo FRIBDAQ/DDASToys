@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  QRootCanvas.cpp
  * @brief Implementation of Qt-embedded ROOT canvas class
@@ -22,6 +38,8 @@
 #include <Configuration.h>
 #include <DDASFitHit.h>
 #include "FitManager.h"
+
+using namespace ddastoys;
 
 //____________________________________________________________________________
 /**
@@ -77,7 +95,7 @@ QRootCanvas::~QRootCanvas()
 
 //____________________________________________________________________________
 void
-QRootCanvas::drawHit(const DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawHit(const DDASFitHit& hit)
 {  
     drawTrace(hit);
 
@@ -203,9 +221,9 @@ QRootCanvas::paintEvent(QPaintEvent*)
  * @param hit  References the hit we extract and plot the trace from
  */
 void
-QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawTrace(const DDASFitHit& hit)
 {
-    std::vector<std::uint16_t> trace = hit.getTrace();
+    std::vector<uint16_t> trace = hit.getTrace();
   
     // Create histograms if they do not exist, otherwise ensure correct size.
   
@@ -238,7 +256,7 @@ QRootCanvas::drawTrace(const DAQ::DDAS::DDASFitHit& hit)
  * be checked by the caller using hit.hasExtension().
  */
 void
-QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawSingleFit(const DDASFitHit& hit)
 {  
     unsigned low = m_pFitManager->getLowFitLimit(hit);
     unsigned high = m_pFitManager->getHighFitLimit(hit);
@@ -248,7 +266,7 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
     // Note that index 0 of the fit vector corresponds to sample number low
     // on the actual trace. We assume if we are here, we have an extension.
   
-    DDAS::HitExtension ext = hit.getExtension();
+    HitExtension ext = hit.getExtension();
     std::vector<double> fit = m_pFitManager->getSinglePulseFit(ext, low, high);
   
     if (!m_pFit1Hist) {
@@ -263,7 +281,8 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
     }
     m_pFit1Hist->SetLineColor(kRed);
     std::string options = "hist same";
-    if (m_pFitManager->getMethod() == ANALYTIC) {
+    auto method = m_pFitManager->getMethod();
+    if (method == ANALYTIC || method == ML_INFERENCE) {
 	options = "hist c same";
     }
     m_pFit1Hist->Draw(options.c_str());
@@ -276,7 +295,7 @@ QRootCanvas::drawSingleFit(const DAQ::DDAS::DDASFitHit& hit)
  * be checked by the caller using hit.hasExtension().
  */
 void
-QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
+QRootCanvas::drawDoubleFit(const DDASFitHit& hit)
 { 
     unsigned low = m_pFitManager->getLowFitLimit(hit);
     unsigned high = m_pFitManager->getHighFitLimit(hit);
@@ -286,7 +305,7 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
     // Note that index 0 of the fit vector corresponds to sample number low
     // on the actual trace. We assume if we are here, we have an extension.
   
-    DDAS::HitExtension ext = hit.getExtension();
+    HitExtension ext = hit.getExtension();
     std::vector<double> fit = m_pFitManager->getDoublePulseFit(ext, low, high);
   
     if (!m_pFit2Hist) {
@@ -301,7 +320,8 @@ QRootCanvas::drawDoubleFit(const DAQ::DDAS::DDASFitHit& hit)
     }
     m_pFit2Hist->SetLineColor(kBlue);
     std::string options = "hist same";
-    if (m_pFitManager->getMethod() == ANALYTIC) {
+    auto method = m_pFitManager->getMethod();
+    if (method == ANALYTIC || method == ML_INFERENCE) {
 	options = "hist c same";
     }
     m_pFit2Hist->Draw(options.c_str());

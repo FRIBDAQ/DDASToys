@@ -10,7 +10,8 @@
      Authors:
              Ron Fox
              Jeromy Tompkins 
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -18,7 +19,7 @@
 /**
  * @file  functions_analytic.cpp
  * @brief Implement analytic functions used to fit DDAS pulses.
- * @note All functions are in the DDAS::AnalyticFit namespace.
+ * @note All functions are in the ddastoys::analytic namespace.
  */
 
 #include "functions_analytic.h"
@@ -31,12 +32,12 @@
 /**
  * @details
  * A logistic function is a function with a sigmoidal shape. We use it to fit 
- * the rising edge of signals DDAS digitizes from detectors. See e.g. 
+ * the rising edge of signals from DDAS digitizes. See e.g. 
  * https://en.wikipedia.org/wiki/Logistic_function for a discussion of this
  * function.
  */
 double
-DDAS::AnalyticFit::logistic(double A, double k, double x1, double x)
+ddastoys::analyticfit::logistic(double A, double k, double x1, double x)
 {
     return A/(1+exp(-k*(x-x1)));
 }
@@ -47,7 +48,7 @@ DDAS::AnalyticFit::logistic(double A, double k, double x1, double x)
  * exponential. This function evaluates this decay at some point.
  */
 double
-DDAS::AnalyticFit::decay(double A, double k, double x1, double x)
+ddastoys::analyticfit::decay(double A, double k, double x1, double x)
 {
     return A*(exp(-k*(x-x1)));
 }
@@ -61,7 +62,7 @@ DDAS::AnalyticFit::decay(double A, double k, double x1, double x)
  * with rise centered at the point in question.
  */
 double
-DDAS::AnalyticFit::switchOn(double x1, double x)
+ddastoys::analyticfit::switchOn(double x1, double x)
 {
     return logistic(1.0, 10000.0, x1, x);
 }
@@ -73,7 +74,7 @@ DDAS::AnalyticFit::switchOn(double x1, double x)
  * that sits on top of a constant offset.
  */
 double
-DDAS::AnalyticFit::singlePulse(
+ddastoys::analyticfit::singlePulse(
     double A1, double k1, double k2, double x1,
     double C, double x
     )
@@ -88,7 +89,7 @@ DDAS::AnalyticFit::singlePulse(
  * The second pulse gets a constant term of 0.
  */
 double
-DDAS::AnalyticFit::doublePulse(
+ddastoys::analyticfit::doublePulse(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C, double x    
@@ -113,7 +114,7 @@ DDAS::AnalyticFit::doublePulse(
  * We plug that position back into the pulse to get the amplitude.
  */
 double
-DDAS::AnalyticFit::pulseAmplitude(double A, double k1, double k2, double x0)
+ddastoys::analyticfit::pulseAmplitude(double A, double k1, double k2, double x0)
 {
     double frac = k1/k2;
     if (frac <= 1.0) {
@@ -129,18 +130,18 @@ double pulseAmplitude(double A, double k1, double k2, double x0)
      * This function is a wrapper for DDAS:AnalyticFit::pulseAmplitude
      * and issues a warning if it is called. It exists for backwards 
      * compatability and should not be used. The correct function in the 
-     * DDAS::AnalyticFit namespace should be called instead.
+     * ddastoys::analytic namespace should be called instead.
      */
     static bool warned(false);
     if(!warned) {
 	std::cerr << "WARNING the pulseAmplitude function is in the ";
-	std::cerr << "DDAS::AnalyticFit namespace\n";
+	std::cerr << "ddastoys::analytic namespace\n";
 	std::cerr << "It should be called as ";
-	std::cerr << "DDAS::AnalyticFit::pulseAmplitude(...);\n";
+	std::cerr << "ddastoys::analyticfit::pulseAmplitude(...);\n";
 	warned = true;
     }
     
-    return  DDAS::AnalyticFit::pulseAmplitude(A, k1, k2, x0);
+    return  ddastoys::analyticfit::pulseAmplitude(A, k1, k2, x0);
 }
 
 /**
@@ -149,9 +150,9 @@ double pulseAmplitude(double A, double k1, double k2, double x0)
  * passed limits low, high.
  */
 double
-DDAS::AnalyticFit::chiSquare1(
+ddastoys::analyticfit::chiSquare1(
     double A1, double k1, double k2,double x1, double C,
-    const std::vector<std::uint16_t>& trace, int low, int high
+    const std::vector<uint16_t>& trace, int low, int high
     )
 {
     if (high == -1) high = trace.size() - 1;
@@ -177,9 +178,9 @@ DDAS::AnalyticFit::chiSquare1(
  * set of (x, y) points.
  */
 double
-DDAS::AnalyticFit::chiSquare1(
+ddastoys::analyticfit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
     )
 {    
     double result = 0.0;
@@ -203,10 +204,10 @@ DDAS::AnalyticFit::chiSquare1(
  * on the passed limits low, high.
  */
 double
-DDAS::AnalyticFit::chiSquare2(
+ddastoys::analyticfit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
-    double C, const std::vector<std::uint16_t>& trace,
+    double C, const std::vector<uint16_t>& trace,
     int low, int high
     )
 {
@@ -235,11 +236,11 @@ DDAS::AnalyticFit::chiSquare2(
  * passed set of (x, y) points.
  */
 double
-DDAS::AnalyticFit::chiSquare2(
+ddastoys::analyticfit::chiSquare2(
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,
     double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points
+    const std::vector<std::pair<uint16_t, uint16_t> >& points
     )
 {
     double result = 0.0;
@@ -259,9 +260,9 @@ DDAS::AnalyticFit::chiSquare2(
 }
 
 void
-DDAS::AnalyticFit::writeTrace(
+ddastoys::analyticfit::writeTrace(
     const char* filename, const char* title,
-    const std::vector<std::uint16_t>& trace
+    const std::vector<uint16_t>& trace
     )
 {
     std::ofstream o(filename);
@@ -275,16 +276,16 @@ DDAS::AnalyticFit::writeTrace(
  * @note The traces must be the same length.
  */
 void
-DDAS::AnalyticFit::writeTrace2(
+ddastoys::analyticfit::writeTrace2(
     const char* filename, const char* title,
-    const std::vector<std::uint16_t>& t1,
-    const std::vector<std::uint16_t>& t2
+    const std::vector<uint16_t>& t1,
+    const std::vector<uint16_t>& t2
     )
 {
     std::ofstream o(filename);    
     o << title << std::endl;
     for (size_t i = 0; i < t1.size(); i++) {
-	std::uint16_t diff = t1[i] - t2[i];
+	uint16_t diff = t1[i] - t2[i];
 	o << i << " " << t1[i] << " " << t2[i]
 	  << " " << diff*diff/t1[i] << std::endl;
     }

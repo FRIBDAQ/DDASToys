@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -34,12 +35,13 @@ class CRingItem;
 
 /**
  * @class CRingItemProcessor
- * @brief Abstract base class to support type-independent ring item processing.
+ * @brief Abstract base class to support type-independent ring-item processing.
  * 
  * @details
  * The concept of this class is really simple. A virtual method for each
- * ring item type that we differentiate between. Similarly a virtual
- * method for ring item types that we don't break out.
+ * ring-item type that we differentiate between. Similarly a virtual
+ * method for ring-item types that we don't break out. The default behavior
+ * for each type is to do a formatted dump to stdout.
  */
 
 class CRingItemProcessor
@@ -83,7 +85,7 @@ public:
     virtual void processFormat(CDataFormatItem& item);
     /**
      * @brief Output a glom parameters item to stdout. 
-     *  @param item References the glom parameter record. 
+     * @param item References the glom parameter record. 
      */    
     virtual void processGlomParams(CGlomParameters& item);
     /**

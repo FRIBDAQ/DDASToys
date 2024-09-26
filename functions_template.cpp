@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  functions_template.cpp
  * @brief Implement functions used to fit DDAS pulses using a trace template.
@@ -18,20 +34,20 @@
  * that sits on top of a constant offset.
  */
 double
-DDAS::TemplateFit::singlePulse(
+ddastoys::templatefit::singlePulse(
     double A1, double x1, double C, double x,
     const std::vector<double>& trace_template
     )
 {
-    double value = 0;                      // Template trace fit value
-    int ishift = static_cast<int>(x - x1); // Phase-shifted sample number
-    double intershift = x - x1 - ishift;   // Shift for interpolation
-    double inter = 0.;                     // Interpolation term
+    double value = 0;                      // Template trace fit value.
+    int ishift = static_cast<int>(x - x1); // Phase-shifted sample number.
+    double intershift = x - x1 - ishift;   // Shift for interpolation.
+    double inter = 0.;                     // Interpolation term.
     int last = static_cast<int>(trace_template.size()-1);
 
     if (ishift < 0) {
 	value = C;
-    } else if(ishift >= 0 && ishift < last) { // Good range
+    } else if(ishift >= 0 && ishift < last) { // Good range.
 	inter = intershift*(trace_template[ishift+1]-trace_template[ishift]);
 	value = C + A1*(trace_template[ishift] + inter);
     } else {
@@ -49,7 +65,7 @@ DDAS::TemplateFit::singlePulse(
  * The second pulse gets a constant term of 0.
  */
 double
-DDAS::TemplateFit::doublePulse(
+ddastoys::templatefit::doublePulse(
     double A1, double x1, double A2, double x2, double C, double x,
     const std::vector<double>& trace_template
     )
@@ -65,9 +81,9 @@ DDAS::TemplateFit::doublePulse(
  * Neyman's chi-square value is computed from a passed set of (x, y) data.
  */
 double
-DDAS::TemplateFit::chiSquare1(
+ddastoys::templatefit::chiSquare1(
     double A1, double x1, double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points,
     const std::vector<double>& trace_template
     )
 {    
@@ -78,7 +94,7 @@ DDAS::TemplateFit::chiSquare1(
 	double pulse = singlePulse(A1, x1, C, x, trace_template);
 	double diff = y - pulse;
 	if (y != 0.0) {
-	    result += (diff/y)*diff;  // This order may control overflows
+	    result += (diff/y)*diff;  // This order may control overflows.
 	    if (std::fpclassify(result) == FP_ZERO) result =  0.0;
 	}
     }
@@ -91,9 +107,9 @@ DDAS::TemplateFit::chiSquare1(
  * Neyman's chi-square value is computed from a passed set of (x, y) data.
  */
 double
-DDAS::TemplateFit::chiSquare2(
+ddastoys::templatefit::chiSquare2(
     double A1, double x1, double A2, double x2, double C,
-    const std::vector<std::pair<std::uint16_t, std::uint16_t> >& points,
+    const std::vector<std::pair<uint16_t, uint16_t> >& points,
     const std::vector<double>& trace_template
     )
 {    
@@ -104,7 +120,7 @@ DDAS::TemplateFit::chiSquare2(
 	double pulse = doublePulse(A1, x1, A2, x2, C, x, trace_template);
 	double diff = y - pulse;
 	if (y != 0.0) {
-	    result += (diff/y)*diff;  // This order may control overflows
+	    result += (diff/y)*diff;  // This order may control overflows.
 	    if (std::fpclassify(result) == FP_ZERO) result =  0.0;
 	}
     }

@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  Configuration.cpp
  * @brief Configuration manager class implementation.
@@ -10,7 +26,7 @@
 #include <sstream>
 #include <iostream>
 
-///
+////////////////////////////////////////////////////////////////////////////////
 // Local trim functions
 //
 
@@ -31,19 +47,34 @@ static inline std::string &trim(std::string &s) {
     return ltrim(rtrim(s));
 }
 
+
 /**
  * @details
  * Lines in the configuration file can be empty or have as their first 
  * non-blank character "#" in which case they are ignored. All other lines 
- * specify channels that should be fit and contain six whitespace integers: 
- * crate slot channel low high saturation. The crate, slot, channel identify
- * a channel to fit while low, high are the limits of  the trace to fit (first 
- * sample index, last sample index), and the saturation defines a limit above 
- * which the trace datapoints will not be fit. Most commonly this saturation 
- * value is set to the saturation value of the ADC.
- */
+ * specify channels that should be fit and must contain six whitespace integers
+ * and one string: crate slot channel low high saturation model. The crate, 
+ * slot, and channel are unsigned integers used to identify a channel to fit. 
+ * Low and high specify the inclusive limits of the trace to fit in samples. 
+ * The saturation value defines a limit above which the trace data points will 
+ * not be fit. Most commonly this saturation value is set to the saturation 
+ * value of the ADC. The last parameter is a string specifying a path to a 
+ * PyTorch model for the machine-learning inference fitting. Not all parameters
+ * are used by each fitting method but default values must be provided.
+ * Please refer to the following:
+ *
+ * @warning While all parameters must be specified in the configuration, 
+ * depending on the fitting method, some of them may be ignored in parts of the
+ * code. Specifically, the machine-learning inference fitting will ignore the 
+ * fit limits, as it requires the input data to be the same shape as the 
+ * training data which is assumed to be the full acquired trace. The traceview 
+ * plotter will use these low and high limits to draw the fit so in practice it
+ * is best to set them to sensible values. Non-ML based fitting methods will 
+ * ignore the model parameter. An empty string ("") is a vaild input in the 
+ * configuration file. 
+*/
 void
-Configuration::readConfigFile()
+ddastoys::Configuration::readConfigFile()
 {
     std::string filename = getFileNameFromEnv("FIT_CONFIGFILE");
   
@@ -61,8 +92,10 @@ Configuration::readConfigFile()
     
 	if (line != "") {
 	    unsigned crate, slot, channel, low, high, saturation;
+	    std::string modelPath;
 	    std::stringstream sline(line);
-	    sline >> crate >> slot >> channel >> low  >> high >> saturation;
+	    sline >> crate >> slot >> channel >> low  >> high >> saturation
+		  >> modelPath;
 	    
 	    if (sline.fail()) {
 		std::string msg(
@@ -73,12 +106,12 @@ Configuration::readConfigFile()
 		throw std::invalid_argument(msg);
 	    }
 	    
-	    // Compute the channel index:            
+	    // Compute the channel index and add the channel to the map:
+	    
 	    unsigned index = channelIndex(crate, slot, channel);
 	    std::pair<unsigned, unsigned> limits(low, high);
-	    std::pair<std::pair<unsigned, unsigned>, unsigned>
-		value(limits, saturation);     
-	    m_fitChannels[index] = value;
+	    ConfigInfo info = {limits, saturation, modelPath};	    
+	    m_fitChannels[index] = info;
 	}
     }
 }
@@ -93,7 +126,7 @@ Configuration::readConfigFile()
  * the floating point template trace data itself.
  */
 void
-Configuration::readTemplateFile()
+ddastoys::Configuration::readTemplateFile()
 {
     std::string filename = getFileNameFromEnv("TEMPLATE_CONFIGFILE");
 
@@ -135,7 +168,8 @@ Configuration::readTemplateFile()
     }
 
     // The template should know how long it is. If you read in more data
-    // points throw an exception.  
+    // points throw an exception:
+    
     if (m_template.size() != npts) {
 	std::string errmsg("Template configfile thinks the trace is ");
 	errmsg += npts;
@@ -145,7 +179,8 @@ Configuration::readTemplateFile()
     }
 
     // Ensure the alignment point is contained in the trace. Note that because
-    // m_alignPoint is an unsigned type it cannot be negative.  
+    // m_alignPoint is an unsigned type it cannot be negative:
+    
     if (m_alignPoint >= m_template.size()) {
 	std::string errmsg("Invalid template alignment point ");
 	errmsg += m_alignPoint;
@@ -164,17 +199,61 @@ Configuration::readTemplateFile()
  * channel.
  */
 bool
-Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
+ddastoys::Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
 {
     int index = channelIndex(crate, slot, channel);
+    
     return (m_fitChannels.find(index) != m_fitChannels.end());
 }
 
-std::pair<std::pair<unsigned, unsigned>, unsigned>
-Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
+std::pair<unsigned, unsigned>
+ddastoys::Configuration::getFitLimits(
+    unsigned crate, unsigned slot, unsigned channel
+    )
 {
     int index = channelIndex(crate, slot, channel);
-    return m_fitChannels[index];
+    
+    return m_fitChannels[index].s_limits;
+}
+
+unsigned
+ddastoys::Configuration::getSaturationValue(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    int index = channelIndex(crate, slot, channel);
+    
+    return m_fitChannels[index].s_saturation;
+}
+
+std::string
+ddastoys::Configuration::getModelPath(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    int index = channelIndex(crate, slot, channel);
+    
+    return m_fitChannels[index].s_modelPath;
+}
+
+/**
+ * @details
+ * As a consequence of the sort-and-erase idiom used to uniquify the model 
+ * list, the model paths names are sorted in the returned vector and may be 
+ * in a different order than how they appear in the configuration file.
+ * It is the responsibilty of the caller to deal with this.
+ */
+std::vector<std::string>
+ddastoys::Configuration::getModelList()
+{
+    std::vector<std::string> models;
+    for (const auto& entry : m_fitChannels) {
+	models.push_back(entry.second.s_modelPath);
+    }
+    std::sort(models.begin(), models.end());
+    models.erase(std::unique(models.begin(), models.end()), models.end());
+    
+    return models;
 }
 
 ///
@@ -182,7 +261,7 @@ Configuration::getFitLimits(unsigned crate, unsigned slot, unsigned channel)
 //
 
 std::string
-Configuration::getFileNameFromEnv(const char* envname)
+ddastoys::Configuration::getFileNameFromEnv(const char* envname)
 {
     const char* pFilename = getenv(envname);
     if (!pFilename) {
@@ -196,7 +275,7 @@ Configuration::getFileNameFromEnv(const char* envname)
 }
 
 std::string
-Configuration::isComment(std::string line)
+ddastoys::Configuration::isComment(std::string line)
 {
     trim(line); // Modifies it
     if (line[0] == '#') return std::string("");
@@ -205,7 +284,9 @@ Configuration::isComment(std::string line)
 }
 
 unsigned
-Configuration::channelIndex(unsigned crate, unsigned slot, unsigned channel)
+ddastoys::Configuration::channelIndex(
+    unsigned crate, unsigned slot, unsigned channel
+    )
 {
     return (crate << 8) | (slot << 4) | channel;
 }

@@ -10,7 +10,7 @@
      Authors:
              Ron Fox
              Jeromy Tompkins 
-	     NSCL
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -64,10 +64,11 @@ public:
      * @brief Entry point for the processor.
      * @param argc Number of command line arguments.
      * @param argv Command line arguments.
+     * @throw std::invalid_argument If the item skip count is invalid.
+     * @throw std::invalid_argument If the dump count is invalid.
+     * @throw ... All other exceptions back to caller (main).
      * @return When done processing items.
-     * @retval EXIT_SUCCESS Always.
-     * @throw std::invalid_argument If gengetopts parameters are invalid.
-     * @throw CException If the data source cannot be created.
+     * @retval EXIT_SUCCESS Processing successful.
      */
     int operator()(int argc, char* argv[]);
 

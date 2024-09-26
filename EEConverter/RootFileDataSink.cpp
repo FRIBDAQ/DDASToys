@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -38,6 +39,7 @@
 #include "DDASFitHit.h"
 
 using namespace ufmt;
+using namespace ddastoys;
 
 static const Int_t BUFFERSIZE(1024*1024); // 1 MB
 
@@ -47,8 +49,10 @@ static const Int_t BUFFERSIZE(1024*1024); // 1 MB
  * implies presrving ROOT's concept of a current working directory across 
  * our operation.
  */
-RootFileDataSink::RootFileDataSink(const char* filename, const char* treename) :
-    m_pUnpacker(new DAQ::DDAS::DDASFitHitUnpacker), m_pTreeEvent(nullptr),
+RootFileDataSink::RootFileDataSink(
+    const char* filename, const char* treename
+    ) :
+    m_pUnpacker(new DDASFitHitUnpacker), m_pTreeEvent(nullptr),
     m_pTree(nullptr), m_pFile(nullptr), m_warnedPutUsed(false)
 {  
     const char* oldDir = gDirectory->GetPath();
@@ -97,13 +101,13 @@ RootFileDataSink::putItem(const CRingItem& item)
     // Bust the ring item up into event builder fragments:
     
     FragmentIndex frags(
-	reinterpret_cast<std::uint16_t*>(item.getBodyPointer())
+	reinterpret_cast<uint16_t*>(item.getBodyPointer())
 	);
     
     // Decode the DDAS hit in each fragment and add it to the event. Note that
     // AddHit does a copy construction of the hit into new storage.
 
-    DAQ::DDAS::DDASFitHit fitHit;
+    DDASFitHit fitHit;
     DDASRootFitHit rootFitHit;
     for (unsigned i = 0; i < frags.getNumberFragments(); i++) {
 	fitHit.Reset();
@@ -131,10 +135,10 @@ RootFileDataSink::put(const void* pData, size_t nBytes)
 {
     if (!m_warnedPutUsed) {
 	m_warnedPutUsed = true;
-	std::cerr << "***WARNING*** RootFileDataSink::put was called.\n";
+	std::cerr << "*WARNING* RootFileDataSink::put was called.\n";
 	std::cerr << "You should use putItem to translate and put ring items\n";
 	std::cerr << "containing DDAS hits that potentially have fits.\n";
-	std::cerr << "We'll treat this as an attempt to output a raw ring item\n";
+	std::cerr << "Assumed this is an attempt to output a raw ring item.\n";
 	std::cerr << "If that's not the case this can fail spectacularly.\n";
 	std::cerr << "YOU HAVE BEEN WARNED: be sure your code is right!\n";
     }

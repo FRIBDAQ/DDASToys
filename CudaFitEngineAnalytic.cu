@@ -29,6 +29,9 @@
 
 #include "jacobian_analytic.h"
 
+using namespace ddastoys;
+using namespace ddastoys::analyticfit;
+
 // Single pulse fit parameter indices:
 
 static const int P1A_INDEX(0);
@@ -473,10 +476,10 @@ void jacobian1(
  * Allocate the device vectors/matrices. Push the trace x/y points into the 
  * GPU where they stay until we're destroyed.
  */
-CudaFitEngine1::CudaFitEngine1(
+ddastoys::analyticfit::CudaFitEngine1::CudaFitEngine1(
     std::vector<std::pair<uint16_t, uint16_t>>& data
     ) :
-    FitEngine(data)
+    CFitEngine(data)
 {
     // Mashall the trace into x/y arrays... this lets them be CUDA memcpied
     // to the GPU    
@@ -520,7 +523,7 @@ CudaFitEngine1::CudaFitEngine1(
  * @details
  * Just deallocate the GPU resources.
  */
-CudaFitEngine1::~CudaFitEngine1()
+ddastoys::analyticfit::CudaFitEngine1::~CudaFitEngine1()
 {
     // Not much point in error checking as we're not going to be able to
     // do anything about errors here anyway.    
@@ -535,7 +538,7 @@ CudaFitEngine1::~CudaFitEngine1()
  * We use a Y size of 32 and x size of npts+31/32. That is one warp wide.
  */
 void
-CudaFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
+ddastoys::analyticfit::CudaFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
 {
     float A   = gsl_vector_get(p, P1A_INDEX);
     float k1  = gsl_vector_get(p, P1K1_INDEX);
@@ -572,7 +575,7 @@ CudaFitEngine1::jacobian(const gsl_vector* p, gsl_matrix* J)
 }
 
 void
-CudaFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
+ddastoys::analyticfit::CudaFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
 {
     float A   = gsl_vector_get(p, P1A_INDEX);
     float k1  = gsl_vector_get(p, P1K1_INDEX);
@@ -615,7 +618,7 @@ CudaFitEngine1::residuals(const gsl_vector* p, gsl_vector* r)
  *  @param msg Context message.
  */
 void
-CudaFitEngine1::throwCudaError(const char* msg)
+ddastoys::analyticfit::CudaFitEngine1::throwCudaError(const char* msg)
 {
     std::string e="Error: ";
     e += msg;
@@ -738,10 +741,10 @@ void jacobian2(
  * * Jacobian vector (m_npts * 9)
  * * Move the trace into the GPU where it stays for all iterations of the fit.
  */
-CudaFitEngine2::CudaFitEngine2(
+ddastoys::analyticfit::CudaFitEngine2::CudaFitEngine2(
     std::vector<std::pair<uint16_t, uint16_t>>&  data
     ) :
-    FitEngine(data)
+    CFitEngine(data)
 {
     // Make separate x/y arrays from the data:    
     m_npts = data.size();
@@ -786,7 +789,7 @@ CudaFitEngine2::CudaFitEngine2(
  * @details
  * Just frees the device blocks.
  */
-CudaFitEngine2::~CudaFitEngine2()
+ddastoys::analyticfit::CudaFitEngine2::~CudaFitEngine2()
 {
     // No point in looking for errors since we don't know how to recover:    
     cudaFree(m_dXtrace);
@@ -800,7 +803,9 @@ CudaFitEngine2::~CudaFitEngine2()
  * 32 thread per warp.
  */
 void
-CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* J)
+ddastoys::analyticfit::CudaFitEngine2::jacobian(
+    const gsl_vector* p, gsl_matrix* J
+    )
 {
     double A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
     double k1    = gsl_vector_get(p, P2K1_INDEX);
@@ -836,20 +841,20 @@ CudaFitEngine2::jacobian(const gsl_vector* p, gsl_matrix* J)
     
     for (int i =0; i < m_npts; i++) {
         int k = i;
-        gsl_matrix_set(j, i, 0, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 1, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 2, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 3, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 4, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 5, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 6, jac[k]);  k += m_npts;
-        gsl_matrix_set(j, i, 7, jac[k]); k += m_npts;
-        gsl_matrix_set(j, i, 8, jac[k]); k += m_npts;    
+        gsl_matrix_set(J, i, 0, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 1, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 2, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 3, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 4, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 5, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 6, jac[k]);  k += m_npts;
+        gsl_matrix_set(J, i, 7, jac[k]); k += m_npts;
+        gsl_matrix_set(J, i, 8, jac[k]); k += m_npts;    
     }
 }
 
 void
-CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
+ddastoys::analyticfit::CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
 {
     // Pull out the current fit parameters:    
     float A1    = gsl_vector_get(p, P2A1_INDEX);   // Pulse 1.
@@ -901,7 +906,7 @@ CudaFitEngine2::residuals(const gsl_vector* p, gsl_vector* r)
  * @param msg - message used to construct the exception messgae.
  */
 void
-CudaFitEngine2::throwCudaError(const char* msg)
+ddastoys::analyticfit::CudaFitEngine2::throwCudaError(const char* msg)
 {
     std::string e="Error: ";
     e += msg;

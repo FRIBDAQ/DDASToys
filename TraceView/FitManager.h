@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  FitManager.h
  * @brief Defines a class for managing fits including calulating fit function
@@ -14,16 +30,11 @@
 
 class QWidget;
 
-namespace DDAS {
+namespace ddastoys {    
     struct HitExtension;
+    class DDASFitHit;    
+    class Configuration;
 }
-namespace DAQ {
-    namespace DDAS {
-	class DDASFitHit;
-    }
-}
-
-class Configuration;
 
 /**
  * @class FitManager
@@ -45,8 +56,9 @@ class Configuration;
 
 /** @brief Fit method enum class */
 enum fitMethod {
-    ANALYTIC, //!< Analytic fit enum.
-    TEMPLATE  //!< Template fit enum.
+    ANALYTIC,   //!< Analytic fit.
+    TEMPLATE,   //!< Template fit.
+    ML_INFERENCE //!< Machine learning inference fit.
 };
 
 class FitManager
@@ -76,7 +88,7 @@ public:
      * @return Vector of fit values for range [low, high].
      */
     std::vector<double> getSinglePulseFit(
-	const DDAS::HitExtension& ext, unsigned low, unsigned high
+	const ddastoys::HitExtension& ext, unsigned low, unsigned high
 	);
     /**
      * @brief Create and return a vector of fit values for each trace sample 
@@ -88,20 +100,20 @@ public:
      * @return Vector of fit values for range [low, high].
      */   
     std::vector<double> getDoublePulseFit(
-	const DDAS::HitExtension& ext, unsigned low, unsigned high
+	const ddastoys::HitExtension& ext, unsigned low, unsigned high
 	);
     /**
      * @brief Get the lower limit of the fit range.
      * @param hit References the hit we are currently processing.
      * @return The lower limit of the fitting range.
      */
-    unsigned getLowFitLimit(const DAQ::DDAS::DDASFitHit& hit);
+    unsigned getLowFitLimit(const ddastoys::DDASFitHit& hit);
     /**
      * @brief Get the upper limit of the fit range.
      * @param hit References the hit we are currently processing.
      * @return The upper limit of the fitting range.
      */
-    unsigned getHighFitLimit(const DAQ::DDAS::DDASFitHit& hit);
+    unsigned getHighFitLimit(const ddastoys::DDASFitHit& hit);
 
     /**
      * @brief Set the fitting method.
@@ -162,7 +174,7 @@ private:
     void issueWarning(std::string msg);
   
 private:
-    Configuration* m_pConfig; //<! Configuration file manager.
+    ddastoys::Configuration* m_pConfig; //<! Configuration file manager.
     fitMethod m_method;       //!< Fit method selection value.
     bool m_config;            //!< Flag for reading the fit config file.
     bool m_templateConfig;    //!< Flag for reading the template config file.

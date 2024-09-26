@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file DDASDecoder.cpp
  * @brief Implement class for processing events. Create and call a ring item 
@@ -24,11 +40,13 @@
 #include <CRingTextItem.h>              //              |
 #include <CPhysicsEventItem.h>          //              |
 #include <CRingPhysicsEventCountItem.h> //              |
-#include <CGlomParameters.h>            //              |
+#include <CGlomParameters.h>            //              V
 #include <CDataFormatItem.h>            //          ----+----
 
 #include <DDASFitHit.h>
 #include "TraceViewProcessor.h"
+
+using namespace ddastoys;
 
 //____________________________________________________________________________
 DDASDecoder::DDASDecoder() :
@@ -50,8 +68,8 @@ DDASDecoder::createDataSource(std::string src)
 {
     m_count = 0; // Reset when creating a new source
     src = "file://" + src; // File URI formatting.
-    std::vector<std::uint16_t> sample;
-    std::vector<std::uint16_t> exclude;
+    std::vector<uint16_t> sample;
+    std::vector<uint16_t> exclude;
     m_pSourceURL = new URL(src);
     std::cout << "Filename in DDASDecoder: "
 	      << m_pSourceURL->getPath() << std::endl;
@@ -71,7 +89,7 @@ DDASDecoder::createDataSource(std::string src)
  * @details
  * An event is a collection of DDASFitHits stored in a vector.
  */
-std::vector<DAQ::DDAS::DDASFitHit>
+std::vector<DDASFitHit>
 DDASDecoder::getEvent()
 {
     // Get the next PHYSICS_EVENT
@@ -86,7 +104,7 @@ DDASDecoder::getEvent()
 	processRingItem(*item);   
 	return m_pProcessor->getUnpackedHits();
     } else {
-	std::vector<DAQ::DDAS::DDASFitHit> v;
+	std::vector<DDASFitHit> v;
 	return v;
     }
 }
@@ -159,9 +177,7 @@ DDASDecoder::getNextPhysicsEvent()
  */
 void
 DDASDecoder::processRingItem(CRingItem& item)
-{
-    // Create a dynamic ring item that can be dynamic cast to a specific one:
-    
+{    
     CRingItem* castableItem = CRingItemFactory::createRingItem(item);
     std::unique_ptr<CRingItem> autoDeletedItem(castableItem);
     
@@ -172,7 +188,9 @@ DDASDecoder::processRingItem(CRingItem& item)
     switch (castableItem->type()) {
     case PERIODIC_SCALERS:
     {    
-	CRingScalerItem& scaler(dynamic_cast<CRingScalerItem&>(*castableItem));
+	CRingScalerItem& scaler(
+	    dynamic_cast<CRingScalerItem&>(*castableItem)
+	    );
 	m_pProcessor->processScalerItem(scaler);
 	break;
     }
@@ -181,8 +199,9 @@ DDASDecoder::processRingItem(CRingItem& item)
     case PAUSE_RUN:
     case RESUME_RUN:
     {
-	CRingStateChangeItem&
-	    statechange(dynamic_cast<CRingStateChangeItem&>(*castableItem));
+	CRingStateChangeItem& statechange(
+	    dynamic_cast<CRingStateChangeItem&>(*castableItem)
+	    );
 	m_pProcessor->processStateChangeItem(statechange);
 	break;
     }
@@ -195,28 +214,33 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
     case PHYSICS_EVENT:
     {
-	CPhysicsEventItem&
-	    event(dynamic_cast<CPhysicsEventItem&>(*castableItem));
+	CPhysicsEventItem& event(
+	    dynamic_cast<CPhysicsEventItem&>(*castableItem)
+	    );
 	m_pProcessor->processEvent(event);
 	break;
     }
     case PHYSICS_EVENT_COUNT:
     {
-	CRingPhysicsEventCountItem&
-	    eventcount(dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem));
+	CRingPhysicsEventCountItem& eventcount(
+	    dynamic_cast<CRingPhysicsEventCountItem&>(*castableItem)
+	    );
 	m_pProcessor->processEventCount(eventcount);
 	break;
     }
     case RING_FORMAT:
     {
-	CDataFormatItem& format(dynamic_cast<CDataFormatItem&>(*castableItem));
+	CDataFormatItem& format(
+	    dynamic_cast<CDataFormatItem&>(*castableItem)
+	    );
 	m_pProcessor->processFormat(format);
 	break;
     }
     case EVB_GLOM_INFO:
     {
-	CGlomParameters&
-	    glomparams(dynamic_cast<CGlomParameters&>(*castableItem));
+	CGlomParameters& glomparams(
+	    dynamic_cast<CGlomParameters&>(*castableItem)
+	    );
 	m_pProcessor->processGlomParams(glomparams);
 	break;
     }
@@ -227,5 +251,3 @@ DDASDecoder::processRingItem(CRingItem& item)
     }
     }
 }
-
-

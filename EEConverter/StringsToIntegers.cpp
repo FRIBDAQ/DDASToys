@@ -69,9 +69,13 @@ convertOne(string aNumber)
 	    return textToInt[aNumber];
 	}
 	else {
-	    string whyBad  = " must be an integer or a symbolic item type but was ";
+	    string whyBad(
+		" must be an integer or a symbolic item type but was "
+		);
 	    whyBad += aNumber;
-	    throw CInvalidArgumentException(aNumber, whyBad, string("converting a list to integers"));
+	    throw CInvalidArgumentException(
+		aNumber, whyBad, string("converting a list to integers")
+		);
 	}
     }
   

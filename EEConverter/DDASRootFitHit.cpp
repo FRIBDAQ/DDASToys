@@ -9,8 +9,9 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     NSCL
+             Jeromy Tompkins
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -27,20 +28,22 @@
 #include "DDASFitHit.h"
 #include "RootExtensions.h"
 
-DDASRootFitHit::DDASRootFitHit() : DAQ::DDAS::DDASFitHit(), TObject()
+using namespace ddastoys;
+
+ddastoys::DDASRootFitHit::DDASRootFitHit() : DDASFitHit(), TObject()
 {}
 
-DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) :
-    DAQ::DDAS::DDASFitHit(rhs), TObject(rhs)
+ddastoys::DDASRootFitHit::DDASRootFitHit(const DDASRootFitHit& rhs) :
+    DDASFitHit(rhs), TObject(rhs)
 {
     *this = rhs;
 }
 
 DDASRootFitHit&
-DDASRootFitHit::operator=(const DDASRootFitHit& rhs)
+ddastoys::DDASRootFitHit::operator=(const DDASRootFitHit& rhs)
 {
     if (this != &rhs) {
-	DAQ::DDAS::DDASFitHit::operator=(rhs);
+	DDASFitHit::operator=(rhs);
 	TObject::operator=(rhs);
     }
 
@@ -48,10 +51,10 @@ DDASRootFitHit::operator=(const DDASRootFitHit& rhs)
 }
 
 DDASRootFitHit&
-DDASRootFitHit::operator=(const DAQ::DDAS::DDASFitHit& rhs)
+ddastoys::DDASRootFitHit::operator=(const DDASFitHit& rhs)
 {
     if (this != &rhs) {
-	DAQ::DDAS::DDASFitHit::operator=(rhs);
+	DDASFitHit::operator=(rhs);
 	TObject::Clear(); // ??
     }
 
@@ -59,9 +62,9 @@ DDASRootFitHit::operator=(const DAQ::DDAS::DDASFitHit& rhs)
 }
 
 void
-DDASRootFitHit::Reset()
+ddastoys::DDASRootFitHit::Reset()
 {
-    DAQ::DDAS::DDASFitHit hit;
+    DDASFitHit hit;
     hit.Reset();
     *this = hit;
 }

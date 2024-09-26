@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file DDASDecoder.h
  * @brief Define an event proessor for reading ring items from a source, in 
@@ -14,10 +30,9 @@
 class URL;
 class CRingItem;
 class CDataSource;
-namespace DAQ {
-    namespace DDAS {
-	class DDASFitHit;
-    }
+
+namespace ddastoys {    
+    class DDASFitHit;
 }
 
 class TraceViewProcessor;
@@ -52,12 +67,13 @@ public:
      * @return The event data. The vector is empty if the end of the data 
      *   file is encountered.
      */
-    std::vector<DAQ::DDAS::DDASFitHit> getEvent();
+    std::vector<ddastoys::DDASFitHit> getEvent();
     /**
      * @brief Skip events in the currently loaded data file.
      * @param nevts Number of PHYSICS_EVENTS to skip.
      * @return int
-     * @retval  0 END_RUN state change event is not encountered when skipping.
+     * @retval  0 END_RUN state change event is not encountered when 
+     *   skipping.
      * @retval -1 END_RUN state change event is encountered when skipping.
      */
     int skip(int nevts);
@@ -73,15 +89,15 @@ public:
     int getEventIndex() { return m_count-1; };
     /**
      * @brief Return the path of the file data source.
-     * @return The file path. Returns an empty string if the data source has 
-     *   not been created.
+     * @return The file path. Returns an empty string if the data source 
+     *   has not been created.
      */
-    std::string getFilePath(); // Implemented in .cpp b/c URL is fwd. declared.
+    std::string getFilePath();
       
 private:
     URL* m_pSourceURL;      //!< URL-formatted data source name.
     CDataSource* m_pSource; //!< Data source to read from.
-    TraceViewProcessor* m_pProcessor; //!< TraceView processor for DDAS events.
+    TraceViewProcessor* m_pProcessor; //!< TraceView processor for DDAS.
     int m_count; //!< How many PHYSICS_EVENTs have been processed.
     
     /**
@@ -94,9 +110,8 @@ private:
      * @brief Perform type-independent processing of ring items. 
      * @param item References the ring item we got.
      */
-    void processRingItem(CRingItem& item);
-  
-  
+    void processRingItem(CRingItem& item);  
 };
+
 
 #endif

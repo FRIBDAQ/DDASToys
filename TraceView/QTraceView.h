@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  QTraceView.h
  * @brief Define a Qt main applicaiton window class.
@@ -25,10 +41,8 @@ class QTimer;
 class QCommandLineParser;
 class QString;
 
-namespace DAQ {
-    namespace DDAS {
-	class DDASFitHit;
-    }
+namespace ddastoys {    
+    class DDASFitHit;
 }
 
 class DDASDecoder;
@@ -101,7 +115,7 @@ private:
      * @param hit References the hit to validate.
      * @return True if the hit passes the filter, false otherwise.
      */
-    bool isValidHit(const DAQ::DDAS::DDASFitHit& hit);
+    bool isValidHit(const ddastoys::DDASFitHit& hit);
     /**
      * @brief Reset and clear all GUI elements and member data to default 
      * states.
@@ -152,8 +166,8 @@ private:
     DDASDecoder* m_pDecoder;   //!< Decoder to perform event processing.
     FitManager* m_pFitManager; //!< Manager for calculating fits from params.
 
-    std::vector<DAQ::DDAS::DDASFitHit> m_hits; //!< List of hits in the event.
-    std::vector<DAQ::DDAS::DDASFitHit> m_filteredHits; //!< Hits passed filter.
+    std::vector<ddastoys::DDASFitHit> m_hits; //!< List of hits in the event.
+    std::vector<ddastoys::DDASFitHit> m_filteredHits; //!< Hits passed filter.
   
     // Added to this widget, Qt _should_ handle cleanup on destruction
   
@@ -166,9 +180,9 @@ private:
     QPushButton* m_pSkipEvents; //!< Skip events button.
     QLineEdit* m_pEventsToSkip; //!< Contains number of events to skip.
     QLineEdit* m_pHitFilter[3]; //!< Crate/slot/channel filter values (wildcard
-                                //!< "*" is OK).
+    //!< "*" is OK).
     QWidget* m_pTopBoxes; //!< Defines layout for selection and event handling
-                          //!< widget group boxes.
+    //!< widget group boxes.
     QHitData* m_pHitData; //!< Display widget for hit data.
   
     QListView* m_pHitSelectList; //!< The list to select channel hits to draw.

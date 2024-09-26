@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  QHitData.cpp
  * @brief Implementation of hit data management class.
@@ -18,6 +34,8 @@
 #include <DDASFitHit.h>
 #include "FitManager.h"
 
+using namespace ddastoys;
+
 //____________________________________________________________________________
 /**
  * @details
@@ -25,7 +43,7 @@
  */
 QHitData::QHitData(FitManager* pFitMgr, QWidget* parent) :
     QWidget(parent), m_pFitManager(pFitMgr),
-    m_pExtension(new DDAS::HitExtension)
+    m_pExtension(new HitExtension)
 {
     QGroupBox* hitBox = createHitBox();
     QGroupBox* classifierBox = createClassifierBox();
@@ -60,7 +78,7 @@ QHitData::~QHitData()
 
 //____________________________________________________________________________
 void
-QHitData::update(const DAQ::DDAS::DDASFitHit& hit)
+QHitData::update(const DDASFitHit& hit)
 {
     updateHitData(hit);
     if (hit.hasExtension()) {
@@ -157,8 +175,8 @@ QHitData::createFitBox()
 
     QLabel* label = new QLabel("Fit method:");
     m_pFitMethod = new QComboBox;
-    m_pFitMethod->addItems({"Analytic", "Template"});
-    m_pFitMethod->setCurrentIndex(1);
+    m_pFitMethod->addItems({"Analytic", "Template", "ML_Inference"});
+    m_pFitMethod->setCurrentIndex(0);
     m_pPrintFit = new QPushButton("Print");
     m_pPrintFit->setEnabled(false);
   
@@ -175,23 +193,46 @@ QHitData::createFitBox()
 void
 QHitData::createConnections()
 {
-    connect(m_pFitMethod, SIGNAL(currentIndexChanged(int)),
-	    this, SLOT(configureFit()));
+    connect(
+	m_pFitMethod, SIGNAL(currentIndexChanged(int)),
+	this, SLOT(configureFit())
+	);
     connect(m_pPrintFit, SIGNAL(clicked()), this, SLOT(printFitResults()));
 }
 
 //____________________________________________________________________________
+/**
+ * @details
+ * This expects a hit from the new-style fit extension which contains the 
+ * single and double pulse probabilities calculated by the machine learning 
+ * inference code.
+ */
 void
-QHitData::updateHitData(const DAQ::DDAS::DDASFitHit& hit)
-{ 
+QHitData::updateHitData(const DDASFitHit& hit)
+{
+    // All hits have an ID and hit data:
+    
     QString id = QString(
 	"Crate: %1 Slot: %2 Channel: %3"
 	).arg(hit.getCrateID()).arg(hit.getSlotID()).arg(hit.getChannelID());
-    QString data = QString(
+    QString hitData = QString(
 	"Energy: %1 Time: %2"
-	).arg(hit.getEnergy()).arg(hit.getTime());  
+	).arg(hit.getEnergy()).arg(hit.getTime());
+
+    // If there's a fit, update the probabilities:
+    
+    QString fit1Prob = QString("Single pulse probability: N/A");
+    QString fit2Prob = QString("Double pulse probability: N/A");
+    if (hit.hasExtension()) {
+	auto ext = hit.getExtension();
+	fit1Prob = QString("Single pulse probability: %1").arg(ext.singleProb);
+	fit2Prob = QString("Double pulse probability: %1").arg(ext.doubleProb);
+    }
+
     m_pId->setText(id);
-    m_pRawData->setText(data);
+    m_pRawData->setText(hitData);
+    m_pFit1Prob->setText(fit1Prob);
+    m_pFit2Prob->setText(fit2Prob);
 }
 
 //____________________________________________________________________________
@@ -272,5 +313,15 @@ QHitData::printFitResults()
 	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].decayTime 
 	      << std::setw(6) << " Pos2: "
 	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].position
+	      << std::endl;
+    
+    std::cout << std::endl;  
+    std::cout << "----- Classification -----" << std::endl;
+    std::cout << std::left
+	      << std::setw(5) << "P(single): "
+	      << std::setw(8) << m_pExtension->singleProb
+	      << "\n"
+	      << std::setw(5) << "P(double): "
+	      << std::setw(8) << m_pExtension->doubleProb
 	      << std::endl;
 }

@@ -8,23 +8,28 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Authors:
-             Aaron Chester
+	     Aaron Chester
 	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
 
 /** 
- * @file  FitEditorTemplate.h
- * @brief Definition of the FitEditor class for template fitting.
+ * @file  FitEditorMLInference.h
+ * @brief Definition of the FitEditor class for machine-learning inference.
  */
 
-#ifndef FITEDITORTEMPLATE_H
-#define FITEDITORTEMPLATE_H
+#ifndef FITEDITORMLINFERENCE_H
+#define FITEDITORMLINFERENCE_H
 
 #include <CBuiltRingItemEditor.h>
 
 #include <vector>
+#include <string>
+#include <map>
+
+#include <torch/script.h> // Can forward-declare?
+#include <torch/torch.h>  // Ditto?
 
 namespace DAQ {
     namespace DDAS {
@@ -38,51 +43,47 @@ namespace ddastoys {
     class Configuration;
 
     /**
-     * @ingroup template
-     * @{
-     */
-
-    /**
-     * @class FitEditorTemplate
-     * @brief Fit trace data with the template fitting functions.
+     * @class FitEditorMLInference
+     * @brief Fit trace data using machine-learning inference with a detector 
+     * response model defined by the analytic fit functions.
      *
      * @details
-     * Editing the hit overwrites any existing extension. This class is 
-     * intended for use with the EventEditor framework providing a complete 
-     * description of the new event body.
+     * Extending the hit with this editor overwrites any existing extension. 
+     * This class is intended for use with the EventEditor framework providing 
+     * a complete description of the new event body.
      */
-
-    class FitEditorTemplate : public CBuiltRingItemEditor::BodyEditor
+ 
+    class FitEditorMLInference : public CBuiltRingItemEditor::BodyEditor
     {
     public:
 	/** @brief Constructor. */
-	FitEditorTemplate();
+	FitEditorMLInference();
 	/**
 	 * @brief Copy constructor.
 	 * @param rhs Object to copy construct.
 	 */
-	FitEditorTemplate(const FitEditorTemplate& rhs);
+	FitEditorMLInference(const FitEditorMLInference& rhs);    
 	/**
 	 * @brief Move constructor.
 	 * @param rhs Object to move construct.
 	 */
-	FitEditorTemplate(FitEditorTemplate&& rhs) noexcept;
+	FitEditorMLInference(FitEditorMLInference&& rhs) noexcept;
 
 	/**
 	 * @brief Copy assignment operator.
 	 * @param rhs Object to copy assign.
 	 * @return Reference to created object.
 	 */
-	FitEditorTemplate& operator=(const FitEditorTemplate& rhs);
+	FitEditorMLInference& operator=(const FitEditorMLInference& rhs);
 	/**
 	 * @brief Move assignment operator.
 	 * @param rhs Object to move assign.
 	 * @return Reference to created object.
 	 */
-	FitEditorTemplate& operator=(FitEditorTemplate&& rhs) noexcept;
+	FitEditorMLInference& operator=(FitEditorMLInference&& rhs) noexcept;
     
 	/** @brief Destructor. */
-	virtual ~FitEditorTemplate();
+	virtual ~FitEditorMLInference();
 
 	// Mandatory interface from CBuiltRingItemEditor::BodyEditor
     public:
@@ -93,7 +94,7 @@ namespace ddastoys {
 	 * @param pBHdr    Pointer to the body header pointer for the hit.
 	 * @param bodySize Number of bytes in the body.
 	 * @param pBody    Pointer to the body.
-	 * @return Final segment descriptors.
+	 * @return         Final segment descriptors.
 	 */
 	virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(
 	    pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize,
@@ -101,31 +102,16 @@ namespace ddastoys {
 	    );
 	/**
 	 * @brief Free the dynamic fit extension descriptor(s).
-	 * @param e  IOvec we need to free.
+	 * @param e IOvec we need to free.
 	 */
 	virtual void free(iovec& e);
-
-	// Additional functionality for this class
-    private:
-	/**
-	 * @brief This is a hook into which to add the ML classifier.
-	 * @param hit - references a hit.
-	 * @return int
-	 * @retval 0  - On the basis of the trace no fitting.
-	 * @retval 1  - Only fit a single trace.
-	 * @retval 2  - Only fit two traces.
-	 * @retval 3  - Fit both one and double hit.
-	 */
-	int pulseCount(DAQ::DDAS::DDASHit& hit);
   
 	// Private member data
     private:
-	Configuration* m_pConfig;       //! Configuration file parser.
-	std::vector<double> m_template; //!< Trace template.
-	unsigned m_align;               //!< Alignment point on the trace.
+	Configuration* m_pConfig; //!< Configuration file parser.
+	/** Unique models keyed by path to PyTorch file. */
+	std::map<std::string, torch::jit::script::Module> m_models;    
     };
-
-/** @} */
 
 }
 

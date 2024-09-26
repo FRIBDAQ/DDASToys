@@ -8,8 +8,14 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 # Building DDASToys
 Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tagged version of the repository. Some tags of note:
 * 4.0-001 : Version used at NERSC during Feb., 2024 FDSi experiment e21062. Frozen and not maintained.
-* 5.0-002 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DDASHit, and write their own extension data to the output ROOT file.
-* 5.1-000 : The final tag prior to incorporating the machine learning inference. This version of DDASToys also requires the user to point at the location of the UnifiedFormat library external to this project e.g., from the version of NSCLDAQ that you build against. The variable UFMT should point to the top-level installation directory of the unified format version you'd like to use (version 2.1 or later required).
+* 5.0-002 : Major version 5 (and newer) incorporate an external library to unpack raw DDAS data. The DDASFitHit and DDASRootFitHit classes inherit from DAQ::DDAS::DDASHit, and write their own extension data to the output ROOT file.
+* 5.1-000 : The final tag prior to incorporating the machine learning inference. This version of DDASToys also requires the user to point at the location of the [UnifiedFormat](https://github.com/FRIBDAQ/UnifiedFormat) library external to this project e.g., from the version of NSCLDAQ that you build against. The variable `UFMT` should point to the top-level installation directory of the unified format version you'd like to use (version 2.1 or later required).
+* 6.0-000 : The first version with the machine learning inference model. Besides the machine learning, a number of changes have been implemented in this version:
+  - libDDASRootFit.so renamed to libDDASRootFitFormat.so
+  - Consistent and clear namespaceing. The ROOT format library libDDASRootFitFormat.so is in the `ddastoys` namespace, all fitting functions and plugin-specific code have their own namespaces: `ddastoys::analyticfit`, `ddastoys::templatefit`, `ddastoys:mlinference`.
+  - An additional entry in the fit configuration file is required. This entry is used to specify the path to a machine learning inference model for determining pulse parameters for that channel. In the case where you do not want to use the machine learning inference, this input parameter does nothing. Some placeholder must be present in the fit configuration file, which can be an empty string "".
+
+
 
 ## Build Instructions for DDASToys 5.1 and later
 - Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.1-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
@@ -19,9 +25,9 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
 
 Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make`. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
 * Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers at `$(PREFIX)/DDASFormat`,
-* Build the `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
-* Build the `traceview` and `eeconverter` programs (note `traceview` is only built if Qt 5.11.3+ is found),
-* The full DDASToys documentation.
+* Build the various fit editor, format, and unpacker libraries,
+* Build the `traceview` and `eeconverter` programs (note `traceview` is only built if Qt 5.11.3+ is found), and
+* Build the full DDASToys documentation.
 Type `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree. You can also build and install the project using a single command: `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make all install`.
 
 ## Build Instructions for DDASToys 5.0
@@ -43,8 +49,8 @@ Type `PREFIX=/where/to/install/ddastoys make install` to install the DDASToys so
 - Configure the same CERN ROOT environment used to compile the NSCLDAQ version you are compiling the DDASToys code against.
 
 Once the environment is correctly configured, navigate into the cloned repository directory and build DDASToys using `make`. This will create the following:
-* The `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFit.so` libraries,
-* The `traceview` and `eeconverter` programs
+* The `libFitEditorAnalytic.so`, `libFitEditorTemplate.so`, `libDDASFitHitUnpacker.so` and `libDDASRootFitFormat.so` libraries,
+* The `traceview` and `eeconverter` programs, and,
 * The full DDASToys documentation.
 Type `PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation at a directory of your choosing.
 
@@ -72,7 +78,7 @@ The `traceview` top menu is used to load data files and to exit the program. Suc
 
 Crate/slot/channel identifying information for traces you wish to inspect is configured through the <em>Channel selection box</em>. A `*` character is interpreted as a wildcard i.e. crate/slot/channel = 1/2/`*` will show traces for all channels located in crate 1, slot 2 for a given event. The <em>Skip control box</em> allows you to skip ahead in the data file by the number of events shown in the text box. The <em>Main control box</em> buttons are used to view the next event, update the list of viewable events based on the channel selection box values and exit the program, respectively. Once a file has been loaded, you must hit the \a Next button to view the first physics event.
 
-The <em>Hit data</em> and <em>Classifier data</em> boxes display basic event information and classifier output provided a classifier is used. The <em>Fit data</em> box allows you to configure the fitting method and print fit results for traces with fit data. A warning is issued if the program believes the wrong fitting method has been selected.
+The <em>Hit data</em> and <em>Classifier data</em> boxes display basic event information and classifier output. Both classification probabilties may be displayed as N/A (in the case that no fit is associated with the channel) or zero (in cases where a fit but no classification probabilty is defined). The <em>Fit data</em> box allows you to configure the fitting method and print fit results for traces with fit data. A warning is issued if the program believes the wrong fitting method has been selected.
 
 Once a physics event containing trace data has been found, a list of channels with traces matching the current channel selection box data is populated. Clicking on one of the list members will draw the trace and its fits (if present) on the embedded ROOT canvas. The ROOT canvas can be interacted with in the normal ROOT fashion (i.e. clicking and dragging along an axis will zoom). 
 

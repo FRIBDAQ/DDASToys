@@ -26,8 +26,8 @@
     </authorgroup>
     <revhistory>
       <revision>
-        <revnumber>2.0</revnumber>
-        <date>9/19/2023</date>
+        <revnumber>6.0-000</revnumber>
+        <date>9/24/2024</date>
         <authorinitials>RF, ASC</authorinitials>
         <revremark>Original release</revremark>
       </revision>
@@ -35,18 +35,21 @@
   </bookinfo>
   
   <chapter id="ch_intro">
-    <title>Introduction </title>    
+    <title>Introduction</title>    
     <para>
-      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on either the NERSC computing cluster at LBNL or on the local computing cluster at FRIB. DDASToys software is supported for FRIBDAQ versions 12.0-005 and later. Bug reports and other issues related to the DDASToys software should be addressed to daqhelp@frib.msu.edu or chester@frib.msu.edu for more general inquiries.
+      The DDASToys software suite supports parallelized trace fitting at a rate that allows the analysis of nearline data to at least keep up with&#x2014;and hopefully outpace&#x2014;data acquisition. Several tools are introduced as part of this software package. These tools are, for the most part, intended to be run on a remote or local computing cluster (e.g., NERSC's Perlmutter or the FRIB nucleus system).
     </para>
     <para>
-      This document introduces and describes the tools provided by the DDASToys package, how to access and configure your user environment at NERSC to use these tools and how to submit jobs at NERSC using the Slurm Workload Manager. Though much of this document is oriented towards running DDASToys codes at NERSC, the user of Slurm at many High Performance Computing (HPC) facilities allows these scripts to be customized for applications outside of NERSC.
+      This documentation is valid for DDASToys versions 4.0-000 and later. DDASToys major versions 4 and 5 are compatible with FRIBDAQ 12.0-005 and later; version 6 of the DDASToys codebase requires FRIBDAQ 12.1-000. Bug reports and other issues related to the DDASToys software should be addressed to daqhelp@frib.msu.edu.
     </para>
     <para>
-      Detailed documentation of the DDASToys source code are provided in Doxygen reference manuals, installed in the share/sourcedocs/html and share/sourcedocs/latex directories located under the top-level DDASToys installation directory, which is generally /usr/opt/ddastoys. To view the Doxygen documentation, open share/sourcedocs/html/index.html with a web browser such as Firefox.
+      This document introduces and describes the tools provided by the DDASToys package. A worked example for the Perlmutter system at NERSC demonstrates how to access and configure your user environment to use these tools and how to submit jobs at using the Slurm Workload Manager. Other computing clusters may use a different resource management system (e.g, PBS at ALCF Polaris) but the concepts of resource provisioning and managing results are generally applicable. In all cases, documentation provided by the facility the code is being run at should be consulted alongside this guide. All ambiguities or conflicts should be resolved by following the advice of the facility documentation. Though much of this document is oriented towards running DDASToys codes at NERSC, the use of Slurm at many High Performance Computing (HPC) facilities allows the example scripts to be customized for applications outside of NERSC with minimal reconfiguration.
     </para>
     <para>
-      The DDASToys Manual is <emphasis>not</emphasis> intended as a comprehensive guide to NERSC systems or as a troubleshooting document to address issues you may encounter while running your code at NERSC. Please refer to NERSC's own documentation pages for more information: <ulink url="https://docs.nersc.gov/"/>.
+      Detailed documentation of the DDASToys source code are provided in Doxygen reference manuals, installed in the share/sourcedocs/html and share/sourcedocs/latex directories located under the top-level DDASToys installation directory, which is generally /usr/opt/ddastoys/&lt;version&gt;. To view the Doxygen documentation, open share/sourcedocs/html/index.html with a web browser such as Firefox.
+    </para>
+    <para>
+      The DDASToys Manual is <emphasis>not</emphasis> intended as a comprehensive guide to NERSC systems or as a troubleshooting document to address issues you may encounter while running your code at NERSC or any other computing facility. Please refer to NERSC's own documentation pages (or the documentation pages for the appropriate facility) for more information: <ulink url="https://docs.nersc.gov/"/>.
     </para>
     <para>
       The tools provided by this package are:
@@ -69,22 +72,27 @@
       </listitem>
       <listitem>
 	<para>
-	  <literal>libDDASFitHitUnpacker.so</literal> library - A library for unpacking DDAS hit data which may contain fit extensions added to the event by the <literal>EventEditor</literal>. Also capable of unpacking hits without fit extensions.
+	  <literal>libFitEditorMLInference.so</literal> plugin library - Machine-learning inference fitting for trace data. The detector response is modeled using the analytic fitting functions and ML inference is used to extract parameters for a given trace from a trained model. The ML model provides some means to classify event as either single- or double-pulse hits. First available as part of DDASToys release 6.0-000.
 	</para>
       </listitem>
       <listitem>
 	<para>
-	  <literal>traceview</literal> - A program to interactively display traces, their associated fits (if present), and, when implemented, machine learning pulse classification probabilities for events in edited and unedited event files.
+	  <literal>libDDASFitHitUnpacker.so</literal> library - A library for unpacking DDAS hit data which may contain fit extensions added to the event by the <literal>EventEditor</literal>. Also capable of unpacking hits without fit extensions and old-style fit extensions coming from legacy programs like the <literal>ringblockdealer</literal>.
 	</para>
       </listitem>
       <listitem>
 	<para>
-	  <literal>eeconverter</literal> - A program to convert FRIBDAQ event files with (or without!) fit extensions to ROOT format. Each fragment in an event is converted into a DDASFitHit object and each event is written as an entry in an output ROOT TTree saved in a ROOT TFile.
+	  <literal>traceview</literal> - A program to interactively display traces, their associated fits (if present), and, if defined, machine learning pulse classification probabilities for events in edited and unedited event files.
 	</para>
       </listitem>
-            <listitem>
+      <listitem>
 	<para>
-	  <literal>libDDASRootFit.so</literal> - A library containing the definition and implementation of the custom classes streamed to the output ROOT file. User code which loads <literal>eeconverter</literal> output files should link against this library.
+	  <literal>eeconverter</literal> - A program to convert FRIBDAQ event files with (or without) fit extensions to ROOT format. Each fragment in an event is converted into a DDASFitHit object and each event is written as an entry in an output ROOT TTree saved in a ROOT TFile.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <literal>libDDASRootFitFormat.so</literal> - A library containing the definition and implementation of the custom classes streamed to the output ROOT file. User code which loads <literal>eeconverter</literal> output files should link against this library.
 	</para>
       </listitem>
     </itemizedlist>      
@@ -95,16 +103,16 @@
 
   <chapter id="ch_shifter">
     <title>
-      Shifter images and containers
+      Shifter Images and Containerized FRIBDAQ
     </title>
     <para>
-      Shifter is a tool for adapting concepts from Linux containers to HPC resources, allowing users to create their own software environment and run it at a supercomputing facility like NERSC. More generally, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows FRIBDAQ to be built under a supported compilation and library environment.
+      In this chapter we will discuss how to run FRIBDAQ software under a container, using shifter as an example. Shifter is a tool for adapting concepts from Linux containers to HPC resources, allowing users to create their own software environment and run it at a supercomputing facility like NERSC. Conceptually this is very similar to the singularity or apptainer containers FRIB users are familiar with. Generally speaking, containers make use of an overlay file system to provide the userland libraries and utilities of specific Linux environments under the run-time environment of another system. A Debian-like image allows FRIBDAQ to be built under a supported compilation and library environment.
     </para>    
     <para>
       A Shifter image is a single (large) file that contains a file-system image for the user utilities of a specific distribution of Linux. The <command>shifter</command> command can be used to run other commands, set environment variables, or even activate shells in the environment of a container running an instance of a file-system image. Finally, the <command>shifter</command> command allows pieces of the host file system to be mounted at specific points in the container. This allows us to build minimal containers, use them to build the software we need and the mount that software where we expect to see it in FRIBDAQ systems, for example, the /usr/opt directory tree familiar to FRIB users.
     </para>    
     <para>
-      The Shifter image available on NERSC, fribdaq/frib-buster:v4.2, is a Debian-10-based Buster image with several chunks of software added, notably:
+      The Shifter image available on NERSC, fribdaq/frib-buster:v4.2, is a Debian-10-based Buster image with several chunks of software added. Note that the exact contents of the image depend on the DDASToys, FRIBDAQ, and OS distribution you use. In the fribdaq/frib-buster:v4.2, we have:
     </para>
     <itemizedlist>
       <listitem>
@@ -114,7 +122,7 @@
       </listitem>
       <listitem>
 	<para>
-	  Software required to build FRIBDAQ, including CERN ROOT version 6.24.06 including XIA API version 2.13 and Broadcom PLX driver version 7.25.
+	  Software required to build FRIBDAQ, including CERN ROOT version 6.24.06, XIA API version 2.13 and the Broadcom PLX driver version 7.25.
 	</para>
       </listitem>
       <listitem>
@@ -201,7 +209,7 @@
     </para>
 
     <section id="sec_bindpoints">
-      <title>A quick note about volume mounting in Shifter</title>
+      <title>A Quick Note About Volume Mounting in Shifter</title>
       <para>
 	Occasionally mounting a volume in the image using the <literal>--bind</literal> flag will fail and report either an <literal>invalid volume map</literal> or the following error:
 	<informalexample>
@@ -220,23 +228,23 @@
   </chapter>
 
   <chapter id="ch_gettingstarted">
-    <title>Getting started at NERSC</title>
+    <title>Getting Started at NERSC</title>
     <section id="sec_createacct">
-      <title>Creating a NERSC account</title>
+      <title>Creating a NERSC Account</title>
       <para>
 	This guide assumes that the reader wishes to join an existing project. In order to join a project, you must create an account at NERSC. To do so, follow the "I need a new NERSC account" steps here: <ulink url="https://iris.nersc.gov/add-user"/>. Note that NERSC requires that you have an exciting ORCID ID. You can register for an ORCID account here: <ulink url="https://orcid.org/signin"/>. Once you have created an account at NERSC, you will receive two emails: the first informing you that the account request is being processed, and another when the account is approved and added to the project. This requires approval from both NERSC and the project PI, so the approval process may take a couple of days. For any account-related issues, contact accounts@nersc.gov.
       </para>
     </section>
     
     <section id="sec_login">
-      <title>Logging in to NERSC systems</title>
+      <title>Logging in to NERSC Systems</title>
       <para>
 	The machine we will use for analysis at NERSC is Perlmutter, a HPE Cray EX supercomputer. Logging in to Perlmutter requires multifactor identification (MFA). Instructions on how to set up MFA for your account at NERSC are found at <ulink url="https://docs.nersc.gov/connect/mfa"/>. You can optionally setup an SSH proxy to avoid entering your one time password (OTP) every time you log in by following the instructions provided at <ulink url="https://docs.nersc.gov/connect/mfa/#using-sshproxy"/>. Note that the generated key is only good for 24 hours. Once your MFA has been configured, you can connect directly to Perlmutter from the outside via SSH with the commands <command>ssh &lt;username&gt;@perlmutter-p1.nersc.gov</command> or <command>ssh &lt;username&gt;@saul-p1.nersc.gov</command> where &lt;username&gt; is replaced by your NERSC user account name. 
       </para>
     </section>
     
     <section id="sec_config">
-      <title>Configuring your home directory</title>
+      <title>Configuring Your Home Directory</title>
       <para>
 	Connecting to NERSC systems using SSH will place you in your home directory on a login node. The first time you log in the home directory will be empty. This section describes some basic account configuration options which first-time users may find helpful.
       </para>
@@ -262,7 +270,7 @@
     </section>
 
     <section id="sec_filesystems">
-      <title>NERSC file systems and transferring data</title>
+      <title>NERSC Filesystems and Transferring Data</title>
       <para>
 	NERSC has a variety of file systems with different levels of performance, data persistence and capacity which are configured for different purposes. See the NERSC file system documentation for details: <ulink url="https://docs.nersc.gov/filesystems"/>. Data is shared within a project using the Community File System (CFS) which is set with group read/write permissions by default. The CFS space for this project is located at /global/cfs/cdirs/m4386. The environment variable <literal>CFS</literal> is automatically set by NERSC and expands to /global/cfs/cdirs. Project CFS space is intended for data storage, not for intensive I/O jobs.
       </para>
@@ -276,7 +284,7 @@
   </chapter>
   
   <chapter id="ch_plugins">
-    <title>Fit plugin libraries for DDASToys</title>    
+    <title>Fit Plugin Libraries for DDASToys</title>    
     <para>
       This chapter describes the fitting plugins for the <literal>EventEditor</literal> framework in broad terms. The required components are listed below, with the template fitting method given as an example. Fit plugin libraries used with the <literal>EventEditor</literal> must contain the following:
     </para>
@@ -338,13 +346,13 @@
   </chapter>
   
   <chapter id="ch_usingddastoys">
-    <title>Data analysis with DDASToys</title>
+    <title>Data Analysis with DDASToys</title>
     <para>
       If you have read to this point, you are probably interested in processing some data at NERSC. This chapter is for you: a how-to guide for analyzing experimental data using the DDASToys tools. Included in this chapter are example job submission scripts which can be run under Slurm at NERSC. Jobs are submitted to Slurm using the <command>sbatch</command> command with the syntax <literal>sbatch [options] script [args_passed_to_script]</literal>; available options can be viewed by running the command <command>sbatch -h</command> from the terminal on a NERSC login node. The DDASToys tools and job submission scripts must be run under the Shifter container described in <xref linkend="ch_shifter"/>. <xref linkend="app_troubleshooting"/> contains solutions to some commonly encountered issues running DDASToys code. 
     </para>
 
     <section id="sec_importantinfo">
-      <title>Project information</title>
+      <title>Project Information</title>
       <para>
 	Information about the project, data storage, and software is summarized here:
       </para>
@@ -373,14 +381,14 @@
     </section>
     
     <section id="sec_queuesandqos">
-      <title>Job queues and QOS</title>
+      <title>Job Queues and QOS</title>
       <para>
 	Running jobs on NERSC systems will charge hours to the allocation assigned to the project specified by the <literal>--account</literal> flag when the <command>sbatch</command> is invoked. The project for FDSi e21062 analysis is m4386. Jobs at NERSC can be submitted via a number of different queues which each provide a level of service depending on the user's needs and the constraints of the queue itself. The charge factor of the job, and therefore the calculated hours charged to the project allocation depend on which queue the job was run under. Please read <ulink url="https://docs.nersc.gov/jobs/policy/"/> for more information about the job queues available at NERSC and their impact on the number of charged hours . All examples given in this document use the "shared" queue which allows jobs from other users to run simultaneously on the same node. To run jobs exclusively on each node, use the "regular" queue.
       </para>
     </section>
   
     <section id="sec_configfiles">
-      <title>Configuration files required by <literal>EventEditor</literal></title>
+      <title>Configuration Files Required by the <literal>EventEditor</literal></title>
       <para>
 	Here we return to our discussion from <xref linkend="ch_shifter"/> of the environment variable file provided as an argument to the <command>shifter</command>. It is assumed in this section that the environment variable file is called shifter.env and is located in your user account's home directory. The shifter.env file contains a list of environment variables to set inside the container when it is passed as an argument to the <command>shifter</command> command using <literal>--env-file=$HOME/shifter.env</literal>:
       </para>
@@ -418,7 +426,7 @@
 	The structure of the configuration files pointed to by the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables are described below. The fitting routines expect the configuration files to have the formats defined in this section and will fail to run correctly if an improperly formatted file is provided. 
       </para>
       <para>
-	The fit configuration file pointed to by the <literal>FIT_CONFIGFILE</literal> environment variable is a multi-line, whitespace-separated text file describing which channels should be fit. The file can contain blank lines. Both leading and trailing whitespaces are ignored. If the first non-whitespace character on a line is `#', the line is considered a comment and ignored. Non-commented lines contain six whitespace-separated unsigned integers:
+	The fit configuration file pointed to by the <literal>FIT_CONFIGFILE</literal> environment variable is a multi-line, whitespace-separated text file describing which channels should be fit. The file can contain blank lines. Both leading and trailing whitespaces are ignored. If the first non-whitespace character on a line is `#', the line is considered a comment and ignored. Non-commented lines must contain six whitespace-separated unsigned integers and one string:
       </para>
       <itemizedlist>
 	<listitem>
@@ -438,33 +446,38 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    first-point - Sample number on the recorded trace defining the inclusive low limit of the fitting range.
+	    first-point - Sample number on the recorded trace defining the inclusive low limit of the fitting range. This parameter is ignored by the machine-learning inference fitting, but will be read by traceview to plot the fit data, so it is best practice to set to some reasonable value.
 	  </para>
 	</listitem>
 	<listitem>
 	  <para>
-	    last-point - Sample number on the trace defining the inclusive high limit of the fitting range.
+	    last-point - Sample number on the trace defining the inclusive high limit of the fitting range. This parameter is ignored by the machine-learning inference fitting, but will be read by traceview to plot the fit data, so it is best practice to set to some reasonable value.
 	  </para>
 	</listitem>
 	<listitem>
 	  <para>
 	    saturation - The saturation value for the ADC in this crate/slot. Points on the trace greater than or equal to the saturation value are not included in the fit. This allows for fitting traces which overflow the ADC. For a module with a bit depth of B bits, the maximum ADC value is given by 2<superscript>B</superscript>-1.
 	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    model - Path to a PyTorch model for ML inference. This parameter is ignored for fitting which does not implement the machine learning. An empty string is considered a vaild input.
+	  </para>
 	</listitem>	
       </itemizedlist>
       <para>
-	Shown below is an example fit configuration file to fit a single channel, showing the use of comments which can provide more detailed identifying information for the channels to be fit, in this case the dynode of an implantation detector used in a beta-decay experiment.
+	Shown below is an example fit configuration file to fit a single channel, showing the use of comments which can provide more detailed identifying information for the channels to be fit, in this case the dynode of an implantation detector used in a beta-decay experiment. Note that in the model path is "", indicating that this configuration file was not written for ML inference.
       </para>
       <informalexample>
 	<programlisting>
 	  #
 	  #   Describes which channels should be fit.
-	  #   crate slot channel first-point last-point saturation
+	  #   crate slot channel first-point last-point saturation model
 	  #
 
 	  #  Gamma crate high-gain YSO dynode:
 
-	  1 2 0 1 128 65535
+	  1 2 0 1 128 65535 ""
 	</programlisting>
       </informalexample>
       <para>
@@ -506,9 +519,28 @@
 	</programlisting>
       </informalexample>
     </section>
+
+    <section id="sec_configlegacy">
+      <title>Configuration Files for DDASToys Major Versions 4 and 5</title>
+      <para>
+	Legacy fit configuration files for DDASToys major versions 4 and 5 must omit the model path string. An example config file is provided below.
+      </para>
+      <informalexample>
+	<programlisting>
+	  #
+	  #   Describes which channels should be fit.
+	  #   crate slot channel first-point last-point saturation
+	  #
+
+	  #  Gamma crate high-gain YSO dynode:
+
+	  1 2 0 1 128 65535
+	</programlisting>
+      </informalexample>
+    </section>
     
     <section id="sec_singlejob">
-      <title>Running a single <literal>EventEditor</literal> job</title>
+      <title>Running a Single <literal>EventEditor</literal> Job</title>
       <para>
 	The fribdaq/frib-buster:v4.2 container supports FRIBDAQ 12.0 and later which include parallel event editors. The FRIBDAQ <literal>EventEditor</literal> program provides the architecture for fitting event fragments containing traces. Plugin libraries which define the fitting algorithms and the data structure containing the fit results appended to each hit are provided by the user and loaded at the <literal>EventEditor</literal> program runtime. The <literal>EventEditor</literal> program supports parallel fitting using both ZMQ threading and OpenMPI. Running the command <command>$DAQBIN/EventEditor --help</command> from inside the container describes the flags which can be passed to the program assuming the FRIBDAQ environment has been configured by sourcing its associated daqsetup.bash script.
       </para>
@@ -686,28 +718,28 @@
     </section>
 
     <section id="sec_jobarrays">
-      <title>Job arrays</title>
+      <title>Job Arrays</title>
       <para>
 	Job arrays allow a collection of similar jobs to be submitted and managed together in Slurm. All individual jobs must have the same initial options: the values set using the <literal>--time</literal>, <literal>--ntasks</literal>, etc. flags must be identical. The <literal>--array</literal> flag sets a range of index values which can be accessed by an individual task via the <literal>SLURM_ARRAY_TASK_ID</literal> environment variable; for further information about submitting batch job arrays see <ulink url="https://slurm.schedmd.com/job_array.html"/>. Individual array tasks are interpreted by Slurm as single jobs which may impact their scheduling priority. An annotated example submission script to fit traces in multiple subruns of a single run, indexed using a job array, is given in <xref linkend="app_jobarray"/>.
       </para>
     </section>
     
     <section id="sec_traceview">
-      <title>Viewing fit results with <literal>traceview</literal></title>
+      <title>Viewing Fit Results with <literal>traceview</literal></title>
       <para>
 	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification as single- or double-pulse events if the machine learning pulse classifier is used. The viewer is installed in the /bin directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if these environment variables are undefined or point to improperly formatted files. The <literal>traceview</literal> display is a ROOT TCanvas and can be interacted with as such.
       </para>
     </section>
 
     <section id="sec_eeconverter">
-      <title>Using <literal>eeconverter</literal> to convert <literal>EventEditor</literal> output to ROOT format</title>
+      <title>Using <literal>eeconverter</literal> to Convert <literal>EventEditor</literal> Output to ROOT Format</title>
       <para>
 	Similar to the <literal>ddasdumper</literal>, the DDASToys <literal>eeconverter</literal> program converts FRIBDAQ event file data containing traces and fit information into ROOT format for downstream analysis. A shared library for I/O in ROOT is provided. Running <command>/usr/opt/ddastoys/bin/eeconverter --help</command> from the command line inside the container will show how to use the program and how to pass it arguments; running without any command line parameters shows the minimum number of required arguments. A sample job submission script and the script it calls to run the <literal>eeconverter</literal> program are described in <xref linkend="app_eeconverter"/>.
       </para>
     </section>
 
     <section id="sec_pipeline">
-      <title>Creating an analysis pipeline using <literal>sbatch</literal> job dependencies</title>
+      <title>Creating an Analysis Pipeline Using <literal>sbatch</literal> Job Dependencies</title>
       <para>
 	Slurm job dependencies allow the user to delay the start of a job contingent on some set of conditions, including, for example, the successful completion of another job. Complex analysis pipelines can thus be constructed and submitted to the Slurm scheduler using a single script. As an example, consider an analysis workflow using the DDASToys codes described in the previous sections to fit trace data and convert all the fitted output to ROOT format:
 	<orderedlist>
@@ -727,7 +759,7 @@
     </section>
 
     <section id="sec_scripts">
-      <title>Example scripts</title>
+      <title>Example Scripts</title>
       <para>
 	Example job submission scripts for the analyses discussed in this section are available at NERSC under /global/cfs/cdirs/m4386/example_scripts. To use these scripts, copy them to your home directory and modify as needed, by, for example, changing the paths of the volume mounts to point to your analysis directories (<emphasis>ASC: rather than mine, in /chester under the top-level project directory</emphasis>). If you create a new directory for your analysis under the top-level project directory at $CFS/m4386, remember to set the correct permissions if you intend to mount it in the image, see <xref linkend="sec_bindpoints"/>. A brief summary of the available examples are provided here:
       </para>
@@ -783,7 +815,7 @@
   </chapter>
 
   <appendix id="app_bashrc">
-    <title>Sample .bashrc file</title>
+    <title>Sample .bashrc File</title>
     <para>
       Important note: line breaks using the `\' character are shown for convenience and should be removed in a real .bashrc file.
     </para>
@@ -835,7 +867,7 @@
   </appendix>
 
   <appendix id="app_troubleshooting">
-    <title>Troubleshooting DDASToys code</title>
+    <title>Troubleshooting DDASToys Code</title>
     <para>
       This appendix provides solutions for issues encountered while running DDASToys code.
     </para>
@@ -862,7 +894,7 @@
   </appendix>
   
   <appendix id="app_jobarray">
-    <title>Sample scripts for submitting <literal>EventEditor</literal> job arrays</title>
+    <title>Sample Scripts for Submitting <literal>EventEditor</literal> Job Arrays</title>
     <para>
       Shown below is a slightly more advanced job submission script which illustrates two concepts. First, the example demonstrates how to group similar jobs into a job array and submit the array as a batch job to Slurm. Second, this example shows how to prepare your user environment on a login node and submit a batch job in a single step as described in <ulink url="https://docs.nersc.gov/jobs/best-practices/"/>. This script should be run from the command line as <command>./submit_fitarr.sh</command>.
     </para>
@@ -1025,7 +1057,7 @@
   </appendix>
 
   <appendix id="app_eeconverter">
-    <title>Sample scripts for converting <literal>EventEditor</literal> output to ROOT format</title>
+    <title>Sample Scripts for Converting <literal>EventEditor</literal> Output to ROOT Format</title>
     <para>
       Shown below is a sample job submission script for running an <literal>eeconverter</literal> batch job. This script uses the method shown in <xref linkend="app_jobarray"/> to prepare the submission script on a login node before submitting the job using the <command>sbatch</command> command. 
     </para>
@@ -1148,7 +1180,7 @@
   </appendix>
 
   <appendix id="app_pipeline">
-    <title>Sample scripts for constructing an analysis pipeline using <literal>sbatch</literal> dependencies</title>
+    <title>Sample Scripts for Constructing an Analysis Pipeline Using <literal>sbatch</literal> Dependencies</title>
     <para>
       Shown below is a sample job submission script for running combined analysis. This script uses the <literal>sbatch</literal> flags <literal>--parsable</literal> and <literal>--dependency</literal> flags to extract the job ID value and use it to define a workflow where the submission of the ROOT conversion job is dependent on the successful completion of the fitting job. Much of the content of these scripts is similar to what is presented in <xref linkend="ch_usingddastoys"/>, <xref linkend="app_jobarray"/> and <xref linkend="app_eeconverter"/>; please refer to those sections for further details.
     </para>

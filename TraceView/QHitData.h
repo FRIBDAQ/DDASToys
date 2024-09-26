@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  QHitData.h
  * @brief Definition of class to handle disaplying hit data on the main 
@@ -17,13 +33,9 @@ class QPushButton;
 class QGroupBox;
 class QString;
 
-namespace DAQ {
-    namespace DDAS {
-	class DDASFitHit;
-    }
-}
-namespace DDAS{
+namespace ddastoys {
     struct HitExtension;
+    class DDASFitHit;
 }
 
 class FitManager;
@@ -58,7 +70,7 @@ public:
      * if the hit has an extension.
      * @param hit References the hit we are processing
      */ 
-    void update(const DAQ::DDAS::DDASFitHit& hit);
+    void update(const ddastoys::DDASFitHit& hit);
     /**
      * @brief Set the fit method.
      * @param method  The name of the fitting method.
@@ -97,7 +109,7 @@ private:
      * and a time.
      * @param hit References the hit we are displaying data for.
      */
-    void updateHitData(const DAQ::DDAS::DDASFitHit& hit);
+    void updateHitData(const ddastoys::DDASFitHit& hit);
 
 private slots:
     /** @brief Read the fitting method and configure the FitManager. */
@@ -110,16 +122,14 @@ private slots:
   
 private:
     FitManager* m_pFitManager;        //!< Manager for fits, owned by caller.
-    DDAS::HitExtension* m_pExtension; //!< For the currently selected hit.
+    ddastoys::HitExtension* m_pExtension; //!< For the currently selected hit.
 
     // Data for currently selected hit.
     
     QLabel* m_pId;       //!< Global ID value.
     QLabel* m_pRawData;  //!< Energy and timestamp.
     QLabel* m_pFit1Prob; //!< Single-pulse prob. from ML classifier
-                         //!< (not implemented) 
     QLabel* m_pFit2Prob; //!< Double-pulse prob. from ML classifier
-                         //!< (not implemented) 
     QComboBox* m_pFitMethod;  //!< Fit method selection box.
     QPushButton* m_pPrintFit; //!< Print button.
 };

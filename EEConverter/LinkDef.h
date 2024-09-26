@@ -10,7 +10,8 @@
      Authors:
              Ron Fox
              Jeromy Tompkins 
-	     NSCL
+	     Aaron Chester
+	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
@@ -22,23 +23,26 @@
 
 #ifdef __CLING__
 
-// Turn off everything by default.
-
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedefs;
 
-#pragma link C++ class DAQ::DDAS::DDASFitHit+;
+#pragma link C++ namespace ddastoys;
+#pragma link C++ defined_in ddastoys;
+#pragma link C++ namespace DAQ::DDAS;
+#pragma link C++ defined_in DAQ::DDAS;
+
 #pragma link C++ class DAQ::DDAS::DDASHit+;
-#pragma link C++ class DDAS::HitExtension+;
-#pragma link C++ class DDAS::fit1Info+;
-#pragma link C++ class DDAS::fit2Info+;
-#pragma link C++ class DDAS::PulseDescription+;
-#pragma link C++ class DDASRootFitEvent+;
-#pragma link C++ class DDASRootFitHit+;
-#pragma link C++ class RootFit1Info+;
-#pragma link C++ class RootFit2Info+;
-#pragma link C++ class RootHitExtension+;
-#pragma link C++ class RootPulseDescription+;
-#pragma link C++ class std::vector<RootHitExtension>!;
+#pragma link C++ class ddastoys::DDASFitHit+;
+#pragma link C++ class ddastoys::HitExtension+;
+#pragma link C++ class ddastoys::fit1Info+;
+#pragma link C++ class ddastoys::fit2Info+;
+#pragma link C++ class ddastoys::PulseDescription+;
+#pragma link C++ class ddastoys::DDASRootFitEvent+;
+#pragma link C++ class ddastoys::DDASRootFitHit+;
+#pragma link C++ class ddastoys::RootFit1Info+;
+#pragma link C++ class ddastoys::RootFit2Info+;
+#pragma link C++ class ddastoys::RootHitExtension+;
+#pragma link C++ class ddastoys::RootPulseDescription+;
+#pragma link C++ class std::vector<ddastoys::RootHitExtension>!;
 
 #endif

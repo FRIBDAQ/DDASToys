@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2017.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Authors:
+             Aaron Chester
+	     FRIB
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
 /** 
  * @file  QTraceView.cpp
  * @brief Implement Qt main application window class.
@@ -38,6 +54,8 @@
 #include "DDASDecoder.h"
 #include "QHitData.h"
 #include "QRootCanvas.h"
+
+using namespace ddastoys;
 
 //____________________________________________________________________________
 /**
@@ -322,7 +340,7 @@ QTraceView::setStatusBar(std::string msg)
  * Wildcard '*' characters pass everything. Valid hits must contain traces.
  */
 bool
-QTraceView::isValidHit(const DAQ::DDAS::DDASFitHit& hit)
+QTraceView::isValidHit(const DDASFitHit& hit)
 {
     bool crateMatch = false;
     bool slotMatch = false;
@@ -440,8 +458,8 @@ QTraceView::parseArgs(QCommandLineParser& parser)
 	} catch (std::invalid_argument& e) {
 	    std::cerr << "QTraceView::parseArgs(): Unknown fitting method "
 		      << method.toStdString() << " read from command line."
-		      << " Setting fit method to 'Template'." << std::endl;
-	    m_pHitData->setFitMethod("Template");
+		      << " Setting fit method to 'Analytic'." << std::endl;
+	    m_pHitData->setFitMethod("Analytic");
 	}
     }  
 }
