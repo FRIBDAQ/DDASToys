@@ -155,7 +155,7 @@ libFitEditorMLInference.so: FitEditorMLInference.o Configuration.o 	\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS) 					\
 
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
-	$(CXX) -o libDDASFitHitUnpacker.so -shared $^ 			\
+	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ 		\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 FitEditorMLInference.o: FitEditorMLInference.cpp

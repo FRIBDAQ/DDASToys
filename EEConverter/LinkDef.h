@@ -23,13 +23,13 @@
 
 #ifdef __CLING__
 
-// Turn off everything by default.
-
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedefs;
 
 #pragma link C++ namespace ddastoys;
 #pragma link C++ defined_in ddastoys;
+#pragma link C++ namespace DAQ::DDAS;
+#pragma link C++ defined_in DAQ::DDAS;
 
 #pragma link C++ class DAQ::DDAS::DDASHit+;
 #pragma link C++ class ddastoys::DDASFitHit+;

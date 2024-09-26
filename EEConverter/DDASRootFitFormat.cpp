@@ -72,6 +72,35 @@ namespace ddastoys {
    }
 }
 
+namespace DAQ {
+   namespace DDAS {
+   namespace ROOTDict {
+      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();
+      static TClass *DAQcLcLDDAS_Dictionary();
+
+      // Function generating the singleton type initializer
+      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()
+      {
+         static ::ROOT::TGenericClassInfo 
+            instance("DAQ::DDAS", 0 /*version*/, "DDASHit.h", 34,
+                     ::ROOT::Internal::DefineBehavior((void*)nullptr,(void*)nullptr),
+                     &DAQcLcLDDAS_Dictionary, 0);
+         return &instance;
+      }
+      // Insure that the inline function is _not_ optimized away by the compiler
+      ::ROOT::TGenericClassInfo *(*_R__UNIQUE_DICT_(InitFunctionKeeper))() = &GenerateInitInstance;  
+      // Static variable to force the class initialization
+      static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstance(); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+      // Dictionary for non-ClassDef classes
+      static TClass *DAQcLcLDDAS_Dictionary() {
+         return GenerateInitInstance()->GetClass();
+      }
+
+   }
+}
+}
+
 namespace ROOT {
    static void *new_ddastoyscLcLDDASRootFitEvent(void *p = nullptr);
    static void *newArray_ddastoyscLcLDDASRootFitEvent(Long_t size, void *p);
@@ -1363,9 +1392,9 @@ nullptr
     };
     static const char* includePaths[] = {
 "..",
-"/user/0400x/ddastoys/DDASFormat/include",
+"/user/chester/ddastoys/DDASFormat/include",
 "/usr/opt/root/6.26.04/include/",
-"/user/0400x/DDASToys/EEConverter/",
+"/aaron/DDASToys/EEConverter/",
 nullptr
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(

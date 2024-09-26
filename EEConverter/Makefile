@@ -35,7 +35,7 @@ libDDASRootFitFormat.so: DDASRootFitFormat.o DDASRootFitHit.o 		\
 
 DDASRootFitFormat.cpp: DDASRootFitEvent.h DDASRootFitHit.h 		\
 	../DDASFitHit.h RootExtensions.h LinkDef.h
-	$(ROOTSYS)/bin/rootcling -f $@ 	-rml libDDASRootFit.so 		\
+	$(ROOTSYS)/bin/rootcling -f $@ 	-rml libDDASRootFitFormat.so 	\
 	-rmf libDDASRootFitFormat.rootmap -I.. -I$(DDASFMTINC) $^
 
 %.o : %.cpp
@@ -49,6 +49,6 @@ converterargs.o:
 
 clean:
 	rm -f *.o *.so *.pcm *.rootmap
-	rm -f DDASRootFit.cpp
+	rm -f DDASRootFitFormat.cpp
 	rm -f converterargs.c converterargs.h
 	rm -f eeconverter
