@@ -31,7 +31,7 @@
 namespace ddastoys {
 
     /**
-     * @defgroup ddasrootfitformat libDDASRootFit.so
+     * @defgroup ddasrootfitformat libDDASRootFitFormat.so
      * @brief ROOT data format and classes. Basically a ROOT-ized DDASFitHit 
      * and fit_extensions.h.
      */

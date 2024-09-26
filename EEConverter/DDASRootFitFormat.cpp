@@ -1392,7 +1392,7 @@ nullptr
     };
     static const char* includePaths[] = {
 "..",
-"/user/chester/ddastoys/DDASFormat/include",
+"/usr/opt/ddastoys/6.0-000/DDASFormat/include",
 "/usr/opt/root/6.26.04/include/",
 "/aaron/DDASToys/EEConverter/",
 nullptr
