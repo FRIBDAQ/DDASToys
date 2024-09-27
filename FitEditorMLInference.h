@@ -31,11 +31,6 @@
 #include <torch/script.h> // Can forward-declare?
 #include <torch/torch.h>  // Ditto?
 
-namespace DAQ {
-    namespace DDAS {
-	class DDASHit;
-    }
-}
 
 /** @namespace ddastoys */
 namespace ddastoys {

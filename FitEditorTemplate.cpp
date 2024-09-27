@@ -30,8 +30,8 @@
 #include "Configuration.h"
 #include "lmfit_template.h"
 
+using namespace ddasfmt;
 using namespace ddastoys;
-using namespace ddastoys::templatefit;
     
 /**
  * @details
@@ -149,8 +149,8 @@ FitEditorTemplate::operator()(
     
     // Make the hit:
     
-    DAQ::DDAS::DDASHit hit;
-    DAQ::DDAS::DDASHitUnpacker unpacker;
+    DDASHit hit;
+    DDASHitUnpacker unpacker;
     unpacker.unpack(
 	static_cast<uint32_t*>(pBody),
 	static_cast<uint32_t*>(nullptr),
@@ -175,7 +175,7 @@ FitEditorTemplate::operator()(
 		// Bit 0 do single fit, bit 1 do double fit.
 		
 		if (classification & 1) {
-		    lmfit1(
+		    templatefit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace,
 			m_template, m_align, limits, sat
 			);
@@ -190,13 +190,13 @@ FitEditorTemplate::operator()(
 		    
 		    if (classification & 1) {
 			fit1Info guess = pFit->s_extension.onePulseFit;
-			lmfit2(
+			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
 			    m_template, m_align, limits, &guess, sat
 			    );
 		    } else {
 			// nullptr: no guess for single params.
-			lmfit2(
+			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
 			    m_template, m_align, limits, nullptr, sat
 			    );
@@ -234,7 +234,7 @@ FitEditorTemplate::free(iovec& e)
 //
 
 int
-FitEditorTemplate::pulseCount(DAQ::DDAS::DDASHit& hit)
+FitEditorTemplate::pulseCount(DDASHit& hit)
 {
     return 3; // In absence of classifier.
 }
