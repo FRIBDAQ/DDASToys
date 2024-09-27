@@ -1,3 +1,15 @@
 *.so
 *.o
 *~
+*.rootmap
+*.pcm
+*moc_*
+EEConverter/eeconverter
+TraceView/traceview
+Docs/manual/
+Docs/sourcedocs/
+EEConverter/DDASRootFitFormat.cpp
+EEConverter/converterargs.c
+EEConverter/converterargs.h
+TraceView/.qmake.stash
+TraceView/Makefile
