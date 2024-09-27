@@ -26,10 +26,8 @@
 
 #include <vector>
 
-namespace DAQ {
-    namespace DDAS {
-	class DDASHit;
-    }
+namespace ddasfmt {
+    class DDASHit;
 }
 
 /** @namespace ddastoys */
@@ -116,7 +114,7 @@ namespace ddastoys {
 	 * @retval 2  - Only fit two traces.
 	 * @retval 3  - Fit both one and double hit.
 	 */
-	int pulseCount(DAQ::DDAS::DDASHit& hit);
+	int pulseCount(ddasfmt::DDASHit& hit);
   
 	// Private member data
     private:

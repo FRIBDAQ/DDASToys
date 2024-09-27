@@ -30,8 +30,8 @@
 #include "fit_extensions.h"
 #include "mlinference.h"
 
+using namespace ddasfmt;
 using namespace ddastoys;
-using namespace ddastoys::mlinference;
 
 /**
  * @details
@@ -147,8 +147,8 @@ ddastoys::FitEditorMLInference::operator()(
     
     // Make the hit:
     
-    DAQ::DDAS::DDASHit hit;
-    DAQ::DDAS::DDASHitUnpacker unpacker;
+    DDASHit hit;
+    DDASHitUnpacker unpacker;
     unpacker.unpack(
 	static_cast<uint32_t*>(pBody),
 	static_cast<uint32_t*>(nullptr),
@@ -166,8 +166,9 @@ ddastoys::FitEditorMLInference::operator()(
 	if (trace.size() > 0) { // Need a trace to fit
 	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
 	    auto modelPath = m_pConfig->getModelPath(crate, slot, chan);
-	    
-	    performInference(pFit, trace, sat, m_models[modelPath]);
+	    mlinference::performInference(
+		pFit, trace, sat, m_models[modelPath]
+		);
 	}
     
 	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);

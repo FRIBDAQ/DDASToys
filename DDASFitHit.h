@@ -39,10 +39,10 @@ namespace ddastoys {
      *
      * @details
      * These objects are produced by `DDASFitHitUnpacker::decode()`. 
-     * They are basically just DAQ::DDAS::DDASHits with some extra fields.     
+     * They are basically just ddasfmt::DDASHits with some extra fields.     
      */
 
-    class DDASFitHit : public DAQ::DDAS::DDASHit
+    class DDASFitHit : public ddasfmt::DDASHit
     {
     private:
 	bool m_haveExtension;     //!< True iff has extension data.
@@ -61,7 +61,7 @@ namespace ddastoys {
 	 */
 	DDASFitHit& operator=(const DDASFitHit& rhs) {
 	    if (this != &rhs) {
-		DAQ::DDAS::DDASHit::operator=(rhs);
+		ddasfmt::DDASHit::operator=(rhs);
 		m_haveExtension = false;
 		if (rhs.hasExtension()) {
 		    auto ext = rhs.getExtension();
@@ -74,7 +74,7 @@ namespace ddastoys {
 	/** @brief Reset the hit information. */
 	void Reset() {
 	    m_haveExtension = false;
-	    DAQ::DDAS::DDASHit::Reset(); // Reset base class membrers.
+	    ddasfmt::DDASHit::Reset(); // Reset base class membrers.
 	}
 	/** 
 	 * @brief Set the hit extension information for this hit. 

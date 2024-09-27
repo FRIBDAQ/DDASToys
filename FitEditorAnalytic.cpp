@@ -31,8 +31,8 @@
 #include "Configuration.h"
 #include "lmfit_analytic.h"
 
+using namespace ddasfmt;
 using namespace ddastoys;
-using namespace ddastoys::analyticfit;
 
 /**
  * @details
@@ -129,8 +129,8 @@ ddastoys::FitEditorAnalytic::operator()(
     
     // Make the hit:
     
-    DAQ::DDAS::DDASHit hit;
-    DAQ::DDAS::DDASHitUnpacker unpacker;
+    DDASHit hit;
+    DDASHitUnpacker unpacker;
     unpacker.unpack(
 	static_cast<uint32_t*>(pBody),
 	static_cast<uint32_t*>(nullptr),
@@ -155,7 +155,7 @@ ddastoys::FitEditorAnalytic::operator()(
 		// Bit 0 do single fit, bit 1 do double fit.
 		    
 		if (classification & 1) {
-		    lmfit1(
+		    analyticfit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace, limits, sat
 			);
 		}                    
@@ -168,13 +168,13 @@ ddastoys::FitEditorAnalytic::operator()(
 		    
 		    if (classification & 1) {
 			fit1Info guess = pFit->s_extension.onePulseFit;
-			lmfit2(
+			analyticfit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace, limits,
 			    &guess, sat
 			    );
 		    } else {
 			// nullptr: no guess for single params.
-			lmfit2(
+			analyticfit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace, limits,
 			    nullptr, sat
 			    );
@@ -219,7 +219,7 @@ ddastoys::FitEditorAnalytic::free(iovec& e)
  * for every mapped channel.
  */
 int
-ddastoys::FitEditorAnalytic::pulseCount(DAQ::DDAS::DDASHit& hit)
+ddastoys::FitEditorAnalytic::pulseCount(DDASHit& hit)
 {
     return 3; // In absence of classifier.
 }

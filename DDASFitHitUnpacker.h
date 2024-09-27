@@ -54,11 +54,11 @@ namespace ddastoys {
      * post-processing traces. A typical trace analysis may involve fitting
      * traces and performing further analysis with the fit output (event 
      * classification, measuring physics observables, etc.). This class 
-     * is an extension of DAQ::DDAS::DDASHitUnpacker and retains all the 
+     * is an extension of ddasfmt::DDASHitUnpacker and retains all the 
      * funcitonality of the base class.
      */
     
-    class DDASFitHitUnpacker : public DAQ::DDAS::DDASHitUnpacker
+    class DDASFitHitUnpacker : public ddasfmt::DDASHitUnpacker
     {
     public:
 	/**
