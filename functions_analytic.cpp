@@ -97,6 +97,7 @@ ddastoys::analyticfit::doublePulse(
 {
     double p1 = singlePulse(A1, k1, k2, x1, C, x);
     double p2 = singlePulse(A2, k3, k4, x2, 0.0, x);
+    
     return p1 + p2;
 }
 
@@ -116,11 +117,11 @@ ddastoys::analyticfit::doublePulse(
 double
 ddastoys::analyticfit::pulseAmplitude(double A, double k1, double k2, double x0)
 {
+    if (k1 <= 0 || k2 <=0 ) return -1;
     double frac = k1/k2;
-    if (frac <= 1.0) {
-	return -1; 
-    }
-    double pos = x0 + log(frac-1.0)/k1;
+    if (frac <= 1.0) return -2; 
+    double pos = x0 + log(frac - 1.0)/k1;
+    
     return singlePulse(A, k1, k2, x0, 0.0, pos);
 }
 

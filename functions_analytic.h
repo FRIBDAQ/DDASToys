@@ -110,7 +110,8 @@ namespace ddastoys {
 	 * @param k2 The fall time term of the decay.
 	 * @param x0 The position of the pulse.
 	 * @return The corrected amplitude of the fitted pulse.
-	 * @retval -1 If \f$k_1/k_2 \leq 1\f$.
+	 * @retval -1 If \f$k_1 \leq 0\f$ or \f$k_1 \leq 0\f$.
+	 * @retval -2 If \f$k_1/k_2 \leq 1\f$.
 	 */
 	double pulseAmplitude(double A, double k1, double k2, double x0);
 	/**
@@ -226,7 +227,7 @@ namespace ddastoys {
 
 	/** @} */
 	
-    }
-};
+    } // namespace ddastoys::analyticfit
+} // namespace ddastoys
 
 #endif

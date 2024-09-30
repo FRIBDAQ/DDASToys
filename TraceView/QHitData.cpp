@@ -33,6 +33,7 @@
 
 #include <DDASFitHit.h>
 #include "FitManager.h"
+#include "functions_analytic.h"
 
 using namespace ddastoys;
 
@@ -268,16 +269,19 @@ QHitData::printFitResults()
 	      << std::setw(9) << " Offset: "
 	      << std::setw(8) << m_pExtension->onePulseFit.offset
 	      << std::endl;
-  
+
+    double A   = m_pExtension->onePulseFit.pulse.amplitude;
+    double k1  = m_pExtension->onePulseFit.pulse.steepness;
+    double k2  = m_pExtension->onePulseFit.pulse.decayTime;
+    double x0  = m_pExtension->onePulseFit.pulse.position;
+    double amp = ddastoys::analyticfit::pulseAmplitude(A, k1, k2, x0);
+	
     std::cout << std::left
-	      << std::setw(5) << "Amp: "
-	      << std::setw(8) << m_pExtension->onePulseFit.pulse.amplitude
-	      << std::setw(8) << " Steep: "
-	      << std::setw(8) << m_pExtension->onePulseFit.pulse.steepness 
-	      << std::setw(8) << " Decay: "
-	      << std::setw(8) << m_pExtension->onePulseFit.pulse.decayTime 
-	      << std::setw(6) << " Pos: "
-	      << std::setw(8) << m_pExtension->onePulseFit.pulse.position
+	      << std::setw(3) << "A: " << std::setw(8) << A
+	      << std::setw(6) << " Amp: " << std::setw(8) << amp
+	      << std::setw(8) << " Steep: " << std::setw(8) << k1
+	      << std::setw(8) << " Decay: " << std::setw(8) << k2
+	      << std::setw(6) << " Pos: " << std::setw(8) << x0
 	      << std::endl;
 
     std::cout << std::endl;  
@@ -292,27 +296,33 @@ QHitData::printFitResults()
 	      << std::setw(9) << " Offset: "
 	      << std::setw(8) << m_pExtension->twoPulseFit.offset
 	      << std::endl;
-  
+
+    double A1 = m_pExtension->twoPulseFit.pulses[0].amplitude;
+    k1 = m_pExtension->twoPulseFit.pulses[0].steepness;
+    k2 = m_pExtension->twoPulseFit.pulses[0].decayTime;
+    double x1 = m_pExtension->twoPulseFit.pulses[0].position;
+    double amp1 = ddastoys::analyticfit::pulseAmplitude(A1, k1, k2, x1);
+    double A2 = m_pExtension->twoPulseFit.pulses[1].amplitude;
+    double k3 = m_pExtension->twoPulseFit.pulses[1].steepness;
+    double k4 = m_pExtension->twoPulseFit.pulses[1].decayTime;
+    double x2 = m_pExtension->twoPulseFit.pulses[1].position;
+    double amp2 = ddastoys::analyticfit::pulseAmplitude(A2, k3, k4, x2);
+    
+    
     std::cout << std::left
-	      << std::setw(5) << "Amp1: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[0].amplitude
-	      << std::setw(8) << " Steep1: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[0].steepness 
-	      << std::setw(8) << " Decay1: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[0].decayTime 
-	      << std::setw(6) << " Pos1: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[0].position
+	      << std::setw(3) << "A1: " << std::setw(8) << A1
+	      << std::setw(7) << " Amp1: " << std::setw(8) << amp1
+	      << std::setw(8) << " Steep1: " << std::setw(8) << k1
+	      << std::setw(8) << " Decay1: " << std::setw(8) << k2
+	      << std::setw(6) << " Pos1: " << std::setw(8) << x1
 	      << std::endl;
   
     std::cout << std::left
-	      << std::setw(5) << "Amp2: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].amplitude
-	      << std::setw(8) << " Steep2: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].steepness 
-	      << std::setw(8) << " Decay2: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].decayTime 
-	      << std::setw(6) << " Pos2: "
-	      << std::setw(8) << m_pExtension->twoPulseFit.pulses[1].position
+	      << std::setw(3) << "A2: " << std::setw(8) << A2
+	      << std::setw(7) << " Amp2: " << std::setw(8) << amp2
+	      << std::setw(8) << " Steep2: " << std::setw(8) << k3
+	      << std::setw(8) << " Decay2: " << std::setw(8) << k4 
+	      << std::setw(6) << " Pos2: " << std::setw(8) << x2
 	      << std::endl;
     
     std::cout << std::endl;  
