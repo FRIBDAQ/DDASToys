@@ -28,10 +28,10 @@
 
 #pragma link C++ namespace ddastoys;
 #pragma link C++ defined_in ddastoys;
-#pragma link C++ namespace DAQ::DDAS;
-#pragma link C++ defined_in DAQ::DDAS;
+#pragma link C++ namespace ddasfmt;
+#pragma link C++ defined_in ddasfmt;
 
-#pragma link C++ class DAQ::DDAS::DDASHit+;
+#pragma link C++ class ddasfmt::DDASHit+;
 #pragma link C++ class ddastoys::DDASFitHit+;
 #pragma link C++ class ddastoys::HitExtension+;
 #pragma link C++ class ddastoys::fit1Info+;
