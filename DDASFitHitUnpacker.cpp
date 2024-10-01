@@ -33,6 +33,7 @@
 #include "DDASFitHit.h"
 
 using namespace ddastoys; // Fit extensions, DDASFitHit, etc.
+using namespace ufmt;
 
 /**
  * @details

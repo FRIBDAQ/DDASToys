@@ -88,7 +88,7 @@ DDASFMTBUILDDIR=$(PWD)/DDASFormat/build
 
 # Flags depend on whether we build for GPU fitting:
 
-CXXFLAGS=-std=c++14 -g -O2 -I. -I$(DDASFMTINC) -I$(DAQINC) -I$(UFMTINC)
+CXXFLAGS=-std=c++14 -g -O2 -I. -I$(DDASFMTINC) -I$(UFMTINC)
 CXXLDFLAGS=-lgsl -lgslcblas -L$(DDASFMTLIB) -lDDASFormat
 
 CUDACXXFLAGS=-DCUDA --compiler-options -fPIC 				\
@@ -150,21 +150,26 @@ libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o 		\
 
 libFitEditorMLInference.so: FitEditorMLInference.o Configuration.o 	\
 	functions_analytic.o mlinference.o
-	$(CXX) -I$(TORCHINC) -o libFitEditorMLInference.so -shared $^	\
-	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10	\
-	$(CXXLDFLAGS) $(EXTRALDFLAGS) 					\
+	$(CXX) -o libFitEditorMLInference.so -shared $^			\
+	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ 		\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
+FitEditor%.o: FitEditor%.cpp
+	$(CXX) -I$(DAQINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
+
 FitEditorMLInference.o: FitEditorMLInference.cpp
-	$(CXX) $(CXXFLAGS) -I$(TORCHINC) $(EXTRACXXFLAGS) -c $^ 	\
+	$(CXX) -I$(DAQINC) -I$(TORCHINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^ \
 	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
 
 mlinference.o: mlinference.cpp
 	$(CXX) $(CXXFLAGS) -I$(TORCHINC) $(EXTRACXXFLAGS) -c $^ 	\
 	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
+
+CRingItemProcessor.o: CRingItemProcessor.cpp
+	$(CXX) -I$(DAQINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
