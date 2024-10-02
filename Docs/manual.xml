@@ -814,6 +814,60 @@
     
   </chapter>
 
+<appendix id="app_troubleshooting">
+    <title>Troubleshooting DDASToys Code</title>
+    <para>
+      This appendix provides solutions for issues encountered while running DDASToys code.
+    </para>
+        <itemizedlist>
+	  <listitem>
+	    <para>
+	      <emphasis>Issue:</emphasis> The <literal>EventEditor</literal> code crashes with no output and the following error message:
+	      <informalexample>
+		<programlisting>
+		  [pike:48184] *** Process received signal ***
+		  [pike:48184] Signal: Segmentation fault (11)
+		  [pike:48184] Signal code: Address not mapped (1)
+		  [pike:48184] Failing at address: 0x7fabb7027008
+		  [pike:48184] [ 0] /lib/x86_64-linux-gnu/libpthread.so.0(+0x12730)[0x7fabb80e5730]
+		  [pike:48184] [ 1] /usr/opt/mpi/openmpi-4.0.1/lib/pmix/mca_gds_ds21.so \
+		                    (pmix_gds_ds21_lock_init+0x129)[0x7fabb6e438d9]
+		  ... more errors ...
+		</programlisting>
+	      </informalexample>
+	      <emphasis>Solution:</emphasis> The last line shown above points to the issue, and the solution: disable the PMIx ds21 shared memory optimization by setting the environment variable <literal>PMIX_MCA_gds=^ds21</literal>. Note that this could be done in the shifter.env file used to define the runtime environment of DDASToys on a cluster such as NERSC.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      <emphasis>Issue:</emphasis> Running the <literal>EventEditor</literal> in threaded mode results in no output with the following error:
+	      <informalexample>
+		<programlisting>
+		  Warning ZMC Communicator factory created with empy endpoints table
+		  terminate called after throwing an instance of 'std::invalid_argument'
+		      what():  Failed to find endpoint: 1 in ZMQ endpoint lookup table
+		  Aborted
+		</programlisting>
+	      </informalexample>
+	      <emphasis>Solution:</emphasis> ZMQ is used for threaded parallelism. When using ZMQ transport, the program needs an endpoint lookup table to make a translation between numbered communication endpoints and the URI's that ZMQ uses. This is a text file that contains lines that consist of an endpoint number and a URI indicating the ZMQ communication URI to use. The file can be in ~/.zmqservices, `pwd`/.zmqservices or where the environment variable ZMQ_SERVICES points. The services that need to be specified are 1 - the fanout service, 2 - the sort service, and 3 - the output service. Here's the contents of an example ZMQ services file that I've used:
+	    </para>
+	    <informalexample>
+		<programlisting>
+		  1 inproc://distro
+		  2 inproc://sort
+		  3 inproc://sorted
+		</programlisting>
+	      </informalexample>
+	  </listitem>
+	  <listitem>
+	    <literallayout>
+	      <emphasis>Issue:</emphasis> The `traceview` canvas is empty despite selecting a trace to view.
+	    <emphasis>Solution:</emphasis> The `traceview` canvas is an embedded ROOT canvas in a Qt application. You need to configure the ROOT environment by sourcing the appropriate thisroot.sh script.
+	    </literallayout>
+	  </listitem>
+	</itemizedlist>    
+  </appendix>
+  
   <appendix id="app_bashrc">
     <title>Sample .bashrc File</title>
     <para>
@@ -864,33 +918,6 @@
 
       </programlisting>
     </informalexample>
-  </appendix>
-
-  <appendix id="app_troubleshooting">
-    <title>Troubleshooting DDASToys Code</title>
-    <para>
-      This appendix provides solutions for issues encountered while running DDASToys code.
-    </para>
-        <itemizedlist>
-	  <listitem>
-	    <para>
-	      The <literal>EventEditor</literal> code crashes with no output and a message similar to:
-	      <informalexample>
-		<programlisting>
-		  [pike:48184] *** Process received signal ***
-		  [pike:48184] Signal: Segmentation fault (11)
-		  [pike:48184] Signal code: Address not mapped (1)
-		  [pike:48184] Failing at address: 0x7fabb7027008
-		  [pike:48184] [ 0] /lib/x86_64-linux-gnu/libpthread.so.0(+0x12730)[0x7fabb80e5730]
-		  [pike:48184] [ 1] /usr/opt/mpi/openmpi-4.0.1/lib/pmix/mca_gds_ds21.so \
-		                    (pmix_gds_ds21_lock_init+0x129)[0x7fabb6e438d9]
-		  ... more errors ...
-		</programlisting>
-	      </informalexample>
-	      The last line shown above points to the issue, and the solution: disable the PMIx ds21 shared memory optimization by setting the environment variable <literal>PMIX_MCA_gds=^ds21</literal>. Note that this could be done in the shifter.env file used to define the runtime environment of DDASToys on a cluster such as NERSC.
-	    </para>
-	  </listitem>
-	</itemizedlist>    
   </appendix>
   
   <appendix id="app_jobarray">
