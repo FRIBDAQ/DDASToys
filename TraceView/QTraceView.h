@@ -141,10 +141,17 @@ private slots:
 
      */
     void configureSource(QString filename);
-    /** @brief Get the next event containing trace data. */
+    /** @brief Get the next event. */
     void getNextEvent();
+    /** 
+     * @brief Get the next event containing trace data matching the 
+     * selection criteria. 
+     */
+    void getNextEventWithTraces();
     /** @brief Skip events in the source. */
     void skipEvents();
+    /** @brief Select and skip to a specific event. */
+    void selectEvent();
     /** @brief Apply the hit filter to the current hits for this event. */
     void filterHits();
     /** @brief Update the hit selection list. */
@@ -158,6 +165,8 @@ private slots:
      * @param msg  The warning message displayed in the popup window.
      */
     void issueWarning(std::string msg);
+    /** @brief Issue an EOF warning when we're out of PHYSICS_EVENT data. */
+    void issueEOFWarning();
     /** @brief Test slot function which prints the current time to stdout. */
     void test();
   
@@ -176,9 +185,9 @@ private:
     QAction* m_pOpenAction; //!< Open a file and crate a data source from menu.
     QAction* m_pExitAction; //!< Clean exit the program.
 
-    QPushButton* m_pButtons[3]; //!< The "Next", "Update" and "Exit" buttons.
-    QPushButton* m_pSkipEvents; //!< Skip events button.
-    QLineEdit* m_pEventsToSkip; //!< Contains number of events to skip.
+    QPushButton* m_pMainButtons[3]; //!< "Next", "Update" and "Exit" buttons.
+    QPushButton* m_pSelectButtons[2]; //!< "Skip" and "Select" buttons.
+    QLineEdit* m_pSelectLineEdit; //!< Events to skip or select.
     QLineEdit* m_pHitFilter[3]; //!< Crate/slot/channel filter values (wildcard
     //!< "*" is OK).
     QWidget* m_pTopBoxes; //!< Defines layout for selection and event handling

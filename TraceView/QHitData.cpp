@@ -133,7 +133,7 @@ QGroupBox*
 QHitData::createHitBox()
 {
     QGroupBox* box = new QGroupBox;
-    box->setTitle("Hit data");
+    box->setTitle("Hit Data");
   
     m_pId = new QLabel(
 	QString("Crate: %1 Slot: %2 Channel: %3"
@@ -153,7 +153,7 @@ QGroupBox*
 QHitData::createClassifierBox()
 {
     QGroupBox* box = new QGroupBox;
-    box->setTitle("Classifier data");
+    box->setTitle("Classifier Data");
 
     m_pFit1Prob = new QLabel("Single pulse probability: N/A");
     m_pFit2Prob = new QLabel("Double pulse probability: N/A");
@@ -171,9 +171,9 @@ QGroupBox*
 QHitData::createFitBox()
 {
     QGroupBox* box = new QGroupBox;
-    box->setTitle("Fit data");
+    box->setTitle("Fit Data");
 
-    QLabel* label = new QLabel("Fit method:");
+    QLabel* label = new QLabel("Method:");
     m_pFitMethod = new QComboBox;
     m_pFitMethod->addItems({"Analytic", "Template", "ML_Inference"});
     m_pFitMethod->setCurrentIndex(0);
@@ -215,6 +215,10 @@ QHitData::updateHitData(const DDASFitHit& hit)
     QString id = QString(
 	"Crate: %1 Slot: %2 Channel: %3"
 	).arg(hit.getCrateID()).arg(hit.getSlotID()).arg(hit.getChannelID());
+
+    // Display 3 decimal places of the double-precision full timestamp
+    // possibly with the CFD correction. No limits on the width:
+    
     QString hitData = QString(
 	"Energy: %1 Time: %2"
 	).arg(hit.getEnergy()).arg(hit.getTime(), 0, 'f', 3);
