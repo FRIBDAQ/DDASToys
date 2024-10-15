@@ -151,28 +151,29 @@ libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o 		\
 libFitEditorMLInference.so: FitEditorMLInference.o Configuration.o 	\
 	functions_analytic.o mlinference.o
 	$(CXX) -o libFitEditorMLInference.so -shared $^			\
-	$(CXXLDFLAGS) $(EXTRALDFLAGS)
+	$(CXXLDFLAGS) $(EXTRALDFLAGS)					\
+	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
 
 libDDASFitHitUnpacker.so: DDASFitHitUnpacker.o
 	$(CXX) -o libDDASFitHitUnpacker.so -shared -z defs $^ 		\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
-FitEditor%.o: FitEditor%.cpp
-	$(CXX) -I$(DAQINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
-
-FitEditorMLInference.o: FitEditorMLInference.cpp
-	$(CXX) -I$(DAQINC) -I$(TORCHINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^ \
-	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
-
 mlinference.o: mlinference.cpp
-	$(CXX) $(CXXFLAGS) -I$(TORCHINC) $(EXTRACXXFLAGS) -c $^ 	\
-	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10
+	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -I$(TORCHINC) -c $^
 
 CRingItemProcessor.o: CRingItemProcessor.cpp
 	$(CXX) -I$(DAQINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
+FitEditorMLInference.o: FitEditorMLInference.cpp
+	$(CXX) -I$(DAQINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -I$(TORCHINC) -c $^
+
+FitEditor%.o: FitEditor%.cpp
+	$(CXX) -I$(DAQINC) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
+
+# Companion programs:
 
 traceview:
 	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
