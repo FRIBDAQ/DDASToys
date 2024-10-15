@@ -217,7 +217,7 @@ QHitData::updateHitData(const DDASFitHit& hit)
 	).arg(hit.getCrateID()).arg(hit.getSlotID()).arg(hit.getChannelID());
     QString hitData = QString(
 	"Energy: %1 Time: %2"
-	).arg(hit.getEnergy()).arg(hit.getTime());
+	).arg(hit.getEnergy()).arg(hit.getTime(), 0, 'f', 3);
 
     // If there's a fit, update the probabilities:
     
