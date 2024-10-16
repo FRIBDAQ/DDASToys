@@ -79,7 +79,7 @@ QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
     configureMenu();
   
     // Combine hit selection list and canvas into a single horizontally
-    // aligned widget which we add to the main layout
+    // aligned widget which we add to the main layout:
     
     QWidget* plotWidget = createPlotWidget();  
   
@@ -394,9 +394,7 @@ QTraceView::updateSelectableHits()
 
     for (unsigned i = 0; i < m_filteredHits.size(); i++) {    
 	// Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
-	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].getCrateID()
-	    ).arg(m_filteredHits[i].getSlotID()
-		).arg(m_filteredHits[i].getChannelID());    
+	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].getCrateID()).arg(m_filteredHits[i].getSlotID()).arg(m_filteredHits[i].getChannelID());    
 	QStandardItem* item = new QStandardItem(id);
 	model->setItem(i, item);
     }
@@ -570,8 +568,7 @@ QTraceView::getNextEvent()
 void
 QTraceView::getNextEventWithTraces()
 {    
-    m_filteredHits.clear();
-  
+    m_filteredHits.clear();  
     while (m_filteredHits.empty()) {
 	getNextEvent();
     }
@@ -702,11 +699,11 @@ void
 QTraceView::issueEOFWarning()
 {
     m_hits.clear();
-    filterHits();   
+    m_filteredHits.clear();
     updateSelectableHits();
     m_pRootCanvas->clear();
     
-    std::string msg = "No more physics events in this file.";
+    std::string msg("No more physics events in this file.");
     msg += "The file contains ";
     msg += std::to_string(m_pDecoder->getEventCount());
     msg += " physics events.";

@@ -446,12 +446,12 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    first-point - Sample number on the recorded trace defining the inclusive low limit of the fitting range. This parameter is ignored by the machine-learning inference fitting, but will be read by traceview to plot the fit data, so it is best practice to set to some reasonable value.
+	    first-point - Sample number on the recorded trace defining the inclusive low limit of the fitting range. This parameter is ignored by the machine-learning inference fitting, but will be read by <literal>traceview</literal> to plot the fit data, so it is best practice to set to some reasonable value.
 	  </para>
 	</listitem>
 	<listitem>
 	  <para>
-	    last-point - Sample number on the trace defining the inclusive high limit of the fitting range. This parameter is ignored by the machine-learning inference fitting, but will be read by traceview to plot the fit data, so it is best practice to set to some reasonable value.
+	    last-point - Sample number on the trace defining the inclusive high limit of the fitting range. This parameter is ignored by the machine-learning inference fitting, but will be read by <literal>traceview</literal> to plot the fit data, so it is best practice to set to some reasonable value.
 	  </para>
 	</listitem>
 	<listitem>
@@ -461,7 +461,7 @@
 	</listitem>
 	<listitem>
 	  <para>
-	    model - Path to a PyTorch model for ML inference. This parameter is ignored for fitting which does not implement the machine learning. An empty string is considered a vaild input.
+	    model - Path to a PyTorch model for ML inference. This parameter is ignored for fitting which does not implement the machine learning. An empty string is considered a valid input.
 	  </para>
 	</listitem>	
       </itemizedlist>
@@ -727,7 +727,7 @@
     <section id="sec_traceview">
       <title>Viewing Fit Results with <literal>traceview</literal></title>
       <para>
-	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification as single- or double-pulse events if the machine learning pulse classifier is used. The viewer is installed in the /bin directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if these environment variables are undefined or point to improperly formatted files. The <literal>traceview</literal> display is a ROOT TCanvas and can be interacted with as such.
+	The <literal>traceview</literal> program provides a graphical interface to view event data containing traces as well as their associated fits and classification probabilities. The viewer is installed in the /bin directory under the top-level DDASToys installation directory. Interfaces to display subsets of hit data and select the fitting method are provided. <literal>traceview</literal> reads fit and template configuration information from the <literal>FIT_CONFIGFILE</literal> and <literal>TEMPLATE_CONFIGFILE</literal> environment variables and will exit with an error message if the necessary environment variables are undefined or point to improperly formatted files. Which environment variables are required depends on the fitting method used: for analytic or machine-learning inference fitting, only the fit configuration file is needed; for the template fitting, both configuration files are read. The <literal>traceview</literal> display is an embedded ROOT canvas and can be interacted with as such.
       </para>
     </section>
 
@@ -843,7 +843,7 @@
 	      <emphasis>Issue:</emphasis> Running the <literal>EventEditor</literal> in threaded mode results in no output with the following error:
 	      <informalexample>
 		<programlisting>
-		  Warning ZMC Communicator factory created with empy endpoints table
+		  Warning ZMQ Communicator factory created with empty endpoints table
 		  terminate called after throwing an instance of 'std::invalid_argument'
 		      what():  Failed to find endpoint: 1 in ZMQ endpoint lookup table
 		  Aborted
@@ -862,7 +862,7 @@
 	  <listitem>
 	    <literallayout>
 	      <emphasis>Issue:</emphasis> The `traceview` canvas is empty despite selecting a trace to view.
-	    <emphasis>Solution:</emphasis> The `traceview` canvas is an embedded ROOT canvas in a Qt application. You need to configure the ROOT environment by sourcing the appropriate thisroot.sh script.
+	    <emphasis>Solution:</emphasis> The `traceview` canvas is an embedded ROOT canvas in a Qt application. It may be that the ROOT environment must be configure by sourcing the appropriate thisroot.sh script. This issue was observed only once in October 2024 for an unknown version of DDASToys and was not found to be easily reproducible.
 	    </literallayout>
 	  </listitem>
 	</itemizedlist>    

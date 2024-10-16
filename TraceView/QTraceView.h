@@ -60,6 +60,23 @@ class QRootCanvas;
  * communicate between objects. See Qt documentation for details.
  */
 
+/** 
+ * @todo (ASC 10/15/24): Probably a project-wide TODO... only the public and 
+ * Qt signaling interfaces need to be exposed here. I suspect that any helper 
+ * functions can be make static, which may greatly simplify the class and make 
+ * compilation easier.
+ */
+
+/** 
+ * @todo (ASC 10/16/24): Probably _another_ project-wide TODO... avoid 
+ * constructor initializations which use the new keyword. Can use smart ptrs 
+ * (preferred?) or simply initialize in the constructor body with the 
+ * initialization list for all pointer membvers as nullptr. Hopefully improves 
+ * safety e.g., an exception or other error in the constructor body will 
+ * (hopefully!) ensure deletion of created objetcs which _may_ not happen if 
+ * new'd in init list.
+ */
+
 class QTraceView : public QWidget
 {
     Q_OBJECT
@@ -138,7 +155,6 @@ private slots:
     /** 
      * @brief Attempt to create the file data soruce. Update GUI if successful.
      * @param filename Filename as a QString, without URI formatting.
-
      */
     void configureSource(QString filename);
     /** @brief Get the next event. */
