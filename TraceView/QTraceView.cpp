@@ -68,8 +68,8 @@ using namespace ddastoys;
 QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
     QWidget(parent), m_pDecoder(new DDASDecoder), m_pFitManager(new FitManager),
     m_pMenuBar(new QMenuBar), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
-    m_pExitAction(nullptr), m_pButtons{nullptr}, m_pSkipEvents(nullptr),
-    m_pEventsToSkip(nullptr), m_pHitFilter{nullptr},
+    m_pExitAction(nullptr), m_pMainButtons{nullptr}, m_pSelectButtons{nullptr},
+    m_pSelectLineEdit(nullptr), m_pHitFilter{nullptr},
     m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
     m_pHitSelectList(createHitSelectList()),
     m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
@@ -79,7 +79,7 @@ QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
     configureMenu();
   
     // Combine hit selection list and canvas into a single horizontally
-    // aligned widget which we add to the main layout
+    // aligned widget which we add to the main layout:
     
     QWidget* plotWidget = createPlotWidget();  
   
@@ -162,7 +162,7 @@ QTraceView::changeEvent(QEvent* e)
 void
 QTraceView::createActions()
 {
-    m_pOpenAction = new QAction(tr("&Open file..."), this);
+    m_pOpenAction = new QAction(tr("&Open File..."), this);
     m_pOpenAction->setStatusTip(tr("Open an existing file"));
     connect(m_pOpenAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
@@ -202,7 +202,7 @@ QTraceView::createTopBoxes()
     // Channel selection
   
     QGroupBox* channelBox = new QGroupBox;
-    channelBox->setTitle("Channel selection");
+    channelBox->setTitle("Channel Selection");
     QHBoxLayout* channelBoxLayout = new QHBoxLayout;
     const char* letext[3] = {"Crate:" , "Slot:", "Channel:"};
     for (int i = 0; i < 3; i++) {
@@ -213,34 +213,37 @@ QTraceView::createTopBoxes()
     }
     channelBox->setLayout(channelBoxLayout);
 
-    // Skip control
+    // Event selection control:
   
-    QGroupBox* skipBox = new QGroupBox;
-    skipBox->setTitle("Skip control");
-    QHBoxLayout* skipBoxLayout = new QHBoxLayout;
-    m_pSkipEvents = new QPushButton(tr("Skip"));
-    m_pEventsToSkip = new QLineEdit("1");
-    m_pEventsToSkip->setValidator(new QIntValidator(0, 9999999, this));
-    skipBoxLayout->addWidget(m_pSkipEvents);
-    skipBoxLayout->addWidget(m_pEventsToSkip);
-    skipBox->setLayout(skipBoxLayout);
+    QGroupBox* selectBox = new QGroupBox;
+    selectBox->setTitle("Event Selection");
+    QHBoxLayout* selectBoxLayout = new QHBoxLayout;
+    const char* sbtext[2] = {"Skip", "Select"};
+    for (int i = 0; i < 2; i++) {
+	m_pSelectButtons[i] = new QPushButton(tr(sbtext[i]));
+	selectBoxLayout->addWidget(m_pSelectButtons[i]);	
+    }
+    m_pSelectLineEdit = new QLineEdit("0");
+    m_pSelectLineEdit->setValidator(new QIntValidator(0, 9999999, this));
+    selectBoxLayout->addWidget(m_pSelectLineEdit);
+    selectBox->setLayout(selectBoxLayout);
 
-    // Main control (next event, update, exit)
+    // Main control (next event, update, exit):
   
     QGroupBox* mainBox = new QGroupBox;
-    mainBox->setTitle("Main control");
+    mainBox->setTitle("Main Control");
     QHBoxLayout* mainBoxLayout = new QHBoxLayout;
-    const char* btext[3] = {"Next", "Update", "Exit"};
+    const char* mbtext[3] = {"Next", "Update", "Exit"};
     for (int i = 0; i < 3; i++) {
-	m_pButtons[i] = new QPushButton(tr(btext[i]));
-	mainBoxLayout->addWidget(m_pButtons[i]);
+	m_pMainButtons[i] = new QPushButton(tr(mbtext[i]));
+	mainBoxLayout->addWidget(m_pMainButtons[i]);
     }
     mainBox->setLayout(mainBoxLayout);
 
-    // Setup the actual widget
+    // Setup the actual widget:
   
     mainLayout->addWidget(channelBox);
-    mainLayout->addWidget(skipBox);
+    mainLayout->addWidget(selectBox);
     mainLayout->addWidget(mainBox);
     w->setLayout(mainLayout);
   
@@ -270,20 +273,27 @@ QTraceView::createHitSelectList()
 void
 QTraceView::createConnections()
 {
-    // Skip button    
-    connect(m_pSkipEvents, SIGNAL(clicked()), this, SLOT(skipEvents()));  
+    // Skip button
+    connect(m_pSelectButtons[0], SIGNAL(clicked()), this, SLOT(skipEvents()));
+    
+    // Select button
+    connect(m_pSelectButtons[1], SIGNAL(clicked()), this, SLOT(selectEvent()));
   
     // Next button  
-    connect(m_pButtons[0], SIGNAL(clicked()), this, SLOT(getNextEvent()));
+    connect(
+	m_pMainButtons[0], SIGNAL(clicked()),
+	this, SLOT(getNextEventWithTraces())
+	);
 
     // Update buttons  
-    connect(m_pButtons[1], SIGNAL(clicked()), this, SLOT(filterHits()));
+    connect(m_pMainButtons[1], SIGNAL(clicked()), this, SLOT(filterHits()));
     connect(
-	m_pButtons[1], SIGNAL(clicked()), this, SLOT(updateSelectableHits())
+	m_pMainButtons[1], SIGNAL(clicked()),
+	this, SLOT(updateSelectableHits())
 	);
   
     // Exit button  
-    connect(m_pButtons[2], SIGNAL(clicked()), this, SLOT(close()));
+    connect(m_pMainButtons[2], SIGNAL(clicked()), this, SLOT(close()));
 
     // Hit selection  
     connect(
@@ -308,7 +318,7 @@ QTraceView::createPlotWidget()
     // Set a label for the selection list  
     QWidget* labeledList = new QWidget;
     QVBoxLayout* layout = new QVBoxLayout;
-    QLabel* label = new QLabel("Crate:slot:channel hits with traces");
+    QLabel* label = new QLabel("Crate:Slot:Channel Hits with Traces");
     layout->addWidget(label);
     layout->addWidget(m_pHitSelectList);
     labeledList->setLayout(layout);
@@ -384,9 +394,7 @@ QTraceView::updateSelectableHits()
 
     for (unsigned i = 0; i < m_filteredHits.size(); i++) {    
 	// Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
-	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].getCrateID()
-	    ).arg(m_filteredHits[i].getSlotID()
-		).arg(m_filteredHits[i].getChannelID());    
+	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].getCrateID()).arg(m_filteredHits[i].getSlotID()).arg(m_filteredHits[i].getChannelID());    
 	QStandardItem* item = new QStandardItem(id);
 	model->setItem(i, item);
     }
@@ -408,10 +416,12 @@ void
 QTraceView::enableAll()
 {
     for (int i = 0; i < 3; i++) {
-	m_pButtons[i]->setEnabled(true);
+	m_pMainButtons[i]->setEnabled(true);
     }
-    m_pSkipEvents->setEnabled(true);
-    m_pEventsToSkip->setEnabled(true);
+    for (int i = 0; i < 2; i++) {
+	m_pSelectButtons[i]->setEnabled(true);
+    }
+    m_pSelectLineEdit->setEnabled(true);
 }
 
 //____________________________________________________________________________
@@ -424,10 +434,12 @@ void
 QTraceView::disableAll()
 {
     for (int i = 0; i < 2; i++) {
-	m_pButtons[i]->setEnabled(false);
+	m_pMainButtons[i]->setEnabled(false);
     }
-    m_pSkipEvents->setEnabled(false);
-    m_pEventsToSkip->setEnabled(false);
+    for (int i = 0; i < 2; i++) {
+	m_pSelectButtons[i]->setEnabled(false);
+    }
+    m_pSelectLineEdit->setEnabled(false);
 }
 
 //____________________________________________________________________________
@@ -479,7 +491,7 @@ void
 QTraceView::openFile()
 {
     QString filename = QFileDialog::getOpenFileName(
-	this, tr("Open file"), "", tr("EVT files (*.evt);;All Files (*)")
+	this, tr("Open File"), "", tr("Event files (*.evt);;All Files (*)")
 	);
 
     // Get the current file path from the decoder. The path is an empty string
@@ -519,33 +531,23 @@ QTraceView::configureSource(QString filename)
 //____________________________________________________________________________
 /**
  * @details
- * Get the next PHYSICS_EVENT event containing trace data from the data source
- * using the DDASDecoder. Apply the event filter and update the UI.
+ * Get the next PHYSICS_EVENT event from the data source using the DDASDecoder.
+ * Apply the event filter and update the UI.
+ * @note Depending on the channel selection filter settings and whether the hit
+ * has trace data, the hit list may be empty.
  */
 void
 QTraceView::getNextEvent()
 {
-    m_filteredHits.clear();
-  
-    while (m_filteredHits.empty()) {
-	m_hits = m_pDecoder->getEvent();
+    m_hits = m_pDecoder->getEvent();
 
-	// If the hit list is empty there are no more PHYSICS_EVENTs to grab
-	// so issue the EOF warning and return from the function.    
-	filterHits();
+    // If the hit list is empty there are no more PHYSICS_EVENTs to grab
+    // so issue the EOF warning and return from the function.    
+    filterHits();
   
-	if (m_hits.empty()) {
-	    updateSelectableHits();
-	    m_pRootCanvas->clear();
-
-	    std::string msg = "No more physics events in this file.";
-	    msg += "The file contains ";
-	    msg += std::to_string(m_pDecoder->getEventCount());
-	    msg += " physics events.";
-	    issueWarning(msg);
-	    
-	    return;
-	}
+    if (m_hits.empty()) {
+	issueEOFWarning();		
+	return;
     }
 
     updateSelectableHits();
@@ -554,6 +556,22 @@ QTraceView::getNextEvent()
     std::string msg = m_pDecoder->getFilePath()
 	+ " -- Event " + std::to_string(m_pDecoder->getEventIndex());
     setStatusBar(msg);
+}
+
+//____________________________________________________________________________
+/**
+ * @details
+ * Clear the list of filtered hits and keep grabbing events until the filtered 
+ * hit list is not empty i.e., there is at least one valid hit according to 
+ * the channel selection criteria.
+ */
+void
+QTraceView::getNextEventWithTraces()
+{    
+    m_filteredHits.clear();  
+    while (m_filteredHits.empty()) {
+	getNextEvent();
+    }
 }
 
 //____________________________________________________________________________
@@ -568,25 +586,54 @@ QTraceView::skipEvents()
 {
     setStatusBar("Skipping events, be patient...");
   
-    int events = m_pEventsToSkip->text().toInt();
-    int retval = m_pDecoder->skip(events);
+    int skipCount = m_pSelectLineEdit->text().toInt();
+    int retval = m_pDecoder->skip(skipCount);
 
     if (retval < 0) {   
-	m_hits = m_pDecoder->getEvent();
-	filterHits();   
-	updateSelectableHits();
-	m_pRootCanvas->clear();
-	issueWarning(
-	    "No more physics events in this file. The file contains "
-	    + std::to_string(m_pDecoder->getEventCount())
-	    + " physics events."
-	    );
+	issueEOFWarning();
+	return;
     } else {
-	setStatusBar(
-	    "Successfully skipped " + std::to_string(events)
-	    + " physics events. Hit 'Next' to display the next physics "
-	    "event containing trace data."
+	getNextEvent();
+    }
+}
+
+/**
+ * @details
+ * 
+ */ 
+void
+QTraceView::selectEvent()
+{
+    int select = m_pSelectLineEdit->text().toInt();
+    int current = m_pDecoder->getEventIndex();
+    int skipCount = select - current;
+
+    // We're currently looking at this event:
+
+    if (select == current) {
+	return;
+    }
+
+    // We've advanced in the file and are trying to go backwards.
+    // Issue a warning and don't do anything:
+    
+    if (current >= 0 && skipCount < 0) {
+	issueWarning(
+	    "Current event = " + std::to_string(current)
+	    + ", selected event = " + std::to_string(select)
+	    + "\nCannot select previous events!\n"
 	    );
+	return;
+    }
+
+    // Otherwise skip and select:
+    
+    int retval = m_pDecoder->skip(skipCount-1); // We want the next hit...    
+    if (retval < 0) {   
+	issueEOFWarning();
+	return;
+    } else {
+	getNextEvent(); // ...which we grab here if we're not at EOF.
     }
 }
 
@@ -642,6 +689,26 @@ QTraceView::issueWarning(std::string msg)
     msgBox.setText(QString::fromStdString(msg));
     msgBox.setIcon(QMessageBox::Warning);
     msgBox.exec();
+}
+
+/** 
+ * @details
+ * Create the EOF message and issue the warning.
+ */
+void
+QTraceView::issueEOFWarning()
+{
+    m_hits.clear();
+    m_filteredHits.clear();
+    updateSelectableHits();
+    m_pRootCanvas->clear();
+    
+    std::string msg("No more physics events in this file.");
+    msg += "The file contains ";
+    msg += std::to_string(m_pDecoder->getEventCount());
+    msg += " physics events.";
+    
+    issueWarning(msg);
 }
 
 //____________________________________________________________________________

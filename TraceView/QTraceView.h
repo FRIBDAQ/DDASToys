@@ -60,6 +60,23 @@ class QRootCanvas;
  * communicate between objects. See Qt documentation for details.
  */
 
+/** 
+ * @todo (ASC 10/15/24): Probably a project-wide TODO... only the public and 
+ * Qt signaling interfaces need to be exposed here. I suspect that any helper 
+ * functions can be make static, which may greatly simplify the class and make 
+ * compilation easier.
+ */
+
+/** 
+ * @todo (ASC 10/16/24): Probably _another_ project-wide TODO... avoid 
+ * constructor initializations which use the new keyword. Can use smart ptrs 
+ * (preferred?) or simply initialize in the constructor body with the 
+ * initialization list for all pointer membvers as nullptr. Hopefully improves 
+ * safety e.g., an exception or other error in the constructor body will 
+ * (hopefully!) ensure deletion of created objetcs which _may_ not happen if 
+ * new'd in init list.
+ */
+
 class QTraceView : public QWidget
 {
     Q_OBJECT
@@ -138,13 +155,19 @@ private slots:
     /** 
      * @brief Attempt to create the file data soruce. Update GUI if successful.
      * @param filename Filename as a QString, without URI formatting.
-
      */
     void configureSource(QString filename);
-    /** @brief Get the next event containing trace data. */
+    /** @brief Get the next event. */
     void getNextEvent();
+    /** 
+     * @brief Get the next event containing trace data matching the 
+     * selection criteria. 
+     */
+    void getNextEventWithTraces();
     /** @brief Skip events in the source. */
     void skipEvents();
+    /** @brief Select and skip to a specific event. */
+    void selectEvent();
     /** @brief Apply the hit filter to the current hits for this event. */
     void filterHits();
     /** @brief Update the hit selection list. */
@@ -158,6 +181,8 @@ private slots:
      * @param msg  The warning message displayed in the popup window.
      */
     void issueWarning(std::string msg);
+    /** @brief Issue an EOF warning when we're out of PHYSICS_EVENT data. */
+    void issueEOFWarning();
     /** @brief Test slot function which prints the current time to stdout. */
     void test();
   
@@ -176,9 +201,9 @@ private:
     QAction* m_pOpenAction; //!< Open a file and crate a data source from menu.
     QAction* m_pExitAction; //!< Clean exit the program.
 
-    QPushButton* m_pButtons[3]; //!< The "Next", "Update" and "Exit" buttons.
-    QPushButton* m_pSkipEvents; //!< Skip events button.
-    QLineEdit* m_pEventsToSkip; //!< Contains number of events to skip.
+    QPushButton* m_pMainButtons[3]; //!< "Next", "Update" and "Exit" buttons.
+    QPushButton* m_pSelectButtons[2]; //!< "Skip" and "Select" buttons.
+    QLineEdit* m_pSelectLineEdit; //!< Events to skip or select.
     QLineEdit* m_pHitFilter[3]; //!< Crate/slot/channel filter values (wildcard
     //!< "*" is OK).
     QWidget* m_pTopBoxes; //!< Defines layout for selection and event handling
