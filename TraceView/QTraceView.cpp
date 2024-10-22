@@ -22,6 +22,7 @@
 #include "QTraceView.h"
 
 #include <iostream>
+#include <fstream>
 #include <ctime>
 
 #include <QVBoxLayout>
@@ -66,35 +67,38 @@ using namespace ddastoys;
  * children or actions.
  */
 QTraceView::QTraceView(QCommandLineParser& parser, QWidget* parent) :
-    QWidget(parent), m_pDecoder(new DDASDecoder), m_pFitManager(new FitManager),
-    m_pMenuBar(new QMenuBar), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
+    QWidget(parent), m_pDecoder(nullptr), m_pFitManager(nullptr),
+    m_pMenuBar(nullptr), m_pFileMenu(nullptr), m_pOpenAction(nullptr),
     m_pExitAction(nullptr), m_pMainButtons{nullptr}, m_pSelectButtons{nullptr},
-    m_pSelectLineEdit(nullptr), m_pHitFilter{nullptr},
-    m_pTopBoxes(createTopBoxes()), m_pHitData(new QHitData(m_pFitManager)),
-    m_pHitSelectList(createHitSelectList()),
-    m_pRootCanvas(new QRootCanvas(m_pFitManager)), m_pTimer(new QTimer),
-    m_pStatusBar(new QStatusBar)
-{ 
-    createActions();
-    configureMenu();
-  
+    m_pSelectLineEdit(nullptr), m_pHitFilter{nullptr}, m_pTopBoxes(nullptr),
+    m_pHitData(nullptr), m_pHitSelectList(nullptr), m_pPlotWidget(nullptr),
+    m_pRootCanvas(nullptr), m_pTimer(nullptr), m_pStatusBar(nullptr)
+{
+    m_pTimer      = new QTimer;
+    m_pStatusBar  = new QStatusBar;
+    
+    m_pDecoder    = new DDASDecoder;    
+    m_pFitManager = new FitManager;
+    m_pHitData    = new QHitData(m_pFitManager);
+    m_pRootCanvas = new QRootCanvas(m_pFitManager);
+    
+    createMenu();            // Creates m_pMenuBar widget (and actions).
+    createTopBoxWidget();    // Creates m_pTopBoxes widget.
+    createHitSelectWidget(); // Creates m_pHitSelectList widget.
+    createPlotWidget();      // Creates m_pPlotWidget widget.
+      
     // Combine hit selection list and canvas into a single horizontally
     // aligned widget which we add to the main layout:
-    
-    QWidget* plotWidget = createPlotWidget();  
-  
+      
     QVBoxLayout* mainLayout = new QVBoxLayout;
     mainLayout->setMenuBar(m_pMenuBar);
     mainLayout->addWidget(m_pTopBoxes);
     mainLayout->addWidget(m_pHitData);
-    mainLayout->addWidget(plotWidget);
+    mainLayout->addWidget(m_pPlotWidget);
     mainLayout->addWidget(m_pStatusBar);
     setLayout(mainLayout);
 
-    createConnections();
-    disableAll();
-
-    parseArgs(parser);
+    parseArgs(parser); // Assumes widget elements are configured.
   
     m_pTimer->start(20);
 }
@@ -111,9 +115,9 @@ QTraceView::~QTraceView()
     delete m_pFitManager;
 }
 
-///
-// Private member functions inherited from QWidget
-// 
+//////////////////////////////////////////////////////////////////////////////
+// Protected QWidget functions
+/// 
 
 //____________________________________________________________________________
 /**
@@ -138,347 +142,9 @@ QTraceView::changeEvent(QEvent* e)
     }
 }
 
-///
-// Private member functions
-//
-
-//____________________________________________________________________________
-// Create and configure methods
-
-/**
- * @todo (ASC 2/3/23): Creation methods should not fail without explanation -
- * there is an order in which (some of) these functions must be called but no
- * safeguards to prevent someone from doing it wrong e.g. attempting to
- * configure the menu bar before its created.
- */
-
-//____________________________________________________________________________
-/** 
- * @details
- * See Qt documentation for more information. Actions for interactions with 
- * the top menu bar should be created here before adding them to their 
- * associated QMenu objects.
- */
-void
-QTraceView::createActions()
-{
-    m_pOpenAction = new QAction(tr("&Open File..."), this);
-    m_pOpenAction->setStatusTip(tr("Open an existing file"));
-    connect(m_pOpenAction, SIGNAL(triggered()), this, SLOT(openFile()));
-
-    m_pExitAction = new QAction(tr("E&xit"), this);
-    m_pExitAction->setStatusTip(tr("Exit the application"));
-    connect(m_pExitAction, &QAction::triggered, this, &QWidget::close);
-}
-
-//____________________________________________________________________________
-/**
- * @detials
- * The menu bar is a collection of QMenu objects. Menu actions should be 
- * created prior to their addition.
- */
-void
-QTraceView::configureMenu()
-{
-    m_pFileMenu = new QMenu(tr("&File"), this);
-    m_pFileMenu->addAction(m_pOpenAction);
-    m_pFileMenu->addSeparator();
-    m_pFileMenu->addAction(m_pExitAction);
-
-    m_pMenuBar->addMenu(m_pFileMenu);
-}
-
-//____________________________________________________________________________
-/**
- * @details
- * These widgets contain the channel selection boxes and event handling.
- */
-QWidget*
-QTraceView::createTopBoxes()
-{
-    QWidget* w = new QWidget;
-    QHBoxLayout* mainLayout = new QHBoxLayout;
-
-    // Channel selection
-  
-    QGroupBox* channelBox = new QGroupBox;
-    channelBox->setTitle("Channel Selection");
-    QHBoxLayout* channelBoxLayout = new QHBoxLayout;
-    const char* letext[3] = {"Crate:" , "Slot:", "Channel:"};
-    for (int i = 0; i < 3; i++) {
-	QLabel* label = new QLabel(letext[i]);
-	m_pHitFilter[i] = new QLineEdit("*");
-	channelBoxLayout->addWidget(label);
-	channelBoxLayout->addWidget(m_pHitFilter[i]);
-    }
-    channelBox->setLayout(channelBoxLayout);
-
-    // Event selection control:
-  
-    QGroupBox* selectBox = new QGroupBox;
-    selectBox->setTitle("Event Selection");
-    QHBoxLayout* selectBoxLayout = new QHBoxLayout;
-    const char* sbtext[2] = {"Skip", "Select"};
-    for (int i = 0; i < 2; i++) {
-	m_pSelectButtons[i] = new QPushButton(tr(sbtext[i]));
-	selectBoxLayout->addWidget(m_pSelectButtons[i]);	
-    }
-    m_pSelectLineEdit = new QLineEdit("0");
-    m_pSelectLineEdit->setValidator(new QIntValidator(0, 9999999, this));
-    selectBoxLayout->addWidget(m_pSelectLineEdit);
-    selectBox->setLayout(selectBoxLayout);
-
-    // Main control (next event, update, exit):
-  
-    QGroupBox* mainBox = new QGroupBox;
-    mainBox->setTitle("Main Control");
-    QHBoxLayout* mainBoxLayout = new QHBoxLayout;
-    const char* mbtext[3] = {"Next", "Update", "Exit"};
-    for (int i = 0; i < 3; i++) {
-	m_pMainButtons[i] = new QPushButton(tr(mbtext[i]));
-	mainBoxLayout->addWidget(m_pMainButtons[i]);
-    }
-    mainBox->setLayout(mainBoxLayout);
-
-    // Setup the actual widget:
-  
-    mainLayout->addWidget(channelBox);
-    mainLayout->addWidget(selectBox);
-    mainLayout->addWidget(mainBox);
-    w->setLayout(mainLayout);
-  
-    return w;
-}
-
-//____________________________________________________________________________
-QListView*
-QTraceView::createHitSelectList()
-{    
-    QListView* listView = new QListView;
-    QStandardItemModel* model = new QStandardItemModel;
-    listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    listView->setSelectionMode(QAbstractItemView::SingleSelection);
-    listView->setModel(model);
-
-    return listView;
-}
-
-//____________________________________________________________________________
-/**
- * @brief Create signal/slot connections for the main window. 
- *
- * @details
- * See Qt signal/slot documentation for more information.
- */
-void
-QTraceView::createConnections()
-{
-    // Skip button
-    connect(m_pSelectButtons[0], SIGNAL(clicked()), this, SLOT(skipEvents()));
-    
-    // Select button
-    connect(m_pSelectButtons[1], SIGNAL(clicked()), this, SLOT(selectEvent()));
-  
-    // Next button  
-    connect(
-	m_pMainButtons[0], SIGNAL(clicked()),
-	this, SLOT(getNextEventWithTraces())
-	);
-
-    // Update buttons  
-    connect(m_pMainButtons[1], SIGNAL(clicked()), this, SLOT(filterHits()));
-    connect(
-	m_pMainButtons[1], SIGNAL(clicked()),
-	this, SLOT(updateSelectableHits())
-	);
-  
-    // Exit button  
-    connect(m_pMainButtons[2], SIGNAL(clicked()), this, SLOT(close()));
-
-    // Hit selection  
-    connect(
-	m_pHitSelectList->selectionModel(),
-	SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
-	this, SLOT(processHit())
-	);
-
-    // Timer to call inner loop of ROOT  
-    connect(m_pTimer, SIGNAL(timeout()), this, SLOT(handleRootEvents()));  
-}
-
-//____________________________________________________________________________
-/**
- * @details 
- * Combine the hit selection list and the ROOT canvas into a single widget 
- * with its own layout which can be added to the main window layout.
- */
-QWidget*
-QTraceView::createPlotWidget()
-{
-    // Set a label for the selection list  
-    QWidget* labeledList = new QWidget;
-    QVBoxLayout* layout = new QVBoxLayout;
-    QLabel* label = new QLabel("Crate:Slot:Channel Hits with Traces");
-    layout->addWidget(label);
-    layout->addWidget(m_pHitSelectList);
-    labeledList->setLayout(layout);
-  
-    // Combine channel list and plot into a widget  
-    QWidget* plot = new QWidget;
-    QHBoxLayout* mainLayout = new QHBoxLayout;
-    mainLayout->addWidget(labeledList);
-    mainLayout->addWidget(m_pRootCanvas);
-    plot->setLayout(mainLayout);
-
-    return plot;
-}
-
-//____________________________________________________________________________
-// Utilities
-
-//____________________________________________________________________________
-void
-QTraceView::setStatusBar(std::string msg)
-{
-    m_pStatusBar->showMessage(tr(msg.c_str()));
-}
-
-//____________________________________________________________________________
-/**
- * @details
- * Valid events match the crate/slot/channel values set in the filter boxes. 
- * Wildcard '*' characters pass everything. Valid hits must contain traces.
- */
-bool
-QTraceView::isValidHit(const DDASFitHit& hit)
-{
-    bool crateMatch = false;
-    bool slotMatch = false;
-    bool channelMatch = false;
-    bool hasTrace = false;
-    if ((m_pHitFilter[0]->text() == "*") ||
-	(m_pHitFilter[0]->text().toUInt() == hit.getCrateID())) {
-	crateMatch = true;
-    }
-    if ((m_pHitFilter[1]->text() == "*") ||
-	(m_pHitFilter[1]->text().toUInt() == hit.getSlotID())) {
-	slotMatch = true;
-    }
-    if ((m_pHitFilter[2]->text() == "*") ||
-	(m_pHitFilter[2]->text().toUInt() == hit.getChannelID())) {
-	channelMatch = true;
-    }
-
-    std::vector<uint16_t> trace = hit.getTrace();
-    if (!trace.empty()) {
-	hasTrace = true;
-    }
-  
-    return (crateMatch && slotMatch && channelMatch && hasTrace);
-}
-
-//____________________________________________________________________________
-/**
- * @details
- * The list is updated based on the current list of filtered hits. Each hit is 
- * a formatted QString crate:slot:channel where the idenfiying information is 
- * read from the hit itself. The QStandardItemModel is used to provide data to 
- * the QListView interface, see Qt documentation for details.
- */
-void
-QTraceView::updateSelectableHits()
-{
-    QStandardItemModel* model
-	= reinterpret_cast<QStandardItemModel*>(m_pHitSelectList->model());
-    model->clear();
-
-    for (unsigned i = 0; i < m_filteredHits.size(); i++) {    
-	// Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this    
-	QString id = QString("%1:%2:%3").arg(m_filteredHits[i].getCrateID()).arg(m_filteredHits[i].getSlotID()).arg(m_filteredHits[i].getChannelID());    
-	QStandardItem* item = new QStandardItem(id);
-	model->setItem(i, item);
-    }
-}
-
-//____________________________________________________________________________
-void
-QTraceView::resetGUI()
-{
-    m_hits.clear();
-    m_filteredHits.clear();
-    updateSelectableHits();
-    m_pRootCanvas->clear();
-    m_pStatusBar->showMessage("");
-}
-
-//____________________________________________________________________________
-void
-QTraceView::enableAll()
-{
-    for (int i = 0; i < 3; i++) {
-	m_pMainButtons[i]->setEnabled(true);
-    }
-    for (int i = 0; i < 2; i++) {
-	m_pSelectButtons[i]->setEnabled(true);
-    }
-    m_pSelectLineEdit->setEnabled(true);
-}
-
-//____________________________________________________________________________
-/** 
- * @details
- * Disable everything except exit, which we should always be able to do. Assume
- * the exit button is the last one in the button list.
- */
-void
-QTraceView::disableAll()
-{
-    for (int i = 0; i < 2; i++) {
-	m_pMainButtons[i]->setEnabled(false);
-    }
-    for (int i = 0; i < 2; i++) {
-	m_pSelectButtons[i]->setEnabled(false);
-    }
-    m_pSelectLineEdit->setEnabled(false);
-}
-
-//____________________________________________________________________________
-/**
- * @details
- * Use QCommandLineParser to read in and parse positional arguments supplied 
- * on the command line when the program is run. All arguments are considered 
- * optional. Handle the arguments which are provided and issue error messages 
- * if necessary.
- */
-void
-QTraceView::parseArgs(QCommandLineParser& parser)
-{
-    const QStringList args = parser.positionalArguments();
-    const QStringList names = parser.optionNames();
-
-    bool sourceSet = parser.isSet("source");
-    if (sourceSet) {
-	QString filename = parser.value("source");
-	configureSource(filename);
-    }
-
-    bool methodSet = parser.isSet("method");
-    if (methodSet) {
-	QString method = parser.value("method");
-	try {
-	    m_pHitData->setFitMethod(method);
-	} catch (std::invalid_argument& e) {
-	    std::cerr << "QTraceView::parseArgs(): Unknown fitting method "
-		      << method.toStdString() << " read from command line."
-		      << " Setting fit method to 'Analytic'." << std::endl;
-	    m_pHitData->setFitMethod("Analytic");
-	}
-    }  
-}
-
-///
+//////////////////////////////////////////////////////////////////////////////
 // Private slots
-//
+///
 
 //____________________________________________________________________________
 /**
@@ -515,17 +181,27 @@ QTraceView::openFile()
 //____________________________________________________________________________
 /**
  * @details
- * Create a data source from a filename string. Update status bar to show the
- * currently loaded file and enable UI elements on the main window. Errors 
- * which occur during data source creation are dealt with in the decoder.
+ * The list is updated based on the current list of filtered hits. Each hit is 
+ * a formatted QString crate:slot:channel where the idenfiying information is 
+ * read from the hit itself. The QStandardItemModel is used to provide data to 
+ * the QListView interface, see Qt documentation for details.
  */
 void
-QTraceView::configureSource(QString filename)
+QTraceView::updateSelectableHits()
 {
-    m_pDecoder->createDataSource(filename.toStdString());
-    resetGUI();
-    setStatusBar(filename.toStdString());
-    enableAll();
+    QStandardItemModel* model
+	= reinterpret_cast<QStandardItemModel*>(m_pHitSelectList->model());
+    model->clear();
+
+    for (unsigned i = 0; i < m_filteredHits.size(); i++) {
+	auto crate = m_filteredHits[i].getCrateID();
+	auto slot = m_filteredHits[i].getSlotID();
+	auto chan = m_filteredHits[i].getChannelID();
+	// Qt 5.14+ supports arg(arg1, arg2, ...) but we're stuck with this:  
+	QString id = QString("%1:%2:%3").arg(crate).arg(slot).arg(chan);    
+	QStandardItem* item = new QStandardItem(id);
+	model->setItem(i, item);
+    }
 }
 
 //____________________________________________________________________________
@@ -575,6 +251,17 @@ QTraceView::getNextEventWithTraces()
 }
 
 //____________________________________________________________________________
+void
+QTraceView::getNextEventFromList() {
+    if (m_eventList.s_idx >= m_eventList.s_events.size()) {
+	std::cerr << "No more events to view from list\n";
+    } else {
+	selectEventByIndex(m_eventList.s_events[m_eventList.s_idx]);
+	m_eventList.s_idx++; // Next one.
+    }
+}
+
+//____________________________________________________________________________
 /** 
  * @details
  * The number of events to skip is read from the QLineEdit box when the skip 
@@ -584,74 +271,23 @@ QTraceView::getNextEventWithTraces()
 void
 QTraceView::skipEvents()
 {
-    setStatusBar("Skipping events, be patient...");
-  
     int skipCount = m_pSelectLineEdit->text().toInt();
-    int retval = m_pDecoder->skip(skipCount);
-
-    if (retval < 0) {   
-	issueEOFWarning();
-	return;
-    } else {
-	getNextEvent();
-    }
+    setStatusBar("Skipping events, be patient...");  
+    skipAndSelect(skipCount);
 }
 
-/**
+//____________________________________________________________________________
+/** 
  * @details
- * 
- */ 
+ * The event index to select is read from the QLineEdit box when the select 
+ * button is clicked. If the end of the source file is encountered while 
+ * skipping ahead to the selected event, pop up a notification to that effect.
+ */
 void
 QTraceView::selectEvent()
 {
     int select = m_pSelectLineEdit->text().toInt();
-    int current = m_pDecoder->getEventIndex();
-    int skipCount = select - current;
-
-    // We're currently looking at this event:
-
-    if (select == current) {
-	return;
-    }
-
-    // We've advanced in the file and are trying to go backwards.
-    // Issue a warning and don't do anything:
-    
-    if (current >= 0 && skipCount < 0) {
-	issueWarning(
-	    "Current event = " + std::to_string(current)
-	    + ", selected event = " + std::to_string(select)
-	    + "\nCannot select previous events!\n"
-	    );
-	return;
-    }
-
-    // Otherwise skip and select:
-    
-    int retval = m_pDecoder->skip(skipCount-1); // We want the next hit...    
-    if (retval < 0) {   
-	issueEOFWarning();
-	return;
-    } else {
-	getNextEvent(); // ...which we grab here if we're not at EOF.
-    }
-}
-
-//____________________________________________________________________________
-/**
- * @brief Apply the hit filter to the current list of hits for this event.
- */
-void
-QTraceView::filterHits()
-{
-    if (!m_filteredHits.empty()) {
-	m_filteredHits.clear();
-    }
-    for (auto& hit : m_hits) {
-	if (isValidHit(hit)) {
-	    m_filteredHits.push_back(hit);
-	}
-    }
+    selectEventByIndex(select);
 }
 
 //____________________________________________________________________________
@@ -671,10 +307,382 @@ QTraceView::processHit()
 }
 
 //____________________________________________________________________________
+/**
+ * @brief Apply the hit filter to the current list of hits for this event.
+ */
+void
+QTraceView::filterHits()
+{
+    if (!m_filteredHits.empty()) {
+	m_filteredHits.clear();
+    }
+    for (auto& hit : m_hits) {
+	if (isValidHit(hit)) {
+	    m_filteredHits.push_back(hit);
+	}
+    }
+}
+
+
+
+//____________________________________________________________________________
 void
 QTraceView::handleRootEvents()
 {
     gSystem->ProcessEvents();
+}
+
+//____________________________________________________________________________
+void
+QTraceView::test()
+{
+    std::time_t result = std::time(nullptr);
+    std::cout << "Test slot call at: "
+	      << std::asctime(std::localtime(&result))
+	      << std::endl;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Private member functions
+///
+
+//____________________________________________________________________________
+// Create and configure methods
+
+/**
+ * @todo (ASC 2/3/23): Creation methods should not fail without explanation -
+ * there is an order in which (some of) these functions must be called but no
+ * safeguards to prevent someone from doing it wrong e.g. attempting to
+ * configure the menu bar before its created.
+ */
+
+//____________________________________________________________________________
+/**
+ * @detials
+ * The menu bar is a collection of QMenu objects with associated signaling 
+ * for actions. In this function we:
+ * 1. Create the menu bar object.
+ * 2. Create the file menu.
+ * 3. Create actions for the file menu.
+ * 4. Add actions to the file menu.
+ * 5. Add the file menu to the menu bar.
+ */
+void
+QTraceView::createMenu()
+{
+    m_pMenuBar = new QMenuBar;
+    m_pFileMenu = new QMenu(tr("&File"), this);
+    
+    m_pOpenAction = new QAction(tr("&Open File..."), this);
+    m_pOpenAction->setStatusTip(tr("Open an existing file"));
+    connect(m_pOpenAction, SIGNAL(triggered()), this, SLOT(openFile()));
+
+    m_pExitAction = new QAction(tr("E&xit"), this);
+    m_pExitAction->setStatusTip(tr("Exit the application"));
+    connect(m_pExitAction, &QAction::triggered, this, &QWidget::close);
+
+    m_pFileMenu->addAction(m_pOpenAction);
+    m_pFileMenu->addSeparator();
+    m_pFileMenu->addAction(m_pExitAction);
+    m_pMenuBar->addMenu(m_pFileMenu);
+}
+
+//____________________________________________________________________________
+/**
+ * @details
+ * These widgets contain the channel selection boxes and event handling.
+ */
+void
+QTraceView::createTopBoxWidget()
+{
+    m_pTopBoxes = new QWidget;
+    QHBoxLayout* mainLayout = new QHBoxLayout;
+
+    // Channel selection
+  
+    QGroupBox* channelBox = new QGroupBox;
+    channelBox->setTitle("Channel Selection");
+    QHBoxLayout* channelBoxLayout = new QHBoxLayout;
+    const char* letext[3] = {"Crate:" , "Slot:", "Channel:"};
+    for (int i = 0; i < 3; i++) {
+	QLabel* label = new QLabel(letext[i]);
+	m_pHitFilter[i] = new QLineEdit("*");
+	channelBoxLayout->addWidget(label);
+	channelBoxLayout->addWidget(m_pHitFilter[i]);
+    }
+    channelBox->setLayout(channelBoxLayout);
+
+    // Event selection control:
+  
+    QGroupBox* selectBox = new QGroupBox;
+    selectBox->setTitle("Event Selection");
+    QHBoxLayout* selectBoxLayout = new QHBoxLayout;
+    const char* sbtext[2] = {"Skip", "Select"};
+    for (int i = 0; i < 2; i++) {
+	m_pSelectButtons[i] = new QPushButton(tr(sbtext[i]));
+	selectBoxLayout->addWidget(m_pSelectButtons[i]);	
+    }
+    m_pSelectLineEdit = new QLineEdit("0");
+    m_pSelectLineEdit->setValidator(new QIntValidator(0, 9999999, this));
+    selectBoxLayout->addWidget(m_pSelectLineEdit);
+    selectBox->setLayout(selectBoxLayout);
+
+    // Main control (next event, update, exit):
+  
+    QGroupBox* mainBox = new QGroupBox;
+    mainBox->setTitle("Main Control");
+    QHBoxLayout* mainBoxLayout = new QHBoxLayout;
+    const char* mbtext[3] = {"Next", "Update", "Exit"};
+    for (int i = 0; i < 3; i++) {
+	m_pMainButtons[i] = new QPushButton(tr(mbtext[i]));
+	mainBoxLayout->addWidget(m_pMainButtons[i]);
+    }
+    mainBox->setLayout(mainBoxLayout);
+
+    // Setup the actual widget:
+  
+    mainLayout->addWidget(channelBox);
+    mainLayout->addWidget(selectBox);
+    mainLayout->addWidget(mainBox);
+    m_pTopBoxes->setLayout(mainLayout);
+}
+
+//____________________________________________________________________________
+void
+QTraceView::createHitSelectWidget()
+{    
+    m_pHitSelectList = new QListView;
+    QStandardItemModel* model = new QStandardItemModel;
+    m_pHitSelectList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_pHitSelectList->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_pHitSelectList->setModel(model);
+}
+
+//____________________________________________________________________________
+/**
+ * @details 
+ * Combine the hit selection list and the ROOT canvas into a single widget 
+ * with its own layout which can be added to the main window layout.
+ * We assume without checking that the ROOT canvas is not nullptr.
+ */
+void
+QTraceView::createPlotWidget()
+{
+    // Requires that the hit selection is created first:
+    
+    if (!m_pHitSelectList) {
+	createHitSelectWidget();
+    }
+    
+    // Set a label for the selection list:
+    
+    QWidget* labeledList = new QWidget;
+    QVBoxLayout* layout = new QVBoxLayout;
+    QLabel* label = new QLabel("Crate:Slot:Channel Hits with Traces");
+    layout->addWidget(label);
+    layout->addWidget(m_pHitSelectList);
+    labeledList->setLayout(layout);
+  
+    // Combine channel list and plot into a widget:
+    
+    m_pPlotWidget = new QWidget;
+    QHBoxLayout* mainLayout = new QHBoxLayout;
+    mainLayout->addWidget(labeledList);
+    mainLayout->addWidget(m_pRootCanvas);
+    m_pPlotWidget->setLayout(mainLayout);
+}
+
+//____________________________________________________________________________
+/**
+ * @details
+ * See Qt signal/slot documentation for more information. If an event list is 
+ * specified at runtime, the function of some buttons changes slightly.
+ */
+void
+QTraceView::createConnections(bool useEvtList)
+{
+    // Skip button
+    connect(m_pSelectButtons[0], SIGNAL(clicked()), this, SLOT(skipEvents()));
+    
+    // Select button
+    connect(m_pSelectButtons[1], SIGNAL(clicked()), this, SLOT(selectEvent()));
+  
+    // Next button.
+    if (useEvtList) {
+	connect(
+	    m_pMainButtons[0], SIGNAL(clicked()),
+	    this, SLOT(getNextEventFromList())
+	    );
+    } else {
+	connect(
+	    m_pMainButtons[0], SIGNAL(clicked()),
+	    this, SLOT(getNextEventWithTraces())
+	    );
+    }
+
+    // Update buttons  
+    connect(m_pMainButtons[1], SIGNAL(clicked()), this, SLOT(filterHits()));
+    connect(
+	m_pMainButtons[1], SIGNAL(clicked()),
+	this, SLOT(updateSelectableHits())
+	);
+  
+    // Exit button  
+    connect(m_pMainButtons[2], SIGNAL(clicked()), this, SLOT(close()));
+
+    // Hit selection  
+    connect(
+	m_pHitSelectList->selectionModel(),
+	SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
+	this, SLOT(processHit())
+	);
+
+    // Timer to call inner loop of ROOT  
+    connect(m_pTimer, SIGNAL(timeout()), this, SLOT(handleRootEvents()));  
+}
+
+//____________________________________________________________________________
+/**
+ * @details
+ * Create a data source from a filename string. Update status bar to show the
+ * currently loaded file and enable UI elements on the main window. Errors 
+ * which occur during data source creation are dealt with in the decoder.
+ */
+void
+QTraceView::configureSource(QString filename)
+{
+    m_pDecoder->createDataSource(filename.toStdString());
+    reset();
+    setStatusBar(filename.toStdString());
+    enableGUI(true);
+}
+
+//____________________________________________________________________________
+void
+QTraceView::skipAndSelect(int count)
+{
+    int retval = m_pDecoder->skip(count);    
+    if (retval < 0) {   
+	issueEOFWarning();
+    } else {
+	getNextEvent();
+    }
+}
+
+//____________________________________________________________________________
+/**
+ * @details
+ * Events are zero-indexed.
+ */ 
+void
+QTraceView::selectEventByIndex(int idx)
+{
+    int current = m_pDecoder->getEventIndex();
+
+    // We're currently looking at this event:
+
+    if (idx == current) {
+	return;
+    }
+    
+    int skipCount = idx - current - 1; // Our idx is next event.
+    
+    // We've advanced in the file and are trying to go backwards.
+    // Issue a warning and don't do anything:
+    
+    if (current >= 0 && skipCount < 0) {
+	issueWarning(
+	    "Current event = " + std::to_string(current)
+	    + ", selected event = " + std::to_string(idx)
+	    + "\nCannot select previous events!\n"
+	    );
+	return;
+    }
+
+    skipAndSelect(skipCount);    
+}
+
+//____________________________________________________________________________
+/**
+ * @details
+ * Valid events match the crate/slot/channel values set in the filter boxes. 
+ * Wildcard '*' characters pass everything. Valid hits must contain traces.
+ */
+bool
+QTraceView::isValidHit(const DDASFitHit& hit)
+{
+    bool crateMatch = false;
+    bool slotMatch = false;
+    bool channelMatch = false;
+    bool hasTrace = false;
+    if ((m_pHitFilter[0]->text() == "*") ||
+	(m_pHitFilter[0]->text().toUInt() == hit.getCrateID())) {
+	crateMatch = true;
+    }
+    if ((m_pHitFilter[1]->text() == "*") ||
+	(m_pHitFilter[1]->text().toUInt() == hit.getSlotID())) {
+	slotMatch = true;
+    }
+    if ((m_pHitFilter[2]->text() == "*") ||
+	(m_pHitFilter[2]->text().toUInt() == hit.getChannelID())) {
+	channelMatch = true;
+    }
+
+    std::vector<uint16_t> trace = hit.getTrace();
+    if (!trace.empty()) {
+	hasTrace = true;
+    }
+  
+    return (crateMatch && slotMatch && channelMatch && hasTrace);
+}
+
+//____________________________________________________________________________
+// Utilities
+
+//____________________________________________________________________________
+void
+QTraceView::setStatusBar(std::string msg)
+{
+    m_pStatusBar->showMessage(tr(msg.c_str()));
+}
+
+//____________________________________________________________________________
+void
+QTraceView::reset()
+{
+    m_hits.clear();
+    m_filteredHits.clear();
+    updateSelectableHits();
+    m_pRootCanvas->clear();
+    m_pStatusBar->showMessage("");
+}
+
+//____________________________________________________________________________
+void
+QTraceView::enableGUI(bool status)
+{
+    enableMainGUI(status);
+    enableSelectGUI(status);
+}
+
+//____________________________________________________________________________
+void
+QTraceView::enableMainGUI(bool status)
+{
+    for (int i = 0; i < 2; i++) {
+	m_pMainButtons[i]->setEnabled(status);
+    }
+    m_pMainButtons[2]->setEnabled(true); // Exit always enabled.
+}
+
+//____________________________________________________________________________
+void
+QTraceView::enableSelectGUI(bool status)
+{
+    for (int i = 0; i < 2; i++) {
+	m_pSelectButtons[i]->setEnabled(status);
+    }
+    m_pSelectLineEdit->setEnabled(status);
 }
 
 //____________________________________________________________________________
@@ -713,13 +721,96 @@ QTraceView::issueEOFWarning()
 
 //____________________________________________________________________________
 /**
- * @brief Test slot function which prints the current time to stdout. 
+ * @details
+ * Use QCommandLineParser to read in and parse positional arguments supplied 
+ * on the command line when the program is run. All arguments are considered 
+ * optional. Handle the arguments which are provided and issue error messages 
+ * if necessary.
+ *
+ * Some optional arguments may slightly change the function of the GUI 
+ * elements. If an event list is specified by the user at runtime, the 'Next' 
+ * button is used to select the next entry from the event list, not the next 
+ * channel with traces. For simplicity, at the time being skipping and 
+ * selecting specific events from the event list is not supported, so the 
+ * 'Skip' and 'Select' buttons on the hit selection box are disabled.
+ *
+ * @note An event list can only be specified at runtime, and cannot be reloaded
+ * or modified once the program is running. Restarting the program is required 
+ * if the event list is modified or you wish to run `traceview` over all events.
+ *
+ * @todo (ASC 10/22/24): The event list should also be configurable from the 
+ * main menu or some other GUI element as with other optional parameters. 
  */
 void
-QTraceView::test()
+QTraceView::parseArgs(QCommandLineParser& parser)
 {
-    std::time_t result = std::time(nullptr);
-    std::cout << "Test slot call at: "
-	      << std::asctime(std::localtime(&result))
-	      << std::endl;
+    const QStringList args = parser.positionalArguments();
+    const QStringList names = parser.optionNames();
+
+    bool sourceSet = parser.isSet("source");
+    if (sourceSet) {
+	QString filename = parser.value("source");
+	configureSource(filename); // Also enables GUI elements.
+    } else {
+	enableGUI(false);
+    }
+
+    bool methodSet = parser.isSet("method");
+    if (methodSet) {
+	QString method = parser.value("method");
+	try {
+	    m_pHitData->setFitMethod(method);
+	} catch (std::invalid_argument& e) {
+	    std::cerr << "QTraceView::parseArgs(): Unknown fitting method "
+		      << method.toStdString() << " read from command line."
+		      << " Setting fit method to 'Analytic'." << std::endl;
+	    m_pHitData->setFitMethod("Analytic");
+	}
+    }
+    bool eventListSet = parser.isSet("event-list");
+    if (eventListSet) {
+	QString eventListFile = parser.value("event-list");
+	parseEventList(eventListFile);
+	enableSelectGUI(false); // Disable 'Skip', 'Select', QLineEdit
+    }
+
+    // Signals/slots depend on whether we have an event list or not:
+    
+    createConnections(eventListSet);
+}
+
+/**
+ * @details
+ * Events can be specified in the event list file in any order and duplicate 
+ * entries are removed. Event indices are expected to be >= 0, negative
+ * indices will be ignored.
+ */
+void
+QTraceView::parseEventList(QString fname)
+{
+    std::ifstream fin;
+    fin.open(fname.toStdString());
+    
+    // Assume one event per line:
+    
+    int evt;
+    std::vector<int> tmp;
+    
+    while (fin >> evt) {
+	if (evt < 0) {
+	    std::cerr << "Negative event index " << evt
+		      << " found when parsing event file "
+		      << fname.toStdString() << "! Ignoring..."
+		      << std::endl;		
+	} else {
+	    tmp.push_back(evt);
+	}
+    }
+
+    // Uniquify, sort, and assign:
+    
+    std::sort(tmp.begin(), tmp.end());
+    tmp.erase(std::unique(tmp.begin(), tmp.end()), tmp.end());    
+
+    m_eventList = EventList(tmp);
 }

@@ -41,9 +41,10 @@ using namespace ddastoys;
  * @details
  * Also constructs a DDASFitHitUnpacker object.
  */
-TraceViewProcessor::TraceViewProcessor() :
-    m_pUnpacker(new DDASFitHitUnpacker)
-{}
+TraceViewProcessor::TraceViewProcessor() : m_pUnpacker(nullptr)
+{
+    m_pUnpacker = new DDASFitHitUnpacker;
+}
 
 //____________________________________________________________________________
 /**

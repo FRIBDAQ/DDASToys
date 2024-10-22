@@ -41,9 +41,11 @@ using namespace ddastoys;
  * configuration files.
  */
 FitManager::FitManager() :
-    m_pConfig(new Configuration), m_method(ANALYTIC),
-    m_config(false), m_templateConfig(false)
-{}
+    m_pConfig(nullptr), m_method(ANALYTIC), m_config(false),
+    m_templateConfig(false)
+{
+    m_pConfig = new Configuration;
+}
 
 //____________________________________________________________________________
 /**
