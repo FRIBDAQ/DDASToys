@@ -72,7 +72,7 @@
       </listitem>
       <listitem>
 	<para>
-	  <literal>libFitEditorMLInference.so</literal> plugin library - Machine-learning inference fitting for trace data. The detector response is modeled using the analytic fitting functions and ML inference is used to extract parameters for a given trace from a trained model. The ML model provides some means to classify event as either single- or double-pulse hits. First available as part of DDASToys release 6.0-000.
+	  <literal>libFitEditorMLInference.so</literal> plugin library - Machine-learning inference fitting for trace data. The detector response is modeled using the analytic fitting functions and ML inference is used to extract parameters for a given trace from a trained model. The ML model provides some means to classify event as either single- or double-pulse hits. The machine-learning inference fitting is first available as part of DDASToys release 6.0-000.
 	</para>
       </listitem>
       <listitem>
