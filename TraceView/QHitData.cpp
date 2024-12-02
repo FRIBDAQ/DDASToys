@@ -39,11 +39,11 @@ using namespace ddastoys;
 //____________________________________________________________________________
 /**
  * @details
- * Constructs QHitData widgets and defines their layout.
+ * Constructs QHitData widgets and defines their layout. This class does not
+ * manage the FitManager object.
  */
 QHitData::QHitData(FitManager* pFitMgr, QWidget* parent) :
-    QWidget(parent), m_pFitManager(pFitMgr),
-    m_pExtension(new HitExtension)
+    QWidget(parent), m_pFitManager(pFitMgr), m_pExtension(nullptr)
 {
     QGroupBox* hitBox = createHitBox();
     QGroupBox* classifierBox = createClassifierBox();
@@ -66,6 +66,8 @@ QHitData::QHitData(FitManager* pFitMgr, QWidget* parent) :
   
     configureFit();
     createConnections();
+
+    m_pExtension = new HitExtension;
 }
 
 //____________________________________________________________________________

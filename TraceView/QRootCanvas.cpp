@@ -45,6 +45,7 @@ using namespace ddastoys;
 /**
  * @details
  * Construct a QWidget and register it with the ROOT graphics backend.
+ * The canvas does not own the FitManager object.
  */
 QRootCanvas::QRootCanvas(FitManager* pFitMgr, QWidget* parent) :
     QWidget(parent), m_pFitManager(pFitMgr), m_pCanvas(nullptr),

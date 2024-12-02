@@ -50,9 +50,10 @@ using namespace ddastoys;
 
 //____________________________________________________________________________
 DDASDecoder::DDASDecoder() :
-    m_pSourceURL(nullptr), m_pSource(nullptr),
-    m_pProcessor(new TraceViewProcessor), m_count(0)
-{}
+    m_pSourceURL(nullptr), m_pSource(nullptr), m_pProcessor(nullptr), m_count(0)
+{
+    m_pProcessor = new TraceViewProcessor;
+}
 
 //____________________________________________________________________________
 DDASDecoder::~DDASDecoder()

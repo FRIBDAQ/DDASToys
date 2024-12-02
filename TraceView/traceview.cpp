@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 {
   QApplication app(argc, argv);
   app.setApplicationName("traceview");
-  app.setApplicationVersion("2.0");
+  app.setApplicationVersion("2.1");
 
   // Note: "any option value that looks like a builtin Qt option, will be
   // treated by QCoreApplication as a builtin Qt option," see
@@ -84,6 +84,15 @@ int main(int argc, char* argv[])
        QCoreApplication::translate("main", "method")
        );
    opts.push_back(methodOpt);
+   QCommandLineOption eventListOpt(
+       QStringList() << "e" << "event-list",
+       QCoreApplication::translate(
+	   "main",
+	   "Path to a file specifying a subset of events to view (optional)"
+	   ),
+       QCoreApplication::translate("main", "events")
+       );
+   opts.push_back(eventListOpt);
 
    // Add options and configure the parser:
    
