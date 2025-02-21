@@ -46,7 +46,7 @@ namespace ddastoys {
 	 * @param[in, out] pResult Pointer to the fit results.
 	 * @param[in] trace References the trace we're processing.
 	 * @param[in] saturation ADC saturation value. Only samples below the 
-	 *   saturation threshold are used to extrat the pulse parameters.
+	 *   saturation threshold are used to extract the pulse parameters.
 	 * @param[in] module References the inference model for this channel.
 	 */
 	void performInference(

@@ -14,7 +14,9 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
   - libDDASRootFit.so renamed to libDDASRootFitFormat.so
   - Consistent and clear namespacing. The ROOT format library libDDASRootFitFormat.so is in the `ddastoys` namespace, all fitting functions and plugin-specific code have their own namespaces: `ddastoys::analyticfit`, `ddastoys::templatefit`, `ddastoys::mlinference`.
   - An additional entry in the fit configuration file is required. This entry is used to specify the path to a machine learning inference model for determining pulse parameters for that channel. In the case where you do not want to use the machine learning inference, this input parameter does nothing. Some placeholder must be present in the fit configuration file, which can be an empty string "".
-* 6.1-000 : The full hit timestamp is displayed in the `traceview` <em>Hit data</em> box with 1 ps precision (3 decimal places of the full timestamp in nanoseconds). A new feature has been added which allows the user to select PHYSCIS_EVENTs by their event number. Note that the selected events may or may not contain trace data and therefore the hit selection list in `traceview` may be empty. 
+* 6.1-000 : The full hit timestamp is displayed in the `traceview` <em>Hit data</em> box with 1 ps precision (3 decimal places of the full timestamp in nanoseconds). A new feature has been added which allows the user to select PHYSCIS_EVENTs by their event number. Note that the selected events may or may not contain trace data and therefore the hit selection list in `traceview` may be empty.
+* 6.2-000 : Users can specify an event list to view a subset of traces in the input data file.
+* 6.2-001 : Incorporate changes needed to use new ML models which allow trace positions to vary freely on the time axis.
 
 ## Build Instructions for DDASToys 5.1 and later
 - Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.1-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
