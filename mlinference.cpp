@@ -28,6 +28,9 @@
 
 #include "fit_extensions.h"
 
+const int MODEL_TRACELEN = 250;
+const int BASELINE_SAMPLES = 16;
+
 using namespace ddastoys;
 using TT = torch::Tensor; // Just QOL
 
@@ -133,14 +136,20 @@ preprocessInput(std::vector<uint16_t>& trace, unsigned nsamples)
  *
  * @param[in,out] pResult Pointer to results storage.
  * @param[in] output References our processed tensor.
- * @param[in] xscale x-axis normalziation factor (the trace size).
+ * @param[in] traceLen Trace size.
  * @param[in] yscale y-axis normalization factor (max value).
  * @param[in] offset y-axis offset of amplitude-adjusted normalized trace.
  */
 static void
 postProcessOutput(FitInfo* pResult, c10::IValue& output,
-		  double xscale, TT yscale, TT offset)
+		  size_t traceLen, TT yscale, TT offset)
 {
+    int pad = MODEL_TRACELEN - traceLen; // Could pass in...
+
+    /**
+     * @todo (ASC 3/28/25): Additional scaling needed for the k's?
+     */
+    
     // Classification probability. First element is single pulse prob,
     // second element is double pulse prob:
 
@@ -151,22 +160,22 @@ postProcessOutput(FitInfo* pResult, c10::IValue& output,
 
     // Single pulse results:
 
-    TT t_s  = xscale * tup->elements()[2].toTensor();
+    TT t_s  = MODEL_TRACELEN * tup->elements()[2].toTensor() - pad;
     TT a_s  = yscale * tup->elements()[3].toTensor();
-    TT k1_s = tup->elements()[4].toTensor() / xscale;
-    TT k2_s = tup->elements()[5].toTensor() / xscale;
+    TT k1_s = tup->elements()[4].toTensor() / MODEL_TRACELEN;
+    TT k2_s = tup->elements()[5].toTensor() / MODEL_TRACELEN;
     //TT c_s  = yscale * tup->elements()[6].toTensor() + offset;
     
     // Double pulse results:
 
-    TT t1_d = xscale * tup->elements()[12].toTensor();
+    TT t1_d = MODEL_TRACELEN * tup->elements()[12].toTensor() - pad;
     TT a1_d = yscale * tup->elements()[13].toTensor();
-    TT k1_d = tup->elements()[14].toTensor() / xscale;
-    TT k2_d = tup->elements()[15].toTensor() / xscale;
-    TT t2_d = xscale * tup->elements()[17].toTensor();
+    TT k1_d = tup->elements()[14].toTensor() / MODEL_TRACELEN;
+    TT k2_d = tup->elements()[15].toTensor() / MODEL_TRACELEN;
+    TT t2_d = MODEL_TRACELEN * tup->elements()[17].toTensor() - pad;
     TT a2_d = yscale * tup->elements()[18].toTensor();
-    TT k3_d = tup->elements()[19].toTensor() / xscale;
-    TT k4_d = tup->elements()[20].toTensor() / xscale;
+    TT k3_d = tup->elements()[19].toTensor() / MODEL_TRACELEN;
+    TT k4_d = tup->elements()[20].toTensor() / MODEL_TRACELEN;
     // TT c_d = yscale * (tup->elements()[16].toTensor() + tup->elements()[21].toTensor()) + offset;
     
     // Populate our result:
@@ -211,15 +220,26 @@ ddastoys::mlinference::performInference(
 {
     // Preprocess, store normalization constants for later:
 
-    unsigned baselineSamples = 15; // How many samples for baseline removal?
-    auto preprocessed = preprocessInput(trace, baselineSamples);
+    int pad = MODEL_TRACELEN - trace.size();
+    if (pad < 0) {
+	throw std::runtime_error("Input trace is larger than expected size!");
+    }
+    
+    auto preprocessed = preprocessInput(trace, BASELINE_SAMPLES);
     
     auto normalizedInput = std::get<0>(preprocessed); // torch::Tensor
     auto max = std::get<1>(preprocessed);             //      |
     auto offset = std::get<2>(preprocessed);          //      V
-    auto samples = static_cast<double>(trace.size());
 
-    normalizedInput = normalizedInput.unsqueeze(0); // trace.size() x 1 matrix
+    normalizedInput = normalizedInput.unsqueeze(0); // 1 x trace.size() matrix
+
+    // Pad the trace with zeros. Maybe the check is not needed but lets not
+    // worry about what "empty" or "zero length" mean for tensors:
+
+    if (pad > 0) {
+	TT zeros = torch::zeros({1, pad}, torch::kFloat32);
+	normalizedInput = torch::cat({zeros, normalizedInput}, 1);
+    }
     
     // Inference step, input must be matrix:
 
@@ -227,5 +247,5 @@ ddastoys::mlinference::performInference(
 
     // Fish out and populate the results:
 
-    postProcessOutput(pResult, output, samples, max, offset);
+    postProcessOutput(pResult, output, trace.size(), max, offset);
 }
