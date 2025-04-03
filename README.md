@@ -24,7 +24,7 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
 - Ensure Qt 5.11.3 or later is installed. Qt is required by the `traceview` GUI.
 - Configure the same CERN ROOT environment used to compile the NSCLDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddasrootformat.so | grep root` provided that the NSCLDAQ environment is set. Source the script /bin/thisroot.sh located under the top-level ROOT installation directory. In the FRIB bullseye container it is most likely /usr/opt/root/6.26.04/bin/thisroot.sh.
 
-The DDAS format library is incorporated as a git submodule. Before proceeding with the following installation steps, run the command `git submodule --init --recursive` in the top-level DDAS toys source directory. This will clone the DDAS format repository and checkout the correct tag for the version of DDASToys you are installing.
+The DDAS format library is incorporated as a git submodule. Before proceeding with the following installation steps, run the command `git submodule init --recursive` in the top-level DDAS toys source directory. This will clone the DDAS format repository and checkout the correct tag for the version of DDASToys you are installing.
 
 Once the environment and submodule are correctly configured, you can build DDASToys using the command `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make` from the top-level source directory. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
 * Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers at `$(PREFIX)/DDASFormat`,
