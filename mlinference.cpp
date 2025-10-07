@@ -47,33 +47,6 @@ using TT = torch::Tensor; // Just QOL
  */
 
 /**
- * @brief Given a trace and a saturation value, returns the vector of 
- * sample number, sample value pairs that are below saturation.
- *
- * @param trace      Raw trace.
- * @param saturation Saturation level.
- * 
- * @return Reduced trace: vector of sample number, sample value pairs.
- *
- * @note It is currently unclear whether this is needed/how it should be used. 
- * The infernce model is trained using all samples of unsaturated traces. 
- * Reducing the trace changes the input shape. What is the model performance 
- * on saturated traces?
- */
-static std::vector<std::pair<uint16_t, uint16_t>>
-reduceTrace(std::vector<uint16_t>& trace, unsigned saturation)
-{
-    std::vector<std::pair<uint16_t, uint16_t>> reduced;
-    for (unsigned i = 0; i < trace.size(); i++) {
-	if (trace[i] < saturation) {
-	    reduced.push_back(std::pair<uint16_t, uint16_t>(i, trace[i]));
-	}
-    }
-    
-    return reduced;
-}
-
-/**
  * @brief Pre-process the input and return a torch tensor.
  * 
  * @param trace    References the trace to process.
@@ -100,26 +73,22 @@ reduceTrace(std::vector<uint16_t>& trace, unsigned saturation)
 static std::tuple<TT, TT, TT>
 preprocessInput(std::vector<uint16_t>& trace, unsigned nsamples)
 {    
-    // Convert the trace into a torch tensor. Note that first we transform
-    // the input to float and hope this is 32 bits:
+    // Create torch tensor:
 
     std::vector<float> fTrace(trace.begin(), trace.end());
 
-    // Create torch tensor:
-    
-    auto opt = torch::TensorOptions().dtype(torch::kFloat32);
-    TT input = torch::from_blob(fTrace.data(),
-				{static_cast<long>(fTrace.size())},
-				opt).clone();
-    
-    // Remove the offset:
+    TT input = torch::from_blob(
+	fTrace.data(),
+	{static_cast<long>(fTrace.size())},
+	torch::kFloat32
+	).clone();
 
-    TT slice = std::get<0>(torch::topk(input, nsamples,
-				       /*dim=*/0, /*largest=*/false,
-				       /*sorted=*/false));
+    // Remove the offset:
+    
+    TT slice = std::get<0>(torch::topk(input, nsamples, 0, false, false));
     TT offset = torch::mean(slice);
     input -= offset;
-  
+    
     // Divide the trace by its maximum value:
 
     TT max = torch::max(input);
@@ -138,36 +107,38 @@ preprocessInput(std::vector<uint16_t>& trace, unsigned nsamples)
  * @param[in] offset y-axis offset of amplitude-adjusted normalized trace.
  */
 static void
-postProcessOutput(FitInfo* pResult, c10::IValue& output,
-		  double xscale, TT yscale, TT offset)
+postProcessOutput(
+    FitInfo* pResult, c10::IValue& output, double xscale, TT yscale, TT offset
+    )
 {
     // Classification probability. First element is single pulse prob,
     // second element is double pulse prob:
 
     auto tup = output.toTuple();
+    
     TT logit = tup->elements()[1].toTensor();
-    TT pclass = torch::argmax(logit, 1); // 0: single pulse, 1: is double pulse
+    TT pclass = torch::argmax(logit, 1); // 0: single pulse, 1: double pulse
     TT prob = torch::softmax(logit, 1);
 
     // Single pulse results:
 
     TT t_s  = xscale * tup->elements()[2].toTensor();
     TT a_s  = yscale * tup->elements()[3].toTensor();
-    TT k1_s = tup->elements()[4].toTensor() / xscale;
-    TT k2_s = tup->elements()[5].toTensor() / xscale;
-    //TT c_s  = yscale * tup->elements()[6].toTensor() + offset;
-    
+    TT k1_s = tup->elements()[5].toTensor() / xscale;
+    TT k2_s = tup->elements()[6].toTensor() / xscale;
+    TT c_s  = offset;
+	
     // Double pulse results:
 
-    TT t1_d = xscale * tup->elements()[12].toTensor();
-    TT a1_d = yscale * tup->elements()[13].toTensor();
-    TT k1_d = tup->elements()[14].toTensor() / xscale;
-    TT k2_d = tup->elements()[15].toTensor() / xscale;
-    TT t2_d = xscale * tup->elements()[17].toTensor();
-    TT a2_d = yscale * tup->elements()[18].toTensor();
-    TT k3_d = tup->elements()[19].toTensor() / xscale;
-    TT k4_d = tup->elements()[20].toTensor() / xscale;
-    // TT c_d = yscale * (tup->elements()[16].toTensor() + tup->elements()[21].toTensor()) + offset;
+    TT t1_d = xscale * tup->elements()[2].toTensor();
+    TT a1_d = yscale * tup->elements()[4].toTensor();
+    TT k1_d = tup->elements()[5].toTensor() / xscale;
+    TT k2_d = tup->elements()[6].toTensor() / xscale;
+    TT t2_d = xscale * tup->elements()[7].toTensor();
+    TT a2_d = yscale * tup->elements()[8].toTensor();
+    TT k3_d = tup->elements()[9].toTensor() / xscale;
+    TT k4_d = tup->elements()[10].toTensor() / xscale;
+    TT c_d = offset;
     
     // Populate our result:
     
@@ -175,7 +146,6 @@ postProcessOutput(FitInfo* pResult, c10::IValue& output,
     pResult->s_extension.onePulseFit.pulse.position  = t_s.item<double>();
     pResult->s_extension.onePulseFit.pulse.decayTime = k1_s.item<double>();
     pResult->s_extension.onePulseFit.pulse.steepness = k2_s.item<double>();
-    //pResult->s_extension.onePulseFit.offset = c_s.item<double>();
     pResult->s_extension.onePulseFit.offset = offset.item<double>();
     
     pResult->s_extension.twoPulseFit.pulses[0].amplitude = a1_d.item<double>();
@@ -186,7 +156,6 @@ postProcessOutput(FitInfo* pResult, c10::IValue& output,
     pResult->s_extension.twoPulseFit.pulses[1].position  = t2_d.item<double>();
     pResult->s_extension.twoPulseFit.pulses[1].decayTime = k3_d.item<double>();
     pResult->s_extension.twoPulseFit.pulses[1].steepness = k4_d.item<double>();
-    //pResult->s_extension.twoPulseFit.offset = c_d.item<double>();
     pResult->s_extension.twoPulseFit.offset = offset.item<double>();
     
     pResult->s_extension.singleProb = prob[0][0].item<double>();
@@ -204,8 +173,7 @@ postProcessOutput(FitInfo* pResult, c10::IValue& output,
  */
 void
 ddastoys::mlinference::performInference(
-    FitInfo* pResult,
-    std::vector<uint16_t>& trace, unsigned saturation,
+    FitInfo* pResult, std::vector<uint16_t>& trace, unsigned saturation,
     torch::jit::script::Module& module
     )
 {

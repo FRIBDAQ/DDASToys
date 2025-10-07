@@ -26,7 +26,7 @@
 #include <cstdint>
 #include <vector>
 
-#include <torch/script.h> // Can forward-declare?
+#include <torch/script.h>
 
 /** @namespace ddastoys */
 namespace ddastoys {
@@ -50,9 +50,8 @@ namespace ddastoys {
 	 * @param[in] module References the inference model for this channel.
 	 */
 	void performInference(
-	    FitInfo* pResult,
-	    std::vector<uint16_t>& trace, unsigned saturation,
-	    torch::jit::script::Module& module
+	    FitInfo* pResult, std::vector<uint16_t>& trace,
+	    unsigned saturation, torch::jit::script::Module& module
 	    );
 	
 	/** @} */	
