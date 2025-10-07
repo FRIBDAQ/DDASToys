@@ -76,6 +76,7 @@ MAXPOINTS=250
 
 # Unified format library:
 
+UFMT=$(DAQROOT)/unifiedformat
 UFMTINC=$(UFMT)/include
 UFMTLIB=$(UFMT)/lib
 
@@ -176,11 +177,11 @@ FitEditor%.o: FitEditor%.cpp
 # Companion programs:
 
 traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro UFMT=$(UFMT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
 	$(MAKE) -C TraceView
 
 eeconverter:
-	DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
+	UFMT=$(UFMT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
 
 ##
 # Build docbooks and doxygen documentation
