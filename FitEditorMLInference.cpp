@@ -67,9 +67,7 @@ ddastoys::FitEditorMLInference::FitEditorMLInference() :
     }
 }
 
-ddastoys::FitEditorMLInference::FitEditorMLInference(
-    const FitEditorMLInference& rhs
-    ) :
+ddastoys::FitEditorMLInference::FitEditorMLInference(const FitEditorMLInference& rhs) :
     m_pConfig(new Configuration(*rhs.m_pConfig))
 {}
 
@@ -77,9 +75,7 @@ ddastoys::FitEditorMLInference::FitEditorMLInference(
  * @details
  * Constructs using move assignment.
  */
-ddastoys::FitEditorMLInference::FitEditorMLInference(
-    FitEditorMLInference&& rhs
-    ) noexcept :
+ddastoys::FitEditorMLInference::FitEditorMLInference(FitEditorMLInference&& rhs) noexcept :
     m_pConfig(nullptr)
 {
     *this = std::move(rhs);
@@ -129,9 +125,7 @@ ddastoys::FitEditorMLInference::~FitEditorMLInference()
  * - Create an IOvec entry for the extension we created (dynamic).
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-ddastoys::FitEditorMLInference::operator()(
-    pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody
-    )
+ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody)
 { 
     std::vector<CBuiltRingItemEditor::BodySegment> result;
     
@@ -141,7 +135,7 @@ ddastoys::FitEditorMLInference::operator()(
     
     uint16_t* pSize = static_cast<uint16_t*>(pBody);
     CBuiltRingItemEditor::BodySegment hitInfo(
-	*pSize*sizeof(uint16_t), pSize, false
+	*pSize*sizeof(uint16_t), pSize,	false
 	);
     result.push_back(hitInfo);
     
@@ -150,9 +144,7 @@ ddastoys::FitEditorMLInference::operator()(
     DDASHit hit;
     DDASHitUnpacker unpacker;
     unpacker.unpack(
-	static_cast<uint32_t*>(pBody),
-	static_cast<uint32_t*>(nullptr),
-	hit
+	static_cast<uint32_t*>(pBody), static_cast<uint32_t*>(nullptr), hit
 	);
 
     auto crate = hit.getCrateID();
@@ -165,12 +157,10 @@ ddastoys::FitEditorMLInference::operator()(
 	
 	if (trace.size() > 0) { // Need a trace to fit
 	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
-	    auto modelPath = m_pConfig->getModelPath(crate, slot, chan);
-	    mlinference::performInference(
-		pFit, trace, sat, m_models[modelPath]
-		);
+	    auto path = m_pConfig->getModelPath(crate, slot, chan);
+	    mlinference::performInference(pFit, trace, sat, m_models[path]);
 	}
-    
+	
 	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
 	result.push_back(fit);
     
