@@ -139,18 +139,18 @@ libDDASFormat.so:
 
 libFitEditorAnalytic.so: FitEditorAnalytic.o Configuration.o 		\
 	functions_analytic.o lmfit_analytic.o 				\
-	CFitEngine.o SerialFitEngineAnalytic.o 				\
+	CFitEngine.o SerialFitEngineAnalytic.o 	profiling.o		\
 	$(CUDAOBJ)
 	$(CXX) -o libFitEditorAnalytic.so -shared $^ 			\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitEditorTemplate.so: FitEditorTemplate.o Configuration.o 		\
-	functions_template.o lmfit_template.o 
+	functions_template.o lmfit_template.o profiling.o
 	$(CXX) -o libFitEditorTemplate.so -shared $^ 			\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)
 
 libFitEditorMLInference.so: FitEditorMLInference.o Configuration.o 	\
-	functions_analytic.o mlinference.o
+	functions_analytic.o mlinference.o profiling.o
 	$(CXX) -o libFitEditorMLInference.so -shared $^			\
 	$(CXXLDFLAGS) $(EXTRALDFLAGS)					\
 	-L$(TORCHLIB) -Wl,-rpath=$(TORCHLIB) -ltorch -ltorch_cpu -lc10

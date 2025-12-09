@@ -29,9 +29,12 @@
 
 #include "Configuration.h"
 #include "lmfit_template.h"
+#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
+
+static Stats stats;
     
 /**
  * @details
@@ -141,7 +144,7 @@ FitEditorTemplate::operator()(
     // uint32_t of the body is the size of the standard hit part in
     // uint16_t words.
     
-    uint16_t* pSize = static_cast<uint16_t*>(pBody);
+    uint32_t* pSize = static_cast<uint32_t*>(pBody);
     CBuiltRingItemEditor::BodySegment hitInfo(
 	*pSize*sizeof(uint16_t),pSize, false
 	);
@@ -171,14 +174,20 @@ FitEditorTemplate::operator()(
 	    int classification = pulseCount(hit);
 	    
 	    if (classification) {
+
+		// Track total time:
+
+		double total = 0;
 		
 		// Bit 0 do single fit, bit 1 do double fit.
 		
 		if (classification & 1) {
+		    Timer timer;
 		    templatefit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace,
 			m_template, m_align, limits, sat
 			);
+		    total += timer.elapsed();
 		}
                     
 		if (classification & 2 ) {
@@ -190,18 +199,29 @@ FitEditorTemplate::operator()(
 		    
 		    if (classification & 1) {
 			fit1Info guess = pFit->s_extension.onePulseFit;
+			Timer timer;
 			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
 			    m_template, m_align, limits, &guess, sat
 			    );
+			total += timer.elapsed();
 		    } else {
 			// nullptr: no guess for single params.
+			Timer timer;
 			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
 			    m_template, m_align, limits, nullptr, sat
 			    );
+			total += timer.elapsed();
 		    }
-		}	  
+		}
+
+		stats.addData(total);
+		if (stats.size() == 10000) {
+		    stats.compute();
+		    stats.print("======== Template fit stats ========");
+		}
+		
 	    }	   
 	}
     	

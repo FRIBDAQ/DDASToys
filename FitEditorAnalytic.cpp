@@ -30,9 +30,12 @@
 
 #include "Configuration.h"
 #include "lmfit_analytic.h"
+#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
+
+static Stats stats;
 
 /**
  * @details
@@ -121,7 +124,7 @@ ddastoys::FitEditorAnalytic::operator()(
     // uint32_t of the body is the size of the standard hit part in
     // uint16_t words.
     
-    uint16_t* pSize = static_cast<uint16_t*>(pBody);
+    uint32_t* pSize = static_cast<uint32_t*>(pBody);
     CBuiltRingItemEditor::BodySegment hitInfo(
 	*pSize*sizeof(uint16_t), pSize, false
 	);
@@ -152,12 +155,18 @@ ddastoys::FitEditorAnalytic::operator()(
 	    
 	    if (classification) {
 		
+		// Track total time:
+
+		double total = 0;
+		
 		// Bit 0 do single fit, bit 1 do double fit.
 		    
 		if (classification & 1) {
+		    Timer timer;
 		    analyticfit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace, limits, sat
 			);
+		    total += timer.elapsed();
 		}                    
 		if (classification & 2 ) {
 		    
@@ -168,18 +177,29 @@ ddastoys::FitEditorAnalytic::operator()(
 		    
 		    if (classification & 1) {
 			fit1Info guess = pFit->s_extension.onePulseFit;
+			Timer timer;
 			analyticfit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace, limits,
 			    &guess, sat
 			    );
+			total += timer.elapsed();
 		    } else {
+			Timer timer;
 			// nullptr: no guess for single params.
 			analyticfit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace, limits,
 			    nullptr, sat
 			    );
+			total += timer.elapsed();
 		    }
-		}	  
+		}
+
+		stats.addData(total);
+		if (stats.size() == 10000) {
+		    stats.compute();
+		    stats.print("======== Analytic fit stats ========");
+		}
+		
 	    }	
 	}
     

@@ -29,9 +29,12 @@
 #include "Configuration.h"
 #include "fit_extensions.h"
 #include "mlinference.h"
+#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
+
+static Stats stats;
 
 /**
  * @details
@@ -39,6 +42,13 @@ using namespace ddastoys;
  * configuration data. Reads the fit config file. Loads all ML models
  * specified in the configuration. Stores models in a map keyed by the
  * path to their associated PyTorch file.
+ *
+ * The number of threads is explicitly set to 1 as this function is intended
+ * to be called by worker processes in the parallel processing framework.
+ * Some model optimizations are applied:
+ * - `torch::jit::setGraphExecutorOptimize(true)`: Graph optimizations
+ * - `module = torch::jit::freeze(module)`: Freeze, inline, const attributes
+ * - `module = torch::jit::optimize_for_inference(module)`: As name implies
  */
 ddastoys::FitEditorMLInference::FitEditorMLInference() :
     m_pConfig(new Configuration)
@@ -52,11 +62,26 @@ ddastoys::FitEditorMLInference::FitEditorMLInference() :
     }
 
     // Load all the models and store for later access:
+
+    torch::set_num_threads(1); // Each worker is 1 CPU (or thread)
+    torch::jit::setGraphExecutorOptimize(true);
     
     auto modelList = m_pConfig->getModelList();
     for (const auto& m : modelList) {
 	try {
 	    torch::jit::script::Module module = torch::jit::load(m);
+	    module.eval();
+	    module = torch::jit::freeze(module);
+	    module = torch::jit::optimize_for_inference(module);
+
+	    // Warm-up inference to pre-compile kernels:
+	    
+            {
+                torch::InferenceMode inference_mode;                
+                auto input = torch::randn({1, 130}); // a priori size...
+		auto warmup = module.forward({input});                
+            }
+	    
 	    m_models[m] = module;
 	}
 	catch (const c10::Error& e) {
@@ -133,7 +158,7 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr, pBodyHeader pBH
     // uint32_t of the body is the size of the standard hit part in
     // uint16_t words.
     
-    uint16_t* pSize = static_cast<uint16_t*>(pBody);
+    uint32_t* pSize = static_cast<uint32_t*>(pBody);
     CBuiltRingItemEditor::BodySegment hitInfo(
 	*pSize*sizeof(uint16_t), pSize,	false
 	);
@@ -158,7 +183,13 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr, pBodyHeader pBH
 	if (trace.size() > 0) { // Need a trace to fit
 	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
 	    auto path = m_pConfig->getModelPath(crate, slot, chan);
+	    Timer timer;
 	    mlinference::performInference(pFit, trace, sat, m_models[path]);
+	    stats.addData(timer.elapsed());
+	    if (stats.size() == 10000) {
+		stats.compute();
+		stats.print("======== ML inference stats ========");
+	    }
 	}
 	
 	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
