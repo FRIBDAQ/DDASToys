@@ -91,11 +91,11 @@ ddastoys::Configuration::readConfigFile()
 	std::string line = isComment(originalline);
     
 	if (line != "") {
-	    unsigned crate, slot, channel, low, high, saturation;
+	    unsigned crate, slot, channel, length, low, high, saturation;
 	    std::string modelPath;
 	    std::stringstream sline(line);
-	    sline >> crate >> slot >> channel >> low  >> high >> saturation
-		  >> modelPath;
+	    sline >> crate >> slot >> channel >> length >> low  >> high
+		  >> saturation >> modelPath;
 	    
 	    if (sline.fail()) {
 		std::string msg(

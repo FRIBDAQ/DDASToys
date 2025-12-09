@@ -37,6 +37,12 @@ using namespace ddastoys;
 static Stats stats;
 
 /**
+ * @todo (ASC 12/9/25): Model input shape for warmup is hardcoded for
+ * testing optimizations. This needs to be runtime configurable by the
+ * user, preferrably defined in the fit configuration file.
+ */
+
+/**
  * @details
  * Sets up the configuration manager to parse config files and manage 
  * configuration data. Reads the fit config file. Loads all ML models

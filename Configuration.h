@@ -196,8 +196,8 @@ namespace ddastoys {
 	     */
 	};
 	std::map<unsigned, ConfigInfo> m_fitChannels; //!< Channel map for fits.
-	std::vector<double> m_template; //!< Template trace data.
-	unsigned m_alignPoint; //!< Alignment point for the template trace.
+	std::vector<double> m_template; //!< Template trace data
+	unsigned m_alignPoint; //!< Alignment point for the template trace
     };
 
 /** @} */
