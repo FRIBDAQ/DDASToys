@@ -1,3 +1,4 @@
+
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2017.
@@ -34,8 +35,11 @@
 using namespace ddasfmt;
 using namespace ddastoys;
 
+#ifdef ENABLE_TIMING
 static Stats stats;
-    
+static double total(0);
+#endif
+
 /**
  * @details
  * Sets up the configuration manager to parse config files and manage 
@@ -175,19 +179,24 @@ FitEditorTemplate::operator()(
 	    
 	    if (classification) {
 
+#ifdef ENABLE_TIMING
 		// Track total time:
-
-		double total = 0;
+		total = 0;
+#endif
 		
 		// Bit 0 do single fit, bit 1 do double fit.
 		
 		if (classification & 1) {
+#ifdef ENABLE_TIMING
 		    Timer timer;
+#endif
 		    templatefit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace,
 			m_template, m_align, limits, sat
 			);
+#ifdef ENABLE_TIMING
 		    total += timer.elapsed();
+#endif
 		}
                     
 		if (classification & 2 ) {
@@ -199,29 +208,37 @@ FitEditorTemplate::operator()(
 		    
 		    if (classification & 1) {
 			fit1Info guess = pFit->s_extension.onePulseFit;
+#ifdef ENABLE_TIMING
 			Timer timer;
+#endif
 			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
 			    m_template, m_align, limits, &guess, sat
 			    );
+#ifdef ENABLE_TIMING
 			total += timer.elapsed();
+#endif
 		    } else {
 			// nullptr: no guess for single params.
+#ifdef ENABLE_TIMING
 			Timer timer;
+#endif
 			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
 			    m_template, m_align, limits, nullptr, sat
 			    );
+#ifdef ENABLE_TIMING
 			total += timer.elapsed();
+#endif
 		    }
 		}
-
+#ifdef ENABLE_TIMING
 		stats.addData(total);
 		if (stats.size() == 10000) {
 		    stats.compute();
 		    stats.print("======== Template fit stats ========");
 		}
-		
+#endif		
 	    }	   
 	}
     	

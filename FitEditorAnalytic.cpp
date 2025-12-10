@@ -35,7 +35,10 @@
 using namespace ddasfmt;
 using namespace ddastoys;
 
+#ifdef ENABLE_TIMING
 static Stats stats;
+static double total(0);
+#endif
 
 /**
  * @details
@@ -155,18 +158,22 @@ ddastoys::FitEditorAnalytic::operator()(
 	    
 	    if (classification) {
 		
+#ifdef ENABLE_TIMING
 		// Track total time:
-
-		double total = 0;
-		
+		total = 0;
+#endif		
 		// Bit 0 do single fit, bit 1 do double fit.
 		    
 		if (classification & 1) {
+#ifdef ENABLE_TIMING
 		    Timer timer;
+#endif
 		    analyticfit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace, limits, sat
 			);
+#ifdef ENABLE_TIMING		    
 		    total += timer.elapsed();
+#endif
 		}                    
 		if (classification & 2 ) {
 		    
@@ -177,29 +184,37 @@ ddastoys::FitEditorAnalytic::operator()(
 		    
 		    if (classification & 1) {
 			fit1Info guess = pFit->s_extension.onePulseFit;
+#ifdef ENABLE_TIMING
 			Timer timer;
+#endif
 			analyticfit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace, limits,
 			    &guess, sat
 			    );
+#ifdef ENABLE_TIMING
 			total += timer.elapsed();
+#endif
 		    } else {
+#ifdef ENABLE_TIMING
 			Timer timer;
+#endif
 			// nullptr: no guess for single params.
 			analyticfit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace, limits,
 			    nullptr, sat
 			    );
+#ifdef ENABLE_TIMING
 			total += timer.elapsed();
+#endif
 		    }
 		}
-
+#ifdef ENABLE_TIMING
 		stats.addData(total);
 		if (stats.size() == 10000) {
 		    stats.compute();
 		    stats.print("======== Analytic fit stats ========");
 		}
-		
+#endif		
 	    }	
 	}
     

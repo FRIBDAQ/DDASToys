@@ -72,13 +72,13 @@ endif
 
 CXX=g++
 
-MAXPOINTS=250
+MAXPOINTS=5000
 
 # Unified format library:
 
-UFMT=$(DAQROOT)/unifiedformat
-UFMTINC=$(UFMT)/include
-UFMTLIB=$(UFMT)/lib
+UFMTROOT=$(DAQROOT)/unifiedformat
+UFMTINC=$(UFMTROOT)/include
+UFMTLIB=$(UFMTROOT)/lib
 
 # DDAS format library (see .gitmodules):
 
@@ -87,9 +87,14 @@ DDASFMTINC=$(DDASFMTPATH)/include
 DDASFMTLIB=$(DDASFMTPATH)/lib
 DDASFMTBUILDDIR=$(PWD)/DDASFormat/build
 
-# Flags depend on whether we build for GPU fitting:
+# Flags depend on whether we build for GPU fitting. Build with -DENABLE_TIMING
+# to enable inference time measurements in FitEditors:
 
 CXXFLAGS=-std=c++14 -g -O2 -I. -I$(DDASFMTINC) -I$(UFMTINC)
+ifeq ($(ENABLE_TIMING), 1)
+CXXFLAGS+=-DENABLE_TIMING
+endif
+
 CXXLDFLAGS=-lgsl -lgslcblas -L$(DDASFMTLIB) -lDDASFormat
 
 CUDACXXFLAGS=-DCUDA --compiler-options -fPIC 				\
@@ -177,11 +182,11 @@ FitEditor%.o: FitEditor%.cpp
 # Companion programs:
 
 traceview:
-	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro UFMT=$(UFMT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
+	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro UFMTROOT=$(UFMTROOT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
 	$(MAKE) -C TraceView
 
 eeconverter:
-	UFMT=$(UFMT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
+	UFMTROOT=$(UFMTROOT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
 
 ##
 # Build docbooks and doxygen documentation

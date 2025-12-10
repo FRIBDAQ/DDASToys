@@ -3,8 +3,8 @@
 CC = gcc
 CXX = g++
 
-UFMTINC=$(UFMT)/include
-UFMTLIB=$(UFMT)/lib
+UFMTINC=$(UFMTROOT)/include
+UFMTLIB=$(UFMTROOT)/lib
 
 # Assume DAQ environment is set up, DDASFMT stuff from toplevel Makefile:
 

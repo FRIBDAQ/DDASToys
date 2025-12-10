@@ -34,7 +34,9 @@
 using namespace ddasfmt;
 using namespace ddastoys;
 
+#ifdef ENABLE_TIMING
 static Stats stats;
+#endif
 
 /**
  * @todo (ASC 12/9/25): Model input shape for warmup is hardcoded for
@@ -79,15 +81,6 @@ ddastoys::FitEditorMLInference::FitEditorMLInference() :
 	    module.eval();
 	    module = torch::jit::freeze(module);
 	    module = torch::jit::optimize_for_inference(module);
-
-	    // Warm-up inference to pre-compile kernels:
-	    
-            {
-                torch::InferenceMode inference_mode;                
-                auto input = torch::randn({1, 130}); // a priori size...
-		auto warmup = module.forward({input});                
-            }
-	    
 	    m_models[m] = module;
 	}
 	catch (const c10::Error& e) {
@@ -189,13 +182,17 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr, pBodyHeader pBH
 	if (trace.size() > 0) { // Need a trace to fit
 	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
 	    auto path = m_pConfig->getModelPath(crate, slot, chan);
+#ifdef ENABLE_TIMING
 	    Timer timer;
+#endif
 	    mlinference::performInference(pFit, trace, sat, m_models[path]);
+#ifdef ENABLE_TIMING
 	    stats.addData(timer.elapsed());
 	    if (stats.size() == 10000) {
 		stats.compute();
 		stats.print("======== ML inference stats ========");
 	    }
+#endif
 	}
 	
 	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);

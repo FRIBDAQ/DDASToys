@@ -17,6 +17,8 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
 * 6.1-000 : The full hit timestamp is displayed in the `traceview` <em>Hit data</em> box with 1 ps precision (3 decimal places of the full timestamp in nanoseconds). A new feature has been added which allows the user to select PHYSCIS_EVENTs by their event number. Note that the selected events may or may not contain trace data and therefore the hit selection list in `traceview` may be empty.
 * 6.2-000 : Users can specify an event list to view a subset of traces in the input data file.
 * 6.2-001 : Incorporate changes needed to use new ML models which allow trace positions to vary freely on the time axis.
+* 6.3-000 : Updated for ML model used in e23055 (Crider).
+* 6.3-001 : Optimizations for ML inference, added some simple inference profiling tools and option to build DDASToys with profiling output.
 
 ## Build Instructions for DDASToys 5.1 and later
 - Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.1-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
@@ -26,12 +28,12 @@ Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASTo
 
 The DDAS format library is incorporated as a git submodule. Before proceeding with the following installation steps, run the command `git submodule init --recursive` in the top-level DDAS toys source directory. This will clone the DDAS format repository and checkout the correct tag for the version of DDASToys you are installing.
 
-Once the environment and submodule are correctly configured, you can build DDASToys using the command `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make` from the top-level source directory. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
+Once the environment and submodule are correctly configured, you can build DDASToys using the command `UFMTROOT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make` from the top-level source directory. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
 * Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers at `$(PREFIX)/DDASFormat`,
 * Build the various fit editor, format, and unpacker libraries,
 * Build the `traceview` and `eeconverter` programs (note `traceview` is only built if Qt 5.11.3+ is found), and
 * Build the full DDASToys documentation.
-Type `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree. You can also build and install the project using a single command: `UFMT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make all install`.
+Type `UFMTROOT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make install` to install the DDASToys software and documentation somewhere. Note that this install `PREFIX` also defaults to /user/\<yourname\>/ddastoys if not specified. The `PREFIX` for the format library and the DDASToys code can in principle be different but they are intended to be installed under the same directory tree. You can also build and install the project using a single command: `UFMTROOT=/path/to/ufmt PREFIX=/where/to/install/ddastoys make all install`. To build with inference timing loops enabled, compile with ENABLE_TIMING defined in the environment.
 
 ## Build Instructions for DDASToys 5.0
 - Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.0-005 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.

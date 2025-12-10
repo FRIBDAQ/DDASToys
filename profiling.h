@@ -54,10 +54,7 @@ namespace ddastoys {
 	 * @brief Get the elapsed time in microseconds
 	 * @return Elapsed time in microseconds
 	 */
-	double elapsed() {
-	    auto end = std::chrono::high_resolution_clock::now();
-	    return std::chrono::duration<double, std::micro>(end - s_start).count();
-	};
+	double elapsed();
     };
 
     /**
@@ -80,8 +77,8 @@ namespace ddastoys {
     struct Stats {
 	double s_mean;   //!< Mean of s_data when `compute()` is called
 	double s_stddev; //!< Stddev of s_data when `compute()` is called
-	double s_min;    //!< Max value of s_data when `compute()` is called
-	double s_max;    //!< Min value of s_data when `compute()` is called
+	double s_min;    //!< Min value of s_data when `compute()` is called
+	double s_max;    //!< Max value of s_data when `compute()` is called
 	std::vector<double> s_data; //!< Data for stats computation
 
 	/**
