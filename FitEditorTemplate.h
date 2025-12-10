@@ -118,7 +118,7 @@ namespace ddastoys {
   
 	// Private member data
     private:
-	Configuration* m_pConfig;       //! Configuration file parser.
+	Configuration* m_pConfig;       //!< Configuration file parser.
 	std::vector<double> m_template; //!< Trace template.
 	unsigned m_align;               //!< Alignment point on the trace.
     };

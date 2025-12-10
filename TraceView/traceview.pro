@@ -8,14 +8,14 @@ CONFIG += qt warn_on thread console
 message(Using DAQROOT="$(DAQROOT)")
 message(Using DDASFMTINC="$$DDASFMTINC")
 message(Using DDASFMTLIB="$$DDASFMTLIB")
-message(Using UFMT="$$UFMT")
+message(Using UFMTROOT="$$UFMTROOT")
 message(Using ROOTSYS="$(ROOTSYS)")
 
-INCLUDEPATH += .. $${DDASFMTINC} $(DAQINC) $${UFMT}/include $(ROOTSYS)/include
+INCLUDEPATH += .. $${DDASFMTINC} $(DAQINC) $${UFMTROOT}/include $(ROOTSYS)/include
 
 ## FRIBDAQ libraries
 
-LIBS += -L$${DDASFMTLIB} -lDDASFormat -Wl,-rpath=$${DDASFMTLIB} -L$(DAQLIB) -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$${UFMT}/lib -lAbstractFormat -Wl,-rpath=$${UFMT}/lib
+LIBS += -L$${DDASFMTLIB} -lDDASFormat -Wl,-rpath=$${DDASFMTLIB} -L$(DAQLIB) -ldataformat -ldaqio -lException -lurl -Wl,-rpath=$(DAQLIB) -L$${UFMTROOT}/lib -lAbstractFormat -Wl,-rpath=$${UFMTROOT}/lib
 
 ## ROOT libraries
 
