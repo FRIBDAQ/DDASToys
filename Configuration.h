@@ -24,8 +24,8 @@
 
 #include <string>
 #include <map>
+#include <tuple>
 #include <vector>
-#include <utility>
 
 /** @namespace ddastoys */
 namespace ddastoys {
@@ -81,7 +81,10 @@ namespace ddastoys {
 	 */
 	void readConfigFile();
 	/**
-	 * @brief Read the formatted tempalate data from a file. 
+	 * @brief Read the formatted tempalate data from a file.
+	 * @param path Path to file containing template data
+	 * @param npts Length of the trace (and therefore template also)
+	 * @return Tuple of alignment point and template data
 	 * @throw std::length_error If the number of template data points is 
 	 *   different than what the configuration file expects.
 	 * @throw std::invalid_arugment If the alignment point of the template 
@@ -90,7 +93,9 @@ namespace ddastoys {
 	 * @throw std::invalid_argument If the template data file cannot be 
 	 * opened.
 	 */
-	void readTemplateFile();
+	std::tuple<unsigned, std::vector<double>> readTemplateFile(
+	    std::string path, unsigned npts
+	    );
 	/**
 	 * @brief Check the map and determine if the channel should be fit.
 	 * @param crate   The crate ID.
@@ -153,16 +158,6 @@ namespace ddastoys {
 	 * @return Vector of unique model paths.
 	 */
 	std::vector<std::string> getModelList();
-	/** 
-	 * @brief Return the template data.
-	 * @return The template trace data. 
-	 */
-	std::vector<double> getTemplate() { return m_template; };    
-	/**
-	 * @brief Return the template alignment point.
-	 * @return The template trace alignment point. 
-	 */
-	unsigned getTemplateAlignPoint() { return m_alignPoint; };
 	/**
 	 * @brief Get the shape (trace length) of the channel data given a
 	 * model path
@@ -171,6 +166,26 @@ namespace ddastoys {
 	 * @throw std::invalid_argument If the model path is not in the map
 	 */
 	unsigned getModelShape(std::string path);
+	/** 
+	 * @brief Return the template data.
+	 * @param crate   The crate ID.
+	 * @param slot    The slot ID.
+	 * @param channel The channel ID.
+	 * @return The template trace data. 
+	 */
+	std::vector<double> getTemplate(
+	    unsigned crate, unsigned slot, unsigned channel
+	    );
+	/**
+	 * @brief Return the template alignment point.
+	 * @param crate   The crate ID.
+	 * @param slot    The slot ID.
+	 * @param channel The channel ID.
+	 * @return The template trace alignment point. 
+	 */
+	unsigned getTemplateAlignPoint(
+	    unsigned crate, unsigned slot, unsigned channel
+	    );
 
 	// Private methods
     private:
@@ -209,15 +224,10 @@ namespace ddastoys {
 	    std::pair<unsigned, unsigned> s_limits; //!< Fit limits for trace
 	    unsigned s_saturation;   //!< Saturation (data > sat ignored)
 	    std::string s_modelPath; //!< Path to ML model, can be empty string
-	    /** 
-	     * @todo (ASC 9/17/24): Rework the template fitting such that a 
-	     * per-channel template is supported. Remove the need to read the 
-	     * TEMPLATE_CONFIGFILE environment variable. 
-	     */
+	    unsigned s_alignPoint;   //!< Alignment point of template data
+	    std::vector<double> s_template; //!< Template data
 	};
 	std::map<unsigned, ConfigInfo> m_fitChannels; //!< Channel map for fits
-	std::vector<double> m_template; //!< Template trace data
-	unsigned m_alignPoint; //!< Alignment point for the template trace
     };
 
 /** @} */

@@ -31,7 +31,6 @@
 class QWidget;
 
 namespace ddastoys {    
-    struct HitExtension;
     class DDASFitHit;    
     class Configuration;
 }
@@ -76,31 +75,27 @@ public:
     void configure(std::string method);
     /** @brief Read the configuration file using the Configuration class. */
     void readConfigFile();
-    /** @brief Read the template file using the Configuration class. */
-    void readTemplateFile();
     /**
      * @brief Create and return a vector of fit values for each trace sample 
      * in the fit range.
-     * @param ext  References the HitExtension containing the fit parameters
-     *    for this hit.
+     * @param hit  References the hit we are currently processing.
      * @param low  Low limit of the fit in samples.
      * @param high High limit of the fit in samples.
      * @return Vector of fit values for range [low, high].
      */
     std::vector<double> getSinglePulseFit(
-	const ddastoys::HitExtension& ext, unsigned low, unsigned high
+	const ddastoys::DDASFitHit& hit, unsigned low, unsigned high
 	);
     /**
      * @brief Create and return a vector of fit values for each trace sample 
      * in the fit range.
-     * @param ext  References the HitExtension containing the fit parameters 
-     *   for this hit.
+     * @param hit  References the hit we are currently processing.
      * @param low  Low limit of the fit in samples.
      * @param high High limit of the fit in samples.
      * @return Vector of fit values for range [low, high].
      */   
     std::vector<double> getDoublePulseFit(
-	const ddastoys::HitExtension& ext, unsigned low, unsigned high
+	const ddastoys::DDASFitHit& hit, unsigned low, unsigned high
 	);
     /**
      * @brief Get the lower limit of the fit range.
@@ -129,6 +124,9 @@ public:
 private:
     /**
      * @brief Calculate the value of a single-pulse fit at a given data point.
+     * @param crate Crate ID
+     * @param slot Slot ID
+     * @param chan Channel ID
      * @param A1 Amplitude parameter.
      * @param k1 Steepnesss parameter (0 for template fits).
      * @param k2 Decay parameter (0 for template fits).
@@ -138,10 +136,14 @@ private:
      * @return   Fit value at x.
      */
     double singlePulse(
+	unsigned crate, unsigned slot, unsigned chan,
 	double A1, double k1, double k2, double x1, double C, double x
 	);
     /**
      * @brief Calculate the value of a double-pulse fit at a given data point.
+     * @param crate Crate ID
+     * @param slot Slot ID
+     * @param chan Channel ID
      * @param A1 Pulse 1 amplitude parameter.
      * @param k1 Pulse 1 steepnesss parameter (0 for template fits).
      * @param k2 Pulse 1 decay parameter (0 for template fits).
@@ -155,6 +157,7 @@ private:
      * @return   Fit value at x.
      */
     double doublePulse(
+	unsigned crate, unsigned slot, unsigned chan,
 	double A1, double k1, double k2, double x1,
 	double A2, double k3, double k4, double x2,
 	double C, double x
