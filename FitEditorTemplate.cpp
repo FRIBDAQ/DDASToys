@@ -56,26 +56,6 @@ FitEditorTemplate::FitEditorTemplate() :
 	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
 	exit(EXIT_FAILURE);
     }
-
-    // We also have to read the template file:
-    
-    try {
-	m_pConfig->readTemplateFile();
-    }
-    catch (std::exception& e) {
-	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
-	exit(EXIT_FAILURE);
-    }
-
-    // Grab the template data and alignment point:
-
-    /** 
-     * @todo (ASC 9/17/24): Define a per-channel template. Requires getting 
-     * the template for a crate/slot/channel combo rather than one template 
-     * for the entire analysis. See comments in Configuration.h.
-     */    
-    m_template = m_pConfig->getTemplate();
-    m_align = m_pConfig->getTemplateAlignPoint();
 }
 
 FitEditorTemplate::FitEditorTemplate(const FitEditorTemplate& rhs) :
@@ -174,7 +154,11 @@ FitEditorTemplate::operator()(
     
 	if (trace.size() > 0) { // Need a trace to fit
 	    auto limits = m_pConfig->getFitLimits(crate, slot, chan);
-	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);  
+	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
+	    auto templateData = m_pConfig->getTemplate(crate, slot, chan);
+	    auto alignPoint = m_pConfig->getTemplateAlignPoint(
+		crate, slot, chan
+		);
 	    int classification = pulseCount(hit);
 	    
 	    if (classification) {
@@ -192,7 +176,7 @@ FitEditorTemplate::operator()(
 #endif
 		    templatefit::lmfit1(
 			&(pFit->s_extension.onePulseFit), trace,
-			m_template, m_align, limits, sat
+			templateData, alignPoint, limits, sat
 			);
 #ifdef ENABLE_TIMING
 		    total += timer.elapsed();
@@ -213,7 +197,7 @@ FitEditorTemplate::operator()(
 #endif
 			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
-			    m_template, m_align, limits, &guess, sat
+			    templateData, alignPoint, limits, &guess, sat
 			    );
 #ifdef ENABLE_TIMING
 			total += timer.elapsed();
@@ -225,7 +209,7 @@ FitEditorTemplate::operator()(
 #endif
 			templatefit::lmfit2(
 			    &(pFit->s_extension.twoPulseFit), trace,
-			    m_template, m_align, limits, nullptr, sat
+			    templateData, alignPoint, limits, nullptr, sat
 			    );
 #ifdef ENABLE_TIMING
 			total += timer.elapsed();

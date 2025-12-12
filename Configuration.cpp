@@ -95,10 +95,10 @@ ddastoys::Configuration::readConfigFile()
     
 	if (line != "") {
 	    unsigned crate, slot, channel, length, low, high, saturation;
-	    std::string modelPath;
+	    std::string modelPath, templatePath;
 	    std::stringstream sline(line);
 	    sline >> crate >> slot >> channel >> length >> low  >> high
-		  >> saturation >> modelPath;
+		  >> saturation >> modelPath >> templatePath;
 	    
 	    if (sline.fail()) {
 		std::string msg(
@@ -109,11 +109,16 @@ ddastoys::Configuration::readConfigFile()
 		throw std::invalid_argument(msg);
 	    }
 	    
-	    // Compute the channel index and add the channel to the map:
-	    
+	    // Compute the channel index, load template data, and add the
+	    // channel to the map:
+
 	    unsigned index = channelIndex(crate, slot, channel);
 	    std::pair<unsigned, unsigned> limits(low, high);
-	    ConfigInfo info = {length, limits, saturation, modelPath};	    
+	    auto tup = readTemplateFile(templatePath, length);
+	    unsigned align = std::get<0>(tup);
+	    std::vector<double> templateData = std::get<1>(tup);
+	    ConfigInfo info = {length, limits, saturation,
+			       modelPath, align, templateData};	    
 	    m_fitChannels[index] = info;
 	}
     }
@@ -128,23 +133,25 @@ ddastoys::Configuration::readConfigFile()
  * the template trace. The remaining lines in the configuration file contain 
  * the floating point template trace data itself.
  */
-void
-ddastoys::Configuration::readTemplateFile()
+std::tuple<unsigned, std::vector<double>>
+ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts)
 {
-    std::string filename = getFileNameFromEnv("TEMPLATE_CONFIGFILE");
-
-    std::ifstream f(filename);
+    if (path.empty()) {
+	std::vector<double> empty;
+	return std::make_tuple(0, empty);
+    }
+    
+    std::ifstream f(path);
     if (f.fail()) {
 	std::string errmsg("Unable to open the template file: ");
-	errmsg += filename;
+	errmsg += path;
 	throw std::invalid_argument(errmsg);
     }
-
-    if (!m_template.empty()) m_template.clear();
   
     int nread = 0;
-    unsigned npts;
     double val;
+    unsigned align;
+    std::vector<double> data;
     while (!f.eof()) {
 	std::string originalline("");
 	std::getline(f, originalline, '\n');
@@ -153,10 +160,10 @@ ddastoys::Configuration::readTemplateFile()
 	    std::stringstream sline(line);
       
 	    if (nread == 0) {
-		sline >> m_alignPoint >> npts;
+		sline >> align;
 	    } else {
 		sline >> val;
-		m_template.push_back(val);
+		data.push_back(val);
 	    }
       
 	    if (sline.fail()) {
@@ -173,26 +180,28 @@ ddastoys::Configuration::readTemplateFile()
     // The template should know how long it is. If you read in more data
     // points throw an exception:
     
-    if (m_template.size() != npts) {
+    if (data.size() != npts) {
 	std::string errmsg("Template configfile thinks the trace is ");
 	errmsg += npts;
 	errmsg += " samples but read in ";
-	errmsg += m_template.size();
+	errmsg += data.size();
 	throw std::length_error(errmsg); // I guess this is the right one?
     }
 
     // Ensure the alignment point is contained in the trace. Note that because
     // m_alignPoint is an unsigned type it cannot be negative:
     
-    if (m_alignPoint >= m_template.size()) {
+    if (align >= data.size()) {
 	std::string errmsg("Invalid template alignment point ");
-	errmsg += m_alignPoint;
+	errmsg += align;
 	errmsg += " >= template size ";
-	errmsg += m_template.size();
+	errmsg += data.size();
 	throw std::invalid_argument(errmsg);
     }
 
     f.close();
+
+    return std::make_tuple(align, data);
 }
 
 /**
@@ -291,6 +300,26 @@ ddastoys::Configuration::getModelShape(std::string path)
 	throw std::invalid_argument(msg);
     }
 	
+}
+
+std::vector<double>
+ddastoys::Configuration::getTemplate(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    auto index = channelIndex(crate, slot, channel);
+    
+    return m_fitChannels[index].s_template;
+}
+
+unsigned
+ddastoys::Configuration::getTemplateAlignPoint(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    auto index = channelIndex(crate, slot, channel);
+    
+    return m_fitChannels[index].s_alignPoint;
 }
 
 ///

@@ -137,7 +137,7 @@ QRootCanvas::mouseMoveEvent(QMouseEvent *e)
     if (m_pCanvas) {
 	if (e->buttons() & Qt::LeftButton) {
 	    m_pCanvas->HandleInput(kButton1Motion, e->x(), e->y());
-	} else if (e->buttons() & Qt::MidButton) {
+	} else if (e->buttons() & Qt::MiddleButton) {
 	    m_pCanvas->HandleInput(kButton2Motion, e->x(), e->y());
 	} else if (e->buttons() & Qt::RightButton) {
 	    m_pCanvas->HandleInput(kButton3Motion, e->x(), e->y());
@@ -156,7 +156,7 @@ QRootCanvas::mousePressEvent(QMouseEvent *e)
 	case Qt::LeftButton :
 	    m_pCanvas->HandleInput(kButton1Down, e->x(), e->y());
 	    break;
-	case Qt::MidButton :
+	case Qt::MiddleButton :
 	    m_pCanvas->HandleInput(kButton2Down, e->x(), e->y());
 	    break;
 	case Qt::RightButton :
@@ -177,7 +177,7 @@ QRootCanvas::mouseReleaseEvent(QMouseEvent *e)
 	case Qt::LeftButton :
 	    m_pCanvas->HandleInput(kButton1Up, e->x(), e->y());
 	    break;
-	case Qt::MidButton :
+	case Qt::MiddleButton :
 	    m_pCanvas->HandleInput(kButton2Up, e->x(), e->y());
 	    break;
 	case Qt::RightButton :
@@ -267,8 +267,7 @@ QRootCanvas::drawSingleFit(const DDASFitHit& hit)
     // Note that index 0 of the fit vector corresponds to sample number low
     // on the actual trace. We assume if we are here, we have an extension.
   
-    HitExtension ext = hit.getExtension();
-    std::vector<double> fit = m_pFitManager->getSinglePulseFit(ext, low, high);
+    std::vector<double> fit = m_pFitManager->getSinglePulseFit(hit, low, high);
   
     if (!m_pFit1Hist) {
 	m_pFit1Hist = new TH1D("fit1", "fit1", fitRange, low, high+1);
@@ -306,8 +305,7 @@ QRootCanvas::drawDoubleFit(const DDASFitHit& hit)
     // Note that index 0 of the fit vector corresponds to sample number low
     // on the actual trace. We assume if we are here, we have an extension.
   
-    HitExtension ext = hit.getExtension();
-    std::vector<double> fit = m_pFitManager->getDoublePulseFit(ext, low, high);
+    std::vector<double> fit = m_pFitManager->getDoublePulseFit(hit, low, high);
   
     if (!m_pFit2Hist) {
 	m_pFit2Hist = new TH1D("fit2", "fit2", fitRange, low, high+1);

@@ -79,13 +79,6 @@ FitManager::configure(std::string method)
 	setMethod(ANALYTIC);
     } else if (method == "Template") {
 	setMethod(TEMPLATE);
-    
-	// Read the template file if we haven't already:
-    
-	if (!m_templateConfig) {
-	    readTemplateFile();
-	    m_templateConfig = true;
-	}
     } else if (method == "ML_Inference") {
 	setMethod(ML_INFERENCE);	
     } else {
@@ -116,31 +109,15 @@ FitManager::readConfigFile()
 }
 
 //____________________________________________________________________________
-/**
- * @details
- * Will terminate the program and issue an error message if the configuration
- * file cannot be read.
- */
-void
-FitManager::readTemplateFile()
-{
-    try {
-	m_pConfig->readTemplateFile();
-    }
-    catch (std::exception& e) {
-	std::cerr << "ERROR: failed to configure FitManager -- "
-		  << e.what() << std::endl;
-	exit(EXIT_FAILURE);
-    }
-  
-}
-
-//____________________________________________________________________________
 std::vector<double>
 FitManager::getSinglePulseFit(
-    const HitExtension& ext, unsigned low, unsigned high
+    const DDASFitHit& hit, unsigned low, unsigned high
     )
 {
+    auto ext = hit.getExtension();
+    auto crate = hit.getCrateID();
+    auto slot = hit.getSlotID();
+    auto chan = hit.getChannelID();
     std::vector<double> fit;
 
     double A1 = ext.onePulseFit.pulse.amplitude;
@@ -161,7 +138,7 @@ FitManager::getSinglePulseFit(
     }
   
     for (unsigned i = low; i <= high; i++) {
-	fit.push_back(singlePulse(A1, k1, k2, x1, C, i));
+	fit.push_back(singlePulse(crate, slot, chan, A1, k1, k2, x1, C, i));
     }
 
     return fit;
@@ -169,8 +146,12 @@ FitManager::getSinglePulseFit(
 
 //____________________________________________________________________________
 std::vector<double>
-FitManager::getDoublePulseFit(const HitExtension& ext, unsigned low, unsigned high)
+FitManager::getDoublePulseFit(const DDASFitHit& hit, unsigned low, unsigned high)
 {
+    auto ext = hit.getExtension();;
+    auto crate = hit.getCrateID();
+    auto slot = hit.getSlotID();
+    auto chan = hit.getChannelID();
     std::vector<double> fit;
 
     double A1 = ext.twoPulseFit.pulses[0].amplitude;
@@ -186,7 +167,7 @@ FitManager::getDoublePulseFit(const HitExtension& ext, unsigned low, unsigned hi
     double C = ext.twoPulseFit.offset;
  
     for (unsigned i = low; i <= high; i++) {
-	fit.push_back(doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, i));
+	fit.push_back(doublePulse(crate, slot, chan, A1, k1, k2, x1, A2, k3, k4, x2, C, i));
     }
 
     return fit;
@@ -240,6 +221,7 @@ FitManager::getHighFitLimit(const DDASFitHit& hit)
  */
 double
 FitManager::singlePulse(
+    unsigned crate, unsigned slot, unsigned chan,
     double A1, double k1, double k2, double x1, double C, double x
     )
 {
@@ -248,7 +230,7 @@ FitManager::singlePulse(
 	return analyticfit::singlePulse(A1, k1, k2, x1, C, x);
     case TEMPLATE:
     {
-	auto traceTemplate = m_pConfig->getTemplate();
+	auto traceTemplate = m_pConfig->getTemplate(crate, slot, chan);
 	return templatefit::singlePulse(A1, x1, C, x, traceTemplate);
     }
     case ML_INFERENCE:
@@ -269,6 +251,7 @@ FitManager::singlePulse(
  */
 double
 FitManager::doublePulse(
+    unsigned crate, unsigned slot, unsigned chan,
     double A1, double k1, double k2, double x1,
     double A2, double k3, double k4, double x2,    
     double C, double x
@@ -279,7 +262,7 @@ FitManager::doublePulse(
 	return analyticfit::doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
     case TEMPLATE:
     {
-	auto traceTemplate = m_pConfig->getTemplate();
+	auto traceTemplate = m_pConfig->getTemplate(crate, slot, chan);
 	return templatefit::doublePulse(A1, x1, A2, x2, C, x, traceTemplate);
     }
     case ML_INFERENCE:
