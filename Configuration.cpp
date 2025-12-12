@@ -32,13 +32,17 @@
 
 /** @brief Trim from beginning. */
 static inline std::string &ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
     return s;
 }
 
 /** @brief Trim from end. */
 static inline std::string &rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
     return s;
 }
 
@@ -46,7 +50,6 @@ static inline std::string &rtrim(std::string &s) {
 static inline std::string &trim(std::string &s) {
     return ltrim(rtrim(s));
 }
-
 
 /**
  * @details
@@ -91,10 +94,10 @@ ddastoys::Configuration::readConfigFile()
 	std::string line = isComment(originalline);
     
 	if (line != "") {
-	    unsigned crate, slot, channel, low, high, saturation;
+	    unsigned crate, slot, channel, length, low, high, saturation;
 	    std::string modelPath;
 	    std::stringstream sline(line);
-	    sline >> crate >> slot >> channel >> low  >> high
+	    sline >> crate >> slot >> channel >> length >> low  >> high
 		  >> saturation >> modelPath;
 	    
 	    if (sline.fail()) {
@@ -110,7 +113,7 @@ ddastoys::Configuration::readConfigFile()
 	    
 	    unsigned index = channelIndex(crate, slot, channel);
 	    std::pair<unsigned, unsigned> limits(low, high);
-	    ConfigInfo info = {limits, saturation, modelPath};	    
+	    ConfigInfo info = {length, limits, saturation, modelPath};	    
 	    m_fitChannels[index] = info;
 	}
     }
@@ -199,11 +202,23 @@ ddastoys::Configuration::readTemplateFile()
  * channel.
  */
 bool
-ddastoys::Configuration::fitChannel(unsigned crate, unsigned slot, unsigned channel)
+ddastoys::Configuration::fitChannel(
+    unsigned crate, unsigned slot, unsigned channel
+    )
 {
-    int index = channelIndex(crate, slot, channel);
+    auto index = channelIndex(crate, slot, channel);
     
     return (m_fitChannels.find(index) != m_fitChannels.end());
+}
+
+unsigned
+ddastoys::Configuration::getTraceLength(
+    unsigned crate, unsigned slot, unsigned channel
+    )
+{
+    auto index = channelIndex(crate, slot, channel);
+
+    return m_fitChannels[index].s_length;
 }
 
 std::pair<unsigned, unsigned>
@@ -211,7 +226,7 @@ ddastoys::Configuration::getFitLimits(
     unsigned crate, unsigned slot, unsigned channel
     )
 {
-    int index = channelIndex(crate, slot, channel);
+    auto index = channelIndex(crate, slot, channel);
     
     return m_fitChannels[index].s_limits;
 }
@@ -221,7 +236,7 @@ ddastoys::Configuration::getSaturationValue(
     unsigned crate, unsigned slot, unsigned channel
     )
 {
-    int index = channelIndex(crate, slot, channel);
+    auto index = channelIndex(crate, slot, channel);
     
     return m_fitChannels[index].s_saturation;
 }
@@ -231,7 +246,7 @@ ddastoys::Configuration::getModelPath(
     unsigned crate, unsigned slot, unsigned channel
     )
 {
-    int index = channelIndex(crate, slot, channel);
+    auto index = channelIndex(crate, slot, channel);
     
     return m_fitChannels[index].s_modelPath;
 }
@@ -254,6 +269,28 @@ ddastoys::Configuration::getModelList()
     models.erase(std::unique(models.begin(), models.end()), models.end());
     
     return models;
+}
+
+/**
+ * @details
+ * All channels using a particular model are expected to have the same trace
+ * length, so we can simply search for the first instance matching the path
+ */
+unsigned
+ddastoys::Configuration::getModelShape(std::string path)
+{
+    auto it = std::find_if(m_fitChannels.begin(), m_fitChannels.end(),
+			   [&path](const auto& p) {
+			       return p.second.s_modelPath == path;
+			   });
+    if (it != m_fitChannels.end()) {
+	return it->second.s_length;
+    } else {
+	std::string msg("No matching channels for model path '");
+	msg += path + "'";
+	throw std::invalid_argument(msg);
+    }
+	
 }
 
 ///

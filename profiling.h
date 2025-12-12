@@ -38,7 +38,7 @@ namespace ddastoys {
      * Timer timer;
      * ... user code to profile ...
      * double time = timer.elapsed();
-     * @code
+     * @endcode
      */
     struct Timer {
 	std::chrono::high_resolution_clock::time_point s_start; //!< Start time
@@ -72,7 +72,7 @@ namespace ddastoys {
      * }
      * stats.compute();
      * stats.print();
-     * @code
+     * @endcode
      */
     struct Stats {
 	double s_mean;   //!< Mean of s_data when `compute()` is called

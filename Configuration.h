@@ -104,6 +104,17 @@ namespace ddastoys {
 	// Helpers
     public:
 	/**
+	 * @brief Get the trace length for a singe crate/slot/channel
+	 * @param crate   The crate ID.
+	 * @param slot    The slot ID.
+	 * @param channel The channel ID.
+	 * @return The trace length
+	 */
+	unsigned getTraceLength(
+	    unsigned crate, unsigned slot, unsigned channel
+	    );
+
+	/**
 	 * @brief Get the (inclusive) fit limits for a single 
 	 * crate/slot/channel combination.
 	 * @param crate   The crate ID.
@@ -152,6 +163,14 @@ namespace ddastoys {
 	 * @return The template trace alignment point. 
 	 */
 	unsigned getTemplateAlignPoint() { return m_alignPoint; };
+	/**
+	 * @brief Get the shape (trace length) of the channel data given a
+	 * model path
+	 * @param path Path to PyTorch model
+	 * @return Trace length of first channel matching the path
+	 * @throw std::invalid_argument If the model path is not in the map
+	 */
+	unsigned getModelShape(std::string path);
 
 	// Private methods
     private:
@@ -178,7 +197,7 @@ namespace ddastoys {
 	 * @return The global channel index.
 	 */
 	unsigned channelIndex(unsigned crate, unsigned slot, unsigned channel);
-
+	
 	// Private data
     private:
 	/**
@@ -186,16 +205,17 @@ namespace ddastoys {
 	 * @brief Configuration information for the fit.
 	 */
 	struct ConfigInfo {
-	    std::pair<unsigned, unsigned> s_limits;
-	    unsigned s_saturation;
-	    std::string s_modelPath;
+	    unsigned s_length;       //!< Trace length
+	    std::pair<unsigned, unsigned> s_limits; //!< Fit limits for trace
+	    unsigned s_saturation;   //!< Saturation (data > sat ignored)
+	    std::string s_modelPath; //!< Path to ML model, can be empty string
 	    /** 
 	     * @todo (ASC 9/17/24): Rework the template fitting such that a 
 	     * per-channel template is supported. Remove the need to read the 
 	     * TEMPLATE_CONFIGFILE environment variable. 
 	     */
 	};
-	std::map<unsigned, ConfigInfo> m_fitChannels; //!< Channel map for fits.
+	std::map<unsigned, ConfigInfo> m_fitChannels; //!< Channel map for fits
 	std::vector<double> m_template; //!< Template trace data
 	unsigned m_alignPoint; //!< Alignment point for the template trace
     };

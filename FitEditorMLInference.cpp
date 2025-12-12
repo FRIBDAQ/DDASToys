@@ -81,11 +81,27 @@ ddastoys::FitEditorMLInference::FitEditorMLInference() :
 	    module.eval();
 	    module = torch::jit::freeze(module);
 	    module = torch::jit::optimize_for_inference(module);
+
+	    // Warm-up for inference to pre-compile kernels, etc:
+
+	    auto traceLength = m_pConfig->getModelShape(m);
+	    for (int i = 0; i < 10; i++) {
+                torch::InferenceMode mode;                
+                auto input = torch::randn({1, traceLength});
+		auto warmup = module.forward({input});
+            }
+	    
 	    m_models[m] = module;
-	}
+	}	
 	catch (const c10::Error& e) {
 	    std::cerr << "Failed to load model " << m << ": " << e.what()
 		      << std::endl;
+	    exit(EXIT_FAILURE);
+	}
+	catch (const std::invalid_argument& e)
+	{
+	    std::cerr << "Failed to get trace length from model " << m
+		      << ": " << e.what() << std::endl;
 	    exit(EXIT_FAILURE);
 	}
     }
@@ -166,7 +182,7 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr, pBodyHeader pBH
     // Make the hit:
     
     DDASHit hit;
-    DDASHitUnpacker unpacker;
+    DDASHitUnpacker unpacker;    
     unpacker.unpack(
 	static_cast<uint32_t*>(pBody), static_cast<uint32_t*>(nullptr), hit
 	);
