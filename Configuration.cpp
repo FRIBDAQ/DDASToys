@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +99,8 @@ ddastoys::Configuration::readConfigFile()
 	    std::string modelPath, templatePath;
 	    std::stringstream sline(line);
 	    sline >> crate >> slot >> channel >> length >> low  >> high
-		  >> saturation >> modelPath >> templatePath;
+		  >> saturation >> std::quoted(modelPath)
+		  >> std::quoted(templatePath);
 	    
 	    if (sline.fail()) {
 		std::string msg(
@@ -136,7 +138,7 @@ ddastoys::Configuration::readConfigFile()
 std::tuple<unsigned, std::vector<double>>
 ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts)
 {
-    if (path.empty()) {
+    if (path == "none" || path.empty()) {
 	std::vector<double> empty;
 	return std::make_tuple(0, empty);
     }

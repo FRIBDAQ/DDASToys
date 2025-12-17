@@ -8,13 +8,13 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 ## DDASToys Overview
 
 DDASToys provides three FitEditor libraries as plugin extensions for the `EventEditor` program. These libraries allow fits to be parallelized using either ZMQ threading or MPI. The three libraries allow users to fit traces using either:
-* An analytical fitting method which models the trace using a logistic risetime and exponential decay
-* A template fit method in which a pre-defined "super pulse" representing a "typical" pulse shape is fit to the data
-* A machine-learning inference fitting using the same model response function as the analytic fit method.
+* `libFidEditorAnalytic.so` - An analytical fitting method which models the trace using a logistic risetime and exponential decay
+* `libFidEditorTemplate.so` - A template fit method in which a pre-defined "super pulse" representing a "typical" pulse shape is fit to the data
+* `libFidEditorMLInference.so` - A machine-learning inference fitting using the same model response function as the analytic fit method.
 
 `$DAQBIN/EventEditor --help` will provide some guidance on how to run this code. Two more libraries are provided:
 * `libDDASFitHitUnpacker.so` : defines an unpacker for DDAS hits with fit extensions which unpacks event fragments into the DDASFitHit class.
-* ;libDDASRootFitFormat.so` : contains the dictionary needed by ROOT for I/O with DDASFitHits and defines the data structure in the output ROOT file. Note that this library is called `libDDASRootFit.so` in pre-6.0 releases. 
+* `libDDASRootFitFormat.so` : contains the dictionary needed by ROOT for I/O with DDASFitHits and defines the data structure in the output ROOT file. Note that this library is called `libDDASRootFit.so` in pre-6.0 releases. 
 
 For more information refer to the DDASToys Manual installed in <span>$</span>(PREFIX)/share/manual/manual.pdf or point a web browser at <span>$</span>(PREFIX)/share/manual/manual.html. Note that you may want to copy the entire share directory somewhere more convenient e.g., your user home directory before viewing in a browser.
 
@@ -77,4 +77,4 @@ Some `traceview` options -- the loaded data file and the fitting method -- can b
 * 6.2-001 : Incorporate changes needed to use new ML models which allow trace positions to vary freely on the time axis.
 * 6.3-000 : Updated for ML model used in e23055 (Crider).
 * 6.3-001 : Optimizations for ML inference, added some simple inference profiling tools and option to build DDASToys with profiling output.
-* 6.4-000 : User provides trace length in fit configuration file. Remove dependence on template file; support per-channel trace templates.
+* 6.4-000 : User provides trace length in fit configuration file. Remove dependence on template file; support per-channel trace templates. Allow "none" as model or template path.

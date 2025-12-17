@@ -471,7 +471,7 @@
 	</listitem>
       </itemizedlist>
       <para>
-	Shown below is an example fit configuration file to fit a single channel, showing the use of comments which can provide more detailed identifying information for the channels to be fit, in this case the dynode of an implantation detector used in a beta-decay experiment. Note that in the model path is "", indicating that this configuration file was not written for ML inference.
+	Shown below is an example fit configuration file to fit a single channel, showing the use of comments which can provide more detailed identifying information for the channels to be fit, in this case the dynode of an implantation detector used in a beta-decay experiment. Note that in the model path is <literal>none</literal>, indicating that this configuration file was not written for ML inference. An empty string "" is also accepted.
       </para>
       <informalexample>
 	<programlisting>
@@ -482,7 +482,7 @@
 
 	  #  e23055 dynode:
 
-	  0 2 0 130 0 129 65530 /aaron/dev/ddas/fit_traces/traced_model.pt ""
+	  0 2 0 130 0 129 65530 /aaron/dev/ddas/fit_traces/traced_model.pt none
 	</programlisting>
       </informalexample>
       <para>
