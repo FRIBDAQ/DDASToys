@@ -148,7 +148,9 @@ postProcessOutput(
     pResult->s_extension.onePulseFit.pulse.decayTime = k1_s;
     pResult->s_extension.onePulseFit.pulse.steepness = k2_s;
     pResult->s_extension.onePulseFit.offset = offset;
+    pResult->s_extension.twoPulseFit.offset = offset;
     
+    if (t1_d <= t2_d) {
     pResult->s_extension.twoPulseFit.pulses[0].amplitude = a1_d;
     pResult->s_extension.twoPulseFit.pulses[0].position  = t1_d;
     pResult->s_extension.twoPulseFit.pulses[0].decayTime = k1_d;
@@ -157,8 +159,16 @@ postProcessOutput(
     pResult->s_extension.twoPulseFit.pulses[1].position  = t2_d;
     pResult->s_extension.twoPulseFit.pulses[1].decayTime = k3_d;
     pResult->s_extension.twoPulseFit.pulses[1].steepness = k4_d;
-    pResult->s_extension.twoPulseFit.offset = offset;
-    
+    } else {
+    pResult->s_extension.twoPulseFit.pulses[1].amplitude = a1_d;
+    pResult->s_extension.twoPulseFit.pulses[1].position  = t1_d;
+    pResult->s_extension.twoPulseFit.pulses[1].decayTime = k1_d;
+    pResult->s_extension.twoPulseFit.pulses[1].steepness = k2_d;
+    pResult->s_extension.twoPulseFit.pulses[0].amplitude = a2_d;
+    pResult->s_extension.twoPulseFit.pulses[0].position  = t2_d;
+    pResult->s_extension.twoPulseFit.pulses[0].decayTime = k3_d;
+    pResult->s_extension.twoPulseFit.pulses[0].steepness = k4_d;
+    }
     pResult->s_extension.singleProb = prob[0][0].item<double>();
     pResult->s_extension.doubleProb = prob[0][1].item<double>();
 }
