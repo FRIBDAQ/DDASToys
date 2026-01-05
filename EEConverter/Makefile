@@ -34,7 +34,7 @@ libDDASRootFitFormat.so: DDASRootFitFormat.o DDASRootFitHit.o 		\
 	-L$(DDASFMTLIB) -Wl,-rpath=$(DDASFMTLIB) -lDDASFormat
 
 DDASRootFitFormat.cpp: DDASRootFitEvent.h DDASRootFitHit.h 		\
-	../DDASFitHit.h RootExtensions.h LinkDef.h
+	../DDASFitHit.h LinkDef.h
 	$(ROOTSYS)/bin/rootcling -f $@ 	-rml libDDASRootFitFormat.so 	\
 	-rmf libDDASRootFitFormat.rootmap -I.. -I$(DDASFMTINC) $^
 

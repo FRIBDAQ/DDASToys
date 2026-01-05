@@ -35,7 +35,6 @@
 #include "DDASRootFitEvent.h"
 #include "DDASRootFitHit.h"
 #include "DDASFitHitUnpacker.h"
-#include "RootExtensions.h"
 #include "DDASFitHit.h"
 
 using namespace ufmt;
