@@ -49,7 +49,7 @@ namespace ddastoys {
 	HitExtension m_extension; //!< The extension data.
       
     public:
-	DDASFitHit() { Reset(); } //!< Constructor.
+	DDASFitHit() : m_haveExtension(false) {}; //!< Constructor.
 	virtual ~DDASFitHit() {}  //!< Destructor.
 
 	/**
@@ -68,14 +68,21 @@ namespace ddastoys {
 		    setExtension(ext);
 		}
 	    }
+	    
 	    return *this;
 	}
 
-	/** @brief Reset the hit information. */
+	/**
+	 * @brief Reset the hit information.
+	 * @note (ASC 1/5/26): Resets base DDASHit data and sets
+	 * m_haveExtension = false. Note that old hit extension data remains
+	 * until it is itself reset (e.g., by calling `setExtension()`, but
+	 * access is guarded by the extension flag.
+	 */
 	void Reset() {
 	    m_haveExtension = false;
-	    ddasfmt::DDASHit::Reset(); // Reset base class membrers.
-	}
+	    ddasfmt::DDASHit::Reset(); // Reset base class members.
+	}	
 	/** 
 	 * @brief Set the hit extension information for this hit. 
 	 * @param extension Reference to the extension for this hit.
