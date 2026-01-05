@@ -757,16 +757,25 @@ ddastoys::analyticfit::lmfit2(
     pResult->fitStatus  = status;
     pResult->chiSquare  = ChiSquare;
     pResult->offset     = C;
-    
+    if (X1 <= X2) {
     pResult->pulses[0].position  = X1;   // Pulse 1.
     pResult->pulses[0].amplitude = A1;
     pResult->pulses[0].steepness = K1;
-    pResult->pulses[0].decayTime = K2;
-    
+    pResult->pulses[0].decayTime = K2;    
     pResult->pulses[1].position  = X2;   // Pulse 2.
     pResult->pulses[1].amplitude = A2;
     pResult->pulses[1].steepness = K3;
     pResult->pulses[1].decayTime = K4;    
+    } else {
+    pResult->pulses[1].position  = X1;   // Pulse 2.
+    pResult->pulses[1].amplitude = A1;
+    pResult->pulses[1].steepness = K1;
+    pResult->pulses[1].decayTime = K2;    
+    pResult->pulses[0].position  = X2;   // Pulse 1.
+    pResult->pulses[0].amplitude = A2;
+    pResult->pulses[0].steepness = K3;
+    pResult->pulses[0].decayTime = K4; 
+    }
     
     gsl_multifit_fdfsolver_free(solver);    
     gsl_vector_free(initialGuess);

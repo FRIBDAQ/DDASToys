@@ -490,14 +490,24 @@ ddastoys::templatefit::lmfit2(
     pResult->fitStatus  = status;
     pResult->chiSquare  = ChiSquare;
     pResult->offset     = C; // Constant
+    if (X1 <= X2) {
     pResult->pulses[0].amplitude = A1;
-    pResult->pulses[0].position  = X1;
     pResult->pulses[0].steepness = 0; // Unused
     pResult->pulses[0].decayTime = 0; // Unused
     pResult->pulses[1].amplitude = A2;
     pResult->pulses[1].position  = X2;
     pResult->pulses[1].steepness = 0; // Unused
     pResult->pulses[1].decayTime = 0; // Unused
+    } else {
+    pResult->pulses[1].amplitude = A1;
+    pResult->pulses[1].position  = X1;
+    pResult->pulses[1].steepness = 0; // Unused
+    pResult->pulses[1].decayTime = 0; // Unused
+    pResult->pulses[0].amplitude = A2;
+    pResult->pulses[0].position  = X2;
+    pResult->pulses[0].steepness = 0; // Unused
+    pResult->pulses[0].decayTime = 0; // Unused
+    }
     
     gsl_multifit_nlinear_free(solver);    
     gsl_vector_free(initialGuess);
