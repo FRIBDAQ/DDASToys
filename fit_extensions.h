@@ -120,7 +120,7 @@ namespace ddastoys {
      */ 
     struct FitInfo {
 	HitExtension s_extension;              //!< The hit extension data.
-	uint32_t     s_size = sizeof(FitInfo); //!< sizeof(FitInfo)
+	uint32_t s_size = sizeof(FitInfo); //!< sizeof(FitInfo)
     };
 
 } // namespace ddastoys
