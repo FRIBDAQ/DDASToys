@@ -32,13 +32,13 @@ namespace ddastoys {
 
     /**
      * @struct PulseDescription
-     * @brief Describes a single pulse without an offset.
+     * @brief Describes a single pulse without an offset. Zero-initialized.
      */
     struct PulseDescription {  
-	double position;  //!< Where the pulse is.
-	double amplitude; //!< Pulse amplitude.
-	double steepness; //!< Logistic steepness factor.
-	double decayTime; //!< Exponential decay constant.    
+	double position  = 0; //!< Where the pulse is.
+	double amplitude = 0; //!< Pulse amplitude.
+	double steepness = 0; //!< Logistic steepness factor.
+	double decayTime = 0; //!< Exponential decay constant.
     };
 
     /**
@@ -46,11 +46,11 @@ namespace ddastoys {
      * @brief Full fitting information for the single pulse.
      */
     struct fit1Info { // Info from single pulse fit:
-	PulseDescription pulse; //!< Description of the pulse parameters.
-	double   chiSquare;     //!< Chi-square value of the fit.
-	double   offset;        //!< Constant offset.
-	unsigned iterations;    //!< Iterations for fit to converge.
-	unsigned fitStatus;     //!< Fit status from GSL.
+	PulseDescription pulse;  //!< Description of the pulse parameters.
+	double   chiSquare  = 0; //!< Chi-square value of the fit.
+	double   offset     = 0; //!< Constant offset.
+	unsigned iterations = 0; //!< Iterations for fit to converge.
+	unsigned fitStatus  = 0; //!< Fit status from GSL.
     };
     
     /**
@@ -59,10 +59,10 @@ namespace ddastoys {
      */
     struct fit2Info { // Info from double pulse fit:
 	PulseDescription pulses[2]; //!< The two pulses.
-	double   chiSquare;         //!< Chi-square value of the fit.
-	double   offset;            //!< Shared constant offset.
-	unsigned iterations;        //!< Iterations needed to converge.
-	unsigned fitStatus;         //!< Fit status from GSL.
+	double   chiSquare  = 0;    //!< Chi-square value of the fit.
+	double   offset     = 0;    //!< Shared constant offset.
+	unsigned iterations = 0;    //!< Iterations needed to converge.
+	unsigned fitStatus  = 0;    //!< Fit status from GSL.
     };
 
     /**
@@ -78,14 +78,13 @@ namespace ddastoys {
     /**
      * @struct HitExtension
      * @brief The data structure appended to each fit hit.
+     * @note (ASC 1/5/26): 
      */
     struct HitExtension { // Data added to hits with traces:
-	fit1Info onePulseFit; //!< Single-pulse fit information.
-	fit2Info twoPulseFit; //!< Double-pulse fit information.
-	double singleProb;    //!< Probability of single pulse
-	double doubleProb;    //!< Probability of double pulse.
-	/** @brief Default constructor. */
-	HitExtension() = default;
+	fit1Info onePulseFit;  //!< Single-pulse fit information.
+	fit2Info twoPulseFit;  //!< Double-pulse fit information.
+	double singleProb = 0; //!< Probability of single pulse
+	double doubleProb = 0; //!< Probability of double pulse.
 	/** 
 	 * @brief Construct from legacy extension.
 	 * @param leg Legacy extension to construct from.
@@ -102,9 +101,7 @@ namespace ddastoys {
      * @brief A null fit extension is a single 32-bit word.
      */
     struct nullExtension {
-	uint32_t s_size; //!< sizeof(uint32_t)
-	/** @brief Creates a nullExtension and sets its size. */
-	nullExtension() : s_size(sizeof(uint32_t)) {}
+	uint32_t s_size = sizeof(uint32_t);
     };
 
     /**
@@ -113,12 +110,8 @@ namespace ddastoys {
      * struct for DDASToys pre-6.0-000.
      */ 
     struct FitInfoLegacy {
-	HitExtensionLegacy s_extension; //!< The hit extension data.
-	uint32_t           s_size;      //!< sizeof(HitExtensionLegacy)
-	/** @brief Creates FitInfo, set its size, and zeroes fit parameters. */
-	FitInfoLegacy() : s_size(sizeof(FitInfoLegacy)) {
-	    memset(&s_extension, 0, sizeof(HitExtensionLegacy));
-	}
+	HitExtensionLegacy s_extension;          //!< The hit extension data.
+	uint32_t s_size = sizeof(FitInfoLegacy); //!< sizeof(FitInfoLegacy)
     };
     
     /**
@@ -126,12 +119,8 @@ namespace ddastoys {
      * @brief A fit extension that knows its size.
      */ 
     struct FitInfo {
-	HitExtension s_extension; //!< The hit extension data.
-	uint32_t     s_size;      //!< sizeof(HitExtension)
-	/** @brief Creates FitInfo, set its size, and zeroes parameters. */
-	FitInfo() : s_size(sizeof(FitInfo)) {
-	    memset(&s_extension, 0, sizeof(HitExtension));
-	}
+	HitExtension s_extension;              //!< The hit extension data.
+	uint32_t     s_size = sizeof(FitInfo); //!< sizeof(FitInfo)
     };
 
 } // namespace ddastoys
