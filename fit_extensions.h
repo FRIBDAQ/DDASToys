@@ -78,13 +78,19 @@ namespace ddastoys {
     /**
      * @struct HitExtension
      * @brief The data structure appended to each fit hit.
-     * @note (ASC 1/5/26): 
      */
     struct HitExtension { // Data added to hits with traces:
 	fit1Info onePulseFit;  //!< Single-pulse fit information.
 	fit2Info twoPulseFit;  //!< Double-pulse fit information.
 	double singleProb = 0; //!< Probability of single pulse
 	double doubleProb = 0; //!< Probability of double pulse.
+	
+	/**
+	 * @brief Default constructor - Needed because we have a custom
+	 * constructor from the legacy class and we don't get the default
+	 * one by, uh, default :(
+	 */
+	HitExtension() = default;	    
 	/** 
 	 * @brief Construct from legacy extension.
 	 * @param leg Legacy extension to construct from.
@@ -119,7 +125,7 @@ namespace ddastoys {
      * @brief A fit extension that knows its size.
      */ 
     struct FitInfo {
-	HitExtension s_extension;              //!< The hit extension data.
+	HitExtension s_extension;          //!< The hit extension data.
 	uint32_t s_size = sizeof(FitInfo); //!< sizeof(FitInfo)
     };
 
