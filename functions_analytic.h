@@ -104,7 +104,7 @@ namespace ddastoys {
 	    );
 	/**
 	 * @brief Calculate the pulse amplitude corrected for the ballistic 
-	 * deficit imposed by the exponential decay.
+	 * deficit imposed by the exponential decay using pulse parameters.
 	 * @param A  The scaling term of the pulse.
 	 * @param k1 The steepness term of the logistic.
 	 * @param k2 The fall time term of the decay.

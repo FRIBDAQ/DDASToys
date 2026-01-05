@@ -39,10 +39,5 @@
 #pragma link C++ class ddastoys::PulseDescription+;
 #pragma link C++ class ddastoys::DDASRootFitEvent+;
 #pragma link C++ class ddastoys::DDASRootFitHit+;
-#pragma link C++ class ddastoys::RootFit1Info+;
-#pragma link C++ class ddastoys::RootFit2Info+;
-#pragma link C++ class ddastoys::RootHitExtension+;
-#pragma link C++ class ddastoys::RootPulseDescription+;
-#pragma link C++ class std::vector<ddastoys::RootHitExtension>!;
 
 #endif

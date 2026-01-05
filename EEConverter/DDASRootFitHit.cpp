@@ -26,7 +26,6 @@
 #include <iostream>
 
 #include "DDASFitHit.h"
-#include "RootExtensions.h"
 
 using namespace ddastoys;
 
