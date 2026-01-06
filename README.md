@@ -37,6 +37,8 @@ Once the environment and submodule are correctly configured, you can build DDAST
 * Install all of this stuff in the proper location.
 To build with inference timing loops enabled, compile with `ENABLE_TIMING=1` defined in the environment.
 
+The unit tests, run by typing `make check` should all pass.
+
 ## Running DDASToys Codes
 For detailed information about how to run the `EventEditor` codes please refer to the DDASToys manual installed in <span>$</span>(PREFIX)/share/manual/manual.pdf.
 
