@@ -24,6 +24,8 @@
 #
 # To build: UFMT=/path/to/ufmt PREFIX=/path/to/install/dir make all install
 #
+# @note (ASC 1/6/26): Whole thing should be a CMake project.
+#
 
 # Set the top level install path if not provided:
 
@@ -179,7 +181,7 @@ FitEditor%.o: FitEditor%.cpp
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRACXXFLAGS) -c $^
 
-# Companion programs:
+# Companion programs
 
 traceview:
 	(cd TraceView; /usr/bin/qmake -qt=5 traceview.pro UFMTROOT=$(UFMTROOT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB))
@@ -187,6 +189,18 @@ traceview:
 
 eeconverter:
 	UFMTROOT=$(UFMTROOT) DDASFMTINC=$(DDASFMTINC) DDASFMTLIB=$(DDASFMTLIB) $(MAKE) -C EEConverter
+
+##
+# Tests
+#
+
+unittests: TestRunner.o DDASFitHitUnpacker.o Configuration.o fithittests.o fitunpackertests.o  configurationtests.o 
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lcppunit $(CXXLDFLAGS) $(EXTRALDFLAGS)
+
+tests: unittests
+	(cd DDASFormat/build; ctest --VV) && ./unittests
+
+check: tests
 
 ##
 # Build docbooks and doxygen documentation
@@ -208,13 +222,32 @@ install:
 	install -d $(PREFIX)/bin
 	install -d $(PREFIX)/share
 
-	for f in $(shell find . -type f -name "*.so" ! -name "libDDASFormat.so"); do install -m 0755 $$f $(PREFIX)/lib ; done
-	for f in $(shell find . -type f -name "*.pcm"); do install -m 0755 $$f $(PREFIX)/lib ; done
-	for f in $(shell find . -type f -name "*.rootmap"); do install -m 0755 $$f $(PREFIX)/lib ; done
+	for f in $(shell find . -type f -name "*.so" \
+		! -name "libDDASFormat.so"); do \
+		install -m 0755 $$f $(PREFIX)/lib; \
+	done
+
+	for f in $(shell find . -type f -name "*.pcm"); do \
+		install -m 0755 $$f $(PREFIX)/lib; \
+	done
+
+	for f in $(shell find . -type f -name "*.rootmap"); do \
+		install -m 0755 $$f $(PREFIX)/lib; \
+	done
+
+	for f in $(shell find . -maxdepth 1 -type f -name "*.h" \
+		! -name "Asserts.h" \
+		! -name "CRingItemProcessor.h" \
+		! -name "profiling.h"); do \
+		install -m 0644 $$f $(PREFIX)/include; \
+	done
+
 	ln -sf $(PREFIX)/lib/DDASRootFitFormat_rdict.pcm $(PREFIX)/bin/DDASRootFitFormat_rdict.pcm
 
-	for f in $(shell find . -maxdepth 1 -type f -name "*.h" ! -name "CRingItemProcessor.h"); do install -m 0644 $$f $(PREFIX)/include; done
-	for f in $(shell find ./EEConverter -type f -name "*Root*.h" ! -name "ProcessToRootSink.h"); do install -m 0644 $$f $(PREFIX)/include; done
+	for f in $(shell find ./EEConverter -type f -name "*Root*.h" \
+		! -name "ProcessToRootSink.h"); do \
+		install -m 0644 $$f $(PREFIX)/include; \
+	done
 
 	install -m 0755 EEConverter/eeconverter $(PREFIX)/bin/eeconverter
 ifeq ($(BUILD_TRACEVIEW), 1)
@@ -227,7 +260,11 @@ endif
 clean:
 	rm -f *.so *.o
 	rm -rf $(DDASFMTBUILDDIR)
+	rm -f unittests
 	$(MAKE) -C TraceView clean
 	rm -f TraceView/traceview
 	$(MAKE) -C EEConverter clean
 	$(MAKE) -C Docs clean
+
+.PHONY: tests check
+
