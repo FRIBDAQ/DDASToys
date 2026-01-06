@@ -107,7 +107,7 @@ namespace ddastoys {
      * @brief A null fit extension is a single 32-bit word.
      */
     struct nullExtension {
-	uint32_t s_size = sizeof(uint32_t);
+	uint32_t s_size = sizeof(uint32_t); //!< sizeof(uint32_t)
     };
 
     /**

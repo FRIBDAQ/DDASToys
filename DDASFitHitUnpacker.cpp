@@ -26,7 +26,6 @@
 
 #include <string>
 #include <stdexcept>
-#include <iostream>
 
 #include <DataFormat.h>
 
@@ -88,7 +87,7 @@ ddastoys::DDASFitHitUnpacker::decode(const void* p, DDASFitHit& hit)
     const uint32_t* pHitSize = reinterpret_cast<const uint32_t*>(pBody);
     uint32_t bodyWords = *pHitSize;
     uint32_t bodyBytes = bodyWords*sizeof(uint16_t);
- 
+
     if (bodyBytes == bodySize) {    
 	// This is just an ordinary hit:
 	unpack(
