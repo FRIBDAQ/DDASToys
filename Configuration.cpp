@@ -149,7 +149,7 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts)
 	errmsg += path;
 	throw std::invalid_argument(errmsg);
     }
-  
+    
     int nread = 0;
     double val;
     unsigned align;
@@ -184,9 +184,9 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts)
     
     if (data.size() != npts) {
 	std::string errmsg("Template configfile thinks the trace is ");
-	errmsg += npts;
+	errmsg += std::to_string(npts);
 	errmsg += " samples but read in ";
-	errmsg += data.size();
+	errmsg += std::to_string(data.size());
 	throw std::length_error(errmsg); // I guess this is the right one?
     }
 
@@ -195,9 +195,9 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts)
     
     if (align >= data.size()) {
 	std::string errmsg("Invalid template alignment point ");
-	errmsg += align;
+	errmsg += std::to_string(align);
 	errmsg += " >= template size ";
-	errmsg += data.size();
+	errmsg += std::to_string(data.size());
 	throw std::invalid_argument(errmsg);
     }
 
