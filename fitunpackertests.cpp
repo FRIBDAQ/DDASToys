@@ -37,6 +37,7 @@ public:
     DDASFitHitUnpacker unpacker;
     std::vector<std::uint32_t> data; // Pixie payload data
     RingItem* pItem; // hit as an FRIBDAQ ring item
+    size_t dataSize;
     
 public:
     CPPUNIT_TEST_SUITE(FitUnpackerTests);
@@ -60,7 +61,8 @@ public:
 		0x00020001, 0x00040003, 0x00060005, 0x00080007
 	    };
 	    unpacker.unpack(data.data(), data.data() + data.size(), hit);
-	    pItem = (RingItem*)malloc(sizeof(RingItem));
+	    dataSize = data.size()*sizeof(uint32_t);
+	    //pItem = (RingItem*)malloc(sizeof(RingItem));
 	};
 
     void tearDown()
@@ -78,12 +80,12 @@ public:
 
 void FitUnpackerTests::unpack1()
 {
-    EQ(uint32_t(3), hit.getCrateID());
+    EQMSG("Unpack correct crate ID", uint32_t(3), hit.getCrateID());
 }
 
 void FitUnpackerTests::unpack2()
 {
-    EQ(false, hit.hasExtension());
+    EQMSG("Unpacked event has no extension", false, hit.hasExtension());
 }
 
 void FitUnpackerTests::decode1()
@@ -108,7 +110,6 @@ void FitUnpackerTests::decode1()
 
 void FitUnpackerTests::decode2()
 {
-    uint32_t dataSize = data.size()*sizeof(uint32_t);
     uint32_t bodySize = dataSize + sizeof(FitInfo);
     uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader)
 	+ bodySize;
@@ -119,7 +120,7 @@ void FitUnpackerTests::decode2()
     pItem->s_body.u_hasBodyHeader.s_bodyHeader = {
 	sizeof(BodyHeader), 1234, 0, 0
     };
-    memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), bodySize);
+    memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), dataSize);
     memcpy(pItem->s_body.u_hasBodyHeader.s_body + dataSize,
 	   &fit, sizeof(FitInfo));
 
@@ -134,7 +135,6 @@ void FitUnpackerTests::decode2()
 
 void FitUnpackerTests::decode3()
 {
-    uint32_t dataSize = data.size()*sizeof(uint32_t);
     uint32_t bodySize = dataSize + sizeof(FitInfoLegacy);
     uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader)
 	+ bodySize;
@@ -145,7 +145,7 @@ void FitUnpackerTests::decode3()
     pItem->s_body.u_hasBodyHeader.s_bodyHeader = {
 	sizeof(BodyHeader), 1234, 0, 0
     };
-    memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), bodySize);
+    memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), dataSize);
     memcpy(pItem->s_body.u_hasBodyHeader.s_body + dataSize,
 	   &fit, sizeof(FitInfoLegacy));
 
@@ -160,7 +160,6 @@ void FitUnpackerTests::decode3()
 
 void FitUnpackerTests::decode4()
 {
-    uint32_t dataSize = data.size()*sizeof(uint32_t);
     uint32_t bodySize = dataSize + sizeof(nullExtension);
     uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader)
 	+ bodySize;
@@ -171,7 +170,7 @@ void FitUnpackerTests::decode4()
     pItem->s_body.u_hasBodyHeader.s_bodyHeader = {
 	sizeof(BodyHeader), 1234, 0, 0
     };
-    memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), bodySize);
+    memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), dataSize);
     memcpy(pItem->s_body.u_hasBodyHeader.s_body + dataSize,
 	   &nullext, sizeof(nullExtension));
 

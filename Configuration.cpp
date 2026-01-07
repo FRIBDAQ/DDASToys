@@ -278,6 +278,17 @@ ddastoys::Configuration::getModelList()
     }
     std::sort(models.begin(), models.end());
     models.erase(std::unique(models.begin(), models.end()), models.end());
+
+    // Remove "none" and empty strings from model list:
+
+    std::vector<std::string>::iterator it;
+    for (it = models.begin(); it != models.end(); ) {
+	if (*it == "none" || it->empty()) {
+	    it = models.erase(it);
+	} else {
+	    ++it;
+	}
+    }
     
     return models;
 }

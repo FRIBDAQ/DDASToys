@@ -85,6 +85,9 @@ public:
 		       << templatefilepath << "\"\n";
 	    configfile << "0 2 1 5 0 4 65530 \"/tmp/model2.pt\" \""
 		       << templatefilepath << "\"\n";
+	    configfile << "0 3 0 10 0 9 16380 \"none\" \"none\"\n";
+	    configfile << "0 3 1 10 0 9 16380 \"\" \"\"\n";
+	    configfile << "1 4 0 20 0 19 32760 \"/tmp/model3.pt\" \"none\"\n";
 	    configfile.close();
 
 	    templatefile.open(templatefilepath);
@@ -159,8 +162,9 @@ public:
 	    std::vector<std::string> expected;
 	    expected.push_back("/tmp/model1.pt");
 	    expected.push_back("/tmp/model2.pt");
+	    expected.push_back("/tmp/model3.pt");
 	    std::vector<std::string> actual = config.getModelList();
-	    EQMSG("check size of model list", expected.size(), actual.size());
+	    // EQMSG("check size of model list", expected.size(), actual.size());
 	    EQMSG("check model list contents", expected, actual);
 	}
     
