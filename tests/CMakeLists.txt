@@ -50,6 +50,6 @@ target_link_libraries(unittests_ddastoys
 # DDASFormat's own unittests are also registered (DDASFormat calls
 # enable_testing() + add_test() in its own CMakeLists.txt).
 add_test(
-    NAME    DDASToys_UnitTests
+    NAME    DDASToysTests
     COMMAND unittests_ddastoys
 )
