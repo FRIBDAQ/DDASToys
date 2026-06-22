@@ -14,9 +14,9 @@
              East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  StringsToIntegers.h
- * @brief Definition of functions to convert strings of comma-delimited 
+ * @brief Definition of functions to convert strings of comma-delimited
  * integers to a vector of ints.
  */
 
@@ -42,10 +42,10 @@
 #endif
 
 /**
- * @brief aA unbound function that takes a comma separated list of integer 
+ * @brief aA unbound function that takes a comma separated list of integer
  * (in string form) and converts them into a vector of ints. *
  * @param items  Stringified comma separated list of integers. *
- * @return std::vector<int>  Ordered vector of the integers decoded from the 
+ * @return std::vector<int>  Ordered vector of the integers decoded from the
  * string. *
  * @throw CInvalidArgumentException Throws back to the caller if the item type
  * is not a convertable type.

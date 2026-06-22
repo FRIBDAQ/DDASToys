@@ -10,13 +10,13 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             Aaron Chester
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  CFitEngine.cpp
  * @brief Implement constructor for CFitEngine base class.
  */
@@ -28,11 +28,9 @@
  * Marshall the (x, y) points into the coordinate vectors.
  */
 ddastoys::CFitEngine::CFitEngine(
-    std::vector<std::pair<uint16_t, uint16_t>>& data
-    )
-{
-    for (size_t i = 0; i < data.size(); i++) {
-	x.push_back(data[i].first);
-	y.push_back(data[i].second);
-    }
+    std::vector<std::pair<uint16_t, uint16_t>> &data) {
+  for (size_t i = 0; i < data.size(); i++) {
+    x.push_back(data[i].first);
+    y.push_back(data[i].second);
+  }
 }

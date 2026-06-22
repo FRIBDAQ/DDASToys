@@ -9,38 +9,34 @@
 
      Authors:
              Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  ProcessToRootSink.cpp
- * @brief Implement mandatory interface from CRingItemProcessor to process 
+ * @brief Implement mandatory interface from CRingItemProcessor to process
  * data to a ROOT file sink.
  */
 
 #include "ProcessToRootSink.h"
 
-#include <CRingItemFactory.h>
 #include <CPhysicsEventItem.h>
+#include <CRingItemFactory.h>
 
 #include "RootFileDataSink.h"
 
 /**
  * @brief Constructor.
  */
-ProcessToRootSink::ProcessToRootSink(std::string sink) :
-    m_pSink(new RootFileDataSink(sink.c_str()))
-{}
+ProcessToRootSink::ProcessToRootSink(std::string sink)
+    : m_pSink(new RootFileDataSink(sink.c_str())) {}
 
 /**
  * @brief Destructor.
  */
-ProcessToRootSink::~ProcessToRootSink()
-{
-    delete m_pSink;
-}
+ProcessToRootSink::~ProcessToRootSink() { delete m_pSink; }
 
 ///
 // Mandatory interface
@@ -48,11 +44,9 @@ ProcessToRootSink::~ProcessToRootSink()
 
 /**
  * @details
- * Derived class decides what to do with PHYSICS_EVENT ring items. In this 
+ * Derived class decides what to do with PHYSICS_EVENT ring items. In this
  * case, we just pass the data to the ROOT file sink and let it handle the rest.
  */
-void
-ProcessToRootSink::processEvent(CPhysicsEventItem& item)
-{
-    m_pSink->putItem(item);
+void ProcessToRootSink::processEvent(CPhysicsEventItem &item) {
+  m_pSink->putItem(item);
 }

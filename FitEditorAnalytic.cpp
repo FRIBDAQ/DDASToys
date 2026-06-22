@@ -10,13 +10,13 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             Aaron Chester
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  FitEditorAnalytic.cpp
  * @brief Implementation of the FitEditor class for analytic fitting.
  */
@@ -42,66 +42,57 @@ static double total(0);
 
 /**
  * @details
- * Sets up the configuration manager to parse config files and manage 
+ * Sets up the configuration manager to parse config files and manage
  * configuration data. Reads the fit config file.
  */
-ddastoys::FitEditorAnalytic::FitEditorAnalytic() :
-    m_pConfig(new Configuration)
-{  
-    try {
-	m_pConfig->readConfigFile();
-    }
-    catch (std::exception& e) {
-	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
-	exit(EXIT_FAILURE);
-    }
+ddastoys::FitEditorAnalytic::FitEditorAnalytic()
+    : m_pConfig(new Configuration) {
+  try {
+    m_pConfig->readConfigFile();
+  } catch (std::exception &e) {
+    std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
 }
 
-ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic& rhs) :
-    m_pConfig(new Configuration(*rhs.m_pConfig))
-{}
+ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic &rhs)
+    : m_pConfig(new Configuration(*rhs.m_pConfig)) {}
 
 /**
  * @details
  * Constructs using move assignment.
  */
-ddastoys::FitEditorAnalytic::FitEditorAnalytic(FitEditorAnalytic&& rhs) noexcept :
-    m_pConfig(nullptr)
-{
-    *this = std::move(rhs);
+ddastoys::FitEditorAnalytic::FitEditorAnalytic(FitEditorAnalytic &&rhs) noexcept
+    : m_pConfig(nullptr) {
+  *this = std::move(rhs);
 }
 
-FitEditorAnalytic&
-ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic& rhs)
-{
-    if (this != &rhs) {
-	delete m_pConfig;
-	m_pConfig = new Configuration(*rhs.m_pConfig);
-    }
+FitEditorAnalytic &
+ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic &rhs) {
+  if (this != &rhs) {
+    delete m_pConfig;
+    m_pConfig = new Configuration(*rhs.m_pConfig);
+  }
 
-    return *this;
+  return *this;
 }
 
-FitEditorAnalytic&
-ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic&& rhs) noexcept
-{
-    if (this != &rhs) {
-	delete m_pConfig;	
-	m_pConfig = rhs.m_pConfig;
-	rhs.m_pConfig = nullptr;
-    }
+FitEditorAnalytic &
+ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic &&rhs) noexcept {
+  if (this != &rhs) {
+    delete m_pConfig;
+    m_pConfig = rhs.m_pConfig;
+    rhs.m_pConfig = nullptr;
+  }
 
-    return *this;
+  return *this;
 }
 
 /**
  * @details
  * Delete the Configuration object managed by this class.
  */
-ddastoys::FitEditorAnalytic::~FitEditorAnalytic()
-{
-    delete m_pConfig;
-}
+ddastoys::FitEditorAnalytic::~FitEditorAnalytic() { delete m_pConfig; }
 
 /**
  * @details
@@ -109,7 +100,7 @@ ddastoys::FitEditorAnalytic::~FitEditorAnalytic()
  * - Parse the fragment into a hit.
  * - Produce a IOvec element for the existing hit (without any fit
  *   that might have been there).
- * - See if the configuration manager says we should fit and if so, create 
+ * - See if the configuration manager says we should fit and if so, create
  *   the trace.
  * - Get the fit limits and saturation value.
  * - Get the number of pulses to fit.
@@ -117,131 +108,116 @@ ddastoys::FitEditorAnalytic::~FitEditorAnalytic()
  * - Create an IOvec entry for the extension we created (dynamic).
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-ddastoys::FitEditorAnalytic::operator()(
-    pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody
-    )
-{ 
-    std::vector<CBuiltRingItemEditor::BodySegment> result;
-    
-    // Regardless we want a segment that includes the hit. Note that the first
-    // uint32_t of the body is the size of the standard hit part in
-    // uint16_t words.
-    
-    uint32_t* pSize = static_cast<uint32_t*>(pBody);
-    CBuiltRingItemEditor::BodySegment hitInfo(
-	*pSize*sizeof(uint16_t), pSize, false
-	);
-    result.push_back(hitInfo);
-    
-    // Make the hit:
-    
-    DDASHit hit;
-    DDASHitUnpacker unpacker;
-    unpacker.unpack(
-	static_cast<uint32_t*>(pBody),
-	static_cast<uint32_t*>(nullptr),
-	hit
-	);
+ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
+                                        size_t bodySize, void *pBody) {
+  std::vector<CBuiltRingItemEditor::BodySegment> result;
 
-    auto crate = hit.getCrateID();
-    auto slot  = hit.getSlotID();
-    auto chan  = hit.getChannelID();
-  
-    if (m_pConfig->fitChannel(crate, slot, chan)) {
-	std::vector<uint16_t> trace = hit.getTrace();
-	FitInfo* pFit = new FitInfo; // Have an extension tho may be zero.
-	
-	if (trace.size() > 0) { // Need a trace to fit
-	    auto limits = m_pConfig->getFitLimits(crate, slot, chan);
-	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
-	    int classification = pulseCount(hit);
-	    
-	    if (classification) {
-		
+  // Regardless we want a segment that includes the hit. Note that the first
+  // uint32_t of the body is the size of the standard hit part in
+  // uint16_t words.
+
+  uint32_t *pSize = static_cast<uint32_t *>(pBody);
+  CBuiltRingItemEditor::BodySegment hitInfo(*pSize * sizeof(uint16_t), pSize,
+                                            false);
+  result.push_back(hitInfo);
+
+  // Make the hit:
+
+  DDASHit hit;
+  DDASHitUnpacker unpacker;
+  unpacker.unpack(static_cast<uint32_t *>(pBody),
+                  static_cast<uint32_t *>(nullptr), hit);
+
+  auto crate = hit.getCrateID();
+  auto slot = hit.getSlotID();
+  auto chan = hit.getChannelID();
+
+  if (m_pConfig->fitChannel(crate, slot, chan)) {
+    std::vector<uint16_t> trace = hit.getTrace();
+    FitInfo *pFit = new FitInfo; // Have an extension tho may be zero.
+
+    if (trace.size() > 0) { // Need a trace to fit
+      auto limits = m_pConfig->getFitLimits(crate, slot, chan);
+      auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
+      int classification = pulseCount(hit);
+
+      if (classification) {
+
 #ifdef ENABLE_TIMING
-		// Track total time:
-		total = 0;
-#endif		
-		// Bit 0 do single fit, bit 1 do double fit.
-		    
-		if (classification & 1) {
-#ifdef ENABLE_TIMING
-		    Timer timer;
+        // Track total time:
+        total = 0;
 #endif
-		    analyticfit::lmfit1(
-			&(pFit->s_extension.onePulseFit), trace, limits, sat
-			);
-#ifdef ENABLE_TIMING		    
-		    total += timer.elapsed();
-#endif
-		}                    
-		if (classification & 2 ) {
-		    
-		    // The single pulse fit guides the double pulse fit.
-		    // Note that lmfit2 will perform a single fit if no guess
-		    // is provided. If we have already fit the single pulse,
-		    // set the guess to those results.
-		    
-		    if (classification & 1) {
-			fit1Info guess = pFit->s_extension.onePulseFit;
+        // Bit 0 do single fit, bit 1 do double fit.
+
+        if (classification & 1) {
 #ifdef ENABLE_TIMING
-			Timer timer;
+          Timer timer;
 #endif
-			analyticfit::lmfit2(
-			    &(pFit->s_extension.twoPulseFit), trace, limits,
-			    &guess, sat
-			    );
+          analyticfit::lmfit1(&(pFit->s_extension.onePulseFit), trace, limits,
+                              sat);
 #ifdef ENABLE_TIMING
-			total += timer.elapsed();
+          total += timer.elapsed();
 #endif
-		    } else {
+        }
+        if (classification & 2) {
+
+          // The single pulse fit guides the double pulse fit.
+          // Note that lmfit2 will perform a single fit if no guess
+          // is provided. If we have already fit the single pulse,
+          // set the guess to those results.
+
+          if (classification & 1) {
+            fit1Info guess = pFit->s_extension.onePulseFit;
 #ifdef ENABLE_TIMING
-			Timer timer;
+            Timer timer;
 #endif
-			// nullptr: no guess for single params.
-			analyticfit::lmfit2(
-			    &(pFit->s_extension.twoPulseFit), trace, limits,
-			    nullptr, sat
-			    );
+            analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
+                                &guess, sat);
 #ifdef ENABLE_TIMING
-			total += timer.elapsed();
+            total += timer.elapsed();
 #endif
-		    }
-		}
+          } else {
 #ifdef ENABLE_TIMING
-		stats.addData(total);
-		if (stats.size() == 10000) {
-		    stats.compute();
-		    stats.print("======== Analytic fit stats ========");
-		}
-#endif		
-	    }	
-	}
-    
-	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
-	result.push_back(fit);
-    
-    } else { // No fit performed
-	nullExtension* p = new nullExtension;
-	CBuiltRingItemEditor::BodySegment nofit(
-	    sizeof(nullExtension), p, true
-	    );
-	result.push_back(nofit);
-    }    
-    
-    return result;
+            Timer timer;
+#endif
+            // nullptr: no guess for single params.
+            analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
+                                nullptr, sat);
+#ifdef ENABLE_TIMING
+            total += timer.elapsed();
+#endif
+          }
+        }
+#ifdef ENABLE_TIMING
+        stats.addData(total);
+        if (stats.size() == 10000) {
+          stats.compute();
+          stats.print("======== Analytic fit stats ========");
+        }
+#endif
+      }
+    }
+
+    CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
+    result.push_back(fit);
+
+  } else { // No fit performed
+    nullExtension *p = new nullExtension;
+    CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
+    result.push_back(nofit);
+  }
+
+  return result;
 }
 
-void
-ddastoys::FitEditorAnalytic::free(iovec& e)
-{
-    if (e.iov_len == sizeof(FitInfo)) {
-	FitInfo* pFit = static_cast<FitInfo*>(e.iov_base);
-	delete pFit;
-    } else {
-	nullExtension* p = static_cast<nullExtension*>(e.iov_base);
-	delete p;
-    }
+void ddastoys::FitEditorAnalytic::free(iovec &e) {
+  if (e.iov_len == sizeof(FitInfo)) {
+    FitInfo *pFit = static_cast<FitInfo *>(e.iov_base);
+    delete pFit;
+  } else {
+    nullExtension *p = static_cast<nullExtension *>(e.iov_base);
+    delete p;
+  }
 }
 
 ///
@@ -250,13 +226,11 @@ ddastoys::FitEditorAnalytic::free(iovec& e)
 
 /**
  * @details
- * In the absence of the classifier, perform single- and double-pulse fits 
+ * In the absence of the classifier, perform single- and double-pulse fits
  * for every mapped channel.
  */
-int
-ddastoys::FitEditorAnalytic::pulseCount(DDASHit& hit)
-{
-    return 3; // In absence of classifier.
+int ddastoys::FitEditorAnalytic::pulseCount(DDASHit &hit) {
+  return 3; // In absence of classifier.
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -267,12 +241,12 @@ ddastoys::FitEditorAnalytic::pulseCount(DDASHit& hit)
  * @brief Factory method to create this FitEditor.
  *
  * @details
- * $DAQBIN/EventEditor expects a symbol called createEditor to exist in the 
- * plugin library it loads at runtime. Wrapping the factory method in 
+ * $DAQBIN/EventEditor expects a symbol called createEditor to exist in the
+ * plugin library it loads at runtime. Wrapping the factory method in
  * extern "C" prevents namespace mangling by the C++ compiler.
  */
 extern "C" {
-    ddastoys::FitEditorAnalytic* createEditor() {
-	return new ddastoys::FitEditorAnalytic;
-    }
+ddastoys::FitEditorAnalytic *createEditor() {
+  return new ddastoys::FitEditorAnalytic;
+}
 }

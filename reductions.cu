@@ -35,7 +35,7 @@
 //                                                                        //
 // Prof. Stefano Cagnoni / Luca Mussi                                     //
 // IbisLab, Dipartimento di Ingegneria dell'Informazione                  //
-// Università degli Studi di Parma                                        //
+// Universitï¿½ degli Studi di Parma                                        //
 // 181/a Viale G.P. Usberti                                               //
 // I-43124 Parma                                                          //
 // Italy                                                                  //

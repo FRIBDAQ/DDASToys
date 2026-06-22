@@ -10,13 +10,13 @@
      Authors:
              Ron Fox
              Giordano Cerriza
-	     Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             Aaron Chester
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  CFitEngine.h
  * @brief Define the CFitEngine abstract base class.
  */
@@ -25,37 +25,37 @@
 #define CFITENGINE_H
 
 #include <cstdint>
-#include <vector>
-#include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+#include <vector>
 
 /** @namespace ddastoys */
 namespace ddastoys {
 
-    /**
-     * @class CFitEngine
-     * @brief Abstract base class for marshalling data to the fitting 
-     * subsystems to calculate Jacobian elements and residuals.
-     */
-    
-    class CFitEngine {
-    protected:
-	std::vector<uint16_t> x; //!< Trace x coordinate vector.
-	std::vector<uint16_t> y; //!< Trace y coordinate vector.
-    public:
-	/** 
-	 * @brief Constructor.
-	 * @param data (x, y) data to store in the coordinate vectors.
-	 */
-	CFitEngine(std::vector<std::pair<uint16_t, uint16_t>>& data);
-	/** @brief Destructor. */
-	virtual ~CFitEngine() {}
-	/** @brief Virtual method for calculating the Jacobian matrix */
-	virtual void jacobian(const gsl_vector* p,  gsl_matrix *J) = 0;
-	/** @brief Virtual method to calculating the residual. */
-	virtual void residuals(const gsl_vector* p, gsl_vector* r)  = 0;
-    };
-		
-}
+/**
+ * @class CFitEngine
+ * @brief Abstract base class for marshalling data to the fitting
+ * subsystems to calculate Jacobian elements and residuals.
+ */
+
+class CFitEngine {
+protected:
+  std::vector<uint16_t> x; //!< Trace x coordinate vector.
+  std::vector<uint16_t> y; //!< Trace y coordinate vector.
+public:
+  /**
+   * @brief Constructor.
+   * @param data (x, y) data to store in the coordinate vectors.
+   */
+  CFitEngine(std::vector<std::pair<uint16_t, uint16_t>> &data);
+  /** @brief Destructor. */
+  virtual ~CFitEngine() {}
+  /** @brief Virtual method for calculating the Jacobian matrix */
+  virtual void jacobian(const gsl_vector *p, gsl_matrix *J) = 0;
+  /** @brief Virtual method to calculating the residual. */
+  virtual void residuals(const gsl_vector *p, gsl_vector *r) = 0;
+};
+
+} // namespace ddastoys
 
 #endif

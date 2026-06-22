@@ -9,12 +9,12 @@
 
      Authors:
              Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  traceview.cpp
  * @brief traceview main. Run the Qt application.
  */
@@ -42,13 +42,12 @@ using namespace ddastoys;
  * @retval !=0 Error.
  *
  * @details
- * Create the main application. The application has a command line parser to 
- * allow the user to pass commands at runtime to configure the initial viewer 
- * settings. A TApplication necessary for the embedded Root canvas is also 
+ * Create the main application. The application has a command line parser to
+ * allow the user to pass commands at runtime to configure the initial viewer
+ * settings. A TApplication necessary for the embedded Root canvas is also
  * created.
  */
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
   app.setApplicationName("traceview");
   app.setApplicationVersion("2.1");
@@ -60,60 +59,55 @@ int main(int argc, char* argv[])
   // https://doc.qt.io/qt-5/qguiapplication.html#supported-command-line-option.
   // This may not be an exhaustive list.
 
-   QCommandLineParser parser;
-   
-   parser.setApplicationDescription("traceview command line parser");
-   parser.addHelpOption();
-   parser.addVersionOption();
+  QCommandLineParser parser;
 
-   // Set options:
-   
-   std::vector<QCommandLineOption> opts;
-   QCommandLineOption sourceOpt(
-       QStringList() << "s" << "source",
-       QCoreApplication::translate("main", "Path to input data file (.evt)"),
-       QCoreApplication::translate("main", "source")
-       );
-   opts.push_back(sourceOpt);
-   QCommandLineOption methodOpt(
-       QStringList() << "m" << "method",
-       QCoreApplication::translate(
-	   "main",
-	   "Fitting method (one of 'analytic', 'template', 'ml_inference')"
-	   ),
-       QCoreApplication::translate("main", "method")
-       );
-   opts.push_back(methodOpt);
-   QCommandLineOption eventListOpt(
-       QStringList() << "e" << "event-list",
-       QCoreApplication::translate(
-	   "main",
-	   "Path to a file specifying a subset of events to view (optional)"
-	   ),
-       QCoreApplication::translate("main", "events")
-       );
-   opts.push_back(eventListOpt);
+  parser.setApplicationDescription("traceview command line parser");
+  parser.addHelpOption();
+  parser.addVersionOption();
 
-   // Add options and configure the parser:
-   
-   for (const auto& opt : opts) {
-       parser.addOption(opt);
-   }
-   
-   parser.process(app);
+  // Set options:
 
-   // After the QCommandLineParser so ROOT TApplication parser doesn't consume
-   // shared default args such as --help and --version.   
-   TApplication rootapp("TraceViewROOTApp", &argc, argv);
+  std::vector<QCommandLineOption> opts;
+  QCommandLineOption sourceOpt(
+      QStringList() << "s" << "source",
+      QCoreApplication::translate("main", "Path to input data file (.evt)"),
+      QCoreApplication::translate("main", "source"));
+  opts.push_back(sourceOpt);
+  QCommandLineOption methodOpt(
+      QStringList() << "m" << "method",
+      QCoreApplication::translate(
+          "main",
+          "Fitting method (one of 'analytic', 'template', 'ml_inference')"),
+      QCoreApplication::translate("main", "method"));
+  opts.push_back(methodOpt);
+  QCommandLineOption eventListOpt(
+      QStringList() << "e" << "event-list",
+      QCoreApplication::translate(
+          "main",
+          "Path to a file specifying a subset of events to view (optional)"),
+      QCoreApplication::translate("main", "events"));
+  opts.push_back(eventListOpt);
 
-   // Display the GUI
-  
-   QTraceView window(parser, nullptr);
-   window.setWindowTitle("DDASToys TraceView");
-   window.resize(window.sizeHint());
-   window.show();
-  
-   QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
-   
-   return app.exec();
+  // Add options and configure the parser:
+
+  for (const auto &opt : opts) {
+    parser.addOption(opt);
+  }
+
+  parser.process(app);
+
+  // After the QCommandLineParser so ROOT TApplication parser doesn't consume
+  // shared default args such as --help and --version.
+  TApplication rootapp("TraceViewROOTApp", &argc, argv);
+
+  // Display the GUI
+
+  QTraceView window(parser, nullptr);
+  window.setWindowTitle("DDASToys TraceView");
+  window.resize(window.sizeHint());
+  window.show();
+
+  QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
+
+  return app.exec();
 }

@@ -9,19 +9,19 @@
 
      Authors:
              Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
 /**
  * @file  eeconverter.cpp
- * @brief Create an event processor, call its operator() to process data, 
+ * @brief Create an event processor, call its operator() to process data,
  * and handle exceptions.
- */ 
+ */
 
-#include <string>
 #include <iostream>
+#include <string>
 
 #include <Exception.h>
 
@@ -36,38 +36,32 @@
  *
  * @return int
  * @retval EXIT_SUCCESS If the program executes and completes properly.
- * @retval EXIT_FAILURE Otherwise. Most commonly because some part of the 
- *   processing code threw and exception which is handled here. The error 
+ * @retval EXIT_FAILURE Otherwise. Most commonly because some part of the
+ *   processing code threw and exception which is handled here. The error
  *   messages should point the user to the problem.
  *
  * @details
- * Creates and calls the event processor's operator(). 
+ * Creates and calls the event processor's operator().
  *
  * @note To users: Please report unhandled exceptions or unclear error messages
  * to daqhelp!
  */
-int main(int argc, char** argv)
-{  
+int main(int argc, char **argv) {
   CEventProcessor ep;
   try {
     ep(argc, argv);
-  }
-  catch(CException& e) {
-    std::cerr << "eeconverter main caught an exception: "
-	      << e.ReasonText() << std::endl;
+  } catch (CException &e) {
+    std::cerr << "eeconverter main caught an exception: " << e.ReasonText()
+              << std::endl;
     return EXIT_FAILURE;
-  }
-  catch(std::invalid_argument& e) {
-    std::cerr << "eeconverter main caught an exception: "
-	      << e.what() << std::endl;
+  } catch (std::invalid_argument &e) {
+    std::cerr << "eeconverter main caught an exception: " << e.what()
+              << std::endl;
     return EXIT_FAILURE;
-  }
-  catch (std::string msg) {
-    std::cerr << "eeconverter main caught an exception: "
-	      << msg << std::endl;
+  } catch (std::string msg) {
+    std::cerr << "eeconverter main caught an exception: " << msg << std::endl;
     return EXIT_FAILURE;
-  }
-  catch (...) {
+  } catch (...) {
     std::cerr << "eeconverter main caught an unexpected exception type\n";
     return EXIT_FAILURE;
   }

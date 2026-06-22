@@ -9,12 +9,12 @@
 
      Authors:
              Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  FitEditorTemplate.h
  * @brief Definition of the FitEditor class for template fitting.
  */
@@ -27,102 +27,100 @@
 #include <vector>
 
 namespace ddasfmt {
-    class DDASHit;
+class DDASHit;
 }
 
 /** @namespace ddastoys */
 namespace ddastoys {
-    
-    class Configuration;
 
-    /**
-     * @ingroup template
-     * @{
-     */
+class Configuration;
 
-    /**
-     * @class FitEditorTemplate
-     * @brief Fit trace data with the template fitting functions.
-     *
-     * @details
-     * Editing the hit overwrites any existing extension. This class is 
-     * intended for use with the EventEditor framework providing a complete 
-     * description of the new event body.
-     */
+/**
+ * @ingroup template
+ * @{
+ */
 
-    class FitEditorTemplate : public CBuiltRingItemEditor::BodyEditor
-    {
-    public:
-	/** @brief Constructor. */
-	FitEditorTemplate();
-	/**
-	 * @brief Copy constructor.
-	 * @param rhs Object to copy construct.
-	 */
-	FitEditorTemplate(const FitEditorTemplate& rhs);
-	/**
-	 * @brief Move constructor.
-	 * @param rhs Object to move construct.
-	 */
-	FitEditorTemplate(FitEditorTemplate&& rhs) noexcept;
+/**
+ * @class FitEditorTemplate
+ * @brief Fit trace data with the template fitting functions.
+ *
+ * @details
+ * Editing the hit overwrites any existing extension. This class is
+ * intended for use with the EventEditor framework providing a complete
+ * description of the new event body.
+ */
 
-	/**
-	 * @brief Copy assignment operator.
-	 * @param rhs Object to copy assign.
-	 * @return Reference to created object.
-	 */
-	FitEditorTemplate& operator=(const FitEditorTemplate& rhs);
-	/**
-	 * @brief Move assignment operator.
-	 * @param rhs Object to move assign.
-	 * @return Reference to created object.
-	 */
-	FitEditorTemplate& operator=(FitEditorTemplate&& rhs) noexcept;
-    
-	/** @brief Destructor. */
-	virtual ~FitEditorTemplate();
+class FitEditorTemplate : public CBuiltRingItemEditor::BodyEditor {
+public:
+  /** @brief Constructor. */
+  FitEditorTemplate();
+  /**
+   * @brief Copy constructor.
+   * @param rhs Object to copy construct.
+   */
+  FitEditorTemplate(const FitEditorTemplate &rhs);
+  /**
+   * @brief Move constructor.
+   * @param rhs Object to move construct.
+   */
+  FitEditorTemplate(FitEditorTemplate &&rhs) noexcept;
 
-	// Mandatory interface from CBuiltRingItemEditor::BodyEditor
-    public:
-	/**
-	 * @brief Perform the fit and create a fit extension for a single 
-	 * fragment. 
-	 * @param pHdr     Pointer to the ring item header of the hit.
-	 * @param pBHdr    Pointer to the body header pointer for the hit.
-	 * @param bodySize Number of bytes in the body.
-	 * @param pBody    Pointer to the body.
-	 * @return Final segment descriptors.
-	 */
-	virtual std::vector<CBuiltRingItemEditor::BodySegment> operator()(
-	    pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize,
-	    void* pBody
-	    );
-	/**
-	 * @brief Free the dynamic fit extension descriptor(s).
-	 * @param e  IOvec we need to free.
-	 */
-	virtual void free(iovec& e);
+  /**
+   * @brief Copy assignment operator.
+   * @param rhs Object to copy assign.
+   * @return Reference to created object.
+   */
+  FitEditorTemplate &operator=(const FitEditorTemplate &rhs);
+  /**
+   * @brief Move assignment operator.
+   * @param rhs Object to move assign.
+   * @return Reference to created object.
+   */
+  FitEditorTemplate &operator=(FitEditorTemplate &&rhs) noexcept;
 
-	// Additional functionality for this class
-    private:
-	/**
-	 * @brief This is a hook into which to add the ML classifier.
-	 * @param hit - references a hit.
-	 * @return int
-	 * @retval 0  - On the basis of the trace no fitting.
-	 * @retval 1  - Only fit a single trace.
-	 * @retval 2  - Only fit two traces.
-	 * @retval 3  - Fit both one and double hit.
-	 */
-	int pulseCount(ddasfmt::DDASHit& hit);
-  
-	// Private member data
-    private:
-	Configuration* m_pConfig;       //!< Configuration file parser.
-    };
+  /** @brief Destructor. */
+  virtual ~FitEditorTemplate();
+
+  // Mandatory interface from CBuiltRingItemEditor::BodyEditor
+public:
+  /**
+   * @brief Perform the fit and create a fit extension for a single
+   * fragment.
+   * @param pHdr     Pointer to the ring item header of the hit.
+   * @param pBHdr    Pointer to the body header pointer for the hit.
+   * @param bodySize Number of bytes in the body.
+   * @param pBody    Pointer to the body.
+   * @return Final segment descriptors.
+   */
+  virtual std::vector<CBuiltRingItemEditor::BodySegment>
+  operator()(pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize,
+             void *pBody);
+  /**
+   * @brief Free the dynamic fit extension descriptor(s).
+   * @param e  IOvec we need to free.
+   */
+  virtual void free(iovec &e);
+
+  // Additional functionality for this class
+private:
+  /**
+   * @brief This is a hook into which to add the ML classifier.
+   * @param hit - references a hit.
+   * @return int
+   * @retval 0  - On the basis of the trace no fitting.
+   * @retval 1  - Only fit a single trace.
+   * @retval 2  - Only fit two traces.
+   * @retval 3  - Fit both one and double hit.
+   */
+  int pulseCount(ddasfmt::DDASHit &hit);
+
+  // Private member data
+private:
+  Configuration *m_pConfig; //!< Configuration file parser.
+};
 
 /** @} */
 
-}
+} // namespace ddastoys
 
 #endif
