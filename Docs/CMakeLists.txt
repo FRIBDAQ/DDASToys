@@ -26,13 +26,14 @@ set(_has_docs FALSE)
 # =============================================================================
 # Doxygen
 # =============================================================================
+
 if(Doxygen_FOUND)
     set(_doxyfile_in  "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
     set(_doxyfile_out "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
     set(_doxy_outdir  "${CMAKE_CURRENT_BINARY_DIR}/sourcedocs")
 
     # Copy the existing, hand-tuned Doxyfile verbatim …
-    configure_file("${_doxyfile_in}" "${_doxyfile_out}" COPYONLY)
+    configure_file("${_doxyfile_in}" "${_doxyfile_out}" @ONLY)
 
     # … then append overrides for the paths that change between in-tree and
     # out-of-tree builds.  Doxygen's last-definition-wins rule makes this work.
@@ -66,6 +67,7 @@ endif()
 # =============================================================================
 # DocBook manual (HTML + PDF)
 # =============================================================================
+
 set(_manual_xml "${CMAKE_CURRENT_SOURCE_DIR}/manual.xml")
 set(_manual_dir "${CMAKE_CURRENT_BINARY_DIR}/manual")
 set(_manual_deps "")
@@ -116,6 +118,7 @@ endif()
 # =============================================================================
 # Umbrella target
 # =============================================================================
+
 if(_has_docs)
     add_custom_target(docs ALL DEPENDS ${_docs_deps}
         COMMENT "All DDASToys documentation")

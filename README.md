@@ -1,7 +1,7 @@
 # DDASToys documentation
 
 ## Introduction
-This page contains source code documentation for DDASToys. This code is used to build shared plugin libraries which can be used by the NSCLDAQ `EventEditor` program to fit recorded trace data. DDASToys is supported as part of NSCLDAQ releases 11.3 and later. The classes and functions comprising the DDASToys software package are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code.
+This page contains source code documentation for DDASToys. This code is used to build shared plugin libraries which can be used by the NSCLDAQ `EventEditor` program to fit recorded trace data. The DDASToys software packages require NSCLDAQ, and are supported for releases 11.3 and later. The classes and functions comprising the DDASToys software package are documented with an eye toward guiding users looking to incorporate the fitting subroutines into their own code.
 
 Two companion programs for analyzing DDAS data with fits are provided as part of the DDASToys package. Since many users perform their final analysis using CERN ROOT, a conversion tool called `eeconverter` is provided to convert DDAS data with fits to ROOT format. This is conceptually similar to the NSCLDAQ `ddasdumper` program many users are familiar with. A shared library for I/O in ROOT is provided. Trace data and their associated fits can be examined using the `traceview` program. Please note that `traceview` is a lightweight debugging and diagnostic tool, not an analysis tool; analysis of fitted trace data is left to the user.
 
@@ -19,25 +19,126 @@ DDASToys provides three FitEditor libraries as plugin extensions for the `EventE
 For more information refer to the DDASToys Manual installed in <span>$</span>(PREFIX)/share/manual/manual.pdf or point a web browser at <span>$</span>(PREFIX)/share/manual/manual.html. Note that you may want to copy the entire share directory somewhere more convenient e.g., your user home directory before viewing in a browser.
 
 ## Building DDASToys
-Clone the DDASToys repository using `git clone https://github.com/NSCLDAQ/DDASToys.git`. The main branch should be checked out by default. You can verify this using `git branch`. In general it is not advisable to build and install DDASToys from the main branch, you should instead pull down a tag corresponding to a released version. Most often you will want to grab the latest tagged release.
 
-To build the DDASToys code:
-* Setup the NSCLDAQ environment by sourcing the daqsetup.bash script from NSCLDAQ 12.2-000 or later. This will define the environment variables `DAQLIB`, `DAQINC`, etc.
-* Ensure CMake 3.13 or later is installed. CMake 3.13+ is required to build the DDASFormat library.
-* Ensure Qt 5.11.3 or later is installed. Qt is required by the `traceview` GUI.
-* Configure the same CERN ROOT environment used to compile the NSCLDAQ version you are compiling the DDASToys code against. You can verify the ROOT version by examining the output of `ldd $DAQLIB/libddasrootformat.so | grep root` provided that the NSCLDAQ environment is set. Source the script thisroot.sh located under the top-level ROOT installation bin/ directory.
+Clone the DDASToys repository and checkout the desired release tag:
 
-The DDASFormat library is incorporated as a git submodule. Before proceeding with the following installation steps, run the command `git submodule init --recursive` in the top-level DDASToys source directory. This will clone the DDASFormat repository and checkout the correct tag for the version of DDASToys you are installing.
+```bash
+git clone https://github.com/NSCLDAQ/DDASToys.git
+cd DDASToys
+git checkout <release-tag>
+```
 
-Once the environment and submodule are correctly configured, you can build DDASToys using the command `PREFIX=/where/to/install/ddastoys make all install` from the top-level source directory. If no `PREFIX` is specified, it will default to /user/\<yourname\>/ddastoys. This will:
-* Build and install the DDASFormat library libDDASFormat.so and DDAS format and unpacker headers under `$(PREFIX)/DDASFormat`,
-* Build the various DDASToys fit editor, format, and unpacker libraries,
-* Build the `traceview` and `eeconverter` programs (note `traceview` is only built if Qt 5.11.3+ is found), and
-* Build the full DDASToys documentation.
-* Install all of this stuff in the proper location.
-To build with inference timing loops enabled, compile with `ENABLE_TIMING=1` defined in the environment.
+### Requirements
 
-The DDASToys unit tests, run by typing `make check` in the build directory should all pass.
+DDASToys requires:
+
+- NSCLDAQ 12.2-000 or later
+- CMake 3.13 or later
+- CERN ROOT compatible with the NSCLDAQ installation being used
+- Qt 5.11 or later (for `traceview`)
+- LibTorch (for machine-learning inference support)
+- NVIDIA CUDA Toolkit and `libCudaOptimize` (optional, for GPU-accelerated fitting)
+
+Before building, configure the appropriate NSCLDAQ and ROOT environments:
+
+```bash
+source /path/to/nscldaq/daqsetup.bash
+source /path/to/root/bin/thisroot.sh
+```
+
+The DDASFormat library is included as a git submodule. After cloning the repository, initialize and update the submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+### Configuring and Building
+
+Create a build directory and configure the project:
+
+```bash
+cmake -S . -B build \
+    -DCMAKE_INSTALL_PREFIX=/path/to/install
+```
+
+For example:
+
+```bash
+cmake -S . -B build \
+    -DCMAKE_INSTALL_PREFIX=/aaron/dev-install/ddastoys/6.5-dev
+```
+
+Build and install:
+
+```bash
+cmake --build build
+cmake --install build
+```
+
+### Running Unit Tests
+
+After a successful build, run the unit test suite with:
+
+```bash
+ctest --test-dir build --VV
+```
+
+All tests should complete successfully.
+
+### Build Options
+
+The following options may be specified during configuration using
+`-D<option>=ON|OFF`:
+
+| Option | Default | Description |
+|----------|---------|-------------|
+| `DDASTOYS_CUDA` | `OFF` | Build the CUDA GPU-accelerated fit engine. Requires the NVIDIA CUDA Toolkit (`nvcc`) and the `libCudaOptimize` library. |
+| `DDASTOYS_MLINFERENCE` | `ON` | Build the machine-learning inference fit editor. Requires LibTorch. |
+| `DDASTOYS_TRACEVIEW` | `ON` | Build the Qt-based `traceview` diagnostic GUI. Requires Qt 5.11 or newer. |
+| `DDASTOYS_DOCS` | `ON` | Build the Doxygen API documentation and DocBook user manual. |
+| `DDASTOYS_TIMING` | `OFF` | Enable inference timing and profiling instrumentation in the FitEditors. |
+
+For example, to disable documentation and TraceView:
+
+```bash
+cmake -S . -B build \
+    -DCMAKE_INSTALL_PREFIX=/path/to/install \
+    -DDDASTOYS_DOCS=OFF \
+    -DDDASTOYS_TRACEVIEW=OFF
+```
+
+### CUDA Configuration
+
+When `DDASTOYS_CUDA=ON`, the maximum supported trace length compiled into the CUDA fit engine may be configured via:
+
+```bash
+-DDDASTOYS_CUDA_MAXPOINTS=<N>
+```
+
+The default value is:
+
+```text
+DDASTOYS_CUDA_MAXPOINTS=5000
+```
+
+This value is compiled into the CUDA implementation as the `MAXPOINTS`
+macro and should be chosen to accommodate the longest traces expected
+during analysis.
+
+### Installation
+
+The installation places the DDASToys libraries, executables, headers,
+documentation, and the bundled DDASFormat library under the directory
+specified by `CMAKE_INSTALL_PREFIX`.
+
+After installation, the DDASToys manual can be found in:
+
+```text
+<prefix>/share/manual/
+```
+
+Both PDF and HTML versions of the documentation are installed when
+`DDASTOYS_DOCS=ON`.
 
 ## Running DDASToys Codes
 For detailed information about how to run the `EventEditor` codes please refer to the DDASToys manual installed in <span>$</span>(PREFIX)/share/manual/manual.pdf.
@@ -81,4 +182,4 @@ Some `traceview` options -- the loaded data file and the fitting method -- can b
 * 6.3-001 : Optimizations for ML inference, added some simple inference profiling tools and option to build DDASToys with profiling output.
 * 6.4-000 : User provides trace length in fit configuration file. Remove dependence on template file; support per-channel trace templates. Allow "none" as model or template path.
 * 6.4-001 : Pin DDASFormat 2.0-001.
-* 6.5-000 : Move to CMake build environment.
+* 6.5-000 : CMake build environment, minor fixes to unittests.
