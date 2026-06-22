@@ -142,17 +142,17 @@ install(TARGETS DDASRootFitFormat
 
 # The .pcm and .rootmap must live beside the .so so ROOT can find them.
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/DDASRootFitFormat_rdict.pcm"
-    "${CMAKE_CURRENT_BINARY_DIR}/DDASRootFitFormat.rootmap"
+    "${CMAKE_CURRENT_BINARY_DIR}/libDDASRootFitFormat_rdict.pcm"
+    "${CMAKE_CURRENT_BINARY_DIR}/libDDASRootFitFormat.rootmap"
     DESTINATION lib
 )
 
 # ROOT also looks for the .pcm next to the running executable.
-# Create a symlink ${prefix}/bin/DDASRootFitFormat_rdict.pcm in ../lib/…
+# Create a symlink ${prefix}/bin/libDDASRootFitFormat_rdict.pcm in ../lib/…
 install(CODE
     "execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink
-         \"\${CMAKE_INSTALL_PREFIX}/lib/DDASRootFitFormat_rdict.pcm\"
-         \"\${CMAKE_INSTALL_PREFIX}/bin/DDASRootFitFormat_rdict.pcm\")"
+         \"\${CMAKE_INSTALL_PREFIX}/lib/libDDASRootFitFormat_rdict.pcm\"
+         \"\${CMAKE_INSTALL_PREFIX}/bin/libDDASRootFitFormat_rdict.pcm\")"
 )
 
 install(TARGETS eeconverter RUNTIME DESTINATION bin)
