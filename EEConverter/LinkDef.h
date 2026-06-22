@@ -9,14 +9,14 @@
 
      Authors:
              Ron Fox
-             Jeromy Tompkins 
-	     Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             Jeromy Tompkins
+             Aaron Chester
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file   LinkDef.h
  * @brief  Defines the linkages to supply to root.
  */
@@ -31,13 +31,13 @@
 #pragma link C++ namespace ddasfmt;
 #pragma link C++ defined_in ddasfmt;
 
-#pragma link C++ class ddasfmt::DDASHit+;
-#pragma link C++ class ddastoys::DDASFitHit+;
-#pragma link C++ class ddastoys::HitExtension+;
-#pragma link C++ class ddastoys::fit1Info+;
-#pragma link C++ class ddastoys::fit2Info+;
-#pragma link C++ class ddastoys::PulseDescription+;
-#pragma link C++ class ddastoys::DDASRootFitEvent+;
-#pragma link C++ class ddastoys::DDASRootFitHit+;
+#pragma link C++ class ddasfmt::DDASHit + ;
+#pragma link C++ class ddastoys::DDASFitHit + ;
+#pragma link C++ class ddastoys::HitExtension + ;
+#pragma link C++ class ddastoys::fit1Info + ;
+#pragma link C++ class ddastoys::fit2Info + ;
+#pragma link C++ class ddastoys::PulseDescription + ;
+#pragma link C++ class ddastoys::DDASRootFitEvent + ;
+#pragma link C++ class ddastoys::DDASRootFitHit + ;
 
 #endif

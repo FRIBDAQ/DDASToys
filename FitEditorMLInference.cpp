@@ -8,13 +8,13 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Authors:
-	     Aaron Chester
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             Aaron Chester
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
-/** 
+/**
  * @file  FitEditorMLInference.cpp
  * @brief Implementation of the FitEditor class for machine-learning inference.
  */
@@ -46,7 +46,7 @@ static Stats stats;
 
 /**
  * @details
- * Sets up the configuration manager to parse config files and manage 
+ * Sets up the configuration manager to parse config files and manage
  * configuration data. Reads the fit config file. Loads all ML models
  * specified in the configuration. Stores models in a map keyed by the
  * path to their associated PyTorch file.
@@ -58,100 +58,90 @@ static Stats stats;
  * - `module = torch::jit::freeze(module)`: Freeze, inline, const attributes
  * - `module = torch::jit::optimize_for_inference(module)`: As name implies
  */
-ddastoys::FitEditorMLInference::FitEditorMLInference() :
-    m_pConfig(new Configuration)
-{  
+ddastoys::FitEditorMLInference::FitEditorMLInference()
+    : m_pConfig(new Configuration) {
+  try {
+    m_pConfig->readConfigFile();
+  } catch (std::exception &e) {
+    std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // Load all the models and store for later access:
+
+  torch::set_num_threads(1); // Each worker is 1 CPU (or thread)
+  torch::jit::setGraphExecutorOptimize(true);
+
+  auto modelList = m_pConfig->getModelList();
+  for (const auto &m : modelList) {
     try {
-	m_pConfig->readConfigFile();
+      torch::jit::script::Module module = torch::jit::load(m);
+      module.eval();
+      module = torch::jit::freeze(module);
+      module = torch::jit::optimize_for_inference(module);
+
+      // Warm-up for inference to pre-compile kernels, etc:
+
+      auto traceLength = m_pConfig->getModelShape(m);
+      for (int i = 0; i < 10; i++) {
+        torch::InferenceMode mode;
+        auto input = torch::randn({1, traceLength});
+        auto warmup = module.forward({input});
+      }
+
+      m_models[m] = module;
+    } catch (const c10::Error &e) {
+      std::cerr << "Failed to load model " << m << ": " << e.what()
+                << std::endl;
+      exit(EXIT_FAILURE);
+    } catch (const std::invalid_argument &e) {
+      std::cerr << "Failed to get trace length from model " << m << ": "
+                << e.what() << std::endl;
+      exit(EXIT_FAILURE);
     }
-    catch (std::exception& e) {
-	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
-	exit(EXIT_FAILURE);
-    }
-
-    // Load all the models and store for later access:
-
-    torch::set_num_threads(1); // Each worker is 1 CPU (or thread)
-    torch::jit::setGraphExecutorOptimize(true);
-    
-    auto modelList = m_pConfig->getModelList();
-    for (const auto& m : modelList) {
-	try {
-	    torch::jit::script::Module module = torch::jit::load(m);
-	    module.eval();
-	    module = torch::jit::freeze(module);
-	    module = torch::jit::optimize_for_inference(module);
-
-	    // Warm-up for inference to pre-compile kernels, etc:
-
-	    auto traceLength = m_pConfig->getModelShape(m);
-	    for (int i = 0; i < 10; i++) {
-                torch::InferenceMode mode;                
-                auto input = torch::randn({1, traceLength});
-		auto warmup = module.forward({input});
-            }
-	    
-	    m_models[m] = module;
-	}	
-	catch (const c10::Error& e) {
-	    std::cerr << "Failed to load model " << m << ": " << e.what()
-		      << std::endl;
-	    exit(EXIT_FAILURE);
-	}
-	catch (const std::invalid_argument& e)
-	{
-	    std::cerr << "Failed to get trace length from model " << m
-		      << ": " << e.what() << std::endl;
-	    exit(EXIT_FAILURE);
-	}
-    }
+  }
 }
 
-ddastoys::FitEditorMLInference::FitEditorMLInference(const FitEditorMLInference& rhs) :
-    m_pConfig(new Configuration(*rhs.m_pConfig))
-{}
+ddastoys::FitEditorMLInference::FitEditorMLInference(
+    const FitEditorMLInference &rhs)
+    : m_pConfig(new Configuration(*rhs.m_pConfig)) {}
 
 /**
  * @details
  * Constructs using move assignment.
  */
-ddastoys::FitEditorMLInference::FitEditorMLInference(FitEditorMLInference&& rhs) noexcept :
-    m_pConfig(nullptr)
-{
-    *this = std::move(rhs);
+ddastoys::FitEditorMLInference::FitEditorMLInference(
+    FitEditorMLInference &&rhs) noexcept
+    : m_pConfig(nullptr) {
+  *this = std::move(rhs);
 }
 
-FitEditorMLInference&
-ddastoys::FitEditorMLInference::operator=(const FitEditorMLInference& rhs)
-{
-    if (this != &rhs) {
-	delete m_pConfig;
-	m_pConfig = new Configuration(*rhs.m_pConfig);
-    }
+FitEditorMLInference &
+ddastoys::FitEditorMLInference::operator=(const FitEditorMLInference &rhs) {
+  if (this != &rhs) {
+    delete m_pConfig;
+    m_pConfig = new Configuration(*rhs.m_pConfig);
+  }
 
-    return *this;
+  return *this;
 }
 
-FitEditorMLInference&
-ddastoys::FitEditorMLInference::operator=(FitEditorMLInference&& rhs) noexcept
-{
-    if (this != &rhs) {
-	delete m_pConfig;	
-	m_pConfig = rhs.m_pConfig;
-	rhs.m_pConfig = nullptr;
-    }
+FitEditorMLInference &
+ddastoys::FitEditorMLInference::operator=(FitEditorMLInference &&rhs) noexcept {
+  if (this != &rhs) {
+    delete m_pConfig;
+    m_pConfig = rhs.m_pConfig;
+    rhs.m_pConfig = nullptr;
+  }
 
-    return *this;
+  return *this;
 }
 
 /**
  * @details
  * Delete the Configuration object managed by this class.
  */
-ddastoys::FitEditorMLInference::~FitEditorMLInference()
-{
-    delete m_pConfig;
-}
+ddastoys::FitEditorMLInference::~FitEditorMLInference() { delete m_pConfig; }
 
 /**
  * @details
@@ -159,80 +149,77 @@ ddastoys::FitEditorMLInference::~FitEditorMLInference()
  * - Parse the fragment into a hit.
  * - Produce a IOvec element for the existing hit (without any fit
  *   that might have been there).
- * - See if the configuration manager says we should fit and if so, get the 
+ * - See if the configuration manager says we should fit and if so, get the
  *   trace from the hit.
  * - Do the inference step
  * - Create an IOvec entry for the extension we created (dynamic).
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr, size_t bodySize, void* pBody)
-{ 
-    std::vector<CBuiltRingItemEditor::BodySegment> result;
-    
-    // Regardless we want a segment that includes the hit. Note that the first
-    // uint32_t of the body is the size of the standard hit part in
-    // uint16_t words.
-    
-    uint32_t* pSize = static_cast<uint32_t*>(pBody);
-    CBuiltRingItemEditor::BodySegment hitInfo(
-	*pSize*sizeof(uint16_t), pSize,	false
-	);
-    result.push_back(hitInfo);
-    
-    // Make the hit:
-    
-    DDASHit hit;
-    DDASHitUnpacker unpacker;    
-    unpacker.unpack(
-	static_cast<uint32_t*>(pBody), static_cast<uint32_t*>(nullptr), hit
-	);
+ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr,
+                                           pBodyHeader pBHdr, size_t bodySize,
+                                           void *pBody) {
+  std::vector<CBuiltRingItemEditor::BodySegment> result;
 
-    auto crate = hit.getCrateID();
-    auto slot  = hit.getSlotID();
-    auto chan  = hit.getChannelID();
-  
-    if (m_pConfig->fitChannel(crate, slot, chan)) {
-	auto trace = hit.getTrace();
-	FitInfo* pFit = new FitInfo; // Have an extension tho may be zero.
-	
-	if (trace.size() > 0) { // Need a trace to fit
-	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
-	    auto path = m_pConfig->getModelPath(crate, slot, chan);
+  // Regardless we want a segment that includes the hit. Note that the first
+  // uint32_t of the body is the size of the standard hit part in
+  // uint16_t words.
+
+  uint32_t *pSize = static_cast<uint32_t *>(pBody);
+  CBuiltRingItemEditor::BodySegment hitInfo(*pSize * sizeof(uint16_t), pSize,
+                                            false);
+  result.push_back(hitInfo);
+
+  // Make the hit:
+
+  DDASHit hit;
+  DDASHitUnpacker unpacker;
+  unpacker.unpack(static_cast<uint32_t *>(pBody),
+                  static_cast<uint32_t *>(nullptr), hit);
+
+  auto crate = hit.getCrateID();
+  auto slot = hit.getSlotID();
+  auto chan = hit.getChannelID();
+
+  if (m_pConfig->fitChannel(crate, slot, chan)) {
+    auto trace = hit.getTrace();
+    FitInfo *pFit = new FitInfo; // Have an extension tho may be zero.
+
+    if (trace.size() > 0) { // Need a trace to fit
+      auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
+      auto path = m_pConfig->getModelPath(crate, slot, chan);
 #ifdef ENABLE_TIMING
-	    Timer timer;
+      Timer timer;
 #endif
-	    mlinference::performInference(pFit, trace, sat, m_models[path]);
+      mlinference::performInference(pFit, trace, sat, m_models[path]);
 #ifdef ENABLE_TIMING
-	    stats.addData(timer.elapsed());
-	    if (stats.size() == 10000) {
-		stats.compute();
-		stats.print("======== ML inference stats ========");
-	    }
+      stats.addData(timer.elapsed());
+      if (stats.size() == 10000) {
+        stats.compute();
+        stats.print("======== ML inference stats ========");
+      }
 #endif
-	}
-	
-	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
-	result.push_back(fit);
-    
-    } else { // No fit performed
-	nullExtension* p = new nullExtension;
-	CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
-	result.push_back(nofit);
     }
-    
-    return result; // Return the description
+
+    CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
+    result.push_back(fit);
+
+  } else { // No fit performed
+    nullExtension *p = new nullExtension;
+    CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
+    result.push_back(nofit);
+  }
+
+  return result; // Return the description
 }
 
-void
-ddastoys::FitEditorMLInference::free(iovec& e)
-{
-    if (e.iov_len == sizeof(FitInfo)) {
-	FitInfo* pFit = static_cast<FitInfo*>(e.iov_base);
-	delete pFit;
-    } else {
-	nullExtension* p = static_cast<nullExtension*>(e.iov_base);
-	delete p;
-    }
+void ddastoys::FitEditorMLInference::free(iovec &e) {
+  if (e.iov_len == sizeof(FitInfo)) {
+    FitInfo *pFit = static_cast<FitInfo *>(e.iov_base);
+    delete pFit;
+  } else {
+    nullExtension *p = static_cast<nullExtension *>(e.iov_base);
+    delete p;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -243,12 +230,12 @@ ddastoys::FitEditorMLInference::free(iovec& e)
  * @brief Factory method to create this FitEditor.
  *
  * @details
- * $DAQBIN/EventEditor expects a symbol called createEditor to exist in the 
- * plugin library it loads at runtime. Wrapping the factory method in 
+ * $DAQBIN/EventEditor expects a symbol called createEditor to exist in the
+ * plugin library it loads at runtime. Wrapping the factory method in
  * extern "C" prevents namespace mangling by the C++ compiler.
  */
 extern "C" {
-    ddastoys::FitEditorMLInference* createEditor() {
-	return new ddastoys::FitEditorMLInference;
-    }
+ddastoys::FitEditorMLInference *createEditor() {
+  return new ddastoys::FitEditorMLInference;
+}
 }

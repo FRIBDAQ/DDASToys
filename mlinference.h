@@ -9,10 +9,10 @@
 
      Authors:
              Aaron Chester
-	     Bashir Sadeghi
-	     FRIB
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+             Bashir Sadeghi
+             FRIB
+             Michigan State University
+             East Lansing, MI 48824-1321
 */
 
 /**
@@ -31,31 +31,29 @@
 /** @namespace ddastoys */
 namespace ddastoys {
 
-    struct FitInfo;
-    
-    /** @namespace ddastoys::mlinference */
-    namespace mlinference {
-	
-	/** 
-	 *@ingroup mlinference
-	 * @{
-	 */
+struct FitInfo;
 
-	/**
-	 * @brief Perform ML inference to determine the pulse parameters.
-	 * @param[in, out] pResult Pointer to the fit results.
-	 * @param[in] trace References the trace we're processing.
-	 * @param[in] saturation ADC saturation value. Only samples below the 
-	 *   saturation threshold are used to extract the pulse parameters.
-	 * @param[in] module References the inference model for this channel.
-	 */
-	void performInference(
-	    FitInfo* pResult, std::vector<uint16_t>& trace,
-	    unsigned saturation, torch::jit::script::Module& module
-	    );
-	
-	/** @} */	
-    }
-}
+/** @namespace ddastoys::mlinference */
+namespace mlinference {
+
+/**
+ *@ingroup mlinference
+ * @{
+ */
+
+/**
+ * @brief Perform ML inference to determine the pulse parameters.
+ * @param[in, out] pResult Pointer to the fit results.
+ * @param[in] trace References the trace we're processing.
+ * @param[in] saturation ADC saturation value. Only samples below the
+ *   saturation threshold are used to extract the pulse parameters.
+ * @param[in] module References the inference model for this channel.
+ */
+void performInference(FitInfo *pResult, std::vector<uint16_t> &trace,
+                      unsigned saturation, torch::jit::script::Module &module);
+
+/** @} */
+} // namespace mlinference
+} // namespace ddastoys
 
 #endif
