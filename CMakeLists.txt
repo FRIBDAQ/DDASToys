@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.13)
 
 project(DDASToys VERSION 6.5.0 LANGUAGES CXX C)
 
 # =============================================================================
 # Options
 # =============================================================================
+
 option(DDASTOYS_CUDA
     "Build the CUDA GPU-accelerated fit engine (requires nvcc + libCudaOptimize)" OFF)
 option(DDASTOYS_MLINFERENCE
@@ -22,6 +23,7 @@ set(DDASTOYS_CUDA_MAXPOINTS 5000 CACHE STRING
 # =============================================================================
 # Language standards
 # =============================================================================
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -32,6 +34,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # =============================================================================
 # RPATH policy
 # =============================================================================
+
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)   # also adds DAQLIB, UFMTLIB, etc.
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -39,6 +42,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # =============================================================================
 # Compile definitions
 # =============================================================================
+
 if(DDASTOYS_TIMING)
     add_compile_definitions(ENABLE_TIMING)
 endif()
@@ -49,6 +53,7 @@ endif()
 # No find_package or find module.  daqsetup.bash sets DAQROOT; we use it as-is.
 # UnifiedFormat is bundled at ${DAQROOT}/unifiedformat in NSCLDAQ 12.2+.
 # =============================================================================
+
 if("$ENV{DAQROOT}" STREQUAL "")
     message(FATAL_ERROR
         "DAQROOT is not set in the environment.\n"
@@ -100,6 +105,7 @@ target_link_libraries(NSCLDAQ::NSCLDAQ INTERFACE
 # =============================================================================
 # CUDA (optional)
 # =============================================================================
+
 if(DDASTOYS_CUDA)
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 14)
@@ -133,7 +139,7 @@ endif()
 # FindGSL is built into CMake (since 3.2); provides GSL::gsl, GSL::gslcblas.
 # Only lmfit_analytic.cpp and lmfit_template.cpp call GSL at link time.
 # functions_analytic.cpp and functions_template.cpp use only <cmath>.
-find_package(GSL 2.0 REQUIRED)
+find_package(GSL 2.4 REQUIRED)
 
 # --- CERN ROOT ---
 find_package(ROOT REQUIRED COMPONENTS Core Tree RIO Hist Graf Gpad)
@@ -186,7 +192,6 @@ if(DDASTOYS_TRACEVIEW)
         set(DDASTOYS_TRACEVIEW OFF)
         message(WARNING "Qt5 >= 5.11 not found — TraceView disabled.")
     else()
-        set(CMAKE_AUTOMOC ON)
         message(STATUS "Qt5 ${Qt5_VERSION}")
     endif()
 endif()
@@ -204,6 +209,7 @@ endif()
 # =============================================================================
 # DDASFormat submodule
 # =============================================================================
+
 # DDASFormat declares option(BUILD_DOCS ...).  Disable it here so it doesn't
 # create a conflicting `docs` target; use DDASTOYS_DOCS for our own docs.
 set(BUILD_DOCS OFF CACHE BOOL
@@ -225,12 +231,9 @@ target_include_directories(DDASFormat
 # In CMake >= 3.12, target_link_libraries(consumer PRIVATE obj_lib) includes
 # the compiled objects AND propagates the OBJECT library's PUBLIC requirements.
 #
-# Grouping matches the Makefile exactly (see truth table in comments below).
 # =============================================================================
 
 # --- Configuration + profiling ---
-# Makefile: FitEditorAnalytic YES  FitEditorTemplate YES  FitEditorMLInference YES
-#           TraceView YES(Config only; profiling extra is harmless)  unittests YES
 add_library(ddastoys_config_objs OBJECT
     Configuration.cpp
     profiling.cpp
@@ -238,14 +241,12 @@ add_library(ddastoys_config_objs OBJECT
 target_include_directories(ddastoys_config_objs PUBLIC ${CMAKE_SOURCE_DIR})
 
 # --- Analytic function evaluation — NO GSL (functions_analytic.cpp uses only <cmath>) ---
-# Makefile: FitEditorAnalytic YES  FitEditorMLInference YES  TraceView YES
 add_library(ddastoys_analytic_funcs_objs OBJECT
     functions_analytic.cpp
 )
 target_include_directories(ddastoys_analytic_funcs_objs PUBLIC ${CMAKE_SOURCE_DIR})
 
 # --- Template function evaluation — NO GSL (functions_template.cpp uses only <cmath>) ---
-# Makefile: FitEditorTemplate YES  TraceView YES
 add_library(ddastoys_template_funcs_objs OBJECT
     functions_template.cpp
 )
@@ -255,7 +256,6 @@ target_include_directories(ddastoys_template_funcs_objs PUBLIC ${CMAKE_SOURCE_DI
 # DDASFitHitUnpacker.cpp uses <DataFormat.h> for ufmt:: ring-item structs.
 # Those are plain C structs — no libdataformat link needed — but the header
 # path is.  NSCLDAQ::Headers provides it without pulling in any libraries.
-# Makefile: libDDASFitHitUnpacker YES  eeconverter YES  traceview YES  unittests YES
 add_library(ddastoys_unpacker_objs OBJECT
     DDASFitHitUnpacker.cpp
 )
@@ -270,13 +270,16 @@ target_link_libraries(ddastoys_unpacker_objs
 )
 
 # --- NSCLDAQ ring-item processor ---
-# CRingItemProcessor.cpp constructs real NSCLDAQ ring-item objects — the
+# CRingItemProcessor.cpp constructs real NSCLDAQ ring item objects — the
 # final binary needs the runtime libraries, propagated via NSCLDAQ::NSCLDAQ.
-# Makefile: eeconverter YES  traceview YES  (NOT unittests)
 add_library(ddastoys_ring_objs OBJECT
     CRingItemProcessor.cpp
 )
-target_include_directories(ddastoys_ring_objs PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(ddastoys_ring_objs PUBLIC 
+        ${CMAKE_SOURCE_DIR}         
+        "${DAQINC}"
+        "${UFMTINC}"
+)
 target_link_libraries(ddastoys_ring_objs
     PUBLIC NSCLDAQ::NSCLDAQ DDASFormat
 )
@@ -301,6 +304,7 @@ endif()
 # =============================================================================
 # Public shared library: libDDASFitHitUnpacker.so
 # =============================================================================
+
 add_library(DDASFitHitUnpacker SHARED)
 target_link_libraries(DDASFitHitUnpacker
     PRIVATE ddastoys_unpacker_objs DDASFormat
@@ -315,13 +319,11 @@ target_link_options(DDASFitHitUnpacker PRIVATE "LINKER:-z,defs")
 # Exact object lists mirror the Makefile.
 # =============================================================================
 
-# libFitEditorAnalytic.so
-# Objects: FitEditorAnalytic, Configuration, functions_analytic,
-#          lmfit_analytic, CFitEngine, SerialFitEngineAnalytic, profiling [+CUDA]
+# --- libFitEditorAnalytic.so ---
 add_library(FitEditorAnalytic SHARED
     FitEditorAnalytic.cpp
     CFitEngine.cpp
-    lmfit_analytic.cpp          # GSL-based fitting — only in this plugin
+    lmfit_analytic.cpp
     SerialFitEngineAnalytic.cpp
 )
 target_include_directories(FitEditorAnalytic PRIVATE ${DAQINC} ${UFMTINC})
@@ -334,12 +336,10 @@ target_link_libraries(FitEditorAnalytic
         GSL::gsl GSL::gslcblas
 )
 
-# libFitEditorTemplate.so
-# Objects: FitEditorTemplate, Configuration, functions_template,
-#          lmfit_template, profiling
+# --- libFitEditorTemplate.so ---
 add_library(FitEditorTemplate SHARED
     FitEditorTemplate.cpp
-    lmfit_template.cpp          # GSL-based fitting — only in this plugin
+    lmfit_template.cpp
 )
 target_include_directories(FitEditorTemplate PRIVATE ${DAQINC} ${UFMTINC})
 target_link_libraries(FitEditorTemplate
@@ -350,9 +350,7 @@ target_link_libraries(FitEditorTemplate
         GSL::gsl GSL::gslcblas
 )
 
-# libFitEditorMLInference.so (optional)
-# Objects: FitEditorMLInference, Configuration, functions_analytic,
-#          mlinference, profiling
+# --- libFitEditorMLInference.so (optional) ---
 # GSL linked per Makefile blanket CXXLDFLAGS (even though not directly used).
 if(DDASTOYS_MLINFERENCE)
     add_library(FitEditorMLInference SHARED
@@ -365,7 +363,6 @@ if(DDASTOYS_MLINFERENCE)
             ddastoys_config_objs
             ddastoys_analytic_funcs_objs
             DDASFormat
-            GSL::gsl GSL::gslcblas
             ${TORCH_LIBRARIES}
     )
     set_target_properties(FitEditorMLInference PROPERTIES CXX_STANDARD 14)
@@ -374,33 +371,30 @@ endif()
 # =============================================================================
 # Subdirectories
 # =============================================================================
+
 if(GENGETOPT_EXECUTABLE)
-    #add_subdirectory(EEConverter)
-    message(STATUS "Skipping EEConverter.")
+    add_subdirectory(EEConverter)
 else()
     message(STATUS "Skipping EEConverter — gengetopt not found.")
 endif()
 
 if(DDASTOYS_TRACEVIEW)
-    #add_subdirectory(TraceView)
-    message(STATUS "Skipping TraceView.")
+    add_subdirectory(TraceView)
 endif()
 
 if(DDASTOYS_DOCS)
-    #add_subdirectory(Docs)
-     message(STATUS "Skipping TraceView.")
-
+    add_subdirectory(Docs)
 endif()
 
 enable_testing()
 if(CPPUNIT_FOUND)
-    #add_subdirectory(tests)
-    message(STATUS "Skipping TraceView.")
+    add_subdirectory(tests)
 endif()
 
 # =============================================================================
 # Install
 # =============================================================================
+
 set(_install_libs DDASFormat DDASFitHitUnpacker FitEditorAnalytic FitEditorTemplate)
 if(DDASTOYS_MLINFERENCE)
     list(APPEND _install_libs FitEditorMLInference)
