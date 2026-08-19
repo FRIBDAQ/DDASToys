@@ -286,7 +286,7 @@ unsigned ddastoys::Configuration::getModelShape(std::string path) {
     return it->second.s_length;
   } else {
     throw std::invalid_argument("No matching channels for model path '" + path +
-                                "'"););
+                                "'");
   }
 }
 
