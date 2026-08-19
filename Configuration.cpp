@@ -81,9 +81,8 @@ void ddastoys::Configuration::readConfigFile() {
 
   std::ifstream f(filename);
   if (f.fail()) {
-    std::string msg("Unable to open the configuration file: ");
-    msg += filename;
-    throw std::invalid_argument(msg);
+    throw std::invalid_argument("Unable to open the configuration file: " +
+                                filename);
   }
 
   while (!f.eof()) {
@@ -149,9 +148,7 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
 
   std::ifstream f(path);
   if (f.fail()) {
-    std::string errmsg("Unable to open the template file: ");
-    errmsg += path;
-    throw std::invalid_argument(errmsg);
+    throw std::invalid_argument("Unable to open the template file: " + path);
   }
 
   int nread = 0;
@@ -173,10 +170,8 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
       }
 
       if (sline.fail()) {
-        std::string errmsg("Error processing line in template file '");
-        errmsg += originalline;
-        errmsg += "'";
-        throw std::invalid_argument(errmsg);
+        throw std::invalid_argument("Error processing line in template file '" +
+                                    originalline + "'");
       }
 
       nread++;
@@ -187,22 +182,18 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
   // points throw an exception:
 
   if (data.size() != npts) {
-    std::string errmsg("Template configfile thinks the trace is ");
-    errmsg += std::to_string(npts);
-    errmsg += " samples but read in ";
-    errmsg += std::to_string(data.size());
-    throw std::length_error(errmsg); // I guess this is the right one?
+    throw std::length_error("Template configfile thinks the trace is " +
+                            std::to_string(npts) + " samples but read in " +
+                            std::to_string(data.size()));
   }
 
   // Ensure the alignment point is contained in the trace. Note that because
   // m_alignPoint is an unsigned type it cannot be negative:
 
   if (align >= data.size()) {
-    std::string errmsg("Invalid template alignment point ");
-    errmsg += std::to_string(align);
-    errmsg += " >= template size ";
-    errmsg += std::to_string(data.size());
-    throw std::invalid_argument(errmsg);
+    throw std::invalid_argument("Invalid template alignment point " +
+                                std::to_string(align) + " >= template size " +
+                                std::to_string(data.size()));
   }
 
   f.close();
@@ -294,9 +285,8 @@ unsigned ddastoys::Configuration::getModelShape(std::string path) {
   if (it != m_fitChannels.end()) {
     return it->second.s_length;
   } else {
-    std::string msg("No matching channels for model path '");
-    msg += path + "'";
-    throw std::invalid_argument(msg);
+    throw std::invalid_argument("No matching channels for model path '" + path +
+                                "'"););
   }
 }
 
@@ -323,10 +313,10 @@ unsigned ddastoys::Configuration::getTemplateAlignPoint(unsigned crate,
 std::string ddastoys::Configuration::getFileNameFromEnv(const char *envname) {
   const char *pFilename = getenv(envname);
   if (!pFilename) {
-    std::string msg("No translation for environment variable: ");
-    msg += envname;
-    msg += " Point that to the proper configuration file and re-run";
-    throw std::invalid_argument(msg);
+    throw std::invalid_argument(
+        "No translation of environment variable: " + std::string(envname) +
+        " Point that to the proper configuration file and "
+        "re-run");
   }
 
   return std::string(pFilename);
