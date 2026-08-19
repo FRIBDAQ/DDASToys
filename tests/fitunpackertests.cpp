@@ -150,7 +150,8 @@ void FitUnpackerTests::decode_null_extension() {
   DDASFitHit myhit;
   unpacker.decode(pItem, myhit);
 
-  EQMSG("Decoded null fit hit has extension", true, myhit.hasExtension());
+  EQMSG("Decoded null fit hit does not have an extension", false,
+        myhit.hasExtension());
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FitUnpackerTests);

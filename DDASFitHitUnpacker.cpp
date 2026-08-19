@@ -97,14 +97,14 @@ const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
     // This is just an ordinary hit:
     unpack(reinterpret_cast<const uint32_t *>(pBody),
            reinterpret_cast<const uint32_t *>(pEnd), hit);
-  } else if ((bodyBytes + sizeof(HitExtensionLegacy)) == bodySize) {
+  } else if ((bodyBytes + sizeof(FitInfoLegacy)) == bodySize) {
     // Hit with old-style fits:
-    pEnd -= sizeof(HitExtensionLegacy); // Also points to extension.
+    pEnd -= sizeof(FitInfoLegacy); // Also points to extension.
     unpack(reinterpret_cast<const uint32_t *>(pBody),
            reinterpret_cast<const uint32_t *>(pEnd), hit);
     // Convert to modern extension and set it:
-    HitExtension ext(*(reinterpret_cast<const HitExtensionLegacy *>(pEnd)));
-    hit.setExtension(ext);
+    hit.setExtension(
+        reinterpret_cast<const FitInfoLegacy *>(pEnd)->s_extension);
   } else if (bodyBytes + sizeof(uint32_t) == bodySize) {
     // There's no hit extension actually -- it's a null extension:
     pEnd -= sizeof(uint32_t);
@@ -120,4 +120,6 @@ const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
     throw std::length_error(
         "Inconsistent event size for ddasfmt::DDASHit or extended hit");
   }
+
+  return nullptr; // Should not get here.
 }
