@@ -94,9 +94,9 @@ ddastoys::FitEditorMLInference::FitEditorMLInference()
       std::cerr << "Failed to load model " << m << ": " << e.what()
                 << std::endl;
       exit(EXIT_FAILURE);
-    } catch (const std::invalid_argument &e) {
-      std::cerr << "Failed to get trace length from model " << m << ": "
-                << e.what() << std::endl;
+    } catch (const std::exception &e) {
+      std::cerr << "Exception while loading model " << m << ": " << e.what()
+                << std::endl;
       exit(EXIT_FAILURE);
     }
   }
@@ -187,13 +187,15 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr,
     if (trace.size() > 0) { // Need a trace to fit
       // Verify that the trace length is what the configuration file expects:
       auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
+      std::cerr << "Crate " << crate << " slot " << slot << " channel " << chan
+                << " expected trace length " << expectedLength
+                << " got trace length " << trace.size() << std::endl;
       if (trace.size() != expectedLength) {
         std::cerr << "Trace length mismatch for crate " << crate << " slot "
                   << slot << " channel " << chan << " expected "
                   << expectedLength << " got " << trace.size() << std::endl;
         throw std::length_error("Trace length mismatch");
       }
-
       auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
       auto path = m_pConfig->getModelPath(crate, slot, chan);
 #ifdef ENABLE_TIMING
