@@ -99,24 +99,21 @@ void ddastoys::Configuration::readConfigFile() {
           saturation >> std::quoted(modelPath) >> std::quoted(templatePath);
 
       if (sline.fail()) {
-        std::string msg("Error processing line in configuration file '");
-        msg += originalline;
-        msg += "'";
-        throw std::invalid_argument(msg);
+        throw std::invalid_argument(
+            "Error processing line in configuration file '" + originalline +
+            "'");
       }
 
       if (low >= high) {
-        std::string msg("Invalid fit limits in configuration file '");
-        msg += originalline;
-        msg += "' low >= high";
-        throw std::invalid_argument(msg);
+        throw std::invalid_argument(
+            "Invalid fit limits in configuration file '" + originalline +
+            "' low >= high");
       }
 
       if (high >= length) {
-        std::string msg("Invalid fit limits in configuration file '");
-        msg += originalline;
-        msg += "' high >= trace length";
-        throw std::invalid_argument(msg);
+        throw std::invalid_argument(
+            "Invalid fit limits in configuration file '" + originalline +
+            "' high >= trace length");
       }
 
       // Compute the channel index, load template data, and add the
