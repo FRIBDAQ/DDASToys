@@ -25,6 +25,7 @@
 
 #include <DDASHit.h>
 #include <DDASHitUnpacker.h>
+#include <utility>
 
 #include "Configuration.h"
 #include "fit_extensions.h"
@@ -104,7 +105,7 @@ ddastoys::FitEditorMLInference::FitEditorMLInference()
 
 ddastoys::FitEditorMLInference::FitEditorMLInference(
     const FitEditorMLInference &rhs)
-    : m_pConfig(new Configuration(*rhs.m_pConfig)) {}
+    : m_pConfig(new Configuration(*rhs.m_pConfig)), m_models(rhs.m_models) {}
 
 /**
  * @details
@@ -121,6 +122,7 @@ ddastoys::FitEditorMLInference::operator=(const FitEditorMLInference &rhs) {
   if (this != &rhs) {
     delete m_pConfig;
     m_pConfig = new Configuration(*rhs.m_pConfig);
+    m_models = rhs.m_models;
   }
 
   return *this;
@@ -131,6 +133,7 @@ ddastoys::FitEditorMLInference::operator=(FitEditorMLInference &&rhs) noexcept {
   if (this != &rhs) {
     delete m_pConfig;
     m_pConfig = rhs.m_pConfig;
+    m_models = std::move(rhs.m_models);
     rhs.m_pConfig = nullptr;
   }
 
@@ -198,7 +201,13 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr,
 #ifdef ENABLE_TIMING
       Timer timer;
 #endif
-      mlinference::performInference(pFit, trace, sat, m_models[path]);
+      auto it = m_models.find(path);
+      if (it == m_models.end()) {
+        std::cerr << "Model not found for crate " << crate << " slot " << slot
+                  << " channel " << chan << " path " << path << std::endl;
+        throw std::runtime_error("No ML model loaded for path: " + path);
+      }
+      mlinference::performInference(pFit, trace, sat, it->second);
 #ifdef ENABLE_TIMING
       stats.addData(timer.elapsed());
       if (stats.size() == 10000) {
