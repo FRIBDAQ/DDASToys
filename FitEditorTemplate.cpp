@@ -136,6 +136,15 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
     FitInfo *pFit = new FitInfo; // Have an extension though may be zero
 
     if (trace.size() > 0) { // Need a trace to fit
+      // Verify that the trace length is what the configuration file expects:
+      auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
+      if (trace.size() != expectedLength) {
+        std::cerr << "Trace length mismatch for crate " << crate << " slot "
+                  << slot << " channel " << chan << " expected "
+                  << expectedLength << " got " << trace.size() << std::endl;
+        throw std::length_error("Trace length mismatch");
+      }
+
       auto limits = m_pConfig->getFitLimits(crate, slot, chan);
       auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
       auto templateData = m_pConfig->getTemplate(crate, slot, chan);
