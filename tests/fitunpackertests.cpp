@@ -41,10 +41,12 @@ public:
 public:
   CPPUNIT_TEST_SUITE(FitUnpackerTests);
 
-  CPPUNIT_TEST(unpack1);
-  CPPUNIT_TEST(unpack2);
-  CPPUNIT_TEST(decode1);
-  CPPUNIT_TEST(decode2);
+  CPPUNIT_TEST(unpack_crate_id);
+  CPPUNIT_TEST(unpack_no_extension);
+  CPPUNIT_TEST(decode_no_extension);
+  CPPUNIT_TEST(decode_fit_extension);
+  CPPUNIT_TEST(decode_legacy_extension);
+  CPPUNIT_TEST(decode_null_extension);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -61,23 +63,23 @@ public:
 
   void tearDown() {}
 
-  void unpack1(); // unpack raw DDASHit
-  void unpack2(); // unpacked raw data doesn't have extension
-  void decode1(); // decode ring item with no extension
-  void decode2(); // decode ring item with extension
-  void decode3(); // decode ring item with legacy extension
-  void decode4(); // decode ring item with null extension
+  void unpack_crate_id();         // unpack raw DDASHit
+  void unpack_no_extension();     // unpacked raw data doesn't have extension
+  void decode_no_extension();     // decode ring item with no extension
+  void decode_fit_extension();    // decode ring item with extension
+  void decode_legacy_extension(); // decode ring item with legacy extension
+  void decode_null_extension();   // decode ring item with null extension
 };
 
-void FitUnpackerTests::unpack1() {
+void FitUnpackerTests::unpack_crate_id() {
   EQMSG("Unpack correct crate ID", uint32_t(3), hit.getCrateID());
 }
 
-void FitUnpackerTests::unpack2() {
+void FitUnpackerTests::unpack_no_extension() {
   EQMSG("Unpacked event has no extension", false, hit.hasExtension());
 }
 
-void FitUnpackerTests::decode1() {
+void FitUnpackerTests::decode_no_extension() {
   uint32_t bodySize = data.size() * sizeof(uint32_t);
   uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader) + bodySize;
 
@@ -93,7 +95,7 @@ void FitUnpackerTests::decode1() {
         myhit.getCrateID());
 }
 
-void FitUnpackerTests::decode2() {
+void FitUnpackerTests::decode_fit_extension() {
   uint32_t bodySize = dataSize + sizeof(FitInfo);
   uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader) + bodySize;
   FitInfo fit;
@@ -113,7 +115,7 @@ void FitUnpackerTests::decode2() {
         myhit.getCrateID());
 }
 
-void FitUnpackerTests::decode3() {
+void FitUnpackerTests::decode_legacy_extension() {
   uint32_t bodySize = dataSize + sizeof(FitInfoLegacy);
   uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader) + bodySize;
   FitInfoLegacy fit;
@@ -133,7 +135,7 @@ void FitUnpackerTests::decode3() {
         myhit.getCrateID());
 }
 
-void FitUnpackerTests::decode4() {
+void FitUnpackerTests::decode_null_extension() {
   uint32_t bodySize = dataSize + sizeof(nullExtension);
   uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader) + bodySize;
   nullExtension nullext;
