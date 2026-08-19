@@ -47,6 +47,8 @@ public:
   CPPUNIT_TEST(decode_fit_extension);
   CPPUNIT_TEST(decode_legacy_extension);
   CPPUNIT_TEST(decode_null_extension);
+  CPPUNIT_TEST(verify_size);
+  CPPUNIT_TEST(verify_hit_size_word_length);
 
   CPPUNIT_TEST_SUITE_END();
 
@@ -69,6 +71,8 @@ public:
   void decode_fit_extension();    // decode ring item with extension
   void decode_legacy_extension(); // decode ring item with legacy extension
   void decode_null_extension();   // decode ring item with null extension
+  void verify_size();             // decode ring item with bad size
+  void verify_hit_size_word_length(); // decode ring item with bad hit size word
 };
 
 void FitUnpackerTests::unpack_crate_id() {
@@ -152,6 +156,34 @@ void FitUnpackerTests::decode_null_extension() {
 
   EQMSG("Decoded null fit hit does not have an extension", false,
         myhit.hasExtension());
+}
+
+void FitUnpackerTests::verify_size() {
+  uint32_t bodySize = data.size() * sizeof(uint32_t);
+  bodySize /= 2; // This will mismatch the size word in the hit data.
+  uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader) + bodySize;
+
+  pItem = (RingItem *)realloc(pItem, totalSize);
+  pItem->s_header = {totalSize, PHYSICS_EVENT};
+  pItem->s_body.u_hasBodyHeader.s_bodyHeader = {sizeof(BodyHeader), 1234, 0, 0};
+  memcpy(pItem->s_body.u_hasBodyHeader.s_body, data.data(), bodySize);
+
+  DDASFitHit myhit;
+  CPPUNIT_ASSERT_THROW(unpacker.decode(pItem, myhit), std::length_error);
+}
+
+void FitUnpackerTests::verify_hit_size_word_length() {
+  std::vector<uint16_t> bad = {0x0001}; // Must be 32 bits
+  uint32_t bodySize = bad.size() * sizeof(uint16_t);
+  uint32_t totalSize = sizeof(RingItemHeader) + sizeof(BodyHeader) + bodySize;
+
+  pItem = (RingItem *)realloc(pItem, totalSize);
+  pItem->s_header = {totalSize, PHYSICS_EVENT};
+  pItem->s_body.u_hasBodyHeader.s_bodyHeader = {sizeof(BodyHeader), 1234, 0, 0};
+  memcpy(pItem->s_body.u_hasBodyHeader.s_body, bad.data(), bodySize);
+
+  DDASFitHit myhit;
+  CPPUNIT_ASSERT_THROW(unpacker.decode(pItem, myhit), std::length_error);
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FitUnpackerTests);
