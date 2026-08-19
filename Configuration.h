@@ -175,6 +175,17 @@ public:
    */
   unsigned getTemplateAlignPoint(unsigned crate, unsigned slot,
                                  unsigned channel);
+  /**
+   * @brief Verify that all channels you want to fit have a valid trace
+   * template. Intended to be called by the FitEditorTemplate class constructor
+   * after configuration is complete.
+   * @throw std::invalid_argument If any channel to be fit has no template data.
+   * @note If you call this method from some other FitEditor class which does
+   * not require a template file, it will still throw an exception if the
+   * configuration file has no template data. This is intended behavior. So
+   * don't do that.
+   */
+  void verifyTemplateData();
 
   // Private methods
 private:
@@ -201,6 +212,12 @@ private:
    * @return The global channel index.
    */
   unsigned channelIndex(unsigned crate, unsigned slot, unsigned channel);
+  /**
+   * @brief Get the crate/slot/channel information from a global channel index.
+   * @param index The global channel index.
+   * @return Tuple of crate, slot, channel.
+   */
+  std::tuple<unsigned, unsigned, unsigned> channelFromIndex(unsigned index);
 
   // Private data
 private:

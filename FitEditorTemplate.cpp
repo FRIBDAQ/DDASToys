@@ -49,6 +49,7 @@ static double total(0);
 FitEditorTemplate::FitEditorTemplate() : m_pConfig(new Configuration) {
   try {
     m_pConfig->readConfigFile();
+    m_pConfig->verifyTemplateData();
   } catch (std::exception &e) {
     std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
     exit(EXIT_FAILURE);

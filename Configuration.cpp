@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <tuple>
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local trim functions
@@ -312,6 +313,21 @@ unsigned ddastoys::Configuration::getTemplateAlignPoint(unsigned crate,
   return m_fitChannels[index].s_alignPoint;
 }
 
+void ddastoys::Configuration::verifyTemplateData() {
+  for (const auto &c : m_fitChannels) {
+    if (c.second.s_template.empty()) {
+      auto [crate, slot, channel] = channelFromIndex(c.first);
+      std::string msg("No template for channel ");
+      msg += std::to_string(crate) + "/" + std::to_string(slot) + "/" +
+             std::to_string(channel);
+      msg += " but template fitting was requested."
+             " Provide a template file for this channel in the fit"
+             " configuration (its template path is \"none\" or empty).";
+      throw std::invalid_argument(msg);
+    }
+  }
+}
+
 ///
 // Private methods
 //
@@ -339,4 +355,17 @@ std::string ddastoys::Configuration::isComment(std::string line) {
 unsigned ddastoys::Configuration::channelIndex(unsigned crate, unsigned slot,
                                                unsigned channel) {
   return (crate << 8) | (slot << 4) | channel;
+}
+
+/**
+ * @details
+ * Inverse of channelIndex.
+ */
+std::tuple<unsigned, unsigned, unsigned>
+ddastoys::Configuration::channelFromIndex(unsigned index) {
+  unsigned crate = (index >> 8) & 0xFF;
+  unsigned slot = (index >> 4) & 0x0F;
+  unsigned channel = index & 0x0F;
+
+  return std::make_tuple(crate, slot, channel);
 }
