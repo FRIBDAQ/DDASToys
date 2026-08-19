@@ -187,9 +187,6 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr,
     if (trace.size() > 0) { // Need a trace to fit
       // Verify that the trace length is what the configuration file expects:
       auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
-      std::cerr << "Crate " << crate << " slot " << slot << " channel " << chan
-                << " expected trace length " << expectedLength
-                << " got trace length " << trace.size() << std::endl;
       if (trace.size() != expectedLength) {
         std::cerr << "Trace length mismatch for crate " << crate << " slot "
                   << slot << " channel " << chan << " expected "
