@@ -40,6 +40,7 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include <QStatusBar>
@@ -182,6 +183,10 @@ void QTraceView::openFile() {
 void QTraceView::updateSelectableHits() {
   QStandardItemModel *model =
       reinterpret_cast<QStandardItemModel *>(m_pHitSelectList->model());
+  QSignalBlocker blocker(
+      m_pHitSelectList
+          ->selectionModel()); // Prevents selectionChanged() signal from being
+                               // emitted while we update the list.
   model->clear();
 
   for (unsigned i = 0; i < m_filteredHits.size(); i++) {
@@ -317,13 +322,6 @@ void QTraceView::test() {
 
 //____________________________________________________________________________
 // Create and configure methods
-
-/**
- * @todo (ASC 2/3/23): Creation methods should not fail without explanation -
- * there is an order in which (some of) these functions must be called but no
- * safeguards to prevent someone from doing it wrong e.g. attempting to
- * configure the menu bar before its created.
- */
 
 //____________________________________________________________________________
 /**
