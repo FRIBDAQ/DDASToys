@@ -105,6 +105,20 @@ void ddastoys::Configuration::readConfigFile() {
         throw std::invalid_argument(msg);
       }
 
+      if (low >= high) {
+        std::string msg("Invalid fit limits in configuration file '");
+        msg += originalline;
+        msg += "' low >= high";
+        throw std::invalid_argument(msg);
+      }
+
+      if (high >= length) {
+        std::string msg("Invalid fit limits in configuration file '");
+        msg += originalline;
+        msg += "' high >= trace length";
+        throw std::invalid_argument(msg);
+      }
+
       // Compute the channel index, load template data, and add the
       // channel to the map:
 
