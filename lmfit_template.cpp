@@ -144,6 +144,11 @@ void ddastoys::templatefit::lmfit1(fit1Info *pResult,
   std::vector<std::pair<uint16_t, uint16_t>> points;
   reduceTrace(points, low, high, trace, saturation);
   unsigned npts = points.size(); // Number of points for the fit.
+  if (npts < P1_PARAM_COUNT) {
+    pResult->fitStatus = GSL_EBADLEN;
+    pResult->iterations = 0;
+    return;
+  }
 
   // Nonlinear least squares fitting in GSL 2.5 is done by approximating
   // the objective function g(x) by some low-order approximation in the
@@ -325,7 +330,12 @@ void ddastoys::templatefit::lmfit2(fit2Info *pResult,
 
   std::vector<std::pair<uint16_t, uint16_t>> points;
   reduceTrace(points, low, high, trace, saturation);
-  int npts = points.size(); // Number of points to fit
+  unsigned npts = points.size(); // Number of points to fit
+  if (npts < P2_PARAM_COUNT) {
+    pResult->fitStatus = GSL_EBADLEN;
+    pResult->iterations = 0;
+    return;
+  }
 
   // Nonlinear least squares fitting in gsl 2.5 is done by approximating
   // the objective function g(x) by some low-order approximation in the
