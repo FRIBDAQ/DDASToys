@@ -103,6 +103,12 @@ void ddastoys::Configuration::readConfigFile() {
             "'");
       }
 
+      if (length == 0) {
+        throw std::invalid_argument(
+            "Invalid trace length in configuration file '" + originalline +
+            "' length = 0");
+      }
+
       if (low >= high) {
         throw std::invalid_argument(
             "Invalid fit limits in configuration file '" + originalline +

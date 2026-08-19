@@ -86,11 +86,11 @@ public:
    * @return Tuple of alignment point and template data
    * @throw std::length_error If the number of template data points is
    *   different than what the configuration file expects.
-   * @throw std::invalid_arugment If the alignment point of the template
-   * is not contained in the trace (e.g. align to sample 100 on a 100
-   * sample trace [0, 99]).
+   * @throw std::invalid_argument If the alignment point of the template
+   *   is not contained in the trace (e.g. align to sample 100 on a 100
+   *   sample trace [0, 99]).
    * @throw std::invalid_argument If the template data file cannot be
-   * opened.
+   *   opened.
    */
   std::tuple<unsigned, std::vector<double>> readTemplateFile(std::string path,
                                                              unsigned npts);
