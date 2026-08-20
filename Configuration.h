@@ -111,6 +111,7 @@ public:
    * @param crate   The crate ID.
    * @param slot    The slot ID.
    * @param channel The channel ID.
+   * @throw std::out_of_range If the channel is not in the map.
    * @return The trace length
    */
   unsigned getTraceLength(unsigned crate, unsigned slot, unsigned channel);
@@ -121,6 +122,7 @@ public:
    * @param crate   The crate ID.
    * @param slot    The slot ID.
    * @param channel The channel ID.
+   * @throw std::out_of_range If the channel is not in the map.
    * @return Pair of [low, high] fit limits (inclusive).
    */
   std::pair<unsigned, unsigned> getFitLimits(unsigned crate, unsigned slot,
@@ -131,6 +133,7 @@ public:
    * @param crate   The crate ID.
    * @param slot    The slot ID.
    * @param channel The channel ID.
+   * @throw std::out_of_range If the channel is not in the map.
    * @return The saturation value of the trace for this channel.
    */
   unsigned getSaturationValue(unsigned crate, unsigned slot, unsigned channel);
@@ -140,6 +143,7 @@ public:
    * @param crate   The crate ID.
    * @param slot    The slot ID.
    * @param channel The channel ID.
+   * @throw std::out_of_range If the channel is not in the map.
    * @return Path to the ML inference model.
    */
   std::string getModelPath(unsigned crate, unsigned slot, unsigned channel);
@@ -153,8 +157,8 @@ public:
    * @brief Get the shape (trace length) of the channel data given a
    * model path
    * @param path Path to PyTorch model
-   * @return Trace length of first channel matching the path
    * @throw std::invalid_argument If the model path is not in the map
+   * @return Trace length of first channel matching the path
    */
   unsigned getModelShape(std::string path);
   /**
@@ -162,6 +166,7 @@ public:
    * @param crate   The crate ID.
    * @param slot    The slot ID.
    * @param channel The channel ID.
+   * @throw std::out_of_range If the channel is not in the map.
    * @return The template trace data.
    */
   std::vector<double> getTemplate(unsigned crate, unsigned slot,
@@ -171,6 +176,7 @@ public:
    * @param crate   The crate ID.
    * @param slot    The slot ID.
    * @param channel The channel ID.
+   * @throw std::out_of_range If the channel is not in the map.
    * @return The template trace alignment point.
    */
   unsigned getTemplateAlignPoint(unsigned crate, unsigned slot,
@@ -209,15 +215,16 @@ private:
    * @param crate The crate ID.
    * @param slot The slot ID.
    * @param channel The channel ID.
+   * @throw std::invalid_argument If the slot or channel is out of range.
    * @return The global channel index.
    */
-  unsigned channelIndex(unsigned crate, unsigned slot, unsigned channel);
+  unsigned computeGlobalIndex(unsigned crate, unsigned slot, unsigned channel);
   /**
    * @brief Get the crate/slot/channel information from a global channel index.
    * @param index The global channel index.
    * @return Tuple of crate, slot, channel.
    */
-  std::tuple<unsigned, unsigned, unsigned> channelFromIndex(unsigned index);
+  std::tuple<unsigned, unsigned, unsigned> decodeGlobalIndex(unsigned index);
 
   // Private data
 private:

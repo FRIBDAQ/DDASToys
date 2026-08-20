@@ -117,6 +117,12 @@ public:
    * @return fitMethod enum type.
    */
   enum fitMethod getMethod() { return m_method; };
+  /**
+   * @brief Check if the hit is configured for fitting.
+   * @param hit References the hit we are currently processing.
+   * @return True if the hit is configured for fitting, false otherwise.
+   */
+  bool isConfigured(const ddastoys::DDASFitHit &hit);
 
 private:
   /**

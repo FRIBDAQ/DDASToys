@@ -21,8 +21,6 @@
 
 #include "QRootCanvas.h"
 
-#include <iostream>
-
 #include <TCanvas.h>
 #include <TH1D.h>
 #include <TLegend.h>
@@ -98,9 +96,10 @@ void QRootCanvas::drawHit(const DDASFitHit &hit) {
 
   // For single pulses the double fit and single fit frequently look almost
   // identical. Drawing the double fit first makes the single fit in these
-  // instances appear more clear.
+  // instances appear more clear. We check to see if this channel is present in
+  // the current configuration before attempting to draw the fit data.
 
-  if (hit.hasExtension()) {
+  if (hit.hasExtension() && m_pFitManager->isConfigured(hit)) {
     drawDoubleFit(hit);
     drawSingleFit(hit);
     drawFitLegend();
