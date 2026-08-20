@@ -17,7 +17,7 @@ option(DDASTOYS_DOCS
 option(DDASTOYS_TIMING
     "Compile ENABLE_TIMING into FitEditors for inference profiling" OFF)
 
-set(DDASTOYS_CUDA_MAXPOINTS 5000 CACHE STRING
+set(DDASTOYS_CUDA_MAXPOINTS 1024 CACHE STRING
     "Maximum trace length compiled into the CUDA fit engine (MAXPOINTS macro)")
 
 # =============================================================================
