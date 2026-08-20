@@ -64,6 +64,7 @@ ddastoys::FitEditorMLInference::FitEditorMLInference()
   try {
     m_pConfig->readConfigFile();
   } catch (std::exception &e) {
+    std::cerr << "In the path to a forced exit...\n";
     std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }

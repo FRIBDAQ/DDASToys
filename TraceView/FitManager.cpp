@@ -205,8 +205,8 @@ unsigned FitManager::getHighFitLimit(const DDASFitHit &hit) {
 
 //____________________________________________________________________________
 bool FitManager::isConfigured(const DDASFitHit &hit) {
-  return m_pConfig->isConfigured(hit.getCrateID(), hit.getSlotID(),
-                                 hit.getChannelID());
+  return m_pConfig->fitChannel(hit.getCrateID(), hit.getSlotID(),
+                               hit.getChannelID());
 }
 
 ///
