@@ -290,9 +290,8 @@ if(DDASTOYS_CUDA)
     add_library(ddastoys_cuda_objs OBJECT
         CudaFitEngineAnalytic.cu
         cudafit_analytic.cu
-        reductions.cu
     )
-    set_target_properties(ddastoys_cuda_objs PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    set_target_properties(ddastoys_cuda_objs PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
     target_compile_definitions(ddastoys_cuda_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
     target_include_directories(ddastoys_cuda_objs
         PRIVATE ${CMAKE_SOURCE_DIR} ${CUDAOPTIMIZE_INCLUDE_DIR}
