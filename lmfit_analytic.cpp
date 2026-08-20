@@ -918,7 +918,7 @@ void ddastoys::analyticfit::lmfit2fixedT(
   std::vector<std::pair<uint16_t, uint16_t>> points;
   reduceTrace(points, low, high, trace, saturation);
   unsigned npts = points.size(); // Number of points to fit.
-  if (npts < P2_PARAM_COUNT) {
+  if (npts < P2FT_PARAM_COUNT) {
     pResult->fitStatus = GSL_EBADLEN;
     pResult->iterations = 0;
     return;
