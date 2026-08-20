@@ -69,9 +69,8 @@ public:
    * @param hit Hit item that we will unpack data into.
    * @throw std::length_error An unexpected hit or extension size is
    *   encountered.
-   * @return A pointer just after the ring item.
    */
-  const void *decode(const void *p, DDASFitHit &hit);
+  void decode(const void *p, DDASFitHit &hit);
 };
 
 /** @} */
