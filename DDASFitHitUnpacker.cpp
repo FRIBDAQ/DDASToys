@@ -119,6 +119,4 @@ const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
     throw std::length_error(
         "Inconsistent event size for ddasfmt::DDASHit or extended hit");
   }
-
-  return nullptr; // Should not get here.
 }
