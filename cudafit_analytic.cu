@@ -18,6 +18,7 @@
 #include <PSO_Optimizer.h> // Particle swarm
 
 #include "fit_extensions.h" // For the fit extension formats.
+#include "functions_analytic.h"
 #include "reductions.cu"
 
 using namespace ddastoys;
