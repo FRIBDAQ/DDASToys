@@ -650,7 +650,8 @@ void ddastoys::analyticfit::lmfit2(fit2Info *pResult,
     std::vector<uint16_t> reversed = trace;
     std::reverse(reversed.begin(), reversed.end());
     std::pair<unsigned, unsigned> revLimits;
-    revLimits.second = trace.size() - limits.first;
+    // Last valid trace index is trace.size() - 1:
+    revLimits.second = trace.size() - 1 - limits.first;
     revLimits.first = revLimits.second - (limits.second - limits.first);
     lmfit1(&fit1, reversed, revLimits, saturation);
 
@@ -977,7 +978,8 @@ void ddastoys::analyticfit::lmfit2fixedT(
     std::vector<uint16_t> reversed = trace;
     std::reverse(reversed.begin(), reversed.end());
     std::pair<unsigned, unsigned> revLimits;
-    revLimits.second = trace.size() - limits.first;
+    // Last valid trace index is trace.size() - 1:
+    revLimits.second = trace.size() - 1 - limits.first;
     revLimits.first = revLimits.second - (limits.second - limits.first);
     lmfit1(&fit1, reversed, revLimits, saturation);
 
