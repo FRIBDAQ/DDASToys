@@ -55,8 +55,7 @@ using namespace ufmt;
  *     4) Anything else - we don't know how to do with and fail with an
  *        error message.
  */
-const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
-                                                 DDASFitHit &hit) {
+void ddastoys::DDASFitHitUnpacker::decode(const void *p, DDASFitHit &hit) {
   // Find the ring item body:
 
   const RingItem *pItem = reinterpret_cast<const RingItem *>(p);
