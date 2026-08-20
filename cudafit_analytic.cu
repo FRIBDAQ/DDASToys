@@ -84,7 +84,7 @@ static unsigned traceToGPU(std::vector<uint16_t> trace,
   ycoords.clear();
 
   int result(0);
-  for (int i = limits.first; i < limits.second; i++) {
+  for (int i = limits.first; i <= limits.second; i++) {
     if (trace[i] < saturation) {
       xcoords.push_back(i);
       ycoords.push_back(trace[i]);

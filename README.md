@@ -32,7 +32,7 @@ git checkout <release-tag>
 
 DDASToys requires:
 
-- NSCLDAQ 12.2-000 or later
+- NSCLDAQ 12.1-000 or later
 - CMake 3.13 or later
 - CERN ROOT compatible with the NSCLDAQ installation being used
 - Qt 5.11 or later (for `traceview`)
