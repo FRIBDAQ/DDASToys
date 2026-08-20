@@ -230,7 +230,7 @@ bool ddastoys::Configuration::fitChannel(unsigned crate, unsigned slot,
 }
 
 unsigned ddastoys::Configuration::getTraceLength(unsigned crate, unsigned slot,
-                                                 unsigned channel) {
+                                                 unsigned channel) const {
   auto index = computeGlobalIndex(crate, slot, channel);
 
   return m_fitChannels.at(index).s_length;
@@ -238,7 +238,7 @@ unsigned ddastoys::Configuration::getTraceLength(unsigned crate, unsigned slot,
 
 std::pair<unsigned, unsigned>
 ddastoys::Configuration::getFitLimits(unsigned crate, unsigned slot,
-                                      unsigned channel) {
+                                      unsigned channel) const {
   auto index = computeGlobalIndex(crate, slot, channel);
 
   return m_fitChannels.at(index).s_limits;
@@ -246,14 +246,14 @@ ddastoys::Configuration::getFitLimits(unsigned crate, unsigned slot,
 
 unsigned ddastoys::Configuration::getSaturationValue(unsigned crate,
                                                      unsigned slot,
-                                                     unsigned channel) {
+                                                     unsigned channel) const {
   auto index = computeGlobalIndex(crate, slot, channel);
 
   return m_fitChannels.at(index).s_saturation;
 }
 
 std::string ddastoys::Configuration::getModelPath(unsigned crate, unsigned slot,
-                                                  unsigned channel) {
+                                                  unsigned channel) const {
   auto index = computeGlobalIndex(crate, slot, channel);
 
   return m_fitChannels.at(index).s_modelPath;
@@ -266,7 +266,7 @@ std::string ddastoys::Configuration::getModelPath(unsigned crate, unsigned slot,
  * in a different order than how they appear in the configuration file.
  * It is the responsibilty of the caller to deal with this.
  */
-std::vector<std::string> ddastoys::Configuration::getModelList() {
+std::vector<std::string> ddastoys::Configuration::getModelList() const {
   std::vector<std::string> models;
   for (const auto &entry : m_fitChannels) {
     models.push_back(entry.second.s_modelPath);
@@ -293,7 +293,7 @@ std::vector<std::string> ddastoys::Configuration::getModelList() {
  * All channels using a particular model are expected to have the same trace
  * length, so we can simply search for the first instance matching the path
  */
-unsigned ddastoys::Configuration::getModelShape(std::string path) {
+unsigned ddastoys::Configuration::getModelShape(std::string path) const {
   auto it = std::find_if(
       m_fitChannels.begin(), m_fitChannels.end(),
       [&path](const auto &p) { return p.second.s_modelPath == path; });
@@ -305,23 +305,23 @@ unsigned ddastoys::Configuration::getModelShape(std::string path) {
   }
 }
 
-std::vector<double> ddastoys::Configuration::getTemplate(unsigned crate,
-                                                         unsigned slot,
-                                                         unsigned channel) {
+std::vector<double>
+ddastoys::Configuration::getTemplate(unsigned crate, unsigned slot,
+                                     unsigned channel) const {
   auto index = computeGlobalIndex(crate, slot, channel);
 
   return m_fitChannels.at(index).s_template;
 }
 
-unsigned ddastoys::Configuration::getTemplateAlignPoint(unsigned crate,
-                                                        unsigned slot,
-                                                        unsigned channel) {
+unsigned
+ddastoys::Configuration::getTemplateAlignPoint(unsigned crate, unsigned slot,
+                                               unsigned channel) const {
   auto index = computeGlobalIndex(crate, slot, channel);
 
   return m_fitChannels.at(index).s_alignPoint;
 }
 
-void ddastoys::Configuration::verifyTemplateData() {
+void ddastoys::Configuration::verifyTemplateData() const {
   for (const auto &c : m_fitChannels) {
     if (c.second.s_template.empty()) {
       auto [crate, slot, channel] = decodeGlobalIndex(c.first);
@@ -340,7 +340,8 @@ void ddastoys::Configuration::verifyTemplateData() {
 // Private methods
 //
 
-std::string ddastoys::Configuration::getFileNameFromEnv(const char *envname) {
+std::string
+ddastoys::Configuration::getFileNameFromEnv(const char *envname) const {
   const char *pFilename = getenv(envname);
   if (!pFilename) {
     throw std::invalid_argument(
@@ -352,7 +353,7 @@ std::string ddastoys::Configuration::getFileNameFromEnv(const char *envname) {
   return std::string(pFilename);
 }
 
-std::string ddastoys::Configuration::isComment(std::string line) {
+std::string ddastoys::Configuration::isComment(std::string line) const {
   trim(line); // Modifies it
   if (line[0] == '#')
     return std::string("");
@@ -362,7 +363,7 @@ std::string ddastoys::Configuration::isComment(std::string line) {
 
 unsigned ddastoys::Configuration::computeGlobalIndex(unsigned crate,
                                                      unsigned slot,
-                                                     unsigned channel) {
+                                                     unsigned channel) const {
   if (slot > MAX_SLOT) {
     throw std::invalid_argument("Invalid slot number " + std::to_string(slot) +
                                 " > " + std::to_string(MAX_SLOT));
@@ -381,7 +382,7 @@ unsigned ddastoys::Configuration::computeGlobalIndex(unsigned crate,
  * Inverse of computeGlobalIndex.
  */
 std::tuple<unsigned, unsigned, unsigned>
-ddastoys::Configuration::decodeGlobalIndex(unsigned index) {
+ddastoys::Configuration::decodeGlobalIndex(unsigned index) const {
   unsigned crate = (index >> (CHANNEL_BITS + SLOT_BITS));
   unsigned slot = (index >> CHANNEL_BITS) & MAX_SLOT;
   unsigned channel = index & MAX_CHANNEL;

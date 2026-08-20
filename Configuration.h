@@ -114,7 +114,8 @@ public:
    * @throw std::out_of_range If the channel is not in the map.
    * @return The trace length
    */
-  unsigned getTraceLength(unsigned crate, unsigned slot, unsigned channel);
+  unsigned getTraceLength(unsigned crate, unsigned slot,
+                          unsigned channel) const;
 
   /**
    * @brief Get the (inclusive) fit limits for a single
@@ -126,7 +127,7 @@ public:
    * @return Pair of [low, high] fit limits (inclusive).
    */
   std::pair<unsigned, unsigned> getFitLimits(unsigned crate, unsigned slot,
-                                             unsigned channel);
+                                             unsigned channel) const;
   /**
    * @brief Get the ADC saturation value for a single crate/slot/channel
    * combination.
@@ -136,7 +137,8 @@ public:
    * @throw std::out_of_range If the channel is not in the map.
    * @return The saturation value of the trace for this channel.
    */
-  unsigned getSaturationValue(unsigned crate, unsigned slot, unsigned channel);
+  unsigned getSaturationValue(unsigned crate, unsigned slot,
+                              unsigned channel) const;
   /**
    * @brief Get the ML inference model path for a single
    * crate/slot/channel combination.
@@ -146,13 +148,14 @@ public:
    * @throw std::out_of_range If the channel is not in the map.
    * @return Path to the ML inference model.
    */
-  std::string getModelPath(unsigned crate, unsigned slot, unsigned channel);
+  std::string getModelPath(unsigned crate, unsigned slot,
+                           unsigned channel) const;
   /**
    * @brief Get the list of unique model names specified in the
    * configuration file.
    * @return Vector of unique model paths.
    */
-  std::vector<std::string> getModelList();
+  std::vector<std::string> getModelList() const;
   /**
    * @brief Get the shape (trace length) of the channel data given a
    * model path
@@ -160,7 +163,7 @@ public:
    * @throw std::invalid_argument If the model path is not in the map
    * @return Trace length of first channel matching the path
    */
-  unsigned getModelShape(std::string path);
+  unsigned getModelShape(std::string path) const;
   /**
    * @brief Return the template data.
    * @param crate   The crate ID.
@@ -170,7 +173,7 @@ public:
    * @return The template trace data.
    */
   std::vector<double> getTemplate(unsigned crate, unsigned slot,
-                                  unsigned channel);
+                                  unsigned channel) const;
   /**
    * @brief Return the template alignment point.
    * @param crate   The crate ID.
@@ -180,7 +183,7 @@ public:
    * @return The template trace alignment point.
    */
   unsigned getTemplateAlignPoint(unsigned crate, unsigned slot,
-                                 unsigned channel);
+                                 unsigned channel) const;
   /**
    * @brief Verify that all channels you want to fit have a valid trace
    * template. Intended to be called by the FitEditorTemplate class constructor
@@ -191,7 +194,7 @@ public:
    * configuration file has no template data. This is intended behavior. So
    * don't do that.
    */
-  void verifyTemplateData();
+  void verifyTemplateData() const;
 
   // Private methods
 private:
@@ -202,14 +205,14 @@ private:
    * @throw std::invalid_argument If there's no translation.
    * @return Translation of envname.
    */
-  std::string getFileNameFromEnv(const char *envname);
+  std::string getFileNameFromEnv(const char *envname) const;
   /**
    * @brief Determines if a line is a comment or not.
    * @param line Line to check.
    * @return The trimmed line if the line is not a comment, otherwise an
    *   empty string.
    */
-  std::string isComment(std::string line);
+  std::string isComment(std::string line) const;
   /**
    * @brief Get global channel index from crate/slot/channel information.
    * @param crate The crate ID.
@@ -218,13 +221,16 @@ private:
    * @throw std::invalid_argument If the slot or channel is out of range.
    * @return The global channel index.
    */
-  unsigned computeGlobalIndex(unsigned crate, unsigned slot, unsigned channel);
+  unsigned computeGlobalIndex(unsigned crate, unsigned slot,
+                              unsigned channel) const;
   /**
-   * @brief Get the crate/slot/channel information from a global channel index.
+   * @brief Get the crate/slot/channel information from a global channel
+   * index.
    * @param index The global channel index.
    * @return Tuple of crate, slot, channel.
    */
-  std::tuple<unsigned, unsigned, unsigned> decodeGlobalIndex(unsigned index);
+  std::tuple<unsigned, unsigned, unsigned>
+  decodeGlobalIndex(unsigned index) const;
 
   // Private data
 private:
