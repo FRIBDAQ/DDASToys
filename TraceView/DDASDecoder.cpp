@@ -26,7 +26,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <sstream>
 
 #include <CDataFormatItem.h>            //          ----+----
 #include <CDataSource.h>                // Abstract source of ring items.

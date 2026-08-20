@@ -27,7 +27,6 @@
 #include <iostream>
 #include <sstream>
 #include <tuple>
-#include <typeindex>
 
 // So we're not using magic numbers for the global index:
 static constexpr unsigned CHANNEL_BITS =

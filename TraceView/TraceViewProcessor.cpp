@@ -22,7 +22,6 @@
 #include "TraceViewProcessor.h"
 
 #include <ctime>
-#include <iostream>
 
 #include <CDataFormatItem.h>
 #include <CPhysicsEventItem.h>

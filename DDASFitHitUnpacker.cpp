@@ -25,7 +25,6 @@
 #include "DDASFitHitUnpacker.h"
 
 #include <stdexcept>
-#include <string>
 
 #include <DataFormat.h>
 

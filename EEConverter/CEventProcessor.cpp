@@ -31,19 +31,19 @@
 #include <sstream>
 #include <vector>
 
-#include <CDataFormatItem.h>            //             ----+----
-#include <CDataSource.h>                // Abstract source of ring items
-#include <CDataSourceFactory.h>         // URI to a concrete data source
-#include <CGlomParameters.h>            //                 V
-#include <CPhysicsEventItem.h>          //                 |
-#include <CRingItem.h>                  // Base class for ring items
-#include <CRingItemFactory.h>           // Create specific item from generic
-#include <CRingPhysicsEventCountItem.h> //                 |
-#include <CRingScalerItem.h>            // Specific ring item classes
-#include <CRingStateChangeItem.h>       //                 |
-#include <CRingTextItem.h>              //                 |
-#include <DataFormat.h>                 // Ring item data formats
-#include <Exception.h>                  // Base class for exception handling
+#include <CDataFormatItem.h>
+#include <CDataSource.h>
+#include <CDataSourceFactory.h>
+#include <CGlomParameters.h>
+#include <CPhysicsEventItem.h>
+#include <CRingItem.h>
+#include <CRingItemFactory.h>
+#include <CRingPhysicsEventCountItem.h>
+#include <CRingScalerItem.h>
+#include <CRingStateChangeItem.h>
+#include <CRingTextItem.h>
+#include <DataFormat.h>
+#include <Exception.h>
 #include <URL.h>
 
 #include "CRingItemProcessor.h"

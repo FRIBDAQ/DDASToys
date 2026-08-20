@@ -24,7 +24,6 @@
 #include "lmfit_template.h"
 
 #include <algorithm>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 

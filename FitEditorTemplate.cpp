@@ -22,7 +22,6 @@
 
 #include "FitEditorTemplate.h"
 
-#include <fstream>
 #include <iostream>
 
 #include <DDASHit.h>

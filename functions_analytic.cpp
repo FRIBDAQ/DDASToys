@@ -25,9 +25,7 @@
 #include "functions_analytic.h"
 
 #include <cmath>
-#include <fstream>
 #include <iostream>
-#include <stdexcept>
 
 /**
  * @details
