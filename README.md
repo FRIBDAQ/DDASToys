@@ -118,12 +118,12 @@ When `DDASTOYS_CUDA=ON`, the maximum supported trace length compiled into the CU
 The default value is:
 
 ```text
-DDASTOYS_CUDA_MAXPOINTS=5000
+DDASTOYS_CUDA_MAXPOINTS=1024
 ```
 
 This value is compiled into the CUDA implementation as the `MAXPOINTS`
 macro and should be chosen to accommodate the longest traces expected
-during analysis.
+during analysis. The maximum allowed value is 1024.
 
 ### Installation
 
