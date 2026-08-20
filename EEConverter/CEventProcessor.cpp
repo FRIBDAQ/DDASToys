@@ -31,7 +31,6 @@
 #include <sstream>
 #include <vector>
 
-#include <CDataFormatItem.h>            //                 |
 #include <CDataFormatItem.h>            //             ----+----
 #include <CDataSource.h>                // Abstract source of ring items
 #include <CDataSourceFactory.h>         // URI to a concrete data source
@@ -125,7 +124,13 @@ int CEventProcessor::operator()(int argc, char *argv[]) {
             << std::endl;
 
   CDataSource *pSource = nullptr;
-  pSource = CDataSourceFactory::makeSource(sourceName, sample, exclude);
+  try {
+    pSource = CDataSourceFactory::makeSource(sourceName, sample, exclude);
+  } catch (CException &e) {
+    std::cerr << "Failed to open the data source " << sourceName << ": "
+              << e.ReasonText() << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
   std::unique_ptr<CDataSource> source(pSource);
 
   // Make the processor using the outout data format and file sink name:
