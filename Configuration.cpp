@@ -324,7 +324,8 @@ ddastoys::Configuration::getTemplateAlignPoint(unsigned crate, unsigned slot,
 void ddastoys::Configuration::verifyTemplateData() const {
   for (const auto &c : m_fitChannels) {
     if (c.second.s_template.empty()) {
-      auto [crate, slot, channel] = decodeGlobalIndex(c.first);
+      unsigned int crate, slot, channel;
+      std::tie(crate, slot, channel) = decodeGlobalIndex(c.first);
       std::string msg("No template for channel ");
       msg += std::to_string(crate) + "/" + std::to_string(slot) + "/" +
              std::to_string(channel);
