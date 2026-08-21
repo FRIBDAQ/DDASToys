@@ -198,15 +198,15 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr,
       }
       auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
       auto path = m_pConfig->getModelPath(crate, slot, chan);
-#ifdef ENABLE_TIMING
-      Timer timer;
-#endif
       auto it = m_models.find(path);
       if (it == m_models.end()) {
         std::cerr << "Model not found for crate " << crate << " slot " << slot
                   << " channel " << chan << " path " << path << std::endl;
         throw std::runtime_error("No ML model loaded for path: " + path);
       }
+#ifdef ENABLE_TIMING
+      Timer timer;
+#endif
       mlinference::performInference(pFit, trace, sat, it->second);
 #ifdef ENABLE_TIMING
       stats.addData(timer.elapsed());

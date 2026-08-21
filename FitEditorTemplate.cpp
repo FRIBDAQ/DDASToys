@@ -153,14 +153,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
       int classification = pulseCount(hit);
 
       if (classification) {
-
-#ifdef ENABLE_TIMING
-        // Track total time:
-        total = 0;
-#endif
-
-        // Bit 0 do single fit, bit 1 do double fit.
-
+        // Bit 0 do single fit, bit 1 do double fit:
         if (classification & 1) {
 #ifdef ENABLE_TIMING
           Timer timer;
@@ -173,12 +166,10 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
         }
 
         if (classification & 2) {
-
           // The single pulse fit guides the double pulse fit.
           // Note that lmfit2 will perform a single fit if no guess
           // is provided. If we have already fit the single pulse,
           // set the guess to those results.
-
           if (classification & 1) {
             fit1Info guess = pFit->s_extension.onePulseFit;
 #ifdef ENABLE_TIMING
