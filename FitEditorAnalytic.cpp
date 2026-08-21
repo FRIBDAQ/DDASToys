@@ -32,6 +32,8 @@
 #include "lmfit_analytic.h"
 #include "profiling.h"
 
+#include "cudafit_analytic.cuh"
+
 using namespace ddasfmt;
 using namespace ddastoys;
 
@@ -47,12 +49,12 @@ static double total(0);
  */
 ddastoys::FitEditorAnalytic::FitEditorAnalytic()
     : m_pConfig(new Configuration) {
-  try {
-    m_pConfig->readConfigFile();
-  } catch (std::exception &e) {
-    std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
-    exit(EXIT_FAILURE);
-  }
+    try {
+	m_pConfig->readConfigFile();
+    } catch (std::exception &e) {
+	std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
+	exit(EXIT_FAILURE);
+    }
 }
 
 ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic &rhs)
@@ -64,28 +66,28 @@ ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic &rhs)
  */
 ddastoys::FitEditorAnalytic::FitEditorAnalytic(FitEditorAnalytic &&rhs) noexcept
     : m_pConfig(nullptr) {
-  *this = std::move(rhs);
+    *this = std::move(rhs);
 }
 
 FitEditorAnalytic &
 ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic &rhs) {
-  if (this != &rhs) {
-    delete m_pConfig;
-    m_pConfig = new Configuration(*rhs.m_pConfig);
-  }
+    if (this != &rhs) {
+	delete m_pConfig;
+	m_pConfig = new Configuration(*rhs.m_pConfig);
+    }
 
-  return *this;
+    return *this;
 }
 
 FitEditorAnalytic &
 ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic &&rhs) noexcept {
-  if (this != &rhs) {
-    delete m_pConfig;
-    m_pConfig = rhs.m_pConfig;
-    rhs.m_pConfig = nullptr;
-  }
+    if (this != &rhs) {
+	delete m_pConfig;
+	m_pConfig = rhs.m_pConfig;
+	rhs.m_pConfig = nullptr;
+    }
 
-  return *this;
+    return *this;
 }
 
 /**
@@ -110,116 +112,128 @@ ddastoys::FitEditorAnalytic::~FitEditorAnalytic() { delete m_pConfig; }
 std::vector<CBuiltRingItemEditor::BodySegment>
 ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
                                         size_t bodySize, void *pBody) {
-  std::vector<CBuiltRingItemEditor::BodySegment> result;
+    std::vector<CBuiltRingItemEditor::BodySegment> result;
 
-  // Regardless we want a segment that includes the hit. Note that the first
-  // uint32_t of the body is the size of the standard hit part in
-  // uint16_t words.
+    // Regardless we want a segment that includes the hit. Note that the first
+    // uint32_t of the body is the size of the standard hit part in
+    // uint16_t words.
 
-  uint32_t *pSize = static_cast<uint32_t *>(pBody);
-  CBuiltRingItemEditor::BodySegment hitInfo(*pSize * sizeof(uint16_t), pSize,
-                                            false);
-  result.push_back(hitInfo);
+    uint32_t *pSize = static_cast<uint32_t *>(pBody);
+    CBuiltRingItemEditor::BodySegment hitInfo(*pSize * sizeof(uint16_t), pSize,
+					      false);
+    result.push_back(hitInfo);
 
-  // Make the hit:
+    // Make the hit:
 
-  DDASHit hit;
-  DDASHitUnpacker unpacker;
-  unpacker.unpack(static_cast<uint32_t *>(pBody),
-                  static_cast<uint32_t *>(nullptr), hit);
+    DDASHit hit;
+    DDASHitUnpacker unpacker;
+    unpacker.unpack(static_cast<uint32_t *>(pBody),
+		    static_cast<uint32_t *>(nullptr), hit);
 
-  auto crate = hit.getCrateID();
-  auto slot = hit.getSlotID();
-  auto chan = hit.getChannelID();
+    auto crate = hit.getCrateID();
+    auto slot = hit.getSlotID();
+    auto chan = hit.getChannelID();
 
-  if (m_pConfig->fitChannel(crate, slot, chan)) {
-    std::vector<uint16_t> trace = hit.getTrace();
-    FitInfo *pFit = new FitInfo; // Have an extension tho may be zero.
+    if (m_pConfig->fitChannel(crate, slot, chan)) {
+	std::vector<uint16_t> trace = hit.getTrace();
+	FitInfo *pFit = new FitInfo; // Have an extension tho may be zero.
 
-    if (trace.size() > 0) { // Need a trace to fit
-      // Verify that the trace length is what the configuration file expects:
-      auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
-      if (trace.size() != expectedLength) {
-        std::cerr << "Trace length mismatch for crate " << crate << " slot "
-                  << slot << " channel " << chan << " expected "
-                  << expectedLength << " got " << trace.size() << std::endl;
-        throw std::length_error("Trace length mismatch");
-      }
+	if (trace.size() > 0) { // Need a trace to fit
+	    // Verify that the trace length is what the configuration file expects:
+	    auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
+	    if (trace.size() != expectedLength) {
+		std::cerr << "Trace length mismatch for crate " << crate << " slot "
+			  << slot << " channel " << chan << " expected "
+			  << expectedLength << " got " << trace.size() << std::endl;
+		throw std::length_error("Trace length mismatch");
+	    }
 
-      auto limits = m_pConfig->getFitLimits(crate, slot, chan);
-      auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
-      int classification = pulseCount(hit);
+	    auto limits = m_pConfig->getFitLimits(crate, slot, chan);
+	    auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
+	    int classification = pulseCount(hit);
 
-      if (classification) {
-        // Bit 0 do single fit, bit 1 do double fit:
-        if (classification & 1) {
+	    if (classification) {
+		// Bit 0 do single fit, bit 1 do double fit:
+		if (classification & 1) {
 #ifdef ENABLE_TIMING
-          Timer timer;
+		    Timer timer;
 #endif
-          analyticfit::lmfit1(&(pFit->s_extension.onePulseFit), trace, limits,
-                              sat);
+		    // analyticfit::lmfit1(&(pFit->s_extension.onePulseFit), trace, limits,
+		    // 			sat);
+		     analyticfit::cudafit1(&(pFit->s_extension.onePulseFit), trace, limits,
+		     			  sat, /*freeTraceWhenDone=*/false);
 #ifdef ENABLE_TIMING
-          total += timer.elapsed();
+		    total += timer.elapsed();
 #endif
-        }
+		}
 
-        if (classification & 2) {
-          // The single pulse fit guides the double pulse fit.
-          // Note that lmfit2 will perform a single fit if no guess
-          // is provided. If we have already fit the single pulse,
-          // set the guess to those results.
-          if (classification & 1) {
-            fit1Info guess = pFit->s_extension.onePulseFit;
+		if (classification & 2) {
+		    // The single pulse fit guides the double pulse fit.
+		    // Note that lmfit2 will perform a single fit if no guess
+		    // is provided. If we have already fit the single pulse,
+		    // set the guess to those results.
+
 #ifdef ENABLE_TIMING
-            Timer timer;
+		    Timer timer;
 #endif
-            analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
-                                &guess, sat);
+		    analyticfit::cudafit2(&(pFit->s_extension.twoPulseFit), trace, limits,
+					  sat, /*traceIsLoaded=*/true);
 #ifdef ENABLE_TIMING
-            total += timer.elapsed();
+		    total += timer.elapsed();
 #endif
-          } else {
+	      
+// 		    if (classification & 1) {
+// 			fit1Info guess = pFit->s_extension.onePulseFit;
+// #ifdef ENABLE_TIMING
+// 			Timer timer;
+// #endif
+// 			analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
+// 					    &guess, sat);
+// #ifdef ENABLE_TIMING
+// 			total += timer.elapsed();
+// #endif
+// 		    } else {
+// #ifdef ENABLE_TIMING
+// 			Timer timer;
+// #endif
+// 			// nullptr: no guess for single params.
+// 			analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
+// 					    nullptr, sat);
+// #ifdef ENABLE_TIMING
+// 			total += timer.elapsed();
+// #endif
+// 		    }
+		}
 #ifdef ENABLE_TIMING
-            Timer timer;
+		stats.addData(total);
+		if (stats.size() == 10000) {
+		    stats.compute();
+		    stats.print("======== Analytic fit stats ========");
+		}
 #endif
-            // nullptr: no guess for single params.
-            analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
-                                nullptr, sat);
-#ifdef ENABLE_TIMING
-            total += timer.elapsed();
-#endif
-          }
-        }
-#ifdef ENABLE_TIMING
-        stats.addData(total);
-        if (stats.size() == 10000) {
-          stats.compute();
-          stats.print("======== Analytic fit stats ========");
-        }
-#endif
-      }
+	    }
+	}
+
+	CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
+	result.push_back(fit);
+
+    } else { // No fit performed
+	nullExtension *p = new nullExtension;
+	CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
+	result.push_back(nofit);
     }
 
-    CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
-    result.push_back(fit);
-
-  } else { // No fit performed
-    nullExtension *p = new nullExtension;
-    CBuiltRingItemEditor::BodySegment nofit(sizeof(nullExtension), p, true);
-    result.push_back(nofit);
-  }
-
-  return result;
+    return result;
 }
 
 void ddastoys::FitEditorAnalytic::free(iovec &e) {
-  if (e.iov_len == sizeof(FitInfo)) {
-    FitInfo *pFit = static_cast<FitInfo *>(e.iov_base);
-    delete pFit;
-  } else {
-    nullExtension *p = static_cast<nullExtension *>(e.iov_base);
-    delete p;
-  }
+    if (e.iov_len == sizeof(FitInfo)) {
+	FitInfo *pFit = static_cast<FitInfo *>(e.iov_base);
+	delete pFit;
+    } else {
+	nullExtension *p = static_cast<nullExtension *>(e.iov_base);
+	delete p;
+    }
 }
 
 ///
@@ -232,7 +246,7 @@ void ddastoys::FitEditorAnalytic::free(iovec &e) {
  * for every mapped channel.
  */
 int ddastoys::FitEditorAnalytic::pulseCount(DDASHit &hit) {
-  return 3; // In absence of classifier.
+    return 3; // In absence of classifier.
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -248,7 +262,7 @@ int ddastoys::FitEditorAnalytic::pulseCount(DDASHit &hit) {
  * extern "C" prevents namespace mangling by the C++ compiler.
  */
 extern "C" {
-ddastoys::FitEditorAnalytic *createEditor() {
-  return new ddastoys::FitEditorAnalytic;
-}
+    ddastoys::FitEditorAnalytic *createEditor() {
+	return new ddastoys::FitEditorAnalytic;
+    }
 }
