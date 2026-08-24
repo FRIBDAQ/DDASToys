@@ -138,6 +138,12 @@ This value is compiled into the CUDA implementation as the `MAXPOINTS`
 macro and should be chosen to accommodate the longest traces expected
 during analysis. The maximum allowed value is 1024.
 
+> **Note:** GPU fitting is a development/experimental feature and is not on the
+> production path — the CPU pipeline is fast enough for real-time processing.
+> Per-trace GPU fitting does not currently beat CPU fitting; see `gpu_fitting.md`
+> for the findings and the batched-fitting plan.
+
+
 ### Installation
 
 The installation places the DDASToys libraries, executables, headers,
