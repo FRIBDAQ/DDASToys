@@ -455,6 +455,9 @@ endif()
 set(_install_libs DDASFormat DDASFitHitUnpacker FitEditorAnalytic FitEditorTemplate)
 if(DDASTOYS_MLINFERENCE)
     list(APPEND _install_libs FitEditorMLInference)
+  endif()
+if(DDASTOYS_CUDA_DEV)
+    list(APPEND _install_libs FitEditorCudaAnalytic FitEditorCudaPSO)
 endif()
 
 install(TARGETS ${_install_libs} LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
@@ -474,20 +477,17 @@ set(_public_headers
     ${CMAKE_SOURCE_DIR}/lmfit_analytic.h
     ${CMAKE_SOURCE_DIR}/lmfit_template.h
 )
-
 if(DDASTOYS_MLINFERENCE)
     list(APPEND _public_headers
         ${CMAKE_SOURCE_DIR}/FitEditorMLInference.h
         ${CMAKE_SOURCE_DIR}/mlinference.h
     )
 endif()
-
 if(DDASTOYS_CUDA_DEV)
     list(APPEND _public_headers
         ${CMAKE_SOURCE_DIR}/FitEditorCudaPSO.h
         ${CMAKE_SOURCE_DIR}/cudafit_analytic.cuh
     )
-    list(APPEND _install_libs FitEditorCudaAnalytic FitEditorCudaPSO)
 endif()
 
 install(FILES ${_public_headers} DESTINATION include)
