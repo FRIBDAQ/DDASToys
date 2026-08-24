@@ -6,7 +6,7 @@ project(DDASToys VERSION 6.5.0 LANGUAGES CXX C)
 # Options
 # =============================================================================
 
-option(DDASTOYS_CUDA
+option(DDASTOYS_CUDA_DEV
     "Build the CUDA GPU-accelerated fit engine (requires nvcc + libCudaOptimize)" OFF)
 option(DDASTOYS_MLINFERENCE
     "Build the ML inference fit editor (requires LibTorch)" ON)
@@ -106,7 +106,7 @@ target_link_libraries(NSCLDAQ::NSCLDAQ INTERFACE
 # CUDA (optional)
 # =============================================================================
 
-if(DDASTOYS_CUDA)
+if(DDASTOYS_CUDA_DEV)
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 14)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
@@ -122,7 +122,7 @@ if(DDASTOYS_CUDA)
 
     if(NOT CUDAOPTIMIZE_INCLUDE_DIR OR NOT CUDAOPTIMIZE_LIB)
         message(FATAL_ERROR
-            "DDASTOYS_CUDA=ON but libCudaOptimize was not found under "
+            "DDASTOYS_CUDA_DEV=ON but libCudaOptimize was not found under "
             "/usr/opt/libcudaoptimize.  Set CUDAOPTIMIZE_INCLUDE_DIR and "
             "CUDAOPTIMIZE_LIB to point at your installation.")
     endif()
@@ -286,7 +286,7 @@ target_link_libraries(ddastoys_ring_objs
 
 # --- CUDA objects (optional, FitEditorAnalytic only) ---
 set(_cuda_link "")
-if(DDASTOYS_CUDA)
+if(DDASTOYS_CUDA_DEV)
     add_library(ddastoys_cuda_objs OBJECT
         CudaFitEngineAnalytic.cu
         cudafit_analytic.cu
@@ -435,7 +435,7 @@ message(STATUS "  DAQROOT        : ${DAQROOT}")
 message(STATUS "  UFMTROOT       : ${UFMTROOT}")
 message(STATUS "  ROOT           : ${ROOT_VERSION}")
 message(STATUS "  GSL            : ${GSL_VERSION}")
-message(STATUS "  CUDA engine    : ${DDASTOYS_CUDA}")
+message(STATUS "  CUDA engine    : ${DDASTOYS_CUDA_DEV}")
 message(STATUS "  ML inference   : ${DDASTOYS_MLINFERENCE}")
 message(STATUS "  TraceView      : ${DDASTOYS_TRACEVIEW}")
 message(STATUS "  Documentation  : ${DDASTOYS_DOCS}")

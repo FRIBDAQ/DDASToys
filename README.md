@@ -92,7 +92,7 @@ The following options may be specified during configuration using
 
 | Option | Default | Description |
 |----------|---------|-------------|
-| `DDASTOYS_CUDA` | `OFF` | Build the CUDA GPU-accelerated fit engine. Requires the NVIDIA CUDA Toolkit (`nvcc`) and the `libCudaOptimize` library. |
+| `DDASTOYS_CUDA_DEV` | `OFF` | Build the developmental CUDA GPU-accelerated fit engine plugin libraries. Requires the NVIDIA CUDA Toolkit (`nvcc`) and the `libCudaOptimize` library. Not intended for production analysis! |
 | `DDASTOYS_MLINFERENCE` | `ON` | Build the machine-learning inference fit editor. Requires LibTorch. |
 | `DDASTOYS_TRACEVIEW` | `ON` | Build the Qt-based `traceview` diagnostic GUI. Requires Qt 5.11 or newer. |
 | `DDASTOYS_DOCS` | `ON` | Build the Doxygen API documentation and DocBook user manual. |
