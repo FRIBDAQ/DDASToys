@@ -549,7 +549,7 @@ void ddastoys::analyticfit::cudafit2(
   if (!traceIsLoaded) {
     traceToGPU(std::vector<uint16_t> trace,
                std::pair<unsigned int, unsigned int> limits,
-               uint16_t saturation)
+               uint16_t saturation);
   }
 
   // Init once, reuse:
