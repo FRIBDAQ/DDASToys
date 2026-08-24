@@ -315,6 +315,8 @@ __host__ __device__ float chiFitness2(const float *pParams, float x, float y,
  * @param pFitnesses Pointer to the array of fitnesse for all solutions in the
  * swarm.
  * @param nParams    Number of parameters in the fit (should be 5).
+ * @param solStride  Solution stride - e.g., 5 parameter fit padded to stride
+ * of 32.
  * @param nSol       Number of solutions in the swarm.
  * @param pXcoords   Trace x-coordinates array.
  * @param pYcoords   Trace y-coordinates array.
@@ -377,7 +379,9 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
  * @param pSolutions Pointer to solutions array in the GPU.
  * @param pFitnesses Pointer to the array of fitnesse for all solutions in the
  * swarm.
- * @param nParams    Number of parameters in the fit (should be 5).
+ * @param nParams    Number of parameters in the fit (should be 9).
+ * @param solStride  Solution stride - e.g., 5 parameter fit padded to stride
+ * of 32.
  * @param nSol       Number of solutions in the swarm.
  * @param pXcoords   Trace x-coordinates array.
  * @param pYcoords   Trace y-coordinates array.
@@ -542,11 +546,10 @@ void ddastoys::analyticfit::cudafit2(
     const std::pair<unsigned, unsigned> &limits, uint16_t saturation,
     bool traceIsLoaded) {
   // If needed get the trace into the GPU:
-  size_t nPoints;
-  if (traceIsLoaded) {
-    nPoints = n_tracePoints; // From prior load.
-  } else {
-    nPoints = traceToGPU(trace, limits, saturation);
+  if (!traceIsLoaded) {
+    traceToGPU(std::vector<uint16_t> trace,
+               std::pair<unsigned int, unsigned int> limits,
+               uint16_t saturation)
   }
 
   // Init once, reuse:
