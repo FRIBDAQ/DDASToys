@@ -77,10 +77,16 @@ cmake --install build
 
 ### Running Unit Tests
 
-After a successful build, run the unit test suite with:
+For CMake >= 3.20, you can run the test suite with:
 
 ```bash
 ctest --test-dir build --VV
+```
+
+While for older CMake versions you will have to run from the build directory:
+
+```bash
+cd build && ctest --VV
 ```
 
 All tests should complete successfully.
