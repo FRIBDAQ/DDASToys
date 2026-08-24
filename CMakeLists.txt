@@ -7,7 +7,9 @@ project(DDASToys VERSION 6.5.0 LANGUAGES CXX C)
 # =============================================================================
 
 option(DDASTOYS_CUDA_DEV
-    "Build the CUDA GPU-accelerated fit engine (requires nvcc + libCudaOptimize)" OFF)
+    "Build the experimental CUDA GPU fit editor plugins: libFitEditorCudaAnalytic 
+    (analytic fit via the CUDA fit engine) and libFitEditorCudaPSO (swarm/PSO fit). 
+    Requires nvcc + libCudaOptimize." OFF)
 option(DDASTOYS_MLINFERENCE
     "Build the ML inference fit editor (requires LibTorch)" ON)
 option(DDASTOYS_TRACEVIEW
@@ -103,7 +105,7 @@ target_link_libraries(NSCLDAQ::NSCLDAQ INTERFACE
 )
 
 # =============================================================================
-# CUDA (optional)
+# CUDA fitting (optional)
 # =============================================================================
 
 if(DDASTOYS_CUDA_DEV)
@@ -127,7 +129,10 @@ if(DDASTOYS_CUDA_DEV)
             "CUDAOPTIMIZE_LIB to point at your installation.")
     endif()
 
-    add_compile_definitions(CUDA MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
+    # NOTE: the CUDA macro is applied per-target (only to the analytic sources
+    # of libFitEditorCudaAnalytic), NOT globally, so the normal CPU
+    # libFitEditorAnalytic keeps using the serial fit engine. MAXPOINTS is set
+    # on the CUDA object libraries below.
     message(STATUS "CUDA enabled — MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS}")
 endif()
 
@@ -284,20 +289,31 @@ target_link_libraries(ddastoys_ring_objs
     PUBLIC NSCLDAQ::NSCLDAQ DDASFormat
 )
 
-# --- CUDA objects (optional, FitEditorAnalytic only) ---
-set(_cuda_link "")
+# --- CUDA objects (optional, DDASTOYS_CUDA_DEV) ---
+# Two independent implementations, split so each dev plugin links only what it
+# needs:
+#   ddastoys_cuda_engine_objs : CudaFitEngine1/2 — GPU LM residual/Jacobian
+#                               offload, used by libFitEditorCudaAnalytic.
+#                               Raw CUDA, no libCudaOptimize.
+#   ddastoys_cuda_pso_objs    : cudafit1/2 — libCudaOptimize swarm optimizer,
+#                               used by libFitEditorCudaPSO.
 if(DDASTOYS_CUDA_DEV)
-    add_library(ddastoys_cuda_objs OBJECT
+    add_library(ddastoys_cuda_engine_objs OBJECT
         CudaFitEngineAnalytic.cu
+    )
+    set_target_properties(ddastoys_cuda_engine_objs PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
+    target_compile_definitions(ddastoys_cuda_engine_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
+    target_include_directories(ddastoys_cuda_engine_objs PRIVATE ${CMAKE_SOURCE_DIR})
+
+    add_library(ddastoys_cuda_pso_objs OBJECT
         cudafit_analytic.cu
     )
-    set_target_properties(ddastoys_cuda_objs PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
-    target_compile_definitions(ddastoys_cuda_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
-    target_include_directories(ddastoys_cuda_objs
+    set_target_properties(ddastoys_cuda_pso_objs PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
+    target_compile_definitions(ddastoys_cuda_pso_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
+    target_include_directories(ddastoys_cuda_pso_objs
         PRIVATE ${CMAKE_SOURCE_DIR} ${CUDAOPTIMIZE_INCLUDE_DIR}
     )
-    target_link_libraries(ddastoys_cuda_objs PUBLIC "${CUDAOPTIMIZE_LIB}")
-    set(_cuda_link ddastoys_cuda_objs)
+    target_link_libraries(ddastoys_cuda_pso_objs PUBLIC "${CUDAOPTIMIZE_LIB}")
 endif()
 
 # =============================================================================
@@ -318,7 +334,7 @@ target_link_options(DDASFitHitUnpacker PRIVATE "LINKER:-z,defs")
 # Exact object lists mirror the Makefile.
 # =============================================================================
 
-# --- libFitEditorAnalytic.so ---
+# --- libFitEditorAnalytic.so (CPU serial fit) ---
 add_library(FitEditorAnalytic SHARED
     FitEditorAnalytic.cpp
     CFitEngine.cpp
@@ -330,7 +346,6 @@ target_link_libraries(FitEditorAnalytic
     PRIVATE
         ddastoys_config_objs
         ddastoys_analytic_funcs_objs
-        ${_cuda_link}
         DDASFormat
         GSL::gsl GSL::gslcblas
 )
@@ -365,6 +380,49 @@ if(DDASTOYS_MLINFERENCE)
             ${TORCH_LIBRARIES}
     )
     set_target_properties(FitEditorMLInference PROPERTIES CXX_STANDARD 14)
+endif()
+
+# --- Experimental CUDA plugins (analytic-style GPU fits) ---
+# Two additional analytic plugins, built alongside the normal CPU 
+# libFitEditorAnalytic (which is unaffected):
+#   libFitEditorCudaAnalytic.so : the same analytic editor/lmfit sources compiled
+#     with -DCUDA, so lmfit_analytic uses CudaFitEngine1/2 (GPU LM residual/
+#     Jacobian offload) instead of the serial engine. No new C++ code.
+#   libFitEditorCudaPSO.so : the FitEditorCudaPSO editor driving the libCudaOptimize
+#     swarm optimizer (cudafit1/2), always doing both single- and double-pulse
+#     fits with the trace kept resident on the GPU between them.
+if(DDASTOYS_CUDA_DEV)
+    # libFitEditorCudaAnalytic.so — analytic fit via the CUDA fit engine.
+    # No SerialFitEngineAnalytic.cpp: with -DCUDA, lmfit_analytic selects
+    # CudaFitEngine1/2 (provided by ddastoys_cuda_engine_objs).
+    add_library(FitEditorCudaAnalytic SHARED
+        FitEditorAnalytic.cpp
+        CFitEngine.cpp
+        lmfit_analytic.cpp
+    )
+    target_compile_definitions(FitEditorCudaAnalytic PRIVATE CUDA)
+    target_include_directories(FitEditorCudaAnalytic PRIVATE ${DAQINC} ${UFMTINC})
+    target_link_libraries(FitEditorCudaAnalytic
+        PRIVATE
+            ddastoys_config_objs
+            ddastoys_analytic_funcs_objs
+            ddastoys_cuda_engine_objs
+            DDASFormat
+            GSL::gsl GSL::gslcblas
+    )
+
+    # libFitEditorCudaPSO.so — swarm/PSO fit via libCudaOptimize.
+    add_library(FitEditorCudaPSO SHARED
+        FitEditorCudaPSO.cpp
+    )
+    target_include_directories(FitEditorCudaPSO PRIVATE ${DAQINC} ${UFMTINC})
+    target_link_libraries(FitEditorCudaPSO
+        PRIVATE
+            ddastoys_config_objs
+            ddastoys_analytic_funcs_objs
+            ddastoys_cuda_pso_objs
+            DDASFormat
+    )
 endif()
 
 # =============================================================================
@@ -416,11 +474,20 @@ set(_public_headers
     ${CMAKE_SOURCE_DIR}/lmfit_analytic.h
     ${CMAKE_SOURCE_DIR}/lmfit_template.h
 )
+
 if(DDASTOYS_MLINFERENCE)
     list(APPEND _public_headers
         ${CMAKE_SOURCE_DIR}/FitEditorMLInference.h
         ${CMAKE_SOURCE_DIR}/mlinference.h
     )
+endif()
+
+if(DDASTOYS_CUDA_DEV)
+    list(APPEND _public_headers
+        ${CMAKE_SOURCE_DIR}/FitEditorCudaPSO.h
+        ${CMAKE_SOURCE_DIR}/cudafit_analytic.cuh
+    )
+    list(APPEND _install_libs FitEditorCudaAnalytic FitEditorCudaPSO)
 endif()
 
 install(FILES ${_public_headers} DESTINATION include)
@@ -435,7 +502,7 @@ message(STATUS "  DAQROOT        : ${DAQROOT}")
 message(STATUS "  UFMTROOT       : ${UFMTROOT}")
 message(STATUS "  ROOT           : ${ROOT_VERSION}")
 message(STATUS "  GSL            : ${GSL_VERSION}")
-message(STATUS "  CUDA engine    : ${DDASTOYS_CUDA_DEV}")
+message(STATUS "  CUDA plugins   : ${DDASTOYS_CUDA_DEV}")
 message(STATUS "  ML inference   : ${DDASTOYS_MLINFERENCE}")
 message(STATUS "  TraceView      : ${DDASTOYS_TRACEVIEW}")
 message(STATUS "  Documentation  : ${DDASTOYS_DOCS}")
