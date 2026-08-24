@@ -32,7 +32,7 @@ git checkout <release-tag>
 
 DDASToys requires:
 
-- NSCLDAQ 12.2-000 or later
+- NSCLDAQ 12.1-000 or later
 - CMake 3.13 or later
 - CERN ROOT compatible with the NSCLDAQ installation being used
 - Qt 5.11 or later (for `traceview`)
@@ -118,12 +118,12 @@ When `DDASTOYS_CUDA=ON`, the maximum supported trace length compiled into the CU
 The default value is:
 
 ```text
-DDASTOYS_CUDA_MAXPOINTS=5000
+DDASTOYS_CUDA_MAXPOINTS=1024
 ```
 
 This value is compiled into the CUDA implementation as the `MAXPOINTS`
 macro and should be chosen to accommodate the longest traces expected
-during analysis.
+during analysis. The maximum allowed value is 1024.
 
 ### Installation
 
@@ -181,4 +181,5 @@ Some `traceview` options -- the loaded data file and the fitting method -- can b
 * 6.3-000 : Updated for ML model used in e23055 (Crider).
 * 6.3-001 : Optimizations for ML inference, added some simple inference profiling tools and option to build DDASToys with profiling output.
 * 6.4-000 : User provides trace length in fit configuration file. Remove dependence on template file; support per-channel trace templates. Allow "none" as model or template path.
-* 6.4-001 : Pin DDASFormat 2.0-001.
+* 6.4-001 : Pin DDASFormat 2.1-001.
+* 6.5-000 : CMake build environment.

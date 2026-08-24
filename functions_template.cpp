@@ -23,10 +23,6 @@
 #include "functions_template.h"
 
 #include <cmath>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-
 
 /**
  * @details

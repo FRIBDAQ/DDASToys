@@ -29,6 +29,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QVBoxLayout>
 
 #include "FitManager.h"
@@ -110,12 +111,10 @@ void QHitData::setFitMethod(QString method) {
   int idx = m_pFitMethod->findText(method, Qt::MatchFixedString);
 
   if (idx < 0) {
-    std::string msg =
+    throw std::invalid_argument(
         "Input '" + method.toStdString() +
-        "' does not "
-        "match any known fit method. Please ensure that the fitting "
-        "method is properly configured before continuing.";
-    throw std::invalid_argument(msg);
+        "' does not match any known fit method. Please ensure that the fitting "
+        "method is properly configured before continuing.");
   } else {
     m_pFitMethod->setCurrentIndex(idx);
   }
@@ -165,7 +164,9 @@ QGroupBox *QHitData::createFitBox() {
 
   QLabel *label = new QLabel("Method:");
   m_pFitMethod = new QComboBox;
-  m_pFitMethod->addItems({"Analytic", "Template", "ML_Inference"});
+  m_pFitMethod->addItem("Analytic", static_cast<int>(ANALYTIC));
+  m_pFitMethod->addItem("Template", static_cast<int>(TEMPLATE));
+  m_pFitMethod->addItem("ML_Inference", static_cast<int>(ML_INFERENCE));
   m_pFitMethod->setCurrentIndex(0);
   m_pPrintFit = new QPushButton("Print");
   m_pPrintFit->setEnabled(false);
@@ -234,6 +235,19 @@ void QHitData::updateHitData(const DDASFitHit &hit) {
 void QHitData::configureFit() {
   std::string method = m_pFitMethod->currentText().toStdString();
   m_pFitManager->configure(method);
+
+  // configure() may refuse the selection (e.g. Template with no template data),
+  // leaving the active method unchanged. Re-sync the combo box to the manager's
+  // real method so the GUI can never show a method that isn't in effect. Block
+  // signals so this reset doesn't re-enter configureFit(). We'll use the Qt
+  // method `findData()` to find the index of the current method in the combo
+  // box, which is stored as an integer in the user data for each item.
+  int idx =
+      m_pFitMethod->findData(static_cast<int>(m_pFitManager->getMethod()));
+  if (idx >= 0) {
+    QSignalBlocker blocker(m_pFitMethod); // Don't re-enter configureFit().
+    m_pFitMethod->setCurrentIndex(idx);
+  }
 }
 
 //____________________________________________________________________________

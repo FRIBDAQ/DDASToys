@@ -29,7 +29,6 @@
 #include <cstdint>
 #include <vector>
 
-
 /** @namespace ddastoys */
 namespace ddastoys {
 /** @namespace ddastoys::analyticfit */
@@ -187,24 +186,6 @@ double chiSquare2(double A1, double k1, double k2, double x1, double A2,
 double chiSquare2(double A1, double k1, double k2, double x1, double A2,
                   double k3, double k4, double x2, double C,
                   const std::vector<std::pair<uint16_t, uint16_t>> &points);
-/**
- * @brief Write a single trace to a file.
- *  @param filename  Where to write.
- *  @param title     Title string.
- *  @param trace     The trace data.
- */
-void writeTrace(const char *filename, const char *title,
-                const std::vector<uint16_t> &trace);
-/**
- * @brief Write two traces to a file.
- * @param filename Where to write.
- * @param title    Title string.
- * @param t1       The first trace.
- * @param t2       The second trace.
- */
-void writeTrace2(const char *filename, const char *title,
-                 const std::vector<uint16_t> &trace1,
-                 const std::vector<uint16_t> &trace2);
 
 /** @} */
 

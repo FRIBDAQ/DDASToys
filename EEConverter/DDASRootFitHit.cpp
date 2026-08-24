@@ -23,8 +23,6 @@
 
 #include "DDASRootFitHit.h"
 
-#include <iostream>
-
 #include "DDASFitHit.h"
 
 using namespace ddastoys;

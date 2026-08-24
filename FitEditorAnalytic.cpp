@@ -137,18 +137,21 @@ ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
     FitInfo *pFit = new FitInfo; // Have an extension tho may be zero.
 
     if (trace.size() > 0) { // Need a trace to fit
+      // Verify that the trace length is what the configuration file expects:
+      auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
+      if (trace.size() != expectedLength) {
+        std::cerr << "Trace length mismatch for crate " << crate << " slot "
+                  << slot << " channel " << chan << " expected "
+                  << expectedLength << " got " << trace.size() << std::endl;
+        throw std::length_error("Trace length mismatch");
+      }
+
       auto limits = m_pConfig->getFitLimits(crate, slot, chan);
       auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
       int classification = pulseCount(hit);
 
       if (classification) {
-
-#ifdef ENABLE_TIMING
-        // Track total time:
-        total = 0;
-#endif
-        // Bit 0 do single fit, bit 1 do double fit.
-
+        // Bit 0 do single fit, bit 1 do double fit:
         if (classification & 1) {
 #ifdef ENABLE_TIMING
           Timer timer;
@@ -159,13 +162,12 @@ ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
           total += timer.elapsed();
 #endif
         }
-        if (classification & 2) {
 
+        if (classification & 2) {
           // The single pulse fit guides the double pulse fit.
           // Note that lmfit2 will perform a single fit if no guess
           // is provided. If we have already fit the single pulse,
           // set the guess to those results.
-
           if (classification & 1) {
             fit1Info guess = pFit->s_extension.onePulseFit;
 #ifdef ENABLE_TIMING

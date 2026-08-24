@@ -72,6 +72,16 @@ void FitManager::configure(std::string method) {
   if (method == "Analytic") {
     setMethod(ANALYTIC);
   } else if (method == "Template") {
+    try {
+      m_pConfig->verifyTemplateData(); // Throws naming first channel with
+                                       // missing template data.
+    } catch (const std::invalid_argument &e) {
+      std::string msg(
+          "WARNING: Cannot configure trace viewer for template fitting: ");
+      msg += e.what();
+      issueWarning(msg);
+      return;
+    }
     setMethod(TEMPLATE);
   } else if (method == "ML_Inference") {
     setMethod(ML_INFERENCE);
@@ -191,6 +201,12 @@ unsigned FitManager::getHighFitLimit(const DDASFitHit &hit) {
   auto limits = m_pConfig->getFitLimits(crate, slot, channel);
 
   return limits.second;
+}
+
+//____________________________________________________________________________
+bool FitManager::isConfigured(const DDASFitHit &hit) {
+  return m_pConfig->fitChannel(hit.getCrateID(), hit.getSlotID(),
+                               hit.getChannelID());
 }
 
 ///

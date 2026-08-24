@@ -33,7 +33,6 @@
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_rng.h>
 
-
 #include "functions_analytic.h"
 #include "jacobian_analytic.h"
 
@@ -398,12 +397,18 @@ void ddastoys::analyticfit::lmfit1(fit1Info *pResult,
 
   std::vector<std::pair<uint16_t, uint16_t>> points;
   reduceTrace(points, low, high, trace, saturation);
+  unsigned npts = points.size();
+  if (npts < P1_PARAM_COUNT) {
+    pResult->fitStatus = GSL_EBADLEN;
+    pResult->iterations = 0;
+    return;
+  }
+
 #ifdef CUDA
   CudaFitEngine1 engine(points);
 #else
   SerialFitEngine1 engine(points);
 #endif
-  unsigned npts = points.size();
 
   const gsl_multifit_fdfsolver_type *method = gsl_multifit_fdfsolver_lmsder;
   gsl_multifit_fdfsolver *solver;
@@ -583,7 +588,12 @@ void ddastoys::analyticfit::lmfit2(fit2Info *pResult,
 
   std::vector<std::pair<uint16_t, uint16_t>> points;
   reduceTrace(points, low, high, trace, saturation);
-  int npts = points.size(); // Number of points to fit.
+  unsigned npts = points.size(); // Number of points to fit.
+  if (npts < P2_PARAM_COUNT) {
+    pResult->fitStatus = GSL_EBADLEN;
+    pResult->iterations = 0;
+    return;
+  }
 #ifdef CUDA
   CudaFitEngine2 engine(points);
 #else
@@ -640,7 +650,8 @@ void ddastoys::analyticfit::lmfit2(fit2Info *pResult,
     std::vector<uint16_t> reversed = trace;
     std::reverse(reversed.begin(), reversed.end());
     std::pair<unsigned, unsigned> revLimits;
-    revLimits.second = trace.size() - limits.first;
+    // Last valid trace index is trace.size() - 1:
+    revLimits.second = trace.size() - 1 - limits.first;
     revLimits.first = revLimits.second - (limits.second - limits.first);
     lmfit1(&fit1, reversed, revLimits, saturation);
 
@@ -906,7 +917,12 @@ void ddastoys::analyticfit::lmfit2fixedT(
 
   std::vector<std::pair<uint16_t, uint16_t>> points;
   reduceTrace(points, low, high, trace, saturation);
-  int npts = points.size(); // Number of points to fit.
+  unsigned npts = points.size(); // Number of points to fit.
+  if (npts < P2FT_PARAM_COUNT) {
+    pResult->fitStatus = GSL_EBADLEN;
+    pResult->iterations = 0;
+    return;
+  }
 
   // Set up basic solver stuff:
 
@@ -962,7 +978,8 @@ void ddastoys::analyticfit::lmfit2fixedT(
     std::vector<uint16_t> reversed = trace;
     std::reverse(reversed.begin(), reversed.end());
     std::pair<unsigned, unsigned> revLimits;
-    revLimits.second = trace.size() - limits.first;
+    // Last valid trace index is trace.size() - 1:
+    revLimits.second = trace.size() - 1 - limits.first;
     revLimits.first = revLimits.second - (limits.second - limits.first);
     lmfit1(&fit1, reversed, revLimits, saturation);
 

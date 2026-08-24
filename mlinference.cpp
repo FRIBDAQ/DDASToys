@@ -187,6 +187,11 @@ void ddastoys::mlinference::performInference(
   // Preprocess, store normalization constants for later:
 
   unsigned baselineSamples = 15; // How many samples for baseline removal?
+  if (trace.size() <= baselineSamples) {
+    throw std::runtime_error(
+        std::to_string(trace.size()) + "-sample trace too short for " +
+        std::to_string(baselineSamples) + "-sample baseline removal");
+  }
   auto preprocessed = preprocessInput(trace, baselineSamples);
 
   // preprocessed elements are torch::Tensors. We extract the values for

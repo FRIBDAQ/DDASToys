@@ -48,6 +48,7 @@ namespace mlinference {
  * @param[in] saturation ADC saturation value. Only samples below the
  *   saturation threshold are used to extract the pulse parameters.
  * @param[in] module References the inference model for this channel.
+ * @throw std::runtime_error If the trace is too short for baseline removal.
  */
 void performInference(FitInfo *pResult, std::vector<uint16_t> &trace,
                       unsigned saturation, torch::jit::script::Module &module);

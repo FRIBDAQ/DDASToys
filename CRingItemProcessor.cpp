@@ -26,8 +26,6 @@
 #include <ctime>
 #include <iostream>
 #include <map>
-#include <memory>
-#include <string>
 
 #include <CDataFormatItem.h>
 #include <CGlomParameters.h>

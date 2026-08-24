@@ -25,10 +25,7 @@
 #include "functions_analytic.h"
 
 #include <cmath>
-#include <fstream>
 #include <iostream>
-#include <stdexcept>
-
 
 /**
  * @details
@@ -236,28 +233,4 @@ double ddastoys::analyticfit::chiSquare2(
   }
 
   return result;
-}
-
-void ddastoys::analyticfit::writeTrace(const char *filename, const char *title,
-                                       const std::vector<uint16_t> &trace) {
-  std::ofstream o(filename);
-  o << title << std::endl;
-  for (size_t i = 0; i < trace.size(); i++) {
-    o << i << " " << trace[i] << std::endl;
-  }
-}
-
-/**
- * @note The traces must be the same length.
- */
-void ddastoys::analyticfit::writeTrace2(const char *filename, const char *title,
-                                        const std::vector<uint16_t> &t1,
-                                        const std::vector<uint16_t> &t2) {
-  std::ofstream o(filename);
-  o << title << std::endl;
-  for (size_t i = 0; i < t1.size(); i++) {
-    uint16_t diff = t1[i] - t2[i];
-    o << i << " " << t1[i] << " " << t2[i] << " " << diff * diff / t1[i]
-      << std::endl;
-  }
 }

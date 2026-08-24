@@ -25,7 +25,6 @@
 #include "DDASFitHitUnpacker.h"
 
 #include <stdexcept>
-#include <string>
 
 #include <DataFormat.h>
 
@@ -56,8 +55,7 @@ using namespace ufmt;
  *     4) Anything else - we don't know how to do with and fail with an
  *        error message.
  */
-const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
-                                                 DDASFitHit &hit) {
+void ddastoys::DDASFitHitUnpacker::decode(const void *p, DDASFitHit &hit) {
   // Find the ring item body:
 
   const RingItem *pItem = reinterpret_cast<const RingItem *>(p);
@@ -75,11 +73,19 @@ const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
 
   // Generate a pointer to off the end of the body. Note bodySize is bytes:
 
+  if (pItem->s_header.s_size < sizeof(RingItemHeader) + bodyHeaderSize)
+    throw std::length_error("Ring item is too small for its body header");
+
   uint32_t bodySize =
       pItem->s_header.s_size - bodyHeaderSize - sizeof(RingItemHeader);
   const uint8_t *pEnd = pBody + bodySize;
 
   // Get the hit data and decide what to do with it:
+
+  if (bodySize < sizeof(uint32_t)) {
+    throw std::length_error(
+        "Ring item body too small to contain a hit size word");
+  }
 
   const uint32_t *pHitSize = reinterpret_cast<const uint32_t *>(pBody);
   uint32_t bodyWords = *pHitSize;
@@ -89,14 +95,14 @@ const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
     // This is just an ordinary hit:
     unpack(reinterpret_cast<const uint32_t *>(pBody),
            reinterpret_cast<const uint32_t *>(pEnd), hit);
-  } else if ((bodyBytes + sizeof(HitExtensionLegacy)) == bodySize) {
+  } else if ((bodyBytes + sizeof(FitInfoLegacy)) == bodySize) {
     // Hit with old-style fits:
-    pEnd -= sizeof(HitExtensionLegacy); // Also points to extension.
+    pEnd -= sizeof(FitInfoLegacy); // Also points to extension.
     unpack(reinterpret_cast<const uint32_t *>(pBody),
            reinterpret_cast<const uint32_t *>(pEnd), hit);
     // Convert to modern extension and set it:
-    HitExtension ext(*(reinterpret_cast<const HitExtensionLegacy *>(pEnd)));
-    hit.setExtension(ext);
+    hit.setExtension(
+        reinterpret_cast<const FitInfoLegacy *>(pEnd)->s_extension);
   } else if (bodyBytes + sizeof(uint32_t) == bodySize) {
     // There's no hit extension actually -- it's a null extension:
     pEnd -= sizeof(uint32_t);
@@ -110,8 +116,6 @@ const void *ddastoys::DDASFitHitUnpacker::decode(const void *p,
     hit.setExtension(reinterpret_cast<const FitInfo *>(pEnd)->s_extension);
   } else {
     throw std::length_error(
-        "Inconsistent event size for DAQ::DDAS::DDASHit or extended hit");
+        "Inconsistent event size for ddasfmt::DDASHit or extended hit");
   }
-
-  return nullptr; // Should not get here.
 }

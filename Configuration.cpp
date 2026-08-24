@@ -26,6 +26,15 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <tuple>
+
+// So we're not using magic numbers for the global index:
+static constexpr unsigned CHANNEL_BITS =
+    5; //!< Number of bits for channel number, [0, 31]
+static constexpr unsigned SLOT_BITS =
+    4; //!< Number of bits for slot number, [0, 15]
+static constexpr unsigned MAX_CHANNEL = 31; //!< Maximum channel number.
+static constexpr unsigned MAX_SLOT = 15;    //!< Maximum slot number.
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local trim functions
@@ -81,9 +90,8 @@ void ddastoys::Configuration::readConfigFile() {
 
   std::ifstream f(filename);
   if (f.fail()) {
-    std::string msg("Unable to open the configuration file: ");
-    msg += filename;
-    throw std::invalid_argument(msg);
+    throw std::invalid_argument("Unable to open the configuration file: " +
+                                filename);
   }
 
   while (!f.eof()) {
@@ -99,16 +107,33 @@ void ddastoys::Configuration::readConfigFile() {
           saturation >> std::quoted(modelPath) >> std::quoted(templatePath);
 
       if (sline.fail()) {
-        std::string msg("Error processing line in configuration file '");
-        msg += originalline;
-        msg += "'";
-        throw std::invalid_argument(msg);
+        throw std::invalid_argument(
+            "Error processing line in configuration file '" + originalline +
+            "'");
+      }
+
+      if (length == 0) {
+        throw std::invalid_argument(
+            "Invalid trace length in configuration file '" + originalline +
+            "' length = 0");
+      }
+
+      if (low >= high) {
+        throw std::invalid_argument(
+            "Invalid fit limits in configuration file '" + originalline +
+            "' low >= high");
+      }
+
+      if (high >= length) {
+        throw std::invalid_argument(
+            "Invalid fit limits in configuration file '" + originalline +
+            "' high >= trace length");
       }
 
       // Compute the channel index, load template data, and add the
       // channel to the map:
 
-      unsigned index = channelIndex(crate, slot, channel);
+      unsigned index = computeGlobalIndex(crate, slot, channel);
       std::pair<unsigned, unsigned> limits(low, high);
       auto tup = readTemplateFile(templatePath, length);
       unsigned align = std::get<0>(tup);
@@ -138,9 +163,7 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
 
   std::ifstream f(path);
   if (f.fail()) {
-    std::string errmsg("Unable to open the template file: ");
-    errmsg += path;
-    throw std::invalid_argument(errmsg);
+    throw std::invalid_argument("Unable to open the template file: " + path);
   }
 
   int nread = 0;
@@ -162,10 +185,8 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
       }
 
       if (sline.fail()) {
-        std::string errmsg("Error processing line in template file '");
-        errmsg += originalline;
-        errmsg += "'";
-        throw std::invalid_argument(errmsg);
+        throw std::invalid_argument("Error processing line in template file '" +
+                                    originalline + "'");
       }
 
       nread++;
@@ -176,22 +197,18 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
   // points throw an exception:
 
   if (data.size() != npts) {
-    std::string errmsg("Template configfile thinks the trace is ");
-    errmsg += std::to_string(npts);
-    errmsg += " samples but read in ";
-    errmsg += std::to_string(data.size());
-    throw std::length_error(errmsg); // I guess this is the right one?
+    throw std::length_error("Template configfile thinks the trace is " +
+                            std::to_string(npts) + " samples but read in " +
+                            std::to_string(data.size()));
   }
 
   // Ensure the alignment point is contained in the trace. Note that because
   // m_alignPoint is an unsigned type it cannot be negative:
 
   if (align >= data.size()) {
-    std::string errmsg("Invalid template alignment point ");
-    errmsg += std::to_string(align);
-    errmsg += " >= template size ";
-    errmsg += std::to_string(data.size());
-    throw std::invalid_argument(errmsg);
+    throw std::invalid_argument("Invalid template alignment point " +
+                                std::to_string(align) + " >= template size " +
+                                std::to_string(data.size()));
   }
 
   f.close();
@@ -207,39 +224,39 @@ ddastoys::Configuration::readTemplateFile(std::string path, unsigned npts) {
  */
 bool ddastoys::Configuration::fitChannel(unsigned crate, unsigned slot,
                                          unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+  auto index = computeGlobalIndex(crate, slot, channel);
 
   return (m_fitChannels.find(index) != m_fitChannels.end());
 }
 
 unsigned ddastoys::Configuration::getTraceLength(unsigned crate, unsigned slot,
-                                                 unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+                                                 unsigned channel) const {
+  auto index = computeGlobalIndex(crate, slot, channel);
 
-  return m_fitChannels[index].s_length;
+  return m_fitChannels.at(index).s_length;
 }
 
 std::pair<unsigned, unsigned>
 ddastoys::Configuration::getFitLimits(unsigned crate, unsigned slot,
-                                      unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+                                      unsigned channel) const {
+  auto index = computeGlobalIndex(crate, slot, channel);
 
-  return m_fitChannels[index].s_limits;
+  return m_fitChannels.at(index).s_limits;
 }
 
 unsigned ddastoys::Configuration::getSaturationValue(unsigned crate,
                                                      unsigned slot,
-                                                     unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+                                                     unsigned channel) const {
+  auto index = computeGlobalIndex(crate, slot, channel);
 
-  return m_fitChannels[index].s_saturation;
+  return m_fitChannels.at(index).s_saturation;
 }
 
 std::string ddastoys::Configuration::getModelPath(unsigned crate, unsigned slot,
-                                                  unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+                                                  unsigned channel) const {
+  auto index = computeGlobalIndex(crate, slot, channel);
 
-  return m_fitChannels[index].s_modelPath;
+  return m_fitChannels.at(index).s_modelPath;
 }
 
 /**
@@ -249,7 +266,7 @@ std::string ddastoys::Configuration::getModelPath(unsigned crate, unsigned slot,
  * in a different order than how they appear in the configuration file.
  * It is the responsibilty of the caller to deal with this.
  */
-std::vector<std::string> ddastoys::Configuration::getModelList() {
+std::vector<std::string> ddastoys::Configuration::getModelList() const {
   std::vector<std::string> models;
   for (const auto &entry : m_fitChannels) {
     models.push_back(entry.second.s_modelPath);
@@ -276,52 +293,68 @@ std::vector<std::string> ddastoys::Configuration::getModelList() {
  * All channels using a particular model are expected to have the same trace
  * length, so we can simply search for the first instance matching the path
  */
-unsigned ddastoys::Configuration::getModelShape(std::string path) {
+unsigned ddastoys::Configuration::getModelShape(std::string path) const {
   auto it = std::find_if(
       m_fitChannels.begin(), m_fitChannels.end(),
       [&path](const auto &p) { return p.second.s_modelPath == path; });
   if (it != m_fitChannels.end()) {
     return it->second.s_length;
   } else {
-    std::string msg("No matching channels for model path '");
-    msg += path + "'";
-    throw std::invalid_argument(msg);
+    throw std::invalid_argument("No matching channels for model path '" + path +
+                                "'");
   }
 }
 
-std::vector<double> ddastoys::Configuration::getTemplate(unsigned crate,
-                                                         unsigned slot,
-                                                         unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+std::vector<double>
+ddastoys::Configuration::getTemplate(unsigned crate, unsigned slot,
+                                     unsigned channel) const {
+  auto index = computeGlobalIndex(crate, slot, channel);
 
-  return m_fitChannels[index].s_template;
+  return m_fitChannels.at(index).s_template;
 }
 
-unsigned ddastoys::Configuration::getTemplateAlignPoint(unsigned crate,
-                                                        unsigned slot,
-                                                        unsigned channel) {
-  auto index = channelIndex(crate, slot, channel);
+unsigned
+ddastoys::Configuration::getTemplateAlignPoint(unsigned crate, unsigned slot,
+                                               unsigned channel) const {
+  auto index = computeGlobalIndex(crate, slot, channel);
 
-  return m_fitChannels[index].s_alignPoint;
+  return m_fitChannels.at(index).s_alignPoint;
+}
+
+void ddastoys::Configuration::verifyTemplateData() const {
+  for (const auto &c : m_fitChannels) {
+    if (c.second.s_template.empty()) {
+      unsigned int crate, slot, channel;
+      std::tie(crate, slot, channel) = decodeGlobalIndex(c.first);
+      std::string msg("No template for channel ");
+      msg += std::to_string(crate) + "/" + std::to_string(slot) + "/" +
+             std::to_string(channel);
+      msg += " but template fitting was requested."
+             " Provide a template file for this channel in the fit"
+             " configuration (its template path is \"none\" or empty).";
+      throw std::invalid_argument(msg);
+    }
+  }
 }
 
 ///
 // Private methods
 //
 
-std::string ddastoys::Configuration::getFileNameFromEnv(const char *envname) {
+std::string
+ddastoys::Configuration::getFileNameFromEnv(const char *envname) const {
   const char *pFilename = getenv(envname);
   if (!pFilename) {
-    std::string msg("No translation for environment variable: ");
-    msg += envname;
-    msg += " Point that to the proper configuration file and re-run";
-    throw std::invalid_argument(msg);
+    throw std::invalid_argument(
+        "No translation of environment variable: " + std::string(envname) +
+        " Point that to the proper configuration file and "
+        "re-run");
   }
 
   return std::string(pFilename);
 }
 
-std::string ddastoys::Configuration::isComment(std::string line) {
+std::string ddastoys::Configuration::isComment(std::string line) const {
   trim(line); // Modifies it
   if (line[0] == '#')
     return std::string("");
@@ -329,7 +362,31 @@ std::string ddastoys::Configuration::isComment(std::string line) {
   return line;
 }
 
-unsigned ddastoys::Configuration::channelIndex(unsigned crate, unsigned slot,
-                                               unsigned channel) {
-  return (crate << 8) | (slot << 4) | channel;
+unsigned ddastoys::Configuration::computeGlobalIndex(unsigned crate,
+                                                     unsigned slot,
+                                                     unsigned channel) const {
+  if (slot > MAX_SLOT) {
+    throw std::invalid_argument("Invalid slot number " + std::to_string(slot) +
+                                " > " + std::to_string(MAX_SLOT));
+  }
+  if (channel > MAX_CHANNEL) {
+    throw std::invalid_argument("Invalid channel number " +
+                                std::to_string(channel) + " > " +
+                                std::to_string(MAX_CHANNEL));
+  }
+  return (crate << (CHANNEL_BITS + SLOT_BITS)) | (slot << CHANNEL_BITS) |
+         channel;
+}
+
+/**
+ * @details
+ * Inverse of computeGlobalIndex.
+ */
+std::tuple<unsigned, unsigned, unsigned>
+ddastoys::Configuration::decodeGlobalIndex(unsigned index) const {
+  unsigned crate = (index >> (CHANNEL_BITS + SLOT_BITS));
+  unsigned slot = (index >> CHANNEL_BITS) & MAX_SLOT;
+  unsigned channel = index & MAX_CHANNEL;
+
+  return std::make_tuple(crate, slot, channel);
 }

@@ -22,7 +22,6 @@
 
 #include "FitEditorTemplate.h"
 
-#include <fstream>
 #include <iostream>
 
 #include <DDASHit.h>
@@ -49,6 +48,8 @@ static double total(0);
 FitEditorTemplate::FitEditorTemplate() : m_pConfig(new Configuration) {
   try {
     m_pConfig->readConfigFile();
+    m_pConfig->verifyTemplateData(); // Throws naming first channel with missing
+                                     // template data.
   } catch (std::exception &e) {
     std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
     exit(EXIT_FAILURE);
@@ -136,6 +137,15 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
     FitInfo *pFit = new FitInfo; // Have an extension though may be zero
 
     if (trace.size() > 0) { // Need a trace to fit
+      // Verify that the trace length is what the configuration file expects:
+      auto expectedLength = m_pConfig->getTraceLength(crate, slot, chan);
+      if (trace.size() != expectedLength) {
+        std::cerr << "Trace length mismatch for crate " << crate << " slot "
+                  << slot << " channel " << chan << " expected "
+                  << expectedLength << " got " << trace.size() << std::endl;
+        throw std::length_error("Trace length mismatch");
+      }
+
       auto limits = m_pConfig->getFitLimits(crate, slot, chan);
       auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
       auto templateData = m_pConfig->getTemplate(crate, slot, chan);
@@ -143,14 +153,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
       int classification = pulseCount(hit);
 
       if (classification) {
-
-#ifdef ENABLE_TIMING
-        // Track total time:
-        total = 0;
-#endif
-
-        // Bit 0 do single fit, bit 1 do double fit.
-
+        // Bit 0 do single fit, bit 1 do double fit:
         if (classification & 1) {
 #ifdef ENABLE_TIMING
           Timer timer;
@@ -163,12 +166,10 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
         }
 
         if (classification & 2) {
-
           // The single pulse fit guides the double pulse fit.
           // Note that lmfit2 will perform a single fit if no guess
           // is provided. If we have already fit the single pulse,
           // set the guess to those results.
-
           if (classification & 1) {
             fit1Info guess = pFit->s_extension.onePulseFit;
 #ifdef ENABLE_TIMING
