@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 
 project(DDASToys VERSION 6.5.0 LANGUAGES CXX C)
 
+enable_testing()
+
 # =============================================================================
 # Options
 # =============================================================================
@@ -443,7 +445,6 @@ if(DDASTOYS_DOCS)
     add_subdirectory(Docs)
 endif()
 
-enable_testing()
 if(CPPUNIT_FOUND)
     add_subdirectory(tests)
 endif()
