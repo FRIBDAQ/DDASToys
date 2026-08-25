@@ -164,7 +164,7 @@ ddastoys::FitEditorCudaPSO::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
                             sat, /*traceIsLoaded=*/true);
 #ifdef ENABLE_TIMING
       stats.addData(timer.elapsed());
-      if (stats.size() == 10000) {
+      if (stats.size() == 1000) {
         stats.compute();
         stats.print("======== CUDA PSO stats ========");
       }

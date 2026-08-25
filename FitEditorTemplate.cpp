@@ -194,7 +194,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
         }
 #ifdef ENABLE_TIMING
         stats.addData(total);
-        if (stats.size() == 10000) {
+        if (stats.size() == 1000) {
           stats.compute();
           stats.print("======== Template fit stats ========");
         }
