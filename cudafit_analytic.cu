@@ -553,7 +553,7 @@ void ddastoys::analyticfit::cudafit2(
   // Init once, reuse:
   static CudaOptimize::DE_Optimizer *opt = nullptr;
   if (!opt) {
-    opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 128);
+    opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 1, 128);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
