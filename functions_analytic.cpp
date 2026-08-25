@@ -146,14 +146,15 @@ double ddastoys::analyticfit::chiSquare1(double A1, double k1, double k2,
     double y = trace[i];
     double pulse = singlePulse(A1, k1, k2, x1, C, x); // Fitted pulse.
     double diff = y - pulse;
-    if (y != 0.0) {
-      result += (diff / y) * diff; // This order may control overflows
-      if (std::fpclassify(result) == FP_ZERO)
-        result = 0.0;
-    }
+    result += diff * diff;
+    // if (y != 0.0) {
+    //   result += (diff / y) * diff; // This order may control overflows
+    //   if (std::fpclassify(result) == FP_ZERO)
+    //     result = 0.0;
+    // }
   }
 
-  return result;
+  return result / (high - low + 1 - 5);
 }
 
 /**
@@ -170,14 +171,15 @@ double ddastoys::analyticfit::chiSquare1(
     double y = points[i].second;
     double pulse = singlePulse(A1, k1, k2, x1, C, x); // Fitted pulse.
     double diff = y - pulse;
-    if (y != 0.0) {
-      result += (diff / y) * diff; // This order may control overflows
-      if (std::fpclassify(result) == FP_ZERO)
-        result = 0.0;
-    }
+    result += diff * diff;
+    // if (y != 0.0) {
+    //   result += (diff / y) * diff; // This order may control overflows
+    //   if (std::fpclassify(result) == FP_ZERO)
+    //     result = 0.0;
+    // }
   }
 
-  return result;
+  return result / (points.size() - 5);
 }
 
 /**
@@ -199,14 +201,15 @@ double ddastoys::analyticfit::chiSquare2(double A1, double k1, double k2,
     double y = trace[i];
     double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
     double diff = y - pulse;
-    if (y != 0.0) {
-      result += (diff / y) * diff; // This order may control overflows
-      if (std::fpclassify(result) == FP_ZERO)
-        result = 0.0;
-    }
+    result += diff * diff;
+    // if (y != 0.0) {
+    //   result += (diff / y) * diff; // This order may control overflows
+    //   if (std::fpclassify(result) == FP_ZERO)
+    //     result = 0.0;
+    // }
   }
 
-  return result;
+  return result / (high - low + 1 - 9);
 }
 
 /**
@@ -225,12 +228,13 @@ double ddastoys::analyticfit::chiSquare2(
     double y = points[i].second;
     double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
     double diff = y - pulse;
-    if (y != 0.0) {
-      result += (diff / y) * diff; // This order may control overflows
-      if (std::fpclassify(result) == FP_ZERO)
-        result = 0.0;
-    }
+    result += diff * diff;
+    // if (y != 0.0) {
+    //   result += (diff / y) * diff; // This order may control overflows
+    //   if (std::fpclassify(result) == FP_ZERO)
+    //     result = 0.0;
+    // }
   }
 
-  return result;
+  return result / (points.size() - 9);
 }
