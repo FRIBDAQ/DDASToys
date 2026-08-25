@@ -340,11 +340,12 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
       int ipt = ptno + swarm * nPoints;
       float x = pXcoords[ipt];
       float y = pYcoords[ipt];
+      float w = pWeights[ipt];
 
       // Ensure that the Neyman chisq weight is valid
       if (y != 0.0) {
-        sqdiff[ptno] = chiFitness1(pSolutions + (solno * solStride), x, y,
-                                   1.0 /*/ y*/); // Unreduced
+        sqdiff[ptno] =
+            chiFitness1(pSolutions + (solno * solStride), x, y, w); // Unreduced
       } else { // No contribution total chisq if no data.
         sqdiff[ptno] = 0.0;
       }
@@ -363,7 +364,7 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
       for (int i = 0; i < nPoints; i++) {
         pFitnesses[solno] += sqdiff[i];
       }
-      pFitnesses[solno] /= (nPoints - nParams); // reduced
+      pFitnesses[solno] /= (nPoints - nParams); // Reduced
       if (!isfinite(pFitnesses[solno]))
         pFitnesses[solno] = FLT_MAX;
     }
@@ -405,11 +406,12 @@ __global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
       int ipt = ptno + swarm * nPoints;
       float x = pXcoords[ipt];
       float y = pYcoords[ipt];
+      float w = pWeights[ipt];
 
       // Validate weight for Neyman chisq
       if (y != 0.0) {
-        sqdiff[ptno] = chiFitness2(pSolutions + (solno * solStride), x, y,
-                                   1.0 /*/ y*/); // Unreduced
+        sqdiff[ptno] =
+            chiFitness2(pSolutions + (solno * solStride), x, y, w); // Unreduced
       } else {
         sqdiff[ptno] = 0.0;
       }
@@ -425,7 +427,7 @@ __global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
       for (int i = 0; i < nPoints; i++) {
         pFitnesses[solno] += sqdiff[i];
       }
-      pFitnesses[solno] /= (nPoints - nParams); // reduced
+      pFitnesses[solno] /= (nPoints - nParams); // Reduced
       if (!isfinite(pFitnesses[solno]))
         pFitnesses[solno] = FLT_MAX;
     }
