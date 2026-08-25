@@ -504,12 +504,12 @@ void ddastoys::analyticfit::cudafit1(
   // Init once, reuse:
   static CudaOptimize::DE_Optimizer *opt = nullptr;
   if (!opt) {
-    opt = new CudaOptimize::DE_Optimizer(&h_fitSingle, P1_NPARAMS, 1, 128);
+    opt = new CudaOptimize::DE_Optimizer(&h_fitSingle, P1_NPARAMS, 1, 64);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
-    opt->setGenerations(500);
-    opt->setStoppingFitness(2.0);
+    opt->setGenerations(300);
+    opt->setStoppingFitness(10.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
@@ -553,12 +553,12 @@ void ddastoys::analyticfit::cudafit2(
   // Init once, reuse:
   static CudaOptimize::DE_Optimizer *opt = nullptr;
   if (!opt) {
-    opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 1, 128);
+    opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 128);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(500);
-    opt->setStoppingFitness(2.0);
+    opt->setStoppingFitness(10.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
