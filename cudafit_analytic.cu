@@ -500,7 +500,7 @@ void ddastoys::analyticfit::cudafit1(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(300);
-    opt->setStoppingFitness(50000.0);
+    opt->setStoppingFitness(5000.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
@@ -549,7 +549,7 @@ void ddastoys::analyticfit::cudafit2(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(500);
-    opt->setStoppingFitness(50000.0);
+    opt->setStoppingFitness(5000.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
