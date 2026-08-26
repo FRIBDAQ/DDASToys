@@ -30,13 +30,13 @@
 #include "Configuration.h"
 #include "lmfit_template.h"
 
+using namespace ddasfmt;
+using namespace ddastoys;
+
 #ifdef ENABLE_TIMING
 #include "profiling.h"
 static Stats stats;
 #endif
-
-using namespace ddasfmt;
-using namespace ddastoys;
 
 /**
  * @details
