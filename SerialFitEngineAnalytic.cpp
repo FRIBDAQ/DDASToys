@@ -242,9 +242,9 @@ void ddastoys::analyticfit::SerialFitEngine1::residuals(const gsl_vector *p,
   size_t npts = x.size();
   for (size_t i = 0; i < npts; i++) {
     double xi = x[i];
-    double yactual = y[i];
-    double fitted = singlePulse(A, k1, k2, x1, C, xi);
-    gsl_vector_set(r, i, (fitted - yactual));
+    double yi = y[i];
+    double p = singlePulse(A, k1, k2, x1, C, xi);
+    gsl_vector_set(r, i, (p - yi));
   }
 }
 
@@ -278,10 +278,10 @@ void ddastoys::analyticfit::SerialFitEngine2::residuals(const gsl_vector *p,
 
   size_t npts = x.size();
   for (size_t i = 0; i < npts; i++) {
-    double xc = x[i];
-    double yc = y[i];
-    double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xc);
-    gsl_vector_set(r, i, (p - yc));
+    double xi = x[i];
+    double yi = y[i];
+    double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xi);
+    gsl_vector_set(r, i, (p - yi));
   }
 }
 
@@ -306,39 +306,39 @@ void ddastoys::analyticfit::SerialFitEngine2::jacobian(const gsl_vector *p,
 
   size_t npts = x.size();
   for (size_t i = 0; i < npts; i++) {
-    double xc = x[i];
+    double xi = x[i];
 
-    double erise1 = exp(-k1 * (xc - x1));
-    double efall1 = exp(-k2 * (xc - x1));
+    double erise1 = exp(-k1 * (xi - x1));
+    double efall1 = exp(-k2 * (xi - x1));
 
-    double erise2 = exp(-k3 * (xc - x2));
-    double efall2 = exp(-k4 * (xc - x2));
+    double erise2 = exp(-k3 * (xi - x2));
+    double efall2 = exp(-k4 * (xi - x2));
 
     gsl_matrix_set(J, i, P2A1_INDEX,
-                   dp1dA(k1, k2, x1, xc, 1.0, erise1, efall1));
+                   dp1dA(k1, k2, x1, xi, 1.0, erise1, efall1));
     gsl_matrix_set(J, i, P2K1_INDEX,
-                   dp1dk1(A1, k1, k2, x1, xc, 1.0, erise1, efall1));
+                   dp1dk1(A1, k1, k2, x1, xi, 1.0, erise1, efall1));
     gsl_matrix_set(J, i, P2K2_INDEX,
-                   dp1dk2(A1, k1, k2, x1, xc, 1.0, erise1, efall1));
+                   dp1dk2(A1, k1, k2, x1, xi, 1.0, erise1, efall1));
     gsl_matrix_set(J, i, P2X1_INDEX,
-                   dp1dx1(A1, k1, k2, x1, xc, 1.0, erise1, efall1));
+                   dp1dx1(A1, k1, k2, x1, xi, 1.0, erise1, efall1));
 
-    // For pulse 2 elements:  A1->A2, k1 -> k3, k2 -> k4, x1 -> x2:
+    // For pulse 2 elements:  A1 -> A2, k1 -> k3, k2 -> k4, x1 -> x2:
 
     gsl_matrix_set(J, i, P2A2_INDEX,
-                   dp1dA(k3, k4, x2, xc, 1.0, erise2, efall2));
+                   dp1dA(k3, k4, x2, xi, 1.0, erise2, efall2));
     gsl_matrix_set(J, i, P2K3_INDEX,
-                   dp1dk1(A2, k3, k4, x2, xc, 1.0, erise2, efall2));
+                   dp1dk1(A2, k3, k4, x2, xi, 1.0, erise2, efall2));
     gsl_matrix_set(J, i, P2K4_INDEX,
-                   dp1dk2(A2, k3, k4, x2, xc, 1.0, erise2, efall2));
+                   dp1dk2(A2, k3, k4, x2, xi, 1.0, erise2, efall2));
     gsl_matrix_set(J, i, P2X2_INDEX,
-                   dp1dx1(A2, k3, k4, x2, xc, 1.0, erise2, efall2));
+                   dp1dx1(A2, k3, k4, x2, xi, 1.0, erise2, efall2));
 
     // Don't forget the constant term:
 
     gsl_matrix_set(
         J, i, P2C_INDEX,
-        dp1dC(A1, k1, k2, x1, xc,
+        dp1dC(A1, k1, k2, x1, xi,
               1.0)); // Need to make the function call if weights are != 1
   }
 }
