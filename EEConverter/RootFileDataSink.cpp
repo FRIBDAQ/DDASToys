@@ -37,7 +37,6 @@
 #include "DDASRootFitEvent.h"
 #include "DDASRootFitHit.h"
 
-
 using namespace ufmt;
 using namespace ddastoys;
 

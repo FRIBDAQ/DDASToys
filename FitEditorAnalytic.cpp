@@ -112,9 +112,9 @@ ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
 #ifdef ENABLE_TIMING
   double total = 0;
 #endif
-  
+
   std::vector<CBuiltRingItemEditor::BodySegment> result;
-  
+
   // Regardless we want a segment that includes the hit. Note that the first
   // uint32_t of the body is the size of the standard hit part in
   // uint16_t words.
