@@ -36,7 +36,6 @@ using namespace ddastoys;
 
 #ifdef ENABLE_TIMING
 static Stats stats;
-static double total(0);
 #endif
 
 /**
@@ -110,6 +109,10 @@ FitEditorTemplate::~FitEditorTemplate() { delete m_pConfig; }
 std::vector<CBuiltRingItemEditor::BodySegment>
 FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
                               size_t bodySize, void *pBody) {
+#ifdef ENABLE_TIMING
+  double total = 0;
+#endif
+    
   std::vector<CBuiltRingItemEditor::BodySegment> result;
 
   // Regardless we want a segment that includes the hit. Note that the first

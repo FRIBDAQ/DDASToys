@@ -26,8 +26,10 @@
 
 #include "cudafit_analytic.cuh"
 
+#include <algorithm>
 #include <cfloat>
 #include <ctime>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -56,6 +58,13 @@ static const unsigned K4 = 7;
 static const unsigned X2 = 8;
 
 static const unsigned P2_NPARAMS = 9;
+
+// Some config options for estimating stopping floor for PSO:
+
+static const int BASELINE_SAMPLES = 15;
+static const double f_s = 0.013; // Fractional residual of single pulse height
+static const double f_d = 0.006; // Fractional residual of double pulse height
+static const double k = 1.25;
 
 /**
  * Here's why we can't have good things (threadable). The libcudaoptimizer
@@ -498,21 +507,35 @@ void ddastoys::analyticfit::cudafit1(
     opt = new CudaOptimize::DE_Optimizer(&h_fitSingle, P1_NPARAMS, 1, 64);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
-                                          CudaOptimize::TERMINATE_FIT));
+					  CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(300);
-    opt->setStoppingFitness(5000.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
   }
+
+  double mean = 0.0;
+  double var = 0.0;
+  for (int i = 0; i < BASELINE_SAMPLES; i++) {
+      double y = trace[i];
+      mean += y;
+      var += y * y;
+  }
+  mean /= BASELINE_SAMPLES;
+  var = var/BASELINE_SAMPLES - mean * mean;
+  double A_est   = *std::max_element(trace.begin(), trace.end()) - mean;
+  double floor = var + (f_s * A_est) * (f_s * A_est);
+
+  opt->setStoppingFitness(k * floor);
+  
   opt->setBounds(0, A1, make_float2(saturation * 10, 0.0));
-  opt->setBounds(0, K1, make_float2(20, 0.0));
-  opt->setBounds(0, K2, make_float2(1.0, 0.0));
+  opt->setBounds(0, K1, make_float2(50, 0.0));
+  opt->setBounds(0, K2, make_float2(2.0, 0.0));
   opt->setBounds(0, C, make_float2(saturation / 4.0, 0.0));
   opt->setBounds(0, X1, make_float2((float)limits.second, (float)limits.first));
 
   opt->optimize();
-
+  
   if (freeTraceWhenDone)
     freeTrace();
 
@@ -547,19 +570,33 @@ void ddastoys::analyticfit::cudafit2(
     opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 1, 128);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
-                                          CudaOptimize::TERMINATE_FIT));
+					  CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(500);
-    opt->setStoppingFitness(5000.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
   }
+
+  double mean = 0.0;
+  double var = 0.0;
+  for (int i = 0; i < BASELINE_SAMPLES; i++) {
+      double y = trace[i];
+      mean += y;
+      var += y * y;
+  }
+  mean /= BASELINE_SAMPLES;
+  var = var/BASELINE_SAMPLES - mean * mean;
+  double A_est   = *std::max_element(trace.begin(), trace.end()) - mean;
+  double floor = var + (f_d * A_est) * (f_d * A_est);
+
+  opt->setStoppingFitness(k * floor);
+  
   opt->setBounds(0, A1, make_float2(saturation * 10, 0.0));
   opt->setBounds(0, A2, make_float2(saturation * 10, 0.0));
-  opt->setBounds(0, K1, make_float2(20.0, 0.0));
-  opt->setBounds(0, K3, make_float2(20.0, 0.0));
-  opt->setBounds(0, K2, make_float2(1.0, 0.0));
-  opt->setBounds(0, K4, make_float2(1.0, 0.0));
+  opt->setBounds(0, K1, make_float2(50.0, 0.0));
+  opt->setBounds(0, K3, make_float2(50.0, 0.0));
+  opt->setBounds(0, K2, make_float2(2.0, 0.0));
+  opt->setBounds(0, K4, make_float2(2.0, 0.0));
   opt->setBounds(0, C, make_float2(saturation / 4.0, 0.0));
   opt->setBounds(0, X1, make_float2((float)limits.second, (float)limits.first));
   opt->setBounds(0, X2, make_float2((float)limits.second, (float)limits.first));
