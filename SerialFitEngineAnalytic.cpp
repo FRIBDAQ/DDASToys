@@ -44,16 +44,18 @@ static const int P1X1_INDEX(3);
 static const int P1C_INDEX(4);
 static const int P1_PARAM_COUNT(5);
 
+// Double pulse fit parameter indices:
+
 static const int P2A1_INDEX(0);
 static const int P2K1_INDEX(1);
 static const int P2K2_INDEX(2);
 static const int P2X1_INDEX(3);
-
 static const int P2A2_INDEX(4);
 static const int P2K3_INDEX(5);
 static const int P2K4_INDEX(6);
 static const int P2X2_INDEX(7);
 static const int P2C_INDEX(8);
+static const int P2_PARAM_COUNT(9);
 
 //////////////////////////////////////////////////////////////////////////////
 // Partial derivative functions that are common:
