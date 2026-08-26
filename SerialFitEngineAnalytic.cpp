@@ -256,39 +256,6 @@ void ddastoys::analyticfit::SerialFitEngine1::residuals(const gsl_vector *p,
 
 /**
  * @details
- * Delegates to base class construction.
- */
-ddastoys::analyticfit::SerialFitEngine2::SerialFitEngine2(
-    std::vector<std::pair<uint16_t, uint16_t>> &data)
-    : CFitEngine(data) {}
-
-void ddastoys::analyticfit::SerialFitEngine2::residuals(const gsl_vector *p,
-                                                        gsl_vector *r) {
-  // Pull out the current fit parameterization:
-
-  double A1 = gsl_vector_get(p, P2A1_INDEX); // Pulse 1.
-  double k1 = gsl_vector_get(p, P2K1_INDEX);
-  double k2 = gsl_vector_get(p, P2K2_INDEX);
-  double x1 = gsl_vector_get(p, P2X1_INDEX);
-
-  double A2 = gsl_vector_get(p, P2A2_INDEX); // Pulse 2.
-  double k3 = gsl_vector_get(p, P2K3_INDEX);
-  double k4 = gsl_vector_get(p, P2K4_INDEX);
-  double x2 = gsl_vector_get(p, P2X2_INDEX);
-
-  double C = gsl_vector_get(p, P2C_INDEX); // Constant.
-
-  size_t npts = x.size();
-  for (size_t i = 0; i < npts; i++) {
-    double xi = x[i];
-    double yi = y[i];
-    double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xi);
-    gsl_vector_set(r, i, (p - yi));
-  }
-}
-
-/**
- * @details
  * Compute the Jacobian matrix of the fit with respect to current values of
  * the fit parameters.
  */
@@ -342,6 +309,39 @@ void ddastoys::analyticfit::SerialFitEngine2::jacobian(const gsl_vector *p,
         J, i, P2C_INDEX,
         dp1dC(A1, k1, k2, x1, xi,
               1.0)); // Need to make the function call if weights are != 1
+  }
+}
+
+/**
+ * @details
+ * Delegates to base class construction.
+ */
+ddastoys::analyticfit::SerialFitEngine2::SerialFitEngine2(
+    std::vector<std::pair<uint16_t, uint16_t>> &data)
+    : CFitEngine(data) {}
+
+void ddastoys::analyticfit::SerialFitEngine2::residuals(const gsl_vector *p,
+                                                        gsl_vector *r) {
+  // Pull out the current fit parameterization:
+
+  double A1 = gsl_vector_get(p, P2A1_INDEX); // Pulse 1.
+  double k1 = gsl_vector_get(p, P2K1_INDEX);
+  double k2 = gsl_vector_get(p, P2K2_INDEX);
+  double x1 = gsl_vector_get(p, P2X1_INDEX);
+
+  double A2 = gsl_vector_get(p, P2A2_INDEX); // Pulse 2.
+  double k3 = gsl_vector_get(p, P2K3_INDEX);
+  double k4 = gsl_vector_get(p, P2K4_INDEX);
+  double x2 = gsl_vector_get(p, P2X2_INDEX);
+
+  double C = gsl_vector_get(p, P2C_INDEX); // Constant.
+
+  size_t npts = x.size();
+  for (size_t i = 0; i < npts; i++) {
+    double xi = x[i];
+    double yi = y[i];
+    double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xi);
+    gsl_vector_set(r, i, (p - yi));
   }
 }
 
