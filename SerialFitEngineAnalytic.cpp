@@ -65,7 +65,7 @@ static const int P2_PARAM_COUNT(9);
  * @brief Returns the partial derivative of a single pulse with respect to the
  * amplitude evaluated at a point
  *
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -87,7 +87,7 @@ static double dp1dA(double k1, double k2, double x1, double x, double w,
  * @brief Partial of single pulse with respect to the rise time constant k1.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -111,7 +111,7 @@ static double dp1dk1(double A, double k1, double k2, double x1, double x,
  * @brief Partial of a single pulse with respect to the decay time constant.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -135,7 +135,7 @@ static double dp1dk2(double A, double k1, double k2, double x1, double x,
  * middle of the pulse's rise.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -162,7 +162,7 @@ static double dp1dx1(double A, double k1, double k2, double x1, double x,
  * evaluated at a point.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
