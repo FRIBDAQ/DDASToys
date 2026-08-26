@@ -507,7 +507,7 @@ void ddastoys::analyticfit::cudafit1(
     opt = new CudaOptimize::DE_Optimizer(&h_fitSingle, P1_NPARAMS, 1, 64);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
-					  CudaOptimize::TERMINATE_FIT));
+                                          CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(300);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
@@ -517,17 +517,17 @@ void ddastoys::analyticfit::cudafit1(
   double mean = 0.0;
   double var = 0.0;
   for (int i = 0; i < BASELINE_SAMPLES; i++) {
-      double y = trace[i];
-      mean += y;
-      var += y * y;
+    double y = trace[i];
+    mean += y;
+    var += y * y;
   }
   mean /= BASELINE_SAMPLES;
-  var = var/BASELINE_SAMPLES - mean * mean;
-  double A_est   = *std::max_element(trace.begin(), trace.end()) - mean;
+  var = var / BASELINE_SAMPLES - mean * mean;
+  double A_est = *std::max_element(trace.begin(), trace.end()) - mean;
   double floor = var + (f_s * A_est) * (f_s * A_est);
 
   opt->setStoppingFitness(k * floor);
-  
+
   opt->setBounds(0, A1, make_float2(saturation * 10, 0.0));
   opt->setBounds(0, K1, make_float2(50, 0.0));
   opt->setBounds(0, K2, make_float2(2.0, 0.0));
@@ -535,7 +535,7 @@ void ddastoys::analyticfit::cudafit1(
   opt->setBounds(0, X1, make_float2((float)limits.second, (float)limits.first));
 
   opt->optimize();
-  
+
   if (freeTraceWhenDone)
     freeTrace();
 
@@ -570,7 +570,7 @@ void ddastoys::analyticfit::cudafit2(
     opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 1, 128);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
-					  CudaOptimize::TERMINATE_FIT));
+                                          CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(500);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
@@ -580,17 +580,17 @@ void ddastoys::analyticfit::cudafit2(
   double mean = 0.0;
   double var = 0.0;
   for (int i = 0; i < BASELINE_SAMPLES; i++) {
-      double y = trace[i];
-      mean += y;
-      var += y * y;
+    double y = trace[i];
+    mean += y;
+    var += y * y;
   }
   mean /= BASELINE_SAMPLES;
-  var = var/BASELINE_SAMPLES - mean * mean;
-  double A_est   = *std::max_element(trace.begin(), trace.end()) - mean;
+  var = var / BASELINE_SAMPLES - mean * mean;
+  double A_est = *std::max_element(trace.begin(), trace.end()) - mean;
   double floor = var + (f_d * A_est) * (f_d * A_est);
 
   opt->setStoppingFitness(k * floor);
-  
+
   opt->setBounds(0, A1, make_float2(saturation * 10, 0.0));
   opt->setBounds(0, A2, make_float2(saturation * 10, 0.0));
   opt->setBounds(0, K1, make_float2(50.0, 0.0));
