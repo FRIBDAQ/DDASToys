@@ -207,4 +207,4 @@ Some `traceview` options -- the loaded data file and the fitting method -- can b
 * 6.3-001 : Optimizations for ML inference, added some simple inference profiling tools and option to build DDASToys with profiling output.
 * 6.4-000 : User provides trace length in fit configuration file. Remove dependence on template file; support per-channel trace templates. Allow "none" as model or template path.
 * 6.4-001 : Pin DDASFormat 2.1-001.
-* 6.5-000 : CMake build environment, stability fixes, improved checking of input configuration, split GPU fitting into its own plugin libraries for development
+* 6.5-000 : CMake build environment, stability fixes, improved checking of input configuration, split GPU fitting into its own plugin libraries for development, use RSS to calculate goodness-of-fit for analytic and template trace fitting

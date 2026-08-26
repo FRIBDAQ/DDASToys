@@ -61,14 +61,13 @@ double singlePulse(double S1, double x1, double C, double x,
 double doublePulse(double S1, double x1, double S2, double x2, double C,
                    double x, const std::vector<double> &trace_template);
 /**
- * @brief Computes the chi-square goodness of a specific
- * parameterization of a single pulse canonical form with respect
- * to a trace.
+ * @brief Computes the chi-square goodness of a specific parameterization of a
+ * single pulse canonical form with respect to a trace.
  * @param A1 Scaling factor for the template fit.
  * @param x1 Offset with respect to the template.
  * @param C  Constant baseline.
- * @param points Set of (x, y) data points which contribute to the
- *   total chi-square value.
+ * @param points Set of (x, y) data points which contribute to the total
+ * chi-square value.
  * @param trace_template Template trace used to fit the data.
  * @return The chi-square goodness-of-fit statistic.
  */
@@ -76,16 +75,15 @@ double chiSquare1(double S1, double x1, double C,
                   const std::vector<std::pair<uint16_t, uint16_t>> &points,
                   const std::vector<double> &trace_template);
 /**
- * @brief Computes the chi-square goodness of a specific
- * parameterization of a double pulse canonical form with respect
- * to a trace.
+ * @brief Computes the chi-square goodness of a specific parameterization of a
+ * double pulse canonical form with respect to a trace.
  * @param A1 Scaling factor for the template fit
  * @param x1 Offset with respect to the template
  * @param A2 Scaling factor for the template fit
  * @param x2 Offset with respect to the template
  * @param C  Constant baseline
  * @param points Set of x, y data points which contribute to the total
- *  chi-square value
+ * chi-square value.
  * @param trace_template Template trace used to fit the data.
  * @return The chi-square goodness-of-fit statistic.
  */

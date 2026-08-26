@@ -28,7 +28,6 @@
 
 #include <cfloat>
 #include <ctime>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -249,8 +248,9 @@ __host__ __device__ float doublePulse(float A1, float k1, float k2, float x1,
  * single-pulse fit.
  * @details
  * The choice of weight determines whether the returned value is Neyman's
- * (weight by variance estimated from data wt = 1/y) or Pearson's (weight by
- * variance estimated from fit wt = 1/fit).
+ * (weight by variance estimated from data wt = 1/y), Pearson's (weight by
+ * variance estimated from fit wt = 1/fit), or a RSS (wt = 1.0). The default
+ * behavior is RSS.
  * @param pParams Pointer to this solutions parameters.
  * @param x       x-coordinate.
  * @param y       y-coordinate.
@@ -278,8 +278,9 @@ __host__ __device__ float chiFitness1(const float *pParams, float x, float y,
  * one solution given that our caller has pulled out what we need.
  * @details
  * The choice of weight determines whether the returned value is Neyman's
- * (weight by variance estimated from data wt = 1/y) or Pearson's (weight by
- * variance estimated from fit wt = 1/fit).
+ * (weight by variance estimated from data wt = 1/y), Pearson's (weight by
+ * variance estimated from fit wt = 1/fit), or a RSS (wt = 1.0). The default
+ * behavior is RSS.
  * @param pParams Pointer to this solutions parameters.
  * @param x       x-coordinate.
  * @param y       y-coordinate.
@@ -341,14 +342,8 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
       float x = pXcoords[ipt];
       float y = pYcoords[ipt];
       float w = pWeights[ipt];
-
-      // Ensure that the Neyman chisq weight is valid
-      if (y != 0.0) {
-        sqdiff[ptno] =
-            chiFitness1(pSolutions + (solno * solStride), x, y, w); // Unreduced
-      } else { // No contribution total chisq if no data.
-        sqdiff[ptno] = 0.0;
-      }
+      sqdiff[ptno] =
+          chiFitness1(pSolutions + (solno * solStride), x, y, w); // Unreduced
     } else {
       sqdiff[ptno] = 0.0; // So it won't contribute to the chisquare sum.
     }
@@ -407,14 +402,8 @@ __global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
       float x = pXcoords[ipt];
       float y = pYcoords[ipt];
       float w = pWeights[ipt];
-
-      // Validate weight for Neyman chisq
-      if (y != 0.0) {
-        sqdiff[ptno] =
-            chiFitness2(pSolutions + (solno * solStride), x, y, w); // Unreduced
-      } else {
-        sqdiff[ptno] = 0.0;
-      }
+      sqdiff[ptno] =
+          chiFitness2(pSolutions + (solno * solStride), x, y, w); // Unreduced
     } else {
       sqdiff[ptno] = 0.0; // So it won't contribute to the chisquare sum.
     }
@@ -511,7 +500,7 @@ void ddastoys::analyticfit::cudafit1(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(300);
-    opt->setStoppingFitness(10.0);
+    opt->setStoppingFitness(50000.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
@@ -540,7 +529,7 @@ void ddastoys::analyticfit::cudafit1(
 
   pResult->chiSquare = analyticfit::chiSquare1(
       pParams[A1], pParams[K1], pParams[K2], pParams[X1], pParams[C], trace,
-      limits.first, limits.second);
+      saturation, limits.first, limits.second);
 }
 
 void ddastoys::analyticfit::cudafit2(
@@ -560,7 +549,7 @@ void ddastoys::analyticfit::cudafit2(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(500);
-    opt->setStoppingFitness(10.0);
+    opt->setStoppingFitness(50000.0);
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
     opt->setHostFitnessEvaluation(false);
@@ -598,6 +587,6 @@ void ddastoys::analyticfit::cudafit2(
   pResult->pulses[1].decayTime = pParams[K4];
   pResult->chiSquare = analyticfit::chiSquare2(
       pParams[A1], pParams[K1], pParams[K2], pParams[X1], pParams[A2],
-      pParams[K3], pParams[K4], pParams[X2], pParams[C], trace, limits.first,
-      limits.second);
+      pParams[K3], pParams[K4], pParams[X2], pParams[C], trace, saturation,
+      limits.first, limits.second);
 }

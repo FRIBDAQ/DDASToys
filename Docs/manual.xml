@@ -324,7 +324,7 @@
 	      </para>
 	    </listitem>
 	  </orderedlist>
-	  For template trace fitting, the model is a template trace parameterized by an amplitude, position and constant baseline offset, the objective function is Neyman's chi-square (both implemented in functions_template.h/cpp) and the optimization algorithm, implemented in lmfit_template.h/cpp, uses the LM method in GSL to minimize the chi-square value between the model and trace data. In the case of an ML model, weights for inference fitting are determined during the training stage and applied to the trace data at the inference step. See the Doxygen documentation for more detail on the fitting subroutines.
+	  For template trace fitting, the model is a template trace parameterized by an amplitude, position and constant baseline offset, the objective function is an unweighted chi-square (both implemented in functions_template.h/cpp) and the optimization algorithm, implemented in lmfit_template.h/cpp, uses the LM method in GSL to minimize the chi-square value between the model and trace data. In the case of an ML model, weights for inference fitting are determined during the training stage and applied to the trace data at the inference step. See the Doxygen documentation for more detail on the fitting subroutines.
 	</para>
       </listitem>
       <listitem>

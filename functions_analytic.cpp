@@ -63,8 +63,8 @@ double ddastoys::analyticfit::switchOn(double x1, double x) {
 /**
  * @details
  * Evaluate the value of a single pulse in accordance with our canonical
- * functional form. The form is a logistic rise with an exponential decay
- * that sits on top of a constant offset.
+ * functional form. The form is a logistic rise with an exponential decay that
+ * sits on top of a constant offset.
  */
 double ddastoys::analyticfit::singlePulse(double A1, double k1, double k2,
                                           double x1, double C, double x) {
@@ -73,9 +73,9 @@ double ddastoys::analyticfit::singlePulse(double A1, double k1, double k2,
 
 /**
  * @details
- * Evaluate the canonical form of a double pulse. This is done by summing
- * two single pulses. The constant term is thrown into the first pulse.
- * The second pulse gets a constant term of 0.
+ * Evaluate the canonical form of a double pulse. This is done by summing two
+ * single pulses. The constant term is thrown into the first pulse. The second
+ * pulse gets a constant term of 0.
  */
 double ddastoys::analyticfit::doublePulse(double A1, double k1, double k2,
                                           double x1, double A2, double k3,
@@ -88,8 +88,8 @@ double ddastoys::analyticfit::doublePulse(double A1, double k1, double k2,
 
 /**
  * @details
- * The A1 term in a pulse fit is not actually the "true" pulse amplitude.
- * The effect of the exponential decay is already important causing A1 to
+ * The A1 term in a pulse fit is not actually the "true" pulse amplitude. The
+ * effect of the exponential decay is already important causing A1 to
  * over-estimate the amplitude.
  *
  * This function computes the "true" amplitude of a pulse given its parameters.
@@ -109,13 +109,14 @@ double ddastoys::analyticfit::pulseAmplitude(double A, double k1, double k2,
   return singlePulse(A, k1, k2, x0, 0.0, pos);
 }
 
+/**
+ * @details
+ * This function is a wrapper for DDAS:AnalyticFit::pulseAmplitude and issues
+ * a warning if it is called. It exists for backwards compatability and should
+ * not be used. The correct function in the ddastoys::analytic namespace
+ * should be called instead.
+ */
 double pulseAmplitude(double A, double k1, double k2, double x0) {
-  /**
-   * This function is a wrapper for DDAS:AnalyticFit::pulseAmplitude
-   * and issues a warning if it is called. It exists for backwards
-   * compatability and should not be used. The correct function in the
-   * ddastoys::analytic namespace should be called instead.
-   */
   static bool warned(false);
   if (!warned) {
     std::cerr << "WARNING the pulseAmplitude function is in the ";
@@ -130,53 +131,52 @@ double pulseAmplitude(double A, double k1, double k2, double x0) {
 
 /**
  * @details
- * Neyman's chi-square. The chi-square value is calculated based on the
- * passed limits low, high.
+ * The chi-square value is calculated based on the passed limits [low, high].
+ * Only points below the passed saturation value contribute to the total
+ * chi-square. We assume weight = 1.0 for each point, so the chi-square is
+ * really RSS/ndf where ndf = nPts - nParams.
  */
 double ddastoys::analyticfit::chiSquare1(double A1, double k1, double k2,
                                          double x1, double C,
                                          const std::vector<uint16_t> &trace,
-                                         int low, int high) {
-  if (high == -1)
+                                         int sat, int low, int high) {
+  if (high == -1) {
     high = trace.size() - 1;
-
+  }
   double result = 0.0;
+  int nPts = 0;
+
   for (int i = low; i <= high; i++) {
     double x = i;
     double y = trace[i];
-    double pulse = singlePulse(A1, k1, k2, x1, C, x); // Fitted pulse.
-    double diff = y - pulse;
-    result += diff * diff;
-    // if (y != 0.0) {
-    //   result += (diff / y) * diff; // This order may control overflows
-    //   if (std::fpclassify(result) == FP_ZERO)
-    //     result = 0.0;
-    // }
+    if (y < sat) {
+      double pulse = singlePulse(A1, k1, k2, x1, C, x); // Fitted pulse.
+      double diff = y - pulse;
+      result += diff * diff;
+      nPts++;
+    }
   }
 
-  return result / (high - low + 1 - 5);
+  return result / (nPts - 5);
 }
 
 /**
  * @details
- * Neyman's chi-square. The chi-square value is calculated from a passed
- * set of (x, y) points.
+ * The chi-square value is calculated from a passed set of (x, y) points. We
+ * assume weight = 1.0 for each point, so the chi-square is really RSS/ndf where
+ * ndf = nPts - nParams.
  */
 double ddastoys::analyticfit::chiSquare1(
     double A1, double k1, double k2, double x1, double C,
     const std::vector<std::pair<uint16_t, uint16_t>> &points) {
   double result = 0.0;
+
   for (size_t i = 0; i < points.size(); i++) {
     double x = points[i].first;
     double y = points[i].second;
     double pulse = singlePulse(A1, k1, k2, x1, C, x); // Fitted pulse.
     double diff = y - pulse;
     result += diff * diff;
-    // if (y != 0.0) {
-    //   result += (diff / y) * diff; // This order may control overflows
-    //   if (std::fpclassify(result) == FP_ZERO)
-    //     result = 0.0;
-    // }
   }
 
   return result / (points.size() - 5);
@@ -184,38 +184,40 @@ double ddastoys::analyticfit::chiSquare1(
 
 /**
  * @details
- * Neyman's chi-square. The chi-square values is calculated based
- * on the passed limits low, high.
+ * The chi-square values is calculated based on the passed limits [low, high].
+ * Only points below the passed saturation value contribute to the total
+ * chi-square. We assume weight = 1.0 for each point, so the chi-square is
+ * really RSS/ndf where ndf = nPts - nParams.
  */
 double ddastoys::analyticfit::chiSquare2(double A1, double k1, double k2,
                                          double x1, double A2, double k3,
                                          double k4, double x2, double C,
                                          const std::vector<uint16_t> &trace,
-                                         int low, int high) {
-  double result = 0.0;
+                                         int sat, int low, int high) {
   if (high == -1)
     high = trace.size() - 1;
+  double result = 0.0;
+  int nPts = 0;
 
   for (int i = low; i <= high; i++) {
     double x = i;
     double y = trace[i];
-    double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
-    double diff = y - pulse;
-    result += diff * diff;
-    // if (y != 0.0) {
-    //   result += (diff / y) * diff; // This order may control overflows
-    //   if (std::fpclassify(result) == FP_ZERO)
-    //     result = 0.0;
-    // }
+    if (y < sat) {
+      double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
+      double diff = y - pulse;
+      result += diff * diff;
+      nPts++;
+    }
   }
 
-  return result / (high - low + 1 - 9);
+  return result / (nPts - 9);
 }
 
 /**
  * @details
- * Neyman's chi-square. The chi-square value is calculated from a
- * passed set of (x, y) points.
+ * The chi-square value is calculated from a passed set of (x, y) points. We
+ * assume weight = 1.0 for each point, so the chi-square is really RSS/ndf where
+ * ndf = nPts - nParams.
  */
 double ddastoys::analyticfit::chiSquare2(
     double A1, double k1, double k2, double x1, double A2, double k3, double k4,
@@ -229,11 +231,6 @@ double ddastoys::analyticfit::chiSquare2(
     double pulse = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, x);
     double diff = y - pulse;
     result += diff * diff;
-    // if (y != 0.0) {
-    //   result += (diff / y) * diff; // This order may control overflows
-    //   if (std::fpclassify(result) == FP_ZERO)
-    //     result = 0.0;
-    // }
   }
 
   return result / (points.size() - 9);
