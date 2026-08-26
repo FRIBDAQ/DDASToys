@@ -30,12 +30,12 @@
 #include "Configuration.h"
 #include "fit_extensions.h"
 #include "mlinference.h"
-#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
 
 #ifdef ENABLE_TIMING
+#include "profiling.h"
 static Stats stats;
 #endif
 

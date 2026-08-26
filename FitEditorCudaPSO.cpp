@@ -32,14 +32,13 @@
 #include "Configuration.h"
 #include "cudafit_analytic.cuh"
 #include "fit_extensions.h"
-#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
 
 #ifdef ENABLE_TIMING
+#include "profiling.h"
 static Stats stats;
-static double total(0);
 #endif
 
 /**
