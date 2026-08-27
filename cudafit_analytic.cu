@@ -457,6 +457,7 @@ void h_fitSingle(const CudaOptimize::SolutionSet *solutions,
   d_fitness1<<<grid, myBlockSize, n_tracePoints * sizeof(float)>>>(
       d_solutions, d_fitnesses, P1_NPARAMS, solStride, nsol, d_xCoords,
       d_yCoords, d_pWeights, n_tracePoints);
+
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
     reportCudaError("Failed to run single pulse fitness kernel");
@@ -485,13 +486,14 @@ void h_fitDouble(const CudaOptimize::SolutionSet *solutions,
 
   // Figure out the bocksize of the computation:
   dim3 myBlockSize(n_tracePoints, 1, 1);
+
   d_fitness2<<<grid, myBlockSize, n_tracePoints * sizeof(float)>>>(
       d_solutions, d_fitnesses, P2_NPARAMS, solStride, nsol, d_xCoords,
       d_yCoords, d_pWeights, n_tracePoints);
 
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
-    reportCudaError("Failed to run single pulsse fitness kernel");
+    reportCudaError("Failed to run double pulse fitness kernel");
   }
 }
 
