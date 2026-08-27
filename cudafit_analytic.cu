@@ -33,6 +33,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <cub/cub.cuh>
+
 #include <DE_Optimizer.h>  // Differntial evolution Optimizer beast.
 #include <PSO_Optimizer.h> // Particle swarm
 
@@ -79,6 +81,8 @@ static std::vector<uint16_t> ycoords; // For debugging.
 static unsigned n_tracePoints;        // Number of points in the trace.
 static float *h_pWeights(0);          // Host weights pointer.
 static float *d_pWeights(0);          // Device weights pointer.
+static const int FITNESS_BLOCK =
+    256; // Block size for parallel chi-square sums.
 
 /**
  * @brief Report the most recent Cuda error as an std::runtime_error.
@@ -318,8 +322,17 @@ __host__ __device__ float chiFitness2(const float *pParams, float x, float y,
  * @brief This function lives in the GPU and:
  * - Computes the chi-square contribution for a single point for a single
  *   solution in the swarm for a single pulse with an offset.
- * - Uses reduceToSum to sum the chisquare contributions over the entire trace.
- * The result is put into the fitness value for our solution
+ * - Serially computes the chi-square.
+ * The result is put into the fitness value for our solution. The computation of
+ * the chi-square sum is done serially.
+ * @note This kernel must be launched as:
+ * @code{.cpp}
+ * dim3 myBlockSize(n_tracePoints, 1, 1);
+ * d_fitness1_serial<<<grid, myBlockSize, n_tracePoints * sizeof(float)>>>( ...
+ * );
+ * @endcode
+ * because the size of the sqdiff array used internally for the chi-square
+ * computation is not known at compile time.
  * @param pSolutions Pointer to solutions array in the GPU.
  * @param pFitnesses Pointer to the array of fitnesse for all solutions in the
  * swarm.
@@ -332,10 +345,11 @@ __host__ __device__ float chiFitness2(const float *pParams, float x, float y,
  * @param pWeights   y weights to apply.
  * @param nPoints    Number of points in the trace.
  */
-__global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
-                           int nParams, int solStride, int nSol,
-                           unsigned short *pXcoords, unsigned short *pYcoords,
-                           float *pWeights, int nPoints) {
+__global__ void d_fitness1_serial(const float *pSolutions, float *pFitnesses,
+                                  int nParams, int solStride, int nSol,
+                                  unsigned short *pXcoords,
+                                  unsigned short *pYcoords, float *pWeights,
+                                  int nPoints) {
   extern __shared__ float sqdiff[]; // Locate the chisqr contribs in shmem.
 
   // Figure out which solution and point we're working on. This is based
@@ -343,6 +357,7 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
   int swarm = blockIdx.x;
   int solno = blockIdx.y + swarm * nSol; // Our solution.
   int ptno = threadIdx.x;                // Our point.
+  const float *sol = pSolutions + (solno * solStride);
 
   if ((solno < nSol * gridDim.x)) {
     if (ptno < nPoints) {
@@ -350,17 +365,15 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
       float x = pXcoords[ipt];
       float y = pYcoords[ipt];
       float w = pWeights[ipt];
-      sqdiff[ptno] =
-          chiFitness1(pSolutions + (solno * solStride), x, y, w); // Unreduced
+      sqdiff[ptno] = chiFitness1(sol, x, y, w); // Unreduced
     } else {
       sqdiff[ptno] = 0.0; // So it won't contribute to the chisquare sum.
     }
 
-    // Reduce threads won't work for us evidently.
     __syncthreads();
 
     // Serial sum - if we are ptno 0 the we sum all npoints of sqdiff
-    // into the solution
+    // into the solution:
 
     if (ptno == 0) {
       pFitnesses[solno] = 0;
@@ -377,14 +390,22 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
 /**
  * @brief This function lives in the GPU and:
  * - Computes the chi-square contribution for a single point for a single
- *   solution in the swarm for a single pulse with an offset.
- * - Uses reduceToSum to sum the chisquare contributions over the entire trace.
+ *   solution in the swarm for a double pulse with an offset.
+ * - Serially computes the chi-square.
  * The result is put into the fitness value for our solution.
+ * @note This kernel must be launched as:
+ * @code{.cpp}
+ * dim3 myBlockSize(n_tracePoints, 1, 1);
+ * d_fitness2_serial<<<grid, myBlockSize, n_tracePoints * sizeof(float)>>>( ...
+ * );
+ * @endcode
+ * because the size of the sqdiff array used internally for the chi-square
+ * computation is not known at compile time.
  * @param pSolutions Pointer to solutions array in the GPU.
  * @param pFitnesses Pointer to the array of fitnesse for all solutions in the
  * swarm.
  * @param nParams    Number of parameters in the fit (should be 9).
- * @param solStride  Solution stride - e.g., 5 parameter fit padded to stride
+ * @param solStride  Solution stride - e.g., 9 parameter fit padded to stride
  * of 32.
  * @param nSol       Number of solutions in the swarm.
  * @param pXcoords   Trace x-coordinates array.
@@ -392,10 +413,11 @@ __global__ void d_fitness1(const float *pSolutions, float *pFitnesses,
  * @param pWeights   y weights to apply.
  * @param nPoints    Number of points in the trace.
  */
-__global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
-                           int nParams, int solStride, int nSol,
-                           unsigned short *pXcoords, unsigned short *pYcoords,
-                           float *pWeights, int nPoints) {
+__global__ void d_fitness2_serial(const float *pSolutions, float *pFitnesses,
+                                  int nParams, int solStride, int nSol,
+                                  unsigned short *pXcoords,
+                                  unsigned short *pYcoords, float *pWeights,
+                                  int nPoints) {
   extern __shared__ float sqdiff[]; // Locate the chisqr contribs in shmem.
 
   // Figure out which solution and point we're working on. This is based
@@ -403,6 +425,7 @@ __global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
   int swarm = blockIdx.x;
   int solno = blockIdx.y + swarm * nSol; // Our solution.
   int ptno = threadIdx.x;                // Our point.
+  const float *sol = pSolutions + (solno * solStride);
 
   if (solno < nSol * gridDim.x) {
     if (ptno < nPoints) {
@@ -410,8 +433,7 @@ __global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
       float x = pXcoords[ipt];
       float y = pYcoords[ipt];
       float w = pWeights[ipt];
-      sqdiff[ptno] =
-          chiFitness2(pSolutions + (solno * solStride), x, y, w); // Unreduced
+      sqdiff[ptno] = chiFitness2(sol, x, y, w); // Unreduced
     } else {
       sqdiff[ptno] = 0.0; // So it won't contribute to the chisquare sum.
     }
@@ -428,6 +450,114 @@ __global__ void d_fitness2(const float *pSolutions, float *pFitnesses,
       if (!isfinite(pFitnesses[solno]))
         pFitnesses[solno] = FLT_MAX;
     }
+  }
+}
+
+/**
+ * @brief This function lives in the GPU and:
+ * - Computes the chi-square contribution for a single point for a single
+ *   solution in the swarm for a single pulse with an offset.
+ * - Uses CUB to compute the chi-square in parallel.
+ * The result is put into the fitness value for our solution.
+ * @param pSolutions Pointer to solutions array in the GPU.
+ * @param pFitnesses Pointer to the array of fitnesse for all solutions in the
+ * swarm.
+ * @param nParams    Number of parameters in the fit (should be 5).
+ * @param solStride  Solution stride - e.g., 5 parameter fit padded to stride
+ * of 32.
+ * @param nSol       Number of solutions in the swarm.
+ * @param pXcoords   Trace x-coordinates array.
+ * @param pYcoords   Trace y-coordinates array.
+ * @param pWeights   y weights to apply.
+ * @param nPoints    Number of points in the trace.
+ */
+__global__ void d_fitness1_cub(const float *pSolutions, float *pFitnesses,
+                               int nParams, int solStride, int nSol,
+                               unsigned short *pXcoords,
+                               unsigned short *pYcoords, float *pWeights,
+                               int nPoints) {
+  int swarm = blockIdx.x;
+  int solno = blockIdx.y + swarm * nSol;
+  if (solno >= nSol * gridDim.x) {
+    return;
+  }
+  const float *sol = pSolutions + solno * solStride;
+
+  // Each thread accumulates its grid-strided share of the points:
+  float partial = 0.0;
+  for (int p = threadIdx.x; p < nPoints; p += blockDim.x) {
+    int ipt = p + swarm * nPoints;
+    float x = pXcoords[ipt];
+    float y = pYcoords[ipt];
+    float w = pWeights[ipt];
+    partial += chiFitness1(sol, x, y, w); // Unreduced
+  }
+
+  // Block-wide sum - CUB handles any block size correctly:
+  typedef cub::BlockReduce<float, FITNESS_BLOCK> BlockReduce;
+  __shared__ typename BlockReduce::TempStorage temp;
+  float total = BlockReduce(temp).Sum(partial); // Valid in thread 0 only
+
+  if (threadIdx.x == 0) {
+    total /= (nPoints - nParams); // Reduced
+    if (!isfinite(total)) {
+      total = FLT_MAX;
+    }
+    pFitnesses[solno] = total;
+  }
+}
+
+/**
+ * @brief This function lives in the GPU and:
+ * - Computes the chi-square contribution for a single point for a single
+ *   solution in the swarm for a single pulse with an offset.
+ * - Uses CUB to compute the chi-square in parallel.
+ * The result is put into the fitness value for our solution.
+ * @param pSolutions Pointer to solutions array in the GPU.
+ * @param pFitnesses Pointer to the array of fitnesse for all solutions in the
+ * swarm.
+ * @param nParams    Number of parameters in the fit (should be 9).
+ * @param solStride  Solution stride - e.g., 9 parameter fit padded to stride
+ * of 32.
+ * @param nSol       Number of solutions in the swarm.
+ * @param pXcoords   Trace x-coordinates array.
+ * @param pYcoords   Trace y-coordinates array.
+ * @param pWeights   y weights to apply.
+ * @param nPoints    Number of points in the trace.
+ */
+__global__ void d_fitness2_cub(const float *pSolutions, float *pFitnesses,
+                               int nParams, int solStride, int nSol,
+                               unsigned short *pXcoords,
+                               unsigned short *pYcoords, float *pWeights,
+                               int nPoints) {
+  int swarm = blockIdx.x;
+  int solno = blockIdx.y + swarm * nSol;
+  if (solno >= nSol * gridDim.x) {
+    return;
+  }
+  const float *sol = pSolutions + solno * solStride;
+
+  // Each thread accumulates its grid-strided share of the points:
+  float partial = 0.0;
+  for (int p = threadIdx.x; p < nPoints; p += blockDim.x) {
+    int ipt = p + swarm * nPoints;
+    float x = pXcoords[ipt];
+    float y = pYcoords[ipt];
+    float w = pWeights[ipt];
+    partial += chiFitness2(sol, x, y, w); // Unreduced
+  }
+
+  // Block-wide sum - CUB handles any block size correctly:
+  typedef cub::BlockReduce<float, FITNESS_BLOCK> BlockReduce;
+  __shared__ typename BlockReduce::TempStorage temp;
+  float total = BlockReduce(temp).Sum(partial); // Valid in thread 0 only
+
+  if (threadIdx.x == 0) {
+    total /= (nPoints - nParams); // Reduced
+    if (!isfinite(total)) {
+      total = FLT_MAX;
+    }
+    pFitnesses[solno] = total;
   }
 }
 
@@ -450,12 +580,9 @@ void h_fitSingle(const CudaOptimize::SolutionSet *solutions,
   int nsol = solutions->getSolutionNumber();
   int solStride = solutions->getActualSolutionSize();
 
-  // Figure out the bocksize of the computation:
-  dim3 myBlockSize(n_tracePoints, 1, 1);
-
-  d_fitness1<<<grid, myBlockSize, n_tracePoints * sizeof(float)>>>(
-      d_solutions, d_fitnesses, P1_NPARAMS, solStride, nsol, d_xCoords,
-      d_yCoords, d_pWeights, n_tracePoints);
+  d_fitness1_cub<<<grid, FITNESS_BLOCK>>>(d_solutions, d_fitnesses, P1_NPARAMS,
+                                          solStride, nsol, d_xCoords, d_yCoords,
+                                          d_pWeights, n_tracePoints);
 
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
@@ -483,12 +610,9 @@ void h_fitDouble(const CudaOptimize::SolutionSet *solutions,
   int nsol = solutions->getSolutionNumber();
   int solStride = solutions->getActualSolutionSize();
 
-  // Figure out the bocksize of the computation:
-  dim3 myBlockSize(n_tracePoints, 1, 1);
-
-  d_fitness2<<<grid, myBlockSize, n_tracePoints * sizeof(float)>>>(
-      d_solutions, d_fitnesses, P2_NPARAMS, solStride, nsol, d_xCoords,
-      d_yCoords, d_pWeights, n_tracePoints);
+  d_fitness2_cub<<<grid, FITNESS_BLOCK>>>(d_solutions, d_fitnesses, P2_NPARAMS,
+                                          solStride, nsol, d_xCoords, d_yCoords,
+                                          d_pWeights, n_tracePoints);
 
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess) {
