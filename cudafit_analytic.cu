@@ -514,19 +514,20 @@ void ddastoys::analyticfit::cudafit1(
     opt->setHostFitnessEvaluation(false);
   }
 
-  double mean = 0.0;
-  double var = 0.0;
+  double baselineMean = 0.0;
+  double baselineVar = 0.0;
   for (int i = 0; i < BASELINE_SAMPLES; i++) {
     double y = trace[i];
-    mean += y;
-    var += y * y;
+    baselineMean += y;
+    baselineVar += y * y;
   }
-  mean /= BASELINE_SAMPLES;
-  var = var / BASELINE_SAMPLES - mean * mean;
-  double A_est = *std::max_element(trace.begin(), trace.end()) - mean;
-  double floor = var + (f_s * A_est) * (f_s * A_est);
+  baselinee /= BASELINE_SAMPLES;
+  baselineVar = baselineVar / BASELINE_SAMPLES - baselineMean * baselineMean;
+  double traceAmp =
+      *std::max_element(trace.begin(), trace.end()) - baselineMean;
+  double floorMSE = baselineVar + (f_s * traceAmp) * (f_s * traceAmp);
 
-  opt->setStoppingFitness(k * floor);
+  opt->setStoppingFitness(k * floorMSE);
 
   opt->setBounds(0, A1, make_float2(saturation * 10, 0.0));
   opt->setBounds(0, K1, make_float2(50, 0.0));
@@ -577,19 +578,20 @@ void ddastoys::analyticfit::cudafit2(
     opt->setHostFitnessEvaluation(false);
   }
 
-  double mean = 0.0;
-  double var = 0.0;
+  double baselineMean = 0.0;
+  double baselineVar = 0.0;
   for (int i = 0; i < BASELINE_SAMPLES; i++) {
     double y = trace[i];
-    mean += y;
-    var += y * y;
+    baselineMean += y;
+    baselineVar += y * y;
   }
-  mean /= BASELINE_SAMPLES;
-  var = var / BASELINE_SAMPLES - mean * mean;
-  double A_est = *std::max_element(trace.begin(), trace.end()) - mean;
-  double floor = var + (f_d * A_est) * (f_d * A_est);
+  baselinee /= BASELINE_SAMPLES;
+  baselineVar = baselineVar / BASELINE_SAMPLES - baselineMean * baselineMean;
+  double traceAmp =
+      *std::max_element(trace.begin(), trace.end()) - baselineMean;
+  double floorMSE = baselineVar + (f_d * traceAmp) * (f_d * traceAmp);
 
-  opt->setStoppingFitness(k * floor);
+  opt->setStoppingFitness(k * floorMSE);
 
   opt->setBounds(0, A1, make_float2(saturation * 10, 0.0));
   opt->setBounds(0, A2, make_float2(saturation * 10, 0.0));
