@@ -115,20 +115,25 @@ cmake -S . -B build \
 
 ### CUDA Configuration
 
-`DDASTOYS_CUDA_DEV` builds two additional, experimental analytic plugins next to
-the normal CPU `libFitEditorAnalytic.so` (which is unaffected):
+`DDASTOYS_CUDA_DEV` builds three additional, experimental analytic plugins next to
+the normal CPU `libFitEditorAnalytic.so`:
 
 * `libFitEditorCudaAnalytic.so` — the analytic fit compiled against the CUDA fit
   engine (GPU-computed residuals/Jacobian for the GSL Levenberg-Marquardt fit).
-* `libFitEditorCudaPSO.so` — the analytic fit driven by the `libCudaOptimize` swarm
-  (PSO/DE) optimizer, always performing both the single- and double-pulse fits.
+* `libFitEditorCudaDE.so` — the analytic fit driven by the `libCudaOptimize` 
+   differential evolution optimizer, always performing both the single- and 
+   double-pulse fits.
+* `libFitEditorCudaPSO.so` — the analytic fit driven by the `libCudaOptimize` 
+  particle-swarm optimizer, always performing both the single- and double-pulse
+  fits.
 
 Both require `nvcc` and `libCudaOptimize`, and you must specify the target GPU
 architecture, e.g. for the Pascal card on spdaq-cuda (compute capability 6.1):
 
     cmake -S . -B build -DDDASTOYS_CUDA_DEV=ON -DCMAKE_CUDA_ARCHITECTURES=61
 
-When `DDASTOYS_CUDA_DEV=ON`, the maximum supported trace length compiled into the CUDA fit engine may be configured via:
+When `DDASTOYS_CUDA_DEV=ON`, the maximum supported trace length compiled into 
+the CUDA fit engine may be configured via:
 
 ```bash
 -DDDASTOYS_CUDA_MAXPOINTS=<N>

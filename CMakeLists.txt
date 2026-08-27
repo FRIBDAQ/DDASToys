@@ -297,8 +297,8 @@ target_link_libraries(ddastoys_ring_objs
 #   ddastoys_cuda_engine_objs : CudaFitEngine1/2 — GPU LM residual/Jacobian
 #                               offload, used by libFitEditorCudaAnalytic.
 #                               Raw CUDA, no libCudaOptimize.
-#   ddastoys_cuda_pso_objs    : cudafit1/2 — libCudaOptimize swarm optimizer,
-#                               used by libFitEditorCudaPSO.
+#   ddastoys_cuda_pso_objs    : cudafit1/2 — libCudaOptimize global optimizers,
+#                               used by libFitEditorCuda.
 if(DDASTOYS_CUDA_DEV)
     add_library(ddastoys_cuda_engine_objs OBJECT
         CudaFitEngineAnalytic.cu
@@ -307,14 +307,18 @@ if(DDASTOYS_CUDA_DEV)
     target_compile_definitions(ddastoys_cuda_engine_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
     target_include_directories(ddastoys_cuda_engine_objs PRIVATE ${CMAKE_SOURCE_DIR})
 
-    add_library(ddastoys_cuda_pso_objs OBJECT
-        cudafit_analytic.cu
-    )
+    # DE variant (default):
+    add_library(ddastoys_cuda_de_objs OBJECT cudafit_analytic.cu)
+    set_target_properties(ddastoys_cuda_de_objs PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
+    target_compile_definitions(ddastoys_cuda_de_objs  PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
+    target_include_directories(ddastoys_cuda_de_objs  PRIVATE ${CMAKE_SOURCE_DIR} ${CUDAOPTIMIZE_INCLUDE_DIR})
+    target_link_libraries(ddastoys_cuda_de_objs  PUBLIC "${CUDAOPTIMIZE_LIB}")
+
+    # PSO variant (adds USE_PSO):
+    add_library(ddastoys_cuda_pso_objs OBJECT cudafit_analytic.cu)
     set_target_properties(ddastoys_cuda_pso_objs PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
-    target_compile_definitions(ddastoys_cuda_pso_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS})
-    target_include_directories(ddastoys_cuda_pso_objs
-        PRIVATE ${CMAKE_SOURCE_DIR} ${CUDAOPTIMIZE_INCLUDE_DIR}
-    )
+    target_compile_definitions(ddastoys_cuda_pso_objs PRIVATE MAXPOINTS=${DDASTOYS_CUDA_MAXPOINTS} USE_PSO)
+    target_include_directories(ddastoys_cuda_pso_objs PRIVATE ${CMAKE_SOURCE_DIR} ${CUDAOPTIMIZE_INCLUDE_DIR})
     target_link_libraries(ddastoys_cuda_pso_objs PUBLIC "${CUDAOPTIMIZE_LIB}")
 endif()
 
@@ -385,12 +389,15 @@ if(DDASTOYS_MLINFERENCE)
 endif()
 
 # --- Experimental CUDA plugins (analytic-style GPU fits) ---
-# Two additional analytic plugins, built alongside the normal CPU 
+# Three additional analytic plugins, built alongside the normal CPU 
 # libFitEditorAnalytic (which is unaffected):
 #   libFitEditorCudaAnalytic.so : the same analytic editor/lmfit sources compiled
 #     with -DCUDA, so lmfit_analytic uses CudaFitEngine1/2 (GPU LM residual/
 #     Jacobian offload) instead of the serial engine. No new C++ code.
-#   libFitEditorCudaPSO.so : the FitEditorCudaPSO editor driving the libCudaOptimize
+#   libFitEditorCudaDE.so : the FitEditorCuda editor driving the libCudaOptimize
+#     differential evolutino optimizer (cudafit1/2), always doing both single- and 
+#     double-pulse fits with the trace kept resident on the GPU between them.
+#   libFitEditorCudaPSO.so : the FitEditorCuda editor driving the libCudaOptimize
 #     swarm optimizer (cudafit1/2), always doing both single- and double-pulse
 #     fits with the trace kept resident on the GPU between them.
 if(DDASTOYS_CUDA_DEV)
@@ -413,18 +420,17 @@ if(DDASTOYS_CUDA_DEV)
             GSL::gsl GSL::gslcblas
     )
 
-    # libFitEditorCudaPSO.so — swarm/PSO fit via libCudaOptimize.
-    add_library(FitEditorCudaPSO SHARED
-        FitEditorCudaPSO.cpp
-    )
+    add_library(FitEditorCudaDE SHARED FitEditorCudaPSO.cpp)
+    target_include_directories(FitEditorCudaDE PRIVATE ${DAQINC} ${UFMTINC})
+    target_link_libraries(FitEditorCudaDE PRIVATE
+        ddastoys_config_objs ddastoys_analytic_funcs_objs
+        ddastoys_cuda_de_objs DDASFormat)
+
+    add_library(FitEditorCudaPSO SHARED FitEditorCudaPSO.cpp)   # unchanged name
     target_include_directories(FitEditorCudaPSO PRIVATE ${DAQINC} ${UFMTINC})
-    target_link_libraries(FitEditorCudaPSO
-        PRIVATE
-            ddastoys_config_objs
-            ddastoys_analytic_funcs_objs
-            ddastoys_cuda_pso_objs
-            DDASFormat
-    )
+    target_link_libraries(FitEditorCudaPSO PRIVATE
+        ddastoys_config_objs ddastoys_analytic_funcs_objs
+        ddastoys_cuda_pso_objs DDASFormat)
 endif()
 
 # =============================================================================

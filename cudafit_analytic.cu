@@ -43,6 +43,13 @@
 
 using namespace ddastoys;
 
+// Compile-time optimizer selection: DE (default) or PSO (-DUSE_PSO).
+#ifdef USE_PSO
+typedef CudaOptimize::PSO_Optimizer OptimizerType;
+#else
+typedef CudaOptimize::DE_Optimizer OptimizerType;
+#endif
+
 // Define the parameter numbers for the fits:
 
 static const unsigned A1 = 0;
@@ -627,15 +634,17 @@ void ddastoys::analyticfit::cudafit1(
   size_t nPoints = traceToGPU(trace, limits, saturation);
 
   // Init once, reuse:
-  static CudaOptimize::DE_Optimizer *opt = nullptr;
+  static OptimizerType *opt = nullptr;
   if (!opt) {
-    opt = new CudaOptimize::DE_Optimizer(&h_fitSingle, P1_NPARAMS, 1, 64);
+    opt = new OptimizerType(&h_fitSingle, P1_NPARAMS, 1, 64);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(300);
+#ifndef USE_PSO // DE-specific options
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
+#endif
     opt->setHostFitnessEvaluation(false);
   }
 
@@ -691,15 +700,17 @@ void ddastoys::analyticfit::cudafit2(
   }
 
   // Init once, reuse:
-  static CudaOptimize::DE_Optimizer *opt = nullptr;
+  static OptimizerType *opt = nullptr;
   if (!opt) {
-    opt = new CudaOptimize::DE_Optimizer(&h_fitDouble, P2_NPARAMS, 1, 128);
+    opt = new OptimizerType(&h_fitDouble, P2_NPARAMS, 1, 128);
     opt->setTerminationFlags(
         (CudaOptimize::TERMINATION_FLAGS)(CudaOptimize::TERMINATE_GENS |
                                           CudaOptimize::TERMINATE_FIT));
     opt->setGenerations(500);
+#ifndef USE_PSO // DE-specific options
     opt->setMutation(CudaOptimize::DE_RANDOM);
     opt->setCrossover(CudaOptimize::DE_BINOMIAL);
+#endif
     opt->setHostFitnessEvaluation(false);
   }
 
