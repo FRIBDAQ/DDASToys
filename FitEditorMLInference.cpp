@@ -30,12 +30,12 @@
 #include "Configuration.h"
 #include "fit_extensions.h"
 #include "mlinference.h"
-#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
 
 #ifdef ENABLE_TIMING
+#include "profiling.h"
 static Stats stats;
 #endif
 
@@ -210,7 +210,7 @@ ddastoys::FitEditorMLInference::operator()(pRingItemHeader pHdr,
       mlinference::performInference(pFit, trace, sat, it->second);
 #ifdef ENABLE_TIMING
       stats.addData(timer.elapsed());
-      if (stats.size() == 10000) {
+      if (stats.size() == 1000) {
         stats.compute();
         stats.print("======== ML inference stats ========");
       }

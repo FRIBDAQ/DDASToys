@@ -40,8 +40,7 @@ namespace analyticfit {
  */
 
 /**
- * @brief Evaluate a logistic function for the specified parameters
- * and point.
+ * @brief Evaluate a logistic function for the specified parameters and point.
  * @param A  Amplitude of the signal.
  * @param k  Steepness of the signal (related to the rise time).
  * @param x1 Mid-point of the rise of the logistic.
@@ -50,8 +49,7 @@ namespace analyticfit {
  */
 double logistic(double A, double k, double x1, double x);
 /**
- * @brief Evaluate an exponential decay for the specific parameters
- * and point.
+ * @brief Evaluate an exponential decay for the specific parameters and point.
  * @param A  Amplitude of the signal
  * @param k  Decay constant of the signal.
  * @param x1 Position of the pulse.
@@ -60,13 +58,11 @@ double logistic(double A, double k, double x1, double x);
  */
 double decay(double A, double k, double x1, double x);
 /**
- * @brief Logistic switch to turn on a function evaluation at a
- * given point.
- * @param x1 Switch on point. The switch is "on" for values greater
- *   than x1.
+ * @brief Logistic switch to turn on a function evaluation at a given point.
+ * @param x1 Switch on point. The switch is "on" for values greater than x1.
  * @param x  Point in space at which to evaluate the switch.
- * @return The switch value: very nearly 0.0 left of x1 and very
- *   nearly 1.0 to the right of x1.
+ * @return The switch value: very nearly 0.0 left of x1 and very nearly 1.0 to
+ * the right of x1.
  */
 double switchOn(double x1, double x);
 /**
@@ -77,7 +73,7 @@ double switchOn(double x1, double x);
  * @param x1 Logistic position.
  * @param C  Constant offset.
  * @param x  Position at which to evaluate the function.
- * @return double Single pulse function evaluated at x.
+ * @return Single pulse function evaluated at x.
  */
 double singlePulse(double A1, double k1, double k2, double x1, double C,
                    double x);
@@ -98,8 +94,8 @@ double singlePulse(double A1, double k1, double k2, double x1, double C,
 double doublePulse(double A1, double k1, double k2, double x1, double A2,
                    double k3, double k4, double x2, double C, double x);
 /**
- * @brief Calculate the pulse amplitude corrected for the ballistic
- * deficit imposed by the exponential decay using pulse parameters.
+ * @brief Calculate the pulse amplitude corrected for the ballistic deficit
+ * imposed by the exponential decay using pulse parameters.
  * @param A  The scaling term of the pulse.
  * @param k1 The steepness term of the logistic.
  * @param k2 The fall time term of the decay.
@@ -110,42 +106,40 @@ double doublePulse(double A1, double k1, double k2, double x1, double A2,
 double pulseAmplitude(double A, double k1, double k2, double x0);
 /**
  * @brief Computes the chi-square goodness-of-fit for a specific
- * parameterization of a single pulse canonical form with respect to
- * a trace.
+ * parameterization of a single pulse canonical form with respect to a trace.
  * @param A1 Amplitude of pulse
  * @param k1 Steepness of pulse rise.
  * @param k2 Decay time of pulse fall.
  * @param x1 Position of the pulse.
  * @param C  Constant offset of the trace.
  * @param trace Trace to compute the chi-square value with respect to.
- * @param low, high Region of interest over which to compute the
- *   chi-square value.
- * @note high = -1 will set the high limit to the last sample in the
- *   trace.
+ * @param sat Saturation value of the ADC. Points where the trace is saturated
+ * will not contribute to the chi-square.
+ * @param low, high Region of interest over which to compute the chi-square
+ * value.
+ * @note `high` = -1 will set the high limit to the last sample in the trace.
  * @return The chi-square goodness-of-fit statistic.
  */
 double chiSquare1(double A1, double k1, double k2, double x1, double C,
-                  const std::vector<uint16_t> &trace, int low = 0,
+                  const std::vector<uint16_t> &trace, int sat, int low = 0,
                   int high = -1);
 /**
  * @brief Computes the chi-square goodness-of-fit for a specific
- * parameterization of a single pulse canonical form with respect
- * to a trace.
+ * parameterization of a single pulse canonical form with respect to a trace.
  * @param A1 Amplitude of pulse
  * @param k1 Steepness of pulse rise.
  * @param k2 Decay time of pulse fall.
  * @param x1 Position of the pulse.
  * @param C  Constant offset of the trace.
- * @param points Set of (x, y) data points which contribute to the
- *   total chi-square value
+ * @param points Set of (x, y) data points which contribute to the total
+ * chi-square value.
  * @return The chi-square goodness-of-fit statistic.
  */
 double chiSquare1(double A1, double k1, double k2, double x1, double C,
                   const std::vector<std::pair<uint16_t, uint16_t>> &points);
 /**
- * @brief Computes the chi-square goodness of a specific
- * parameterization of a double pulse canonical form with respect
- * to a trace.
+ * @brief Computes the chi-square goodness of a specific parameterization of a
+ * double pulse canonical form with respect to a trace.
  * @param A1 Amplitude of the first pulse.
  * @param k1 Steepness of first pulse rise.
  * @param k2 Decay time of the first pulse.
@@ -156,20 +150,20 @@ double chiSquare1(double A1, double k1, double k2, double x1, double C,
  * @param x2 Position of second pulse.
  * @param C  Constant offset the pulses sit on.
  * @param trace Trace to compute the chisquare with respect to.
- * @param low, high Region of interest over which to compute the
- *   chi-square value.
- * @note high = -1 will set the high limit to the last sample in
- *   the trace.
+ * @param sat Saturation value of the ADC. Points where the trace is saturated
+ * will not contribute to the chi-square.
+ * @param low, high Region of interest over which to compute the chi-square
+ * value.
+ * @note high = -1 will set the high limit to the last sample in the trace.
  * @return The chi-square goodness-of-fit statistic.
  */
 double chiSquare2(double A1, double k1, double k2, double x1, double A2,
                   double k3, double k4, double x2, double C,
-                  const std::vector<uint16_t> &trace, int low = 0,
+                  const std::vector<uint16_t> &trace, int sat, int low = 0,
                   int high = -1);
 /**
- * @brief Computes the chi-square goodness of a specific
- * parameterization of a double pulse canonical form with respect
- * to a trace.
+ * @brief Computes the chi-square goodness of a specific parameterization of a
+ * double pulse canonical form with respect to a trace.
  * @param A1 Amplitude of the first pulse.
  * @param k1 Steepness of first pulse rise.
  * @param k2 Decay time of the first pulse.
@@ -180,7 +174,7 @@ double chiSquare2(double A1, double k1, double k2, double x1, double A2,
  * @param x2 Position of second pulse.
  * @param C  Constant offset the pulses sit on.
  * @param points Set of x, y data points which contribute to the total
- *   chi-square value
+ * chi-square value.
  * @return The chi-square goodness-of-fit statistic.
  */
 double chiSquare2(double A1, double k1, double k2, double x1, double A2,

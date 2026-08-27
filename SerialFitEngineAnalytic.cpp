@@ -44,16 +44,18 @@ static const int P1X1_INDEX(3);
 static const int P1C_INDEX(4);
 static const int P1_PARAM_COUNT(5);
 
+// Double pulse fit parameter indices:
+
 static const int P2A1_INDEX(0);
 static const int P2K1_INDEX(1);
 static const int P2K2_INDEX(2);
 static const int P2X1_INDEX(3);
-
 static const int P2A2_INDEX(4);
 static const int P2K3_INDEX(5);
 static const int P2K4_INDEX(6);
 static const int P2X2_INDEX(7);
 static const int P2C_INDEX(8);
+static const int P2_PARAM_COUNT(9);
 
 //////////////////////////////////////////////////////////////////////////////
 // Partial derivative functions that are common:
@@ -63,7 +65,7 @@ static const int P2C_INDEX(8);
  * @brief Returns the partial derivative of a single pulse with respect to the
  * amplitude evaluated at a point
  *
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -85,7 +87,7 @@ static double dp1dA(double k1, double k2, double x1, double x, double w,
  * @brief Partial of single pulse with respect to the rise time constant k1.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -109,7 +111,7 @@ static double dp1dk1(double A, double k1, double k2, double x1, double x,
  * @brief Partial of a single pulse with respect to the decay time constant.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -133,7 +135,7 @@ static double dp1dk2(double A, double k1, double k2, double x1, double x,
  * middle of the pulse's rise.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -160,7 +162,7 @@ static double dp1dx1(double A, double k1, double k2, double x1, double x,
  * evaluated at a point.
  *
  * @param A  Current guess at amplitude.
- * @param k1 Current guess at rise steepness param (log(81)/risetime90).
+ * @param k1 Current guess at rise steepness param.
  * @param k2 Current guess at the decay time constant.
  * @param x1 Current guess at pulse position.
  * @param x  x value at which to evaluate all this.
@@ -242,15 +244,73 @@ void ddastoys::analyticfit::SerialFitEngine1::residuals(const gsl_vector *p,
   size_t npts = x.size();
   for (size_t i = 0; i < npts; i++) {
     double xi = x[i];
-    double yactual = y[i];
-    double fitted = singlePulse(A, k1, k2, x1, C, xi);
-    gsl_vector_set(r, i, (fitted - yactual));
+    double yi = y[i];
+    double p = singlePulse(A, k1, k2, x1, C, xi);
+    gsl_vector_set(r, i, (p - yi));
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implement SerialFitEngine2 - The serialized fit engine for double pulses.
 //
+
+/**
+ * @details
+ * Compute the Jacobian matrix of the fit with respect to current values of
+ * the fit parameters.
+ */
+void ddastoys::analyticfit::SerialFitEngine2::jacobian(const gsl_vector *p,
+                                                       gsl_matrix *J) {
+  // Fish the current fit parameters from p:
+
+  double A1 = gsl_vector_get(p, P2A1_INDEX); // Pulse 1.
+  double k1 = gsl_vector_get(p, P2K1_INDEX);
+  double k2 = gsl_vector_get(p, P2K2_INDEX);
+  double x1 = gsl_vector_get(p, P2X1_INDEX);
+
+  double A2 = gsl_vector_get(p, P2A2_INDEX); // Pulse 2.
+  double k3 = gsl_vector_get(p, P2K3_INDEX);
+  double k4 = gsl_vector_get(p, P2K4_INDEX);
+  double x2 = gsl_vector_get(p, P2X2_INDEX);
+
+  size_t npts = x.size();
+  for (size_t i = 0; i < npts; i++) {
+    double xi = x[i];
+
+    double erise1 = exp(-k1 * (xi - x1));
+    double efall1 = exp(-k2 * (xi - x1));
+
+    double erise2 = exp(-k3 * (xi - x2));
+    double efall2 = exp(-k4 * (xi - x2));
+
+    gsl_matrix_set(J, i, P2A1_INDEX,
+                   dp1dA(k1, k2, x1, xi, 1.0, erise1, efall1));
+    gsl_matrix_set(J, i, P2K1_INDEX,
+                   dp1dk1(A1, k1, k2, x1, xi, 1.0, erise1, efall1));
+    gsl_matrix_set(J, i, P2K2_INDEX,
+                   dp1dk2(A1, k1, k2, x1, xi, 1.0, erise1, efall1));
+    gsl_matrix_set(J, i, P2X1_INDEX,
+                   dp1dx1(A1, k1, k2, x1, xi, 1.0, erise1, efall1));
+
+    // For pulse 2 elements:  A1 -> A2, k1 -> k3, k2 -> k4, x1 -> x2:
+
+    gsl_matrix_set(J, i, P2A2_INDEX,
+                   dp1dA(k3, k4, x2, xi, 1.0, erise2, efall2));
+    gsl_matrix_set(J, i, P2K3_INDEX,
+                   dp1dk1(A2, k3, k4, x2, xi, 1.0, erise2, efall2));
+    gsl_matrix_set(J, i, P2K4_INDEX,
+                   dp1dk2(A2, k3, k4, x2, xi, 1.0, erise2, efall2));
+    gsl_matrix_set(J, i, P2X2_INDEX,
+                   dp1dx1(A2, k3, k4, x2, xi, 1.0, erise2, efall2));
+
+    // Don't forget the constant term:
+
+    gsl_matrix_set(
+        J, i, P2C_INDEX,
+        dp1dC(A1, k1, k2, x1, xi,
+              1.0)); // Need to make the function call if weights are != 1
+  }
+}
 
 /**
  * @details
@@ -278,68 +338,10 @@ void ddastoys::analyticfit::SerialFitEngine2::residuals(const gsl_vector *p,
 
   size_t npts = x.size();
   for (size_t i = 0; i < npts; i++) {
-    double xc = x[i];
-    double yc = y[i];
-    double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xc);
-    gsl_vector_set(r, i, (p - yc));
-  }
-}
-
-/**
- * @details
- * Compute the Jacobian matrix of the fit with respect to current values of
- * the fit parameters.
- */
-void ddastoys::analyticfit::SerialFitEngine2::jacobian(const gsl_vector *p,
-                                                       gsl_matrix *J) {
-  // Fish the current fit parameters from p:
-
-  double A1 = gsl_vector_get(p, P2A1_INDEX); // Pulse 1.
-  double k1 = gsl_vector_get(p, P2K1_INDEX);
-  double k2 = gsl_vector_get(p, P2K2_INDEX);
-  double x1 = gsl_vector_get(p, P2X1_INDEX);
-
-  double A2 = gsl_vector_get(p, P2A2_INDEX); // Pulse 2.
-  double k3 = gsl_vector_get(p, P2K3_INDEX);
-  double k4 = gsl_vector_get(p, P2K4_INDEX);
-  double x2 = gsl_vector_get(p, P2X2_INDEX);
-
-  size_t npts = x.size();
-  for (size_t i = 0; i < npts; i++) {
-    double xc = x[i];
-
-    double erise1 = exp(-k1 * (xc - x1));
-    double efall1 = exp(-k2 * (xc - x1));
-
-    double erise2 = exp(-k3 * (xc - x2));
-    double efall2 = exp(-k4 * (xc - x2));
-
-    gsl_matrix_set(J, i, P2A1_INDEX,
-                   dp1dA(k1, k2, x1, xc, 1.0, erise1, efall1));
-    gsl_matrix_set(J, i, P2K1_INDEX,
-                   dp1dk1(A1, k1, k2, x1, xc, 1.0, erise1, efall1));
-    gsl_matrix_set(J, i, P2K2_INDEX,
-                   dp1dk2(A1, k1, k2, x1, xc, 1.0, erise1, efall1));
-    gsl_matrix_set(J, i, P2X1_INDEX,
-                   dp1dx1(A1, k1, k2, x1, xc, 1.0, erise1, efall1));
-
-    // For pulse 2 elements:  A1->A2, k1 -> k3, k2 -> k4, x1 -> x2:
-
-    gsl_matrix_set(J, i, P2A2_INDEX,
-                   dp1dA(k3, k4, x2, xc, 1.0, erise2, efall2));
-    gsl_matrix_set(J, i, P2K3_INDEX,
-                   dp1dk1(A2, k3, k4, x2, xc, 1.0, erise2, efall2));
-    gsl_matrix_set(J, i, P2K4_INDEX,
-                   dp1dk2(A2, k3, k4, x2, xc, 1.0, erise2, efall2));
-    gsl_matrix_set(J, i, P2X2_INDEX,
-                   dp1dx1(A2, k3, k4, x2, xc, 1.0, erise2, efall2));
-
-    // Don't forget the constant term:
-
-    gsl_matrix_set(
-        J, i, P2C_INDEX,
-        dp1dC(A1, k1, k2, x1, xc,
-              1.0)); // Need to make the function call if weights are != 1
+    double xi = x[i];
+    double yi = y[i];
+    double p = doublePulse(A1, k1, k2, x1, A2, k3, k4, x2, C, xi);
+    gsl_vector_set(r, i, (p - yi));
   }
 }
 

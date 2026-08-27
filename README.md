@@ -10,7 +10,7 @@ Two companion programs for analyzing DDAS data with fits are provided as part of
 DDASToys provides three FitEditor libraries as plugin extensions for the `EventEditor` program. These libraries allow fits to be parallelized using either ZMQ threading or MPI. The three libraries allow users to fit traces using either:
 * `libFidEditorAnalytic.so` - An analytical fitting method which models the trace using a logistic risetime and exponential decay
 * `libFidEditorTemplate.so` - A template fit method in which a pre-defined "super pulse" representing a "typical" pulse shape is fit to the data
-* `libFidEditorMLInference.so` - A machine-learning inference fitting using the same model response function as the analytic fit method.
+* `libFidEditorMLInference.so` - A machine-learning inference fitting using the same model response function as the analytic fit method (requires LibTorch).
 
 `$DAQBIN/EventEditor --help` will provide some guidance on how to run this code. Two more libraries are provided:
 * `libDDASFitHitUnpacker.so` : defines an unpacker for DDAS hits with fit extensions which unpacks event fragments into the DDASFitHit class.
@@ -77,10 +77,16 @@ cmake --install build
 
 ### Running Unit Tests
 
-After a successful build, run the unit test suite with:
+For CMake >= 3.20, you can run the test suite with:
 
 ```bash
 ctest --test-dir build --VV
+```
+
+While for older CMake versions you will have to run from the build directory:
+
+```bash
+cd build && ctest --VV
 ```
 
 All tests should complete successfully.
@@ -92,7 +98,7 @@ The following options may be specified during configuration using
 
 | Option | Default | Description |
 |----------|---------|-------------|
-| `DDASTOYS_CUDA` | `OFF` | Build the CUDA GPU-accelerated fit engine. Requires the NVIDIA CUDA Toolkit (`nvcc`) and the `libCudaOptimize` library. |
+| `DDASTOYS_CUDA_DEV` | `OFF` | Build the developmental CUDA GPU-accelerated fit engine plugin libraries. Requires the NVIDIA CUDA Toolkit (`nvcc`) and the `libCudaOptimize` library. Not intended for production analysis! |
 | `DDASTOYS_MLINFERENCE` | `ON` | Build the machine-learning inference fit editor. Requires LibTorch. |
 | `DDASTOYS_TRACEVIEW` | `ON` | Build the Qt-based `traceview` diagnostic GUI. Requires Qt 5.11 or newer. |
 | `DDASTOYS_DOCS` | `ON` | Build the Doxygen API documentation and DocBook user manual. |
@@ -109,7 +115,25 @@ cmake -S . -B build \
 
 ### CUDA Configuration
 
-When `DDASTOYS_CUDA=ON`, the maximum supported trace length compiled into the CUDA fit engine may be configured via:
+`DDASTOYS_CUDA_DEV` builds three additional, experimental analytic plugins next to
+the normal CPU `libFitEditorAnalytic.so`:
+
+* `libFitEditorCudaAnalytic.so` — the analytic fit compiled against the CUDA fit
+  engine (GPU-computed residuals/Jacobian for the GSL Levenberg-Marquardt fit).
+* `libFitEditorCudaDE.so` — the analytic fit driven by the `libCudaOptimize` 
+   differential evolution optimizer, always performing both the single- and 
+   double-pulse fits.
+* `libFitEditorCudaPSO.so` — the analytic fit driven by the `libCudaOptimize` 
+  particle-swarm optimizer, always performing both the single- and double-pulse
+  fits.
+
+Both require `nvcc` and `libCudaOptimize`, and you must specify the target GPU
+architecture, e.g. for the Pascal card on spdaq-cuda (compute capability 6.1):
+
+    cmake -S . -B build -DDDASTOYS_CUDA_DEV=ON -DCMAKE_CUDA_ARCHITECTURES=61
+
+When `DDASTOYS_CUDA_DEV=ON`, the maximum supported trace length compiled into 
+the CUDA fit engine may be configured via:
 
 ```bash
 -DDDASTOYS_CUDA_MAXPOINTS=<N>
@@ -124,6 +148,12 @@ DDASTOYS_CUDA_MAXPOINTS=1024
 This value is compiled into the CUDA implementation as the `MAXPOINTS`
 macro and should be chosen to accommodate the longest traces expected
 during analysis. The maximum allowed value is 1024.
+
+> **Note:** GPU fitting is a development/experimental feature and is not on the
+> production path — the CPU pipeline is fast enough for real-time processing.
+> Per-trace GPU fitting does not currently beat CPU fitting; see `gpu_fitting.md`
+> for the findings and the batched-fitting plan.
+
 
 ### Installation
 
@@ -182,4 +212,4 @@ Some `traceview` options -- the loaded data file and the fitting method -- can b
 * 6.3-001 : Optimizations for ML inference, added some simple inference profiling tools and option to build DDASToys with profiling output.
 * 6.4-000 : User provides trace length in fit configuration file. Remove dependence on template file; support per-channel trace templates. Allow "none" as model or template path.
 * 6.4-001 : Pin DDASFormat 2.1-001.
-* 6.5-000 : CMake build environment.
+* 6.5-000 : CMake build environment, stability fixes, improved checking of input configuration, split GPU fitting into its own plugin libraries for development, set reasonable CUDA PSO optimizer config and boundry conditions, use RSS to calculate goodness-of-fit for analytic and template trace fitting

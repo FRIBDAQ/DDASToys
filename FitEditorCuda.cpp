@@ -9,7 +9,6 @@
 
      Authors:
              Ron Fox
-             Giordano Cerriza
              Aaron Chester
              FRIB
              Michigan State University
@@ -17,19 +16,22 @@
 */
 
 /**
- * @file  FitEditorAnalytic.cpp
- * @brief Implementation of the FitEditor class for analytic fitting.
+ * @file  FitEditorCuda.cpp
+ * @brief Implementation of the FitEditor class for GPU swarm (PSO/DE) fitting.
  */
 
-#include "FitEditorAnalytic.h"
+#include "FitEditorCuda.h"
 
 #include <iostream>
+#include <stdexcept>
+#include <utility>
 
 #include <DDASHit.h>
 #include <DDASHitUnpacker.h>
 
 #include "Configuration.h"
-#include "lmfit_analytic.h"
+#include "cudafit_analytic.cuh"
+#include "fit_extensions.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
@@ -44,30 +46,28 @@ static Stats stats;
  * Sets up the configuration manager to parse config files and manage
  * configuration data. Reads the fit config file.
  */
-ddastoys::FitEditorAnalytic::FitEditorAnalytic()
-    : m_pConfig(new Configuration) {
+ddastoys::FitEditorCuda::FitEditorCuda() : m_pConfig(new Configuration) {
   try {
     m_pConfig->readConfigFile();
   } catch (std::exception &e) {
-    std::cerr << "Error configuring FitEditor: " << e.what() << std::endl;
+    std::cerr << "Error configuring FitEditorCuda: " << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
 }
 
-ddastoys::FitEditorAnalytic::FitEditorAnalytic(const FitEditorAnalytic &rhs)
+ddastoys::FitEditorCuda::FitEditorCuda(const FitEditorCuda &rhs)
     : m_pConfig(new Configuration(*rhs.m_pConfig)) {}
 
 /**
  * @details
  * Constructs using move assignment.
  */
-ddastoys::FitEditorAnalytic::FitEditorAnalytic(FitEditorAnalytic &&rhs) noexcept
+ddastoys::FitEditorCuda::FitEditorCuda(FitEditorCuda &&rhs) noexcept
     : m_pConfig(nullptr) {
   *this = std::move(rhs);
 }
 
-FitEditorAnalytic &
-ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic &rhs) {
+FitEditorCuda &ddastoys::FitEditorCuda::operator=(const FitEditorCuda &rhs) {
   if (this != &rhs) {
     delete m_pConfig;
     m_pConfig = new Configuration(*rhs.m_pConfig);
@@ -76,8 +76,8 @@ ddastoys::FitEditorAnalytic::operator=(const FitEditorAnalytic &rhs) {
   return *this;
 }
 
-FitEditorAnalytic &
-ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic &&rhs) noexcept {
+FitEditorCuda &
+ddastoys::FitEditorCuda::operator=(FitEditorCuda &&rhs) noexcept {
   if (this != &rhs) {
     delete m_pConfig;
     m_pConfig = rhs.m_pConfig;
@@ -91,33 +91,29 @@ ddastoys::FitEditorAnalytic::operator=(FitEditorAnalytic &&rhs) noexcept {
  * @details
  * Delete the Configuration object managed by this class.
  */
-ddastoys::FitEditorAnalytic::~FitEditorAnalytic() { delete m_pConfig; }
+ddastoys::FitEditorCuda::~FitEditorCuda() { delete m_pConfig; }
 
 /**
  * @details
- * This is the hook into the FitEditorAnalytic class. Here we:
+ * This is the hook into the FitEditorCuda class. Here we:
  * - Parse the fragment into a hit.
- * - Produce a IOvec element for the existing hit (without any fit
- *   that might have been there).
- * - See if the configuration manager says we should fit and if so, create
- *   the trace.
- * - Get the fit limits and saturation value.
- * - Get the number of pulses to fit.
- * - Do the fits.
+ * - Produce an IOvec element for the existing hit (without any fit that might
+ *   have been there).
+ * - See if the configuration manager says we should fit and if so, create the
+ *   trace.
+ * - Verify the trace length matches the configuration.
+ * - Always perform both the single- and double-pulse swarm fits, keeping the
+ *   trace resident on the GPU between them.
  * - Create an IOvec entry for the extension we created (dynamic).
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
-                                        size_t bodySize, void *pBody) {
-#ifdef ENABLE_TIMING
-  double total = 0;
-#endif
-
+ddastoys::FitEditorCuda::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
+                                    size_t bodySize, void *pBody) {
   std::vector<CBuiltRingItemEditor::BodySegment> result;
 
   // Regardless we want a segment that includes the hit. Note that the first
-  // uint32_t of the body is the size of the standard hit part in
-  // uint16_t words.
+  // uint32_t of the body is the size of the standard hit part in uint16_t
+  // words.
 
   uint32_t *pSize = static_cast<uint32_t *>(pBody);
   CBuiltRingItemEditor::BodySegment hitInfo(*pSize * sizeof(uint16_t), pSize,
@@ -151,56 +147,25 @@ ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
 
       auto limits = m_pConfig->getFitLimits(crate, slot, chan);
       auto sat = m_pConfig->getSaturationValue(crate, slot, chan);
-      int classification = pulseCount(hit);
 
-      if (classification) {
-        // Bit 0 do single fit, bit 1 do double fit:
-        if (classification & 1) {
-#ifdef ENABLE_TIMING
-          Timer timer;
-#endif
-          analyticfit::lmfit1(&(pFit->s_extension.onePulseFit), trace, limits,
-                              sat);
-#ifdef ENABLE_TIMING
-          total += timer.elapsed();
-#endif
-        }
+      // Always do both fits. Keep the trace resident on the GPU between them:
+      // cudafit1 leaves it loaded (freeTraceWhenDone = false), cudafit2 reuses
+      // it (traceIsLoaded = true) and frees it when done.
 
-        if (classification & 2) {
-          // The single pulse fit guides the double pulse fit.
-          // Note that lmfit2 will perform a single fit if no guess
-          // is provided. If we have already fit the single pulse,
-          // set the guess to those results.
-          if (classification & 1) {
-            fit1Info guess = pFit->s_extension.onePulseFit;
 #ifdef ENABLE_TIMING
-            Timer timer;
+      Timer timer;
 #endif
-            analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
-                                &guess, sat);
+      analyticfit::cudafit1(&(pFit->s_extension.onePulseFit), trace, limits,
+                            sat, /*freeTraceWhenDone=*/false);
+      analyticfit::cudafit2(&(pFit->s_extension.twoPulseFit), trace, limits,
+                            sat, /*traceIsLoaded=*/true);
 #ifdef ENABLE_TIMING
-            total += timer.elapsed();
-#endif
-          } else {
-#ifdef ENABLE_TIMING
-            Timer timer;
-#endif
-            // nullptr: no guess for single params.
-            analyticfit::lmfit2(&(pFit->s_extension.twoPulseFit), trace, limits,
-                                nullptr, sat);
-#ifdef ENABLE_TIMING
-            total += timer.elapsed();
-#endif
-          }
-        }
-#ifdef ENABLE_TIMING
-        stats.addData(total);
-        if (stats.size() == 1000) {
-          stats.compute();
-          stats.print("======== Analytic fit stats ========");
-        }
-#endif
+      stats.addData(timer.elapsed());
+      if (stats.size() == 1000) {
+        stats.compute();
+        stats.print("======== CUDA stats ========");
       }
+#endif
     }
 
     CBuiltRingItemEditor::BodySegment fit(sizeof(FitInfo), pFit, true);
@@ -215,7 +180,7 @@ ddastoys::FitEditorAnalytic::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
   return result;
 }
 
-void ddastoys::FitEditorAnalytic::free(iovec &e) {
+void ddastoys::FitEditorCuda::free(iovec &e) {
   if (e.iov_len == sizeof(FitInfo)) {
     FitInfo *pFit = static_cast<FitInfo *>(e.iov_base);
     delete pFit;
@@ -223,19 +188,6 @@ void ddastoys::FitEditorAnalytic::free(iovec &e) {
     nullExtension *p = static_cast<nullExtension *>(e.iov_base);
     delete p;
   }
-}
-
-///
-// Private methods
-//
-
-/**
- * @details
- * In the absence of the classifier, perform single- and double-pulse fits
- * for every mapped channel.
- */
-int ddastoys::FitEditorAnalytic::pulseCount(DDASHit &hit) {
-  return 3; // In absence of classifier.
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -251,7 +203,5 @@ int ddastoys::FitEditorAnalytic::pulseCount(DDASHit &hit) {
  * extern "C" prevents namespace mangling by the C++ compiler.
  */
 extern "C" {
-ddastoys::FitEditorAnalytic *createEditor() {
-  return new ddastoys::FitEditorAnalytic;
-}
+ddastoys::FitEditorCuda *createEditor() { return new ddastoys::FitEditorCuda; }
 }

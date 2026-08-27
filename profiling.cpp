@@ -37,11 +37,23 @@ void Stats::compute() {
   s_mean = std::accumulate(s_data.begin(), s_data.end(), 0.0);
   s_mean /= s_data.size();
 
+  if (s_data.size() > 1) {
+    auto v = s_data; // Make a copy just in case we want ordered s_data later
+    const auto midItr = v.begin() + v.size() / 2;
+    std::nth_element(v.begin(), midItr, v.end());
+    if ((v.size() % 2) == 0) { // Even number of samples
+      const auto leftItr = std::max_element(v.begin(), midItr);
+      s_median = 0.5 * (*leftItr + *midItr);
+    } else { // Odd number of samples
+      s_median = (double)(*midItr);
+    }
+  }
+
   double sumSq = 0;
   for (const auto d : s_data) {
     sumSq += (d - s_mean) * (d - s_mean);
   }
-  s_stddev = std::sqrt(sumSq) / s_data.size();
+  s_stddev = std::sqrt(sumSq / s_data.size());
 
   s_min = *std::min_element(s_data.begin(), s_data.end());
   s_max = *std::max_element(s_data.begin(), s_data.end());
@@ -50,6 +62,7 @@ void Stats::compute() {
 void Stats::print(std::string label) {
   std::cout << label << std::endl;
   std::cout << "  Mean:   " << s_mean << " us" << std::endl;
+  std::cout << "  Median: " << s_median << " us" << std::endl;
   std::cout << "  Std:    " << s_stddev << " us" << std::endl;
   std::cout << "  Min:    " << s_min << " us" << std::endl;
   std::cout << "  Max:    " << s_max << " us" << std::endl;
@@ -57,6 +70,7 @@ void Stats::print(std::string label) {
 
 void Stats::reset() {
   s_mean = 0;
+  s_median = 0;
   s_stddev = 0;
   s_min = 0;
   s_max = 0;

@@ -76,6 +76,7 @@ struct Timer {
  */
 struct Stats {
   double s_mean;   //!< Mean of s_data when `compute()` is called
+  double s_median; //!< Median of s_data when `compute()` is called
   double s_stddev; //!< Stddev of s_data when `compute()` is called
   double s_min;    //!< Min value of s_data when `compute()` is called
   double s_max;    //!< Max value of s_data when `compute()` is called

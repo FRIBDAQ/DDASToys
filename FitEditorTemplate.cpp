@@ -29,14 +29,13 @@
 
 #include "Configuration.h"
 #include "lmfit_template.h"
-#include "profiling.h"
 
 using namespace ddasfmt;
 using namespace ddastoys;
 
 #ifdef ENABLE_TIMING
+#include "profiling.h"
 static Stats stats;
-static double total(0);
 #endif
 
 /**
@@ -110,6 +109,10 @@ FitEditorTemplate::~FitEditorTemplate() { delete m_pConfig; }
 std::vector<CBuiltRingItemEditor::BodySegment>
 FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
                               size_t bodySize, void *pBody) {
+#ifdef ENABLE_TIMING
+  double total = 0;
+#endif
+
   std::vector<CBuiltRingItemEditor::BodySegment> result;
 
   // Regardless we want a segment that includes the hit. Note that the first
@@ -194,7 +197,7 @@ FitEditorTemplate::operator()(pRingItemHeader pHdr, pBodyHeader pBHdr,
         }
 #ifdef ENABLE_TIMING
         stats.addData(total);
-        if (stats.size() == 10000) {
+        if (stats.size() == 1000) {
           stats.compute();
           stats.print("======== Template fit stats ========");
         }

@@ -27,8 +27,8 @@
 /**
  * @details
  * Evaluate the value of a single pulse in accordance with our canonical
- * functional form. The form is a logistic rise with an exponential decay
- * that sits on top of a constant offset.
+ * functional form. The form is a logistic rise with an exponential decay that
+ * sits on top of a constant offset.
  */
 double
 ddastoys::templatefit::singlePulse(double A1, double x1, double C, double x,
@@ -54,9 +54,9 @@ ddastoys::templatefit::singlePulse(double A1, double x1, double C, double x,
 
 /**
  * @details
- * Evaluate the canonical form of a double pulse. This is done by summing
- * two single pulses. The constant term is thrown into the first pulse.
- * The second pulse gets a constant term of 0.
+ * Evaluate the canonical form of a double pulse. This is done by summing two
+ * single pulses. The constant term is thrown into the first pulse. The second
+ * pulse gets a constant term of 0.
  */
 double
 ddastoys::templatefit::doublePulse(double A1, double x1, double A2, double x2,
@@ -70,7 +70,9 @@ ddastoys::templatefit::doublePulse(double A1, double x1, double A2, double x2,
 
 /**
  * @details
- * Neyman's chi-square value is computed from a passed set of (x, y) data.
+ * Chi-square value is computed from a passed set of (x, y) data. We assume
+ * weight = 1.0 for each point, so the chi-square is really RSS/ndf where ndf =
+ * nPts - nParams.
  */
 double ddastoys::templatefit::chiSquare1(
     double A1, double x1, double C,
@@ -82,19 +84,17 @@ double ddastoys::templatefit::chiSquare1(
     double y = points[i].second;
     double pulse = singlePulse(A1, x1, C, x, trace_template);
     double diff = y - pulse;
-    if (y != 0.0) {
-      result += (diff / y) * diff; // This order may control overflows.
-      if (std::fpclassify(result) == FP_ZERO)
-        result = 0.0;
-    }
+    result += diff * diff;
   }
 
-  return result;
+  return result / (points.size() - 3);
 }
 
 /**
  * @details
- * Neyman's chi-square value is computed from a passed set of (x, y) data.
+ * Chi-square value is computed from a passed set of (x, y) data. We assume
+ * weight = 1.0 for each point, so the chi-square is really RSS/ndf where ndf =
+ * nPts - nParams.
  */
 double ddastoys::templatefit::chiSquare2(
     double A1, double x1, double A2, double x2, double C,
@@ -106,12 +106,8 @@ double ddastoys::templatefit::chiSquare2(
     double y = points[i].second;
     double pulse = doublePulse(A1, x1, A2, x2, C, x, trace_template);
     double diff = y - pulse;
-    if (y != 0.0) {
-      result += (diff / y) * diff; // This order may control overflows.
-      if (std::fpclassify(result) == FP_ZERO)
-        result = 0.0;
-    }
+    result += diff * diff;
   }
 
-  return result;
+  return result / (points.size() - 5);
 }
