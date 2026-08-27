@@ -10,7 +10,7 @@ enable_testing()
 
 option(DDASTOYS_CUDA_DEV
     "Build the experimental CUDA GPU fit editor plugins: libFitEditorCudaAnalytic 
-    (analytic fit via the CUDA fit engine), libFitEditorDE (differential evolution 
+    (analytic fit via the CUDA fit engine), libFitEditorCudaDE (differential evolution 
     fit), and libFitEditorCudaPSO (particle-swarm fit). 
     Requires nvcc + libCudaOptimize." OFF)
 option(DDASTOYS_MLINFERENCE
@@ -465,7 +465,7 @@ if(DDASTOYS_MLINFERENCE)
     list(APPEND _install_libs FitEditorMLInference)
   endif()
 if(DDASTOYS_CUDA_DEV)
-    list(APPEND _install_libs FitEditorCudaAnalytic FitEditorCudaPSO)
+    list(APPEND _install_libs FitEditorCudaAnalytic FitEditorCudaDE FitEditorCudaPSO)
 endif()
 
 install(TARGETS ${_install_libs} LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
