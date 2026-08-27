@@ -521,7 +521,7 @@ void ddastoys::analyticfit::cudafit1(
     baselineMean += y;
     baselineVar += y * y;
   }
-  baselinee /= BASELINE_SAMPLES;
+  baselineMean /= BASELINE_SAMPLES;
   baselineVar = baselineVar / BASELINE_SAMPLES - baselineMean * baselineMean;
   double traceAmp =
       *std::max_element(trace.begin(), trace.end()) - baselineMean;
@@ -585,7 +585,7 @@ void ddastoys::analyticfit::cudafit2(
     baselineMean += y;
     baselineVar += y * y;
   }
-  baselinee /= BASELINE_SAMPLES;
+  baselineMean /= BASELINE_SAMPLES;
   baselineVar = baselineVar / BASELINE_SAMPLES - baselineMean * baselineMean;
   double traceAmp =
       *std::max_element(trace.begin(), trace.end()) - baselineMean;
