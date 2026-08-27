@@ -540,7 +540,7 @@ void ddastoys::analyticfit::cudafit1(
     freeTrace();
 
   // Pull out the fit values into the pResult:
-  // opt.getFunctionEvals() is as close to an iteration count as we have.
+  // opt.getCurrentEvals() is as close to an iteration count as we have.
   pResult->fitStatus = 0;
   pResult->iterations = opt->getCurrentEvals();
   float *pParams = opt->getBestSolution(0);
